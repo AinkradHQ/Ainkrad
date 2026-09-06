@@ -302,9 +302,9 @@ struct SetupBrandMark: View {
             if reduceMotion || !showsField {
                 composition(isStatic: true)
             } else {
-                TimelineView(.animation) { context in
+                BudgetedTimelineView { date in
                     composition(isStatic: false,
-                                now: context.date.timeIntervalSinceReferenceDate)
+                                now: date.timeIntervalSinceReferenceDate)
                 }
             }
         }

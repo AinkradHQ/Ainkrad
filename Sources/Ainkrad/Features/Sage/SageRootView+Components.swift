@@ -115,8 +115,8 @@ struct WorkingIndicator: View {
         if reduceMotion {
             HStack(spacing: 3) { ForEach(0..<3, id: \.self) { _ in dot(0.7) } }
         } else {
-            TimelineView(.animation) { context in
-                let t = context.date.timeIntervalSinceReferenceDate
+            BudgetedTimelineView { date in
+                let t = date.timeIntervalSinceReferenceDate
                 HStack(spacing: 3) {
                     ForEach(0..<3, id: \.self) { i in
                         // ~1.6s breathe (2π·durationBase), 60° per-dot stagger.

@@ -225,6 +225,12 @@ struct AinkradHostApp: App {
                 // Motion accessibility toggle — see GlobalSettings.uiReduceMotion.
                 // Default false = motion on.
                 .environment(\.ainkradReduceMotion, environment.generalSettingsStore.uiReduceMotion)
+                // Motion budget source, MUST sit directly below the
+                // ainkradReduceMotion injection above — it reads that
+                // environment value, so applied above it the budget would
+                // silently see reduceMotion == false for the process
+                // lifetime (see ainkradMotionBudgetSource()'s doc comment).
+                .ainkradMotionBudgetSource()
                 // Settings -> Appearance -> Overlays, injected once here rather
                 // than threaded through every call site. Before this, only the
                 // surfaces that opted into `hudPanelChrome` obeyed the slider;
