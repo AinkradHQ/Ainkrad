@@ -196,7 +196,13 @@ extension AppEnvironment {
         // `.onAppear` (which SwiftUI can re-fire) — `bootstrap()` itself only
         // ever runs once, from `AinkradHostApp.init`.
         let dsp2 = AinkradSignposts.begin(AinkradSignposts.launch, "c3-sound-play-applaunch")
-        sounds.play(.appLaunch)
+        // Deferred to a later main-actor turn, NOT played inline. Measured:
+        // playing it here cost 196 ms on the launch critical path, because the
+        // first `play` is what actually spins up the audio stack (the players
+        // themselves are lazy now -- see SoundEngine). A launch chime has no
+        // business delaying the first frame; it still plays, just after the
+        // window is up.
+        Task { @MainActor in sounds.play(.appLaunch) }
         AinkradSignposts.end(AinkradSignposts.launch, "c3-sound-play-applaunch", dsp2)
 
         let dsp3 = AinkradSignposts.begin(AinkradSignposts.launch, "c4-connections-and-models")
