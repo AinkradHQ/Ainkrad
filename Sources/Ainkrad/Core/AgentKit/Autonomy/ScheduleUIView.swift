@@ -136,7 +136,7 @@ struct ScheduleUIView: View {
                 message: "Add one above to have the agent run on a timer, a file change, a git change, or an incoming webhook."
             )
         } else {
-            VStack(alignment: .leading, spacing: 8) {
+            LazyVStack(alignment: .leading, spacing: 8) {
                 ForEach(store.schedules) { schedule in
                     scheduleRow(schedule, tokens: tokens)
                 }

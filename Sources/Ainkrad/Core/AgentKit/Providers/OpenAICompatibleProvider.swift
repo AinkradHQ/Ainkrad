@@ -166,8 +166,13 @@ struct OpenAICompatibleProvider: LLMProvider {
                 hasImage = true
                 contentParts.append(["type": "image_url", "image_url": ["url": "data:\(mediaType);base64,\(base64)"]])
             case .thinking:
-                // Unreachable: `wireContent` strips `.thinking` before this switch runs.
-                preconditionFailure(".thinking must never reach the wire — use wireContent")
+                // `wireContent` strips `.thinking` before this switch runs, so
+                // reaching here is a bug upstream. Assert it in Debug so it is
+                // caught in development — but in Release, DROP the block rather
+                // than killing the user's session mid-conversation. Dropping is
+                // exactly what `wireContent` would have done, so nothing is lost.
+                assertionFailure(".thinking reached the wire — wireContent was bypassed")
+                Log.app.error("Dropped a .thinking block that reached the wire serializer")
             }
         }
         var out: [[String: Any]] = []
@@ -190,6 +195,12 @@ struct OpenAICompatibleProvider: LLMProvider {
     /// plain string, not this array form).
     nonisolated static func wireContentForTesting(_ message: AgentMessage) -> [[String: Any]] {
         wireMessages(for: message).first?["content"] as? [[String: Any]] ?? []
+    }
+
+    /// Test-only alias matching the shared `wirePayloadForTesting` seam name used
+    /// across providers (see `ClaudeProvider`, `GeminiProvider`).
+    nonisolated static func wirePayloadForTesting(_ message: AgentMessage) -> [[String: Any]] {
+        wireContentForTesting(message)
     }
 
     /// Best-effort human-readable message from a non-2xx response body. Never echoes the API key

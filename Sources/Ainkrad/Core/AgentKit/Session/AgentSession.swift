@@ -38,6 +38,10 @@ final class AgentSession {
     private(set) var state: State = .idle
     private(set) var streamingText: String = ""
     private(set) var streamingThinking: String = ""
+    /// Pre-parsed blocks for `streamingText`, published on the same coalesced
+    /// tick. The view renders these instead of re-parsing the whole message —
+    /// see `MarkdownStreamParser`.
+    private(set) var streamingBlocks: [MarkdownBlock] = []
 
     /// Hunk ids the user has toggled to REJECT on the pending edit_file approval.
     /// Reset whenever a new approval is parked; read by `approve()` to rebuild a
@@ -330,6 +334,7 @@ final class AgentSession {
         state = .thinking
         streamingText = ""
         streamingThinking = ""
+        streamingBlocks = []
 
         currentTask = Task { [weak self] in
             guard let self else { return }
@@ -413,6 +418,7 @@ final class AgentSession {
         }
         streamingText = ""
         streamingThinking = ""
+        streamingBlocks = []
         state = .idle
         // NOTE: `messages` intentionally preserved — this is the one thing that
         // distinguishes `interrupt()` from `reset()`.
@@ -537,6 +543,7 @@ final class AgentSession {
         state = .idle
         streamingText = ""
         streamingThinking = ""
+        streamingBlocks = []
         pendingSkillSuggestion = nil
     }
 
@@ -735,6 +742,7 @@ final class AgentSession {
             case .failed(let message):
                 streamingText = ""
                 streamingThinking = ""
+                streamingBlocks = []
                 let isLocal = isLocalConnection?(connection) ?? false
                 state = .failed(Self.actionableFailureMessage(message, connection: connection, isLocal: isLocal))
                 recordSettlement(success: false, resolved: resolved, usedModel: currentModel.model)
@@ -742,6 +750,7 @@ final class AgentSession {
             case .completed:
                 streamingText = ""
                 streamingThinking = ""
+                streamingBlocks = []
                 state = .idle
                 recordSettlement(success: true, resolved: resolved, usedModel: currentModel.model)
                 settled()
@@ -776,6 +785,7 @@ final class AgentSession {
                 messages.append(AgentMessage(role: .user, content: resultBlocks))
                 streamingText = ""
                 streamingThinking = ""
+                streamingBlocks = []
                 // loop: re-send with the appended results
             }
         }
@@ -807,6 +817,11 @@ final class AgentSession {
         state = .thinking
         streamingText = ""
         streamingThinking = ""
+        streamingBlocks = []
+        var textParser = MarkdownStreamParser()
+        var coalescer = StreamCoalescer()
+        var pendingThinking = ""
+        var pendingPublish = false
         var pendingCalls: [ToolCall] = []
         var failure: String?
         var sawDone = false
@@ -817,8 +832,18 @@ final class AgentSession {
         do {
             for try await event in stream {
                 switch event {
-                case .thinkingDelta(let d): streamingThinking += d; if state != .thinking { state = .thinking }
-                case .textDelta(let d): streamingText += d; if state != .streaming { state = .streaming }
+                case .thinkingDelta(let d):
+                    pendingThinking += d
+                    pendingPublish = true
+                    if state != .thinking { state = .thinking }
+                    publishIfDue(&coalescer, &textParser, &pendingThinking, &pendingPublish)
+                case .textDelta(let d):
+                    // Cheap: appends to the parser's short pending tail. This is
+                    // NOT the SwiftUI-invalidating step — `publishIfDue` is.
+                    textParser.append(d)
+                    pendingPublish = true
+                    if state != .streaming { state = .streaming }
+                    publishIfDue(&coalescer, &textParser, &pendingThinking, &pendingPublish)
                 case .toolUseStart(_, let name): state = .callingTool(name)
                 case .toolInputDelta: break
                 case .toolUseComplete(let id, let name, let input):
@@ -829,8 +854,10 @@ final class AgentSession {
                 }
             }
         } catch {
+            flushStreaming(&textParser, &pendingThinking)
             return .failed(error.localizedDescription)
         }
+        flushStreaming(&textParser, &pendingThinking)
         lastTurnUsage = turnUsage
 
         if let failure { return .failed(failure) }
@@ -849,6 +876,29 @@ final class AgentSession {
         // idle; a stream that ended WITHOUT `.done` is a wedge we finalize as a
         // failure so the re-entrancy guard never stays stuck.
         return sawDone ? .completed : .failed("The response ended unexpectedly.")
+    }
+
+    /// Publishes to the observable properties only when the coalescing window
+    /// has elapsed. Everything between publishes is accumulated, not dropped.
+    private func publishIfDue(_ coalescer: inout StreamCoalescer,
+                              _ parser: inout MarkdownStreamParser,
+                              _ thinking: inout String,
+                              _ pending: inout Bool) {
+        guard pending, coalescer.shouldPublish(at: ContinuousClock.now) else { return }
+        streamingText = parser.text
+        streamingBlocks = parser.blocks
+        streamingThinking = thinking
+        pending = false
+    }
+
+    /// Unconditional publish. Required at stream end (normal or error): the
+    /// last window is almost never exactly full, and without this the final
+    /// few tokens would never reach the view.
+    private func flushStreaming(_ parser: inout MarkdownStreamParser,
+                                _ thinking: inout String) {
+        streamingText = parser.text
+        streamingBlocks = parser.blocks
+        streamingThinking = thinking
     }
 
     /// Wraps the FIRST HTTP call of a user turn in a bounded failover walk over

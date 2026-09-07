@@ -125,6 +125,7 @@ struct AgentTurnTimelineView: View {
 /// is seamless.
 struct LiveStepView: View {
     let streamingText: String
+    let streamingBlocks: [MarkdownBlock]
     let streamingThinking: String
     let isStreaming: Bool
     let tokens: DesignTokens
@@ -142,7 +143,7 @@ struct LiveStepView: View {
                 }
                 if isStreaming || !streamingText.isEmpty {
                     VStack(alignment: .leading, spacing: 2) {
-                        SageMarkdownText(text: streamingText, tokens: tokens, typography: typography)
+                        SageMarkdownText(blocks: streamingBlocks, tokens: tokens, typography: typography)
                         if isStreaming { StreamingCursor(tokens: tokens) }
                     }
                 } else if streamingThinking.isEmpty {

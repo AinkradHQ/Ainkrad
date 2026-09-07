@@ -19,7 +19,7 @@ struct HoardSidebar: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 1) {
+            LazyVStack(alignment: .leading, spacing: 1) {
                 ForEach(sections) { section in
                     if let title = section.title {
                         Text(title.uppercased())
