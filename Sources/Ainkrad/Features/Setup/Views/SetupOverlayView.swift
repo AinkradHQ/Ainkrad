@@ -105,13 +105,12 @@ struct SetupOverlayView: View {
     /// a later, genuinely-owed first-run wizard skip steps as if it were still
     /// a replay; leaving it unset while `isSetupPresented` came back some
     /// other way would make a real first-run look cancellable. Mirrors
-    /// `SetupDoneStepView.finish()`'s ordering and menu-bar restore, minus
-    /// `coordinator.complete()` — a cancelled replay has not finished setup,
-    /// it has merely stopped looking at it again.
+    /// `SetupDoneStepView.finish()`'s ordering, minus `coordinator.complete()`
+    /// — a cancelled replay has not finished setup, it has merely stopped
+    /// looking at it again.
     private func closeReplay() {
         environment.isSetupPresented = false
         environment.isSetupReplay = false
-        environment.menuBarController?.install()
     }
 
     /// Full-bleed: rail, heading, step, nav — no panel chrome, no fixed size.
@@ -158,10 +157,6 @@ struct SetupOverlayView: View {
             Log.persistence.info(
                 "Adopted an already-configured Home; first-run setup is complete for it")
             rebuilt.isSetupPresented = false
-            // The other gate-lowering site (see `SetupDoneStepView.finish()`):
-            // the status item is suppressed while the gate is up and nothing
-            // re-installs it on its own, so it has to be brought back here too.
-            rebuilt.menuBarController?.install()
         case .resumed(let step):
             // Never silently: if the target was unreachable the wizard would
             // otherwise appear to have simply not moved.

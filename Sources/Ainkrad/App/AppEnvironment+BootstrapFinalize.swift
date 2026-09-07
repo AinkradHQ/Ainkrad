@@ -33,16 +33,13 @@ extension AppEnvironment {
         home: Home,
         defaults: UserDefaults
     ) {
-        // Built after `environment` exists so the content closure can inject
-        // `self` for `MenuBarPopoverView`'s `.environment(_:)` — mirrors how
-        // `launcherStore.presentOverlay`/`pluginLaunchHub` below capture
-        // `[weak environment]` rather than being wired inside the initializer.
         // MARK: Signal (notification feed)
         //
         // Built here rather than in `bootstrapCoreStores` because it needs the
         // sound engine, the window state, and `environment` itself for the
-        // popover's content closure — the same reasons `menuBarController` is
-        // built here.
+        // popover's content closure — mirrors how `launcherStore.presentOverlay`/
+        // `pluginLaunchHub` below capture `[weak environment]` rather than
+        // being wired inside the initializer.
         let signalPreferencesStore = SignalPreferencesStore(
             url: home.cacheRoot.deletingLastPathComponent()
                 .appendingPathComponent("signal-preferences.json"))
@@ -328,11 +325,6 @@ extension AppEnvironment {
                 center.emit(.appUpdateFailed(displayName: name,
                                              reason: Self.describe(error)), from: .host)
             }
-        }
-
-        environment.menuBarController = MenuBarController(presence: environment.menuBarPresence) { [weak environment] in
-            guard let environment else { return AnyView(EmptyView()) }
-            return AnyView(MenuBarPopoverView(presence: environment.menuBarPresence).environment(environment))
         }
 
         // Launch-time external I/O (local-model probes, MCP connect, LSP

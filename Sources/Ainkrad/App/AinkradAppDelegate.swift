@@ -13,10 +13,6 @@ final class AinkradAppDelegate: NSObject, NSApplicationDelegate {
     /// before that (e.g. a very early Dock quit) — the fallback below just
     /// lets the app quit rather than hanging with no coordinator to reply.
     var quitCoordinator: QuitCoordinator?
-    /// Wired from `AinkradHostApp.init` alongside `quitCoordinator`. Owns the
-    /// `NSStatusItem`/popover for the app's lifetime — installed here on
-    /// launch, torn down on quit (M7 Slice 7).
-    var menuBarController: MenuBarController?
     /// Wired alongside the above. Chat-history writes are coalesced (see
     /// `SageSessionStore.syncActive`), so the last few hundred
     /// milliseconds of a transcript may still be pending when the user quits —
@@ -47,7 +43,6 @@ final class AinkradAppDelegate: NSObject, NSApplicationDelegate {
         if let signalBannerResponder {
             UNUserNotificationCenter.current().delegate = signalBannerResponder
         }
-        menuBarController?.install()
         LaunchSignpost.end()
     }
 
@@ -58,6 +53,5 @@ final class AinkradAppDelegate: NSObject, NSApplicationDelegate {
         // socket file behind means anything that connects between quit and the
         // next launch writes into nothing and is told it succeeded.
         signalSocketServer?.stop()
-        menuBarController?.teardown()
     }
 }
