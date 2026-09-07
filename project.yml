@@ -40,11 +40,11 @@ settings:
     # entitlement, failing the build if it does not.
 
 packages:
-  # AinkradAppKit — the Built-in App SDK (github.com/AhmedMElhalaby/AinkradAppKit).
+  # AinkradAppKit — the Built-in App SDK (github.com/AinkradHQ/AinkradAppKit).
   # DYNAMIC library: the host embeds one copy; plugin bundles resolve it at
   # runtime (a static copy per binary would break dynamic protocol casts).
   AinkradAppKit:
-    url: https://github.com/AhmedMElhalaby/AinkradAppKit
+    url: https://github.com/AinkradHQ/AinkradAppKit
     # Apps-over-MCP: AinkradAppMCP + MCPAppServer (PR #18) and the per-tool
     # `requiresLiveApp` flag (PR #20), plus resource `purpose`/`resultProvider`
     # (feat/resource-description-and-errors). Always a merge commit on

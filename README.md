@@ -8,7 +8,7 @@ A Jarvis-inspired, floating-island HUD for macOS: tiled panes over a single blur
 island, a built-in terminal, a distraction-free Focus Mode, and a fully themeable
 neon interface.
 
-[![Release](https://img.shields.io/github/v/release/AhmedMElhalaby/Ainkrad?sort=semver)](https://github.com/AhmedMElhalaby/Ainkrad/releases)
+[![Release](https://img.shields.io/github/v/release/AinkradHQ/Ainkrad?sort=semver)](https://github.com/AinkradHQ/Ainkrad/releases)
 ![Platform](https://img.shields.io/badge/platform-macOS%2014%2B-blue)
 ![Swift](https://img.shields.io/badge/Swift-6.0-orange)
 ![License](https://img.shields.io/badge/license-Proprietary-lightgrey)
@@ -62,7 +62,7 @@ operating layer**; this release delivers the workspace foundation it will run on
 ## Build from source
 
 ```bash
-git clone https://github.com/AhmedMElhalaby/Ainkrad.git
+git clone https://github.com/AinkradHQ/Ainkrad.git
 cd Ainkrad
 
 brew install xcodegen          # one-time, if you don't have it
@@ -93,7 +93,7 @@ One command, and the app launches. Read the caveats it prints — they explain
 what you are trusting.
 
 **Or download directly** from the
-[**Releases**](https://github.com/AhmedMElhalaby/Ainkrad/releases) page, open the
+[**Releases**](https://github.com/AinkradHQ/Ainkrad/releases) page, open the
 `.dmg`, and drag **Ainkrad** into Applications. Because the app is not notarized,
 macOS will refuse to open it until you clear the quarantine flag:
 

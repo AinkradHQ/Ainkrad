@@ -37,5 +37,5 @@ First MVP release.
 - No stray `zsh` `%` when opening several terminals in quick succession (the
   shell now spawns already sized to its pane).
 
-[Unreleased]: https://github.com/AhmedMElhalaby/Ainkrad/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/AhmedMElhalaby/Ainkrad/releases/tag/v0.1.0
+[Unreleased]: https://github.com/AinkradHQ/Ainkrad/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/AinkradHQ/Ainkrad/releases/tag/v0.1.0
