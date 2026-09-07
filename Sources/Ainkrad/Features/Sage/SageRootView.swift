@@ -16,6 +16,11 @@ struct SageRootView: View {
     @Environment(\.ainkradReduceMotion) private var reduceMotion
     var showsHeader: Bool = true
     var autoFocusComposer: Bool = false
+    /// Whether the transcript should keep pinning to the newest content.
+    /// Set true on every new message/turn. NOT yet cleared by user scroll —
+    /// no scroll-position seam exists in this codebase (see Task 4 report);
+    /// this is the minimal gate the follow-up needs to hook into.
+    @State private var followTail = true
     @State private var draft = ""
     @State private var isSidebarVisible = false
     @State private var modelPicker = SageModelPickerModel()
@@ -241,6 +246,7 @@ struct SageRootView: View {
                         if session.state == .thinking || session.state == .streaming
                             || isCallingToolWithoutCard(session) {
                             LiveStepView(streamingText: session.streamingText,
+                                         streamingBlocks: session.streamingBlocks,
                                          streamingThinking: session.streamingThinking,
                                          isStreaming: session.state == .streaming,
                                          tokens: tokens, typography: assistantTypography,
@@ -289,9 +295,13 @@ struct SageRootView: View {
             }
             .scrollContentBackground(.hidden)
             .onChange(of: session.messages.count) { _, _ in
+                followTail = true
                 withAnimation(reduceMotion ? nil : AinkradMotion.present) { proxy.scrollTo("streaming", anchor: .bottom) }
             }
-            .onChange(of: session.streamingText) { _, _ in
+            .onChange(of: session.streamingBlocks.count) { _, _ in
+                // Blocks, not text: this now fires when a new block appears
+                // (a handful of times per reply) instead of on every token.
+                guard followTail else { return }
                 proxy.scrollTo("streaming", anchor: .bottom)
             }
         }

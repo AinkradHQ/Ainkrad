@@ -9,13 +9,26 @@ import AinkradHostRuntime
 /// resolution is memoised via `InlineMarkdownCache`, so re-evaluating this
 /// view on every streaming update stays cheap.
 struct SageMarkdownText: View {
-    let text: String
+    private let blocks: [MarkdownBlock]
     let tokens: DesignTokens
-    var typography: SageTypography = .init()
+    var typography: SageTypography
+
+    /// Primary path for streaming: blocks are already parsed incrementally by
+    /// `MarkdownStreamParser`, so this does no parsing at all.
+    init(blocks: [MarkdownBlock], tokens: DesignTokens, typography: SageTypography = .init()) {
+        self.blocks = blocks
+        self.tokens = tokens
+        self.typography = typography
+    }
+
+    /// Committed transcript messages, which are parsed once and never change.
+    init(text: String, tokens: DesignTokens, typography: SageTypography = .init()) {
+        self.init(blocks: MarkdownBlocks.parse(text), tokens: tokens, typography: typography)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
-            ForEach(Array(MarkdownBlocks.parse(text).enumerated()), id: \.offset) { _, block in
+            ForEach(Array(blocks.enumerated()), id: \.offset) { _, block in
                 blockView(block)
             }
         }
