@@ -14,7 +14,12 @@ settings:
     # system to attach a saved grant to, so it re-prompts on every access.
     CODE_SIGN_STYLE: Automatic
     CODE_SIGN_IDENTITY: "Apple Development"
-    DEVELOPMENT_TEAM: PSY67XNHG4
+    # RT9AA68C38 -- read from the Developer ID Application certificate that
+    # actually signs releases ("Developer ID Application: ULINK sp. z o.o.
+    # (RT9AA68C38)"). This was PSY67XNHG4, which no longer has a signing
+    # identity on this machine; a release signed under a team the cert does not
+    # belong to cannot be notarized, and notarytool needs --team-id to match.
+    DEVELOPMENT_TEAM: RT9AA68C38
     CODE_SIGNING_REQUIRED: YES
     CODE_SIGNING_ALLOWED: YES
     # NOTE: Release deliberately does NOT override the identity above.
