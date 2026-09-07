@@ -4,8 +4,10 @@ import AinkradHostRuntime
 
 /// Renders assistant transcript text as markdown blocks. Prose/heading/list
 /// items resolve inline markdown via `AttributedString`; fenced code reuses
-/// the kit's `AinkradCodeBlock` (mono chamfer surface + copy button). Re-runs
-/// cheaply on each streaming update.
+/// the kit's `AinkradCodeBlock` (mono chamfer surface + copy button). Block
+/// parsing is incremental (see `MarkdownStreamParser`) and inline markdown
+/// resolution is memoised via `InlineMarkdownCache`, so re-evaluating this
+/// view on every streaming update stays cheap.
 struct SageMarkdownText: View {
     let text: String
     let tokens: DesignTokens
@@ -60,14 +62,11 @@ struct SageMarkdownText: View {
         }
     }
 
-    /// Resolves inline markdown (bold/italic/`code`/links); falls back to the
-    /// raw string when it fails to parse (never throws into the view).
+    /// Resolves inline markdown (bold/italic/`code`/links) through a shared
+    /// bounded cache — see `InlineMarkdownCache` for why. Never throws into
+    /// the view; unparseable source renders as itself.
     private func inline(_ src: String) -> Text {
-        if let attributed = try? AttributedString(markdown: src,
-              options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)) {
-            return Text(attributed)
-        }
-        return Text(src)
+        Text(InlineMarkdownCache.attributed(src))
     }
 
     private func headingSize(_ level: Int) -> CGFloat {
