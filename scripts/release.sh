@@ -130,6 +130,20 @@ ln -s /Applications "$STAGE/Applications"
 hdiutil create -volname "Ainkrad ${VERSION}" -srcfolder "$STAGE" -ov -format UDZO "$DMG" >/dev/null
 rm -rf "$STAGE"
 
+# Sign the DISK IMAGE itself, not just the app inside it. Notarizing and
+# stapling a DMG is enough for Gatekeeper to let a download through, but an
+# unsigned container has no signature for `spctl` (or a cautious user running
+# `codesign -dv`) to evaluate at all -- it reports "code object is not signed
+# at all". Apple recommends signing the image; doing so costs one command and
+# removes the ambiguity from the artifact people actually download.
+#
+# Must happen BEFORE notarization: the notary service hashes what it is given,
+# and signing afterwards would invalidate the stapled ticket.
+if [[ "$SIGNED" == true ]]; then
+  codesign --force --timestamp --sign "$SIGN_IDENTITY" "$DMG"
+  codesign --verify --strict --verbose=2 "$DMG"
+fi
+
 # --- notarize + staple -----------------------------------------------------
 NOTARIZED=false
 if [[ "$SIGNED" == true ]]; then
