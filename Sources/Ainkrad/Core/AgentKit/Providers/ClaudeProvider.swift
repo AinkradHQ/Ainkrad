@@ -205,7 +205,7 @@ struct ClaudeProvider: LLMProvider {
     }
 
     nonisolated private static func wireMessage(_ message: AgentMessage, isOAuth: Bool) -> [String: Any] {
-        let blocks: [[String: Any]] = message.wireContent.map { block in
+        let blocks: [[String: Any]] = message.wireContent.compactMap { block in
             switch block {
             case .text(let t):
                 return ["type": "text", "text": t]
@@ -218,11 +218,22 @@ struct ClaudeProvider: LLMProvider {
             case .image(let mediaType, let base64):
                 return ["type": "image", "source": ["type": "base64", "media_type": mediaType, "data": base64]]
             case .thinking:
-                // Unreachable: `wireContent` strips `.thinking` before this switch runs.
-                preconditionFailure(".thinking must never reach the wire — use wireContent")
+                // `wireContent` strips `.thinking` before this switch runs, so
+                // reaching here is a bug upstream. Assert it in Debug so it is
+                // caught in development — but in Release, DROP the block rather
+                // than killing the user's session mid-conversation. Dropping is
+                // exactly what `wireContent` would have done, so nothing is lost.
+                assertionFailure(".thinking reached the wire — wireContent was bypassed")
+                Log.app.error("Dropped a .thinking block that reached the wire serializer")
+                return nil
             }
         }
         return ["role": message.role.rawValue, "content": blocks]
+    }
+
+    /// Test-only hook exposing `wireMessage(_:isOAuth:)`'s `"content"` array for a single message.
+    nonisolated static func wirePayloadForTesting(_ message: AgentMessage) -> [[String: Any]] {
+        wireMessage(message, isOAuth: false)["content"] as? [[String: Any]] ?? []
     }
 
     /// Best-effort human-readable message from a non-2xx response body. Never echoes the API key

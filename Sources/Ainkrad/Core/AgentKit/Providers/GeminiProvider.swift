@@ -118,7 +118,7 @@ struct GeminiProvider: LLMProvider {
     /// Maps one `AgentMessage` to a Gemini `content` object. Sage → "model".
     nonisolated private static func wireContent(_ message: AgentMessage) -> [String: Any] {
         let role = message.role == .assistant ? "model" : "user"
-        let parts: [[String: Any]] = message.wireContent.map { block in
+        let parts: [[String: Any]] = message.wireContent.compactMap { block in
             switch block {
             case .text(let t):
                 return ["text": t]
@@ -130,8 +130,14 @@ struct GeminiProvider: LLMProvider {
             case .image(let mediaType, let base64):
                 return ["inlineData": ["mimeType": mediaType, "data": base64]]
             case .thinking:
-                // Unreachable: `wireContent` strips `.thinking` before this switch runs.
-                preconditionFailure(".thinking must never reach the wire — use wireContent")
+                // `wireContent` strips `.thinking` before this switch runs, so
+                // reaching here is a bug upstream. Assert it in Debug so it is
+                // caught in development — but in Release, DROP the block rather
+                // than killing the user's session mid-conversation. Dropping is
+                // exactly what `wireContent` would have done, so nothing is lost.
+                assertionFailure(".thinking reached the wire — wireContent was bypassed")
+                Log.app.error("Dropped a .thinking block that reached the wire serializer")
+                return nil
             }
         }
         return ["role": role, "parts": parts]
@@ -140,6 +146,12 @@ struct GeminiProvider: LLMProvider {
     /// Test-only hook exposing `wireContent(_:)`'s `"parts"` array for a single message.
     nonisolated static func wireContentForTesting(_ message: AgentMessage) -> [[String: Any]] {
         wireContent(message)["parts"] as? [[String: Any]] ?? []
+    }
+
+    /// Test-only alias matching the shared `wirePayloadForTesting` seam name used
+    /// across providers (see `ClaudeProvider`, `OpenAICompatibleProvider`).
+    nonisolated static func wirePayloadForTesting(_ message: AgentMessage) -> [[String: Any]] {
+        wireContentForTesting(message)
     }
 
     private static func errorMessage(fromResponseBody body: String) -> String {
