@@ -236,13 +236,8 @@ final class AppEnvironment {
     /// exists. Retained here so the settings surface and menu-bar presence read
     /// the SAME live `status`.
     let remoteChannelService: RemoteChannelService
-    /// Owns the `NSStatusItem`/popover for the app's lifetime. `var`/optional
-    /// (not an `init` param) because its content closure captures `self` —
-    /// it's built in `bootstrap()` right after `environment` itself exists,
-    /// then installed/torn down by `AinkradAppDelegate`.
-    var menuBarController: MenuBarController?
     /// The Signal feed. Built in `finalizeBootstrap` (it needs the sound engine
-    /// and the window state), so `var`/optional like `menuBarController`.
+    /// and the window state), so `var`/optional.
     var signalCenter: SignalCenter?
     /// Whether notifications make a sound, and how loud. Held here because
     /// Settings binds to it, and built in `finalizeBootstrap` alongside the

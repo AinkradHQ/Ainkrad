@@ -53,8 +53,8 @@ struct SignalBellDropdownOverlay: View {
                 // in-window: the first-run setup gate is a full-screen scrim
                 // INSIDE the window, so anything in-window is covered for
                 // free. A popover is a separate window and would escape it,
-                // reintroducing exactly the problem `MenuBarController` has to
-                // suppress by hand.
+                // reintroducing exactly the escape-the-gate problem the old
+                // menu-bar status item had to suppress by hand.
                 .padding(.top, HUDBar.height + 4)
                 .padding(.trailing, 10)
                 // Reduce-motion drops the slide but keeps the fade: appearing

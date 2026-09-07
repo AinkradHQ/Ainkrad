@@ -107,7 +107,7 @@ struct AinkradHostApp: App {
     /// Everything else that outlives a view body lives INSIDE `AppEnvironment`
     /// (`skillWatcher`, `customCommandWatcher`, `fileChangeWatcher`,
     /// `scheduleRunner`, `remoteChannelService`, `mcpServerRegistry`,
-    /// `lspServerRegistry`, `menuBarController`) and is rebuilt wholesale by
+    /// `lspServerRegistry`) and is rebuilt wholesale by
     /// `bootstrap`. `KeyboardShortcutMonitor.MonitoringView` re-reads its
     /// `environment` through `updateNSView` when the `@State` swaps.
     ///
@@ -138,45 +138,7 @@ struct AinkradHostApp: App {
     /// exists across a swap. It is nonetheless inert: its `Timer` block is
     /// `[weak self]` and a scratch home has no schedules, so `tick` is a no-op.
     private static func install(_ environment: AppEnvironment, into appDelegate: AinkradAppDelegate) {
-        // The status item is the one surface that escapes the setup gate: it
-        // lives on `NSStatusBar.system` and its popover is anchored outside the
-        // window, so neither the scrim nor the window-local key monitor reaches
-        // it. Suppress it for as long as the gate is up. This is wired here, the
-        // single place every environment (boot AND swap) passes through, so the
-        // two paths cannot diverge. `[weak environment]` because the environment
-        // owns the controller, which owns this closure.
-        //
-        // Lowering the gate does not re-run this, so the two places that lower
-        // it — `SetupDoneStepView.finish()` and the `alreadyConfigured` re-seat
-        // in `SetupOverlayView` — call `install()` themselves. It is guarded
-        // idempotent, so a redundant call is free.
-        environment.menuBarController?.isSuppressed = { [weak environment] in
-            environment?.isSetupPresented ?? false
-        }
-        // Retire the outgoing status item first: `NSStatusBar` would otherwise
-        // keep showing it, still bound to the previous environment's presence.
-        // No-op on the initial boot, where there is no previous controller.
-        //
-        // Re-installing the incoming one happens HERE rather than being left to
-        // the caller. On the initial boot `applicationDidFinishLaunching` does
-        // the install, but by swap time that has long since fired — a caller
-        // who merely assigned would be left with a torn-down status item and no
-        // menu bar, and nothing in the code would say so. Gated on there having
-        // BEEN an outgoing controller, so the boot path is untouched and the
-        // delegate still owns the first install. (`MenuBarController.install()`
-        // is guarded idempotent anyway: `guard statusItem == nil`.)
-        //
-        // During the wizard's swap this `install()` is a deliberate no-op: the
-        // gate is still up, so `isSuppressed` refuses. The menu bar therefore
-        // stays absent from launch until setup finishes, rather than reappearing
-        // at the swap — which is the point, since the swap happens at step 2 of 8.
-        if appDelegate.menuBarController !== environment.menuBarController,
-           let outgoing = appDelegate.menuBarController {
-            outgoing.teardown()
-            environment.menuBarController?.install()
-        }
         appDelegate.quitCoordinator = environment.quitCoordinator
-        appDelegate.menuBarController = environment.menuBarController
         appDelegate.assistantSessionStore = environment.assistantSessionStore
         appDelegate.signalSocketServer = environment.signalSocketServer
         appDelegate.signalBannerResponder = environment.signalBannerResponder

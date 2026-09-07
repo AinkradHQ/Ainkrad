@@ -131,13 +131,6 @@ struct SetupDoneStepView: View {
         // genuinely owed step after an app update — must not inherit replay
         // and walk the whole wizard instead of the one step it owes.
         environment.isSetupReplay = false
-        // Order matters: `isSuppressed` reads `isSetupPresented`, so the flag
-        // must already be down or this install refuses. The status item was
-        // suppressed for the whole wizard (it is the one surface the gate's
-        // in-window scrim cannot cover — see `MenuBarController.isSuppressed`),
-        // and nothing else installs it after launch, so this is where the menu
-        // bar comes back. `install()` is guarded idempotent.
-        environment.menuBarController?.install()
     }
 
     private func point(title: String, body: String, icon: String,
