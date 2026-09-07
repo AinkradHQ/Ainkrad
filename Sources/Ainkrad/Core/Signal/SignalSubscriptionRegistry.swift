@@ -25,7 +25,11 @@ final class SignalSubscriptionStore {
                                                  withIntermediateDirectories: true)
         guard let data = try? JSONEncoder().encode(approved.mapValues { Array($0).sorted() })
         else { return }
-        try? data.write(to: url, options: .atomic)
+        do {
+            try data.write(to: url, options: .atomic)
+        } catch {
+            Log.registry.error("Failed to write \(data.count, privacy: .public) bytes to \(self.url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+        }
     }
 }
 

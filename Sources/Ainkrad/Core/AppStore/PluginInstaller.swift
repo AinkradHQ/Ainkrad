@@ -162,7 +162,11 @@ final class PluginInstaller {
         let live = pluginDataDir.appendingPathComponent(appID)
         try? FileManager.default.createDirectory(at: pluginDataDir, withIntermediateDirectories: true)
         try? FileManager.default.removeItem(at: live)
-        try? FileManager.default.moveItem(at: retained, to: live)
+        do {
+            try FileManager.default.moveItem(at: retained, to: live)
+        } catch {
+            Log.appStore.error("Failed to move retained data for \(appID, privacy: .public) into \(live.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     /// Permanently deletes retained data for `appID`. Best-effort.
@@ -178,7 +182,11 @@ final class PluginInstaller {
         let retained = retainedDataDir.appendingPathComponent(appID)
         try? FileManager.default.createDirectory(at: retainedDataDir, withIntermediateDirectories: true)
         try? FileManager.default.removeItem(at: retained)
-        try? FileManager.default.moveItem(at: live, to: retained)
+        do {
+            try FileManager.default.moveItem(at: live, to: retained)
+        } catch {
+            Log.appStore.error("Failed to move live data for \(appID, privacy: .public) into retained storage: \(error.localizedDescription, privacy: .public)")
+        }
     }
 }
 

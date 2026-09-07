@@ -108,7 +108,11 @@ public final class ScopedPluginDocumentStore: PluginDocumentStore {
     public func setData(_ data: Data?, forKey key: String) {
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         guard let data else { try? FileManager.default.removeItem(at: fileURL(key)); return }
-        try? data.write(to: fileURL(key), options: .atomic)
+        do {
+            try data.write(to: fileURL(key), options: .atomic)
+        } catch {
+            Log.persistence.error("Failed to write \(data.count, privacy: .public) bytes to \(self.fileURL(key).lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+        }
     }
 }
 

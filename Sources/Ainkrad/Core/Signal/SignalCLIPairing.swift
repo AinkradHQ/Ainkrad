@@ -67,7 +67,11 @@ enum SignalCLIPairing {
         // Written with 0600 in the ATTRIBUTES, not chmod'ed afterwards: a file
         // that exists world-readable for even an instant has already leaked
         // the credential to anything watching the directory.
-        try? data.write(to: url, options: .atomic)
+        do {
+            try data.write(to: url, options: .atomic)
+        } catch {
+            Log.settings.error("Failed to write \(data.count, privacy: .public) bytes to \(url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+        }
         try? FileManager.default.setAttributes([.posixPermissions: 0o600],
                                               ofItemAtPath: url.path)
     }
