@@ -356,7 +356,10 @@ extension AppEnvironment {
                     await localModelAvailability.refresh(
                         connections: connectionStore.connections, probe: localModelProbe,
                         tokenFor: { connectionStore.token(for: $0) })
-                    try? await Task.sleep(for: .seconds(30))
+                    // Jitter: `Task.sleep` has no tolerance, so spread the wakeup
+                    // over a 5s window rather than waking every client on the
+                    // same 30s boundary.
+                    try? await Task.sleep(for: .seconds(30 + Double.random(in: 0...5)))
                 }
             }
 

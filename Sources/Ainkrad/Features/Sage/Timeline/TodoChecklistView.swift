@@ -56,8 +56,8 @@ struct TodoChecklistView: View {
                              : (item.status == .inProgress ? tokens.accentSecondary : tokens.foreground.opacity(0.4)))
         HStack(alignment: .firstTextBaseline, spacing: 7) {
             if item.status == .inProgress && !reduceMotion {
-                TimelineView(.animation) { context in
-                    let wave = 0.5 + 0.5 * sin(context.date.timeIntervalSinceReferenceDate / AinkradMotion.durationBase)
+                BudgetedTimelineView { date in
+                    let wave = 0.5 + 0.5 * sin(date.timeIntervalSinceReferenceDate / AinkradMotion.durationBase)
                     icon.opacity(0.5 + 0.5 * wave)
                 }
             } else {

@@ -52,6 +52,7 @@ extension AppEnvironment {
         // their connections, memory, skills and session history.
         HomeLayoutMigration.run(vaultRoot: home.vaultRoot)
 
+        let csp0 = AinkradSignposts.begin(AinkradSignposts.launch, "core-a-persistence-keychain-registry")
         let persistence = FileDocumentStore(rootURL: home.shared(.config))
         // Sage's own documents live under `Assistant/`, not `Config/` —
         // `agents.json` and `connections.json` sit directly in it, alongside the
@@ -75,6 +76,7 @@ extension AppEnvironment {
         let themeManager = ThemeManager(persistence: persistence)
 
         let workspaceManager = WorkspaceManager()
+        AinkradSignposts.end(AinkradSignposts.launch, "core-a-persistence-keychain-registry", csp0)
 
         // Plugin loading/App Store plumbing needs to exist before
         // `AppEnvironment` is constructed, since `appStore` is one of its
@@ -90,6 +92,7 @@ extension AppEnvironment {
         // Plugin BINARIES are cache: every one of them is re-downloadable from the
         // catalog, so wiping the cache costs a reinstall and nothing more. Plugin
         // DATA is vault: it is what the user authored inside each app.
+        let csp1 = AinkradSignposts.begin(AinkradSignposts.launch, "core-b-plugins-appstore")
         let pluginsDir = home.cacheRoot.appendingPathComponent("Plugins", isDirectory: true)
         var pluginDirs = [pluginsDir]
         if PluginTrust.scansDevPluginsDirectory {
@@ -173,9 +176,14 @@ extension AppEnvironment {
         let appIconStore = AppIconStore(persistence: persistence,
                                         applier: AppKitAppIconApplier(),
                                         themeManager: themeManager)
+        AinkradSignposts.end(AinkradSignposts.launch, "core-b-plugins-appstore", csp1)
+        let csp2 = AinkradSignposts.begin(AinkradSignposts.launch, "core-c-settings-and-connections")
+        let dsp0 = AinkradSignposts.begin(AinkradSignposts.launch, "c1-appicon-apply")
         themeManager.onThemeChange = { [weak appIconStore] in appIconStore?.applyCurrent() }
         appIconStore.applyCurrent()
+        AinkradSignposts.end(AinkradSignposts.launch, "c1-appicon-apply", dsp0)
 
+        let dsp1 = AinkradSignposts.begin(AinkradSignposts.launch, "c2-soundengine-init")
         let generalSettingsStore = GeneralSettingsStore(persistence: persistence)
         let skySettingsStore = SkySettingsStore(persistence: persistence)
         // User-data override dir for AIN-108's sound-pack overrides (e.g. via
@@ -183,11 +191,21 @@ extension AppEnvironment {
         // back to the bundled synth wavs when a given override is absent.
         let soundOverrideDirectory = home.shared(.sounds)
         let sounds = SoundEngine(settings: generalSettingsStore, overrideDirectory: soundOverrideDirectory)
+        AinkradSignposts.end(AinkradSignposts.launch, "c2-soundengine-init", dsp1)
         // Plays exactly once per process, here rather than in a view's
         // `.onAppear` (which SwiftUI can re-fire) — `bootstrap()` itself only
         // ever runs once, from `AinkradHostApp.init`.
-        sounds.play(.appLaunch)
+        let dsp2 = AinkradSignposts.begin(AinkradSignposts.launch, "c3-sound-play-applaunch")
+        // Deferred to a later main-actor turn, NOT played inline. Measured:
+        // playing it here cost 196 ms on the launch critical path, because the
+        // first `play` is what actually spins up the audio stack (the players
+        // themselves are lazy now -- see SoundEngine). A launch chime has no
+        // business delaying the first frame; it still plays, just after the
+        // window is up.
+        Task { @MainActor in sounds.play(.appLaunch) }
+        AinkradSignposts.end(AinkradSignposts.launch, "c3-sound-play-applaunch", dsp2)
 
+        let dsp3 = AinkradSignposts.begin(AinkradSignposts.launch, "c4-connections-and-models")
         let connectionStore = ConnectionStore(persistence: assistantDocuments, secrets: secrets)
 
         // Shared per-connection live-discovered models (picker + router candidates).
@@ -195,7 +213,9 @@ extension AppEnvironment {
         // connection's stale list doesn't linger.
         let discoveredModelsStore = DiscoveredModelsStore(persistence: persistence)
         discoveredModelsStore.prune(keeping: Set(connectionStore.connections.map(\.id)))
+        AinkradSignposts.end(AinkradSignposts.launch, "c4-connections-and-models", dsp3)
 
+        AinkradSignposts.end(AinkradSignposts.launch, "core-c-settings-and-connections", csp2)
         return (
             persistence, secrets, registry, themeManager, workspaceManager, pluginDirs,
             pluginDataRoot, retainedDataRoot, agentContextHub, agentActionHub, pluginLaunchHub,

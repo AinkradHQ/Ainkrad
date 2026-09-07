@@ -802,6 +802,8 @@ final class AgentSession {
 
     private func runOneTurn(provider: LLMProvider, system: String,
                             model: AgentModelConfig, credential: ProviderCredential) async -> TurnOutcome {
+        let signpost = AinkradSignposts.begin(AinkradSignposts.agent, "agent-turn")
+        defer { AinkradSignposts.end(AinkradSignposts.agent, "agent-turn", signpost) }
         state = .thinking
         streamingText = ""
         streamingThinking = ""

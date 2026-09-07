@@ -58,28 +58,53 @@ extension AVAudioPlayer: AudioPlayback {}
 final class SoundEngine: SoundPlaying {
     private let settings: SoundSettingsProviding
     private var players: [UISound: AudioPlayback]
+    /// Lazy-load inputs. `nil` when players were INJECTED (the test entry
+    /// point) — in that mode nothing is ever loaded from disk or bundle, so a
+    /// sound absent from the injected dictionary stays absent, exactly as
+    /// before.
+    private let bundle: Bundle?
+    private let overrideDirectory: URL?
 
-    /// Production entry point: loads every `UISound`'s wav, preferring
-    /// `overrideDirectory/<name>.wav` on disk over `bundle`'s bundled copy.
+    /// Testing seam: how many players have been lazily loaded (or injected)
+    /// so far. Used to assert production init touches nothing up front.
+    var loadedPlayerCountForTesting: Int { players.count }
+
+    /// Production entry point. Loads nothing. Players are created on first
+    /// use, per sound, by `player(for:)`.
+    ///
+    /// WHY: this initialiser used to build an `AVAudioPlayer` for all 24
+    /// `UISound` cases and `prepareToPlay()` each one — 261 ms, measured, on
+    /// the launch critical path, and paid TWICE because the app constructs
+    /// two engines. Almost every one of those players is never used in a
+    /// given session.
+    ///
     /// `bundle` defaults to `.main` (the app bundle); `overrideDirectory`
     /// defaults to `nil` (always use the bundle) — callers that want
     /// overrides (see `AppEnvironment.bootstrap`) pass a real directory,
     /// which need not exist yet (resolution falls back to the bundle).
     init(settings: SoundSettingsProviding, bundle: Bundle = .main, overrideDirectory: URL? = nil) {
         self.settings = settings
-        var loaded: [UISound: AudioPlayback] = [:]
-        for sound in UISound.allCases {
-            guard let url = SoundEngine.resolvedURL(
-                    for: sound,
-                    overrideDirectory: overrideDirectory,
-                    bundle: bundle,
-                    fileExists: { FileManager.default.fileExists(atPath: $0.path) }
-                  ),
-                  let player = try? AVAudioPlayer(contentsOf: url) else { continue }
-            player.prepareToPlay()
-            loaded[sound] = player
-        }
-        self.players = loaded
+        self.players = [:]
+        self.bundle = bundle
+        self.overrideDirectory = overrideDirectory
+    }
+
+    /// Returns the player for `sound`, loading and caching it on first use.
+    /// `nil` when the asset is missing or players were injected without it —
+    /// callers skip silently, exactly as before.
+    private func player(for sound: UISound) -> AudioPlayback? {
+        if let existing = players[sound] { return existing }
+        guard let bundle else { return nil }
+        guard let url = SoundEngine.resolvedURL(
+                for: sound,
+                overrideDirectory: overrideDirectory,
+                bundle: bundle,
+                fileExists: { FileManager.default.fileExists(atPath: $0.path) }
+              ),
+              let player = try? AVAudioPlayer(contentsOf: url) else { return nil }
+        player.prepareToPlay()
+        players[sound] = player
+        return player
     }
 
     /// Pure override-resolution rule, extracted so it's unit-testable without
@@ -108,6 +133,8 @@ final class SoundEngine: SoundPlaying {
     init(settings: SoundSettingsProviding, players: [UISound: AudioPlayback]) {
         self.settings = settings
         self.players = players
+        self.bundle = nil
+        self.overrideDirectory = nil
     }
 
     func play(_ sound: UISound) {
@@ -115,7 +142,7 @@ final class SoundEngine: SoundPlaying {
         guard settings.isEventEnabled(sound) else { return }
         // Per-event remap: the user may point this event at a different
         // effect asset (Settings → General → Sound Effects).
-        guard let player = players[settings.effect(for: sound)] else { return }
+        guard let player = player(for: settings.effect(for: sound)) else { return }
         player.volume = Float(settings.soundVolume)
         player.currentTime = 0
         player.play()
@@ -127,7 +154,7 @@ final class SoundEngine: SoundPlaying {
     /// disabled.
     func preview(_ effect: UISound) {
         guard settings.soundEnabled else { return }
-        guard let player = players[effect] else { return }
+        guard let player = player(for: effect) else { return }
         player.volume = Float(settings.soundVolume)
         player.currentTime = 0
         player.play()

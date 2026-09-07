@@ -48,6 +48,7 @@ final class AinkradAppDelegate: NSObject, NSApplicationDelegate {
             UNUserNotificationCenter.current().delegate = signalBannerResponder
         }
         menuBarController?.install()
+        LaunchSignpost.end()
     }
 
     func applicationWillTerminate(_ notification: Notification) {

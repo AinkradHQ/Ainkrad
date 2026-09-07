@@ -46,6 +46,11 @@ final class ScheduleRunner {
         let t = Timer(timeInterval: 60, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.tick(now: Date()) }
         }
+        // Tolerance: 5s is conservative for scheduled task precision. A schedule due
+        // at 9:00 AM runs no later than 9:00:05 AM — acceptable for user-facing
+        // automation. The coalescing logic already handles missed windows correctly
+        // (no double-fire), so a small tolerance buys timer coalescing with no downside.
+        t.tolerance = 5
         RunLoop.main.add(t, forMode: .common)
         timer = t
     }

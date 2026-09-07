@@ -13,4 +13,6 @@ enum Log {
     static let appStore = Logger(subsystem: subsystem, category: "appStore")
     static let mcp = Logger(subsystem: subsystem, category: "mcp")
     static let lsp = Logger(subsystem: subsystem, category: "lsp")
+    /// Crash sentinel and signpost plumbing — see `CrashSentinel`, AIN-45.
+    static let diagnostics = Logger(subsystem: subsystem, category: "diagnostics")
 }

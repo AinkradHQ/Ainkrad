@@ -1,4 +1,5 @@
 import SwiftUI
+import AinkradAppKit
 import AinkradHostRuntime
 
 /// Accumulates virtual sky-time as the integral of the user's speed setting,
@@ -39,6 +40,7 @@ final class SkyClock {
 /// still have the in-app switch.
 struct AmbientSkyView: View {
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradMotionBudget) private var motionBudget
 
     @State private var clock = SkyClock()
 
@@ -63,7 +65,7 @@ struct AmbientSkyView: View {
         // Read `currentTheme` (observed) so a theme switch repaints the sky.
         let profile = environment.themeManager.currentTheme.skyProfile
         let sky = environment.skySettingsStore
-        let animated = sky.motionEnabled && isLive
+        let animated = sky.motionEnabled && isLive && motionBudget.isAnimating
         // Register the per-effect switches as a body-level dependency: most
         // reads happen inside the Scry renderer closure, which @Observable
         // doesn't track — without this line, toggles wouldn't repaint the
@@ -82,7 +84,7 @@ struct AmbientSkyView: View {
             )
 
             if animated {
-                TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { context in
+                TimelineView(.animation(minimumInterval: motionBudget.minimumInterval ?? 1.0 / 30.0)) { context in
                     layers(
                         at: clock.tick(
                             real: context.date.timeIntervalSinceReferenceDate,

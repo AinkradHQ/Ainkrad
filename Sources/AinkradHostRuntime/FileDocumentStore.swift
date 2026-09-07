@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 /// A `PersistenceStore` that writes each document as a versioned JSON envelope
 /// to `<rootURL>/<documentID>.json`. Writes are atomic (temp file + rename).
@@ -97,6 +98,8 @@ public final class FileDocumentStore: PersistenceStore, @unchecked Sendable {
     }
 
     public func save<T: PersistableDocument>(_ document: T) {
+        let signpost = AinkradSignposts.begin(AinkradSignposts.persistence, "persistence-save")
+        defer { AinkradSignposts.end(AinkradSignposts.persistence, "persistence-save", signpost) }
         let envelope = SaveEnvelope(
             schemaVersion: T.currentSchemaVersion, updatedAt: Date(), payload: document)
         guard let data = try? PersistenceCoding.encoder.encode(envelope) else {

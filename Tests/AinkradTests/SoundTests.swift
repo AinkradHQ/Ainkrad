@@ -82,8 +82,10 @@ struct GlobalSettingsSoundTests {
     }
 }
 
+/// Shared across SoundTests + SoundLazyLoadingTests — not `private` so the
+/// lazy-loading suite in its own file can reuse it instead of duplicating.
 @MainActor
-private final class FakeSoundSettings: SoundSettingsProviding {
+final class FakeSoundSettings: SoundSettingsProviding {
     var soundEnabled: Bool
     var soundVolume: Double
     init(soundEnabled: Bool = true, soundVolume: Double = 0.7) {

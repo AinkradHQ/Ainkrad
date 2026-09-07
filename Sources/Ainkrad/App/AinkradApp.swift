@@ -1,5 +1,6 @@
 import SwiftUI
 import UserNotifications
+import os
 import AinkradAppKit
 import AinkradHostRuntime
 
@@ -17,6 +18,11 @@ struct AinkradHostApp: App {
     @State private var environment: AppEnvironment
 
     init() {
+        // FIRST statement in the process's own code: everything below this line,
+        // including Home resolution and its `exit(0)` recovery path, is then
+        // covered by the handler.
+        CrashSentinel.install()
+        LaunchSignpost.begin()
         FontRegistrar.registerBundledFonts()
         let home: Home
         // First run: no pointer, so nothing to resolve. The app does NOT ask for a
@@ -59,7 +65,9 @@ struct AinkradHostApp: App {
             // `NSApp.terminate` would do nothing.
             exit(0)
         }
+        let bootState = AinkradSignposts.begin(AinkradSignposts.launch, "app-environment-init")
         let environment = AppEnvironment.bootstrap(home: home)
+        AinkradSignposts.end(AinkradSignposts.launch, "app-environment-init", bootState)
         environment.isProvisionalHome = provisional
         // Re-gate on an incomplete marker: a real Home whose wizard was
         // force-quit part-way, or one completed at an older `setupVersion` that
@@ -217,6 +225,12 @@ struct AinkradHostApp: App {
                 // Motion accessibility toggle — see GlobalSettings.uiReduceMotion.
                 // Default false = motion on.
                 .environment(\.ainkradReduceMotion, environment.generalSettingsStore.uiReduceMotion)
+                // Motion budget source, MUST sit directly below the
+                // ainkradReduceMotion injection above — it reads that
+                // environment value, so applied above it the budget would
+                // silently see reduceMotion == false for the process
+                // lifetime (see ainkradMotionBudgetSource()'s doc comment).
+                .ainkradMotionBudgetSource()
                 // Settings -> Appearance -> Overlays, injected once here rather
                 // than threaded through every call site. Before this, only the
                 // surfaces that opted into `hudPanelChrome` obeyed the slider;
@@ -325,5 +339,21 @@ extension EnvironmentValues {
     var setupHomeInstaller: SetupHomeInstaller? {
         get { self[SetupHomeInstallerKey.self] }
         set { self[SetupHomeInstallerKey.self] = newValue }
+    }
+}
+
+/// Holds the open launch interval between `AinkradHostApp.init` and
+/// `applicationDidFinishLaunching`, which are two different types.
+enum LaunchSignpost {
+    nonisolated(unsafe) private static var state: OSSignpostIntervalState?
+
+    static func begin() {
+        state = AinkradSignposts.begin(AinkradSignposts.launch, "launch-to-first-frame")
+    }
+
+    static func end() {
+        guard let state else { return }
+        AinkradSignposts.end(AinkradSignposts.launch, "launch-to-first-frame", state)
+        Self.state = nil
     }
 }
