@@ -73,7 +73,11 @@ struct GeneratedImageView: View {
         panel.canCreateDirectories = true
         panel.begin { response in
             guard response == .OK, let url = panel.url else { return }
-            try? data.write(to: url)
+            do {
+                try data.write(to: url)
+            } catch {
+                Log.app.error("Failed to write \(data.count, privacy: .public) bytes to \(url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            }
         }
     }
 
@@ -140,7 +144,11 @@ struct GeneratedVideoView: View {
         panel.canCreateDirectories = true
         panel.begin { response in
             guard response == .OK, let dest = panel.url else { return }
-            try? FileManager.default.copyItem(at: url, to: dest)
+            do {
+                try FileManager.default.copyItem(at: url, to: dest)
+            } catch {
+                Log.app.error("Failed to copy \(url.lastPathComponent, privacy: .public) to \(dest.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            }
         }
     }
 }
@@ -238,7 +246,11 @@ struct GeneratedAudioView: View {
         panel.canCreateDirectories = true
         panel.begin { response in
             guard response == .OK, let dest = panel.url else { return }
-            try? FileManager.default.copyItem(at: url, to: dest)
+            do {
+                try FileManager.default.copyItem(at: url, to: dest)
+            } catch {
+                Log.app.error("Failed to copy \(url.lastPathComponent, privacy: .public) to \(dest.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            }
         }
     }
 }

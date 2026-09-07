@@ -43,6 +43,7 @@ struct ParityTests {
             hub: AgentContextRegistryHub(),
             actionHub: AgentActionRegistryHub(),
             launchHub: PluginLaunchHub(),
+            signalHub: SignalEmitterHub(),
             declaredPresentation: presentation,
             appAppearanceStore: AppAppearanceStore(persistence: InMemoryPersistenceStore())
         )
@@ -54,8 +55,14 @@ struct ParityTests {
     /// computations below are comparing like configurations, not exploiting
     /// a coincidence between `GenerationSupport.minSupported` and `current`.
     private func hostLoader() -> PluginLoader {
+        // `GenerationSupport.minSupported`, because that is what the SHIPPING
+        // host passes (`AppEnvironment.bootstrapCoreStores`). Pinning this
+        // stand-in to `apiVersion` gave the parity suite a host that rejects
+        // the previous generation, so it agreed with a Dev Host making the same
+        // mistake and the pair looked consistent while both were wrong. A
+        // parity test is only worth having if one side is the real thing.
         PluginLoader(signaturePolicy: DevModeSignaturePolicy(),
-                     minSupportedAPIVersion: AinkradAppKit.apiVersion) { appID, presentation in
+                     minSupportedAPIVersion: GenerationSupport.minSupported) { appID, presentation in
             self.stubHost(appID: appID, presentation: presentation)
         }
     }

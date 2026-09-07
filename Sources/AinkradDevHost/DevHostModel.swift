@@ -80,6 +80,9 @@ final class DevHostModel {
             hub: contextHub,
             actionHub: actionHub,
             launchHub: launchHub,
+            // The dev host has no feed; a plugin's emissions go nowhere, which
+            // is the correct behaviour for a harness that only checks loading.
+            signalHub: SignalEmitterHub(),
             declaredPresentation: presentation,
             appAppearanceStore: AppAppearanceStore(persistence: InMemoryPersistenceStore())
         )
@@ -105,7 +108,17 @@ final class DevHostModel {
             return
         }
 
-        let minSupportedAPIVersion = args.generation ?? AinkradAppKit.apiVersion
+        // Defaults to the REAL host's floor, not to `current`. Defaulting to
+        // `apiVersion` made the Dev Host stricter than the host it stands in
+        // for: the deprecation window is `[minSupported ... current]`, so a
+        // generation-8 bundle that the shipping host loads without complaint
+        // was rejected here as unsupported, and the rejection message quoted a
+        // range ("9-9") no host actually enforces. The whole value of this
+        // screen is that its verdict matches what the developer will get.
+        //
+        // `args.generation` still overrides, which is what it is for: raising
+        // the floor by hand to exercise a rejection locally.
+        let minSupportedAPIVersion = args.generation ?? GenerationSupport.minSupported
         if case .failure(let rejection) = PluginValidator.validate(
             metadata, infoDictionary: info, minSupportedAPIVersion: minSupportedAPIVersion) {
             state = .invalid(rejection.reason)

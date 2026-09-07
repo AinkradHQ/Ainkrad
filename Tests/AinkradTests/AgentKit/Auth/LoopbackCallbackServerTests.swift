@@ -1,6 +1,7 @@
 import Testing
 import Foundation
 import Network
+import Darwin
 @testable import Ainkrad
 
 @Suite struct LoopbackCallbackServerTests {
@@ -17,7 +18,7 @@ import Network
 
     @Test(.timeLimit(.minutes(1)))
     func roundTripsRealCallbackOverSocket() async throws {
-        let testPort: UInt16 = 58_423
+        let testPort = Self.freeLoopbackPort()
         let server = LoopbackCallbackServer(port: testPort)
 
         async let waited = server.waitForCallback(timeout: 20)
@@ -35,12 +36,55 @@ import Network
 
     @Test(.timeLimit(.minutes(1)))
     func timesOutWithoutAConnection() async throws {
-        let testPort: UInt16 = 58_424
+        let testPort = Self.freeLoopbackPort()
         let server = LoopbackCallbackServer(port: testPort)
 
         await #expect(throws: LoopbackError.timedOut) {
             _ = try await server.waitForCallback(timeout: 0.5)
         }
+    }
+
+    /// Asks the OS for a currently-free loopback port.
+    ///
+    /// These tests used fixed ports (58423/58424), which made
+    /// `timesOutWithoutAConnection` flaky under full-suite load — and flaky in a
+    /// misleading way. `LoopbackCallbackServer` sets `requiredLocalEndpoint`, so
+    /// a port still held by an earlier run puts the listener in `.failed` and
+    /// `waitForCallback` throws `bindFailed`; the test then fails asserting
+    /// `timedOut`, which reads as a timeout bug rather than a port collision.
+    ///
+    /// Binding with port 0 and reading back what the kernel assigned is not
+    /// race-free — the port is released before the server claims it — but it is
+    /// vastly better than a constant, because nothing else in the suite or on
+    /// the machine is likely to take that specific ephemeral port in the
+    /// microseconds between.
+    static func freeLoopbackPort() -> UInt16 {
+        let handle = socket(AF_INET, SOCK_STREAM, 0)
+        guard handle >= 0 else { return 58_423 }
+        defer { close(handle) }
+
+        var address = sockaddr_in()
+        address.sin_family = sa_family_t(AF_INET)
+        address.sin_port = 0                                  // let the kernel choose
+        address.sin_addr.s_addr = inet_addr("127.0.0.1")
+        address.sin_len = UInt8(MemoryLayout<sockaddr_in>.size)
+
+        let bound = withUnsafePointer(to: &address) { pointer in
+            pointer.withMemoryRebound(to: sockaddr.self, capacity: 1) {
+                Darwin.bind(handle, $0, socklen_t(MemoryLayout<sockaddr_in>.size))
+            }
+        }
+        guard bound == 0 else { return 58_423 }
+
+        var assigned = sockaddr_in()
+        var length = socklen_t(MemoryLayout<sockaddr_in>.size)
+        let read = withUnsafeMutablePointer(to: &assigned) { pointer in
+            pointer.withMemoryRebound(to: sockaddr.self, capacity: 1) {
+                getsockname(handle, $0, &length)
+            }
+        }
+        guard read == 0 else { return 58_423 }
+        return UInt16(bigEndian: assigned.sin_port)
     }
 
     /// Opens a raw TCP connection to 127.0.0.1:port and writes an HTTP

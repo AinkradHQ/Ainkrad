@@ -196,7 +196,24 @@ struct LauncherView: View {
 
     /// The app's neon tile, drawn live from the active theme around its SF Symbol.
     private func tile(for row: AppRow, tokens: DesignTokens) -> some View {
-        NeonAppTile(symbol: row.icon, tokens: tokens, size: 32)
+        NeonAppTile(symbol: row.icon, tokens: tokens, size: 32, badge: badge(for: row),
+                    badgeStatus: badgeStatus(for: row))
+    }
+
+    /// Unread events this app has published, for its tile badge. Nil until the
+    /// feed exists, so the launcher renders unchanged during bootstrap.
+    /// The colour the count should be. A fixed accent read GREEN on a tile
+    /// whose count is usually failures.
+    private func badgeStatus(for row: AppRow) -> AinkradStatus? {
+        guard let center = environment.signalCenter,
+              let worst = center.worstUnreadSeverity(for: .app(appID: row.id))
+        else { return nil }
+        return SignalPresentation.status(for: worst)
+    }
+
+    private func badge(for row: AppRow) -> String? {
+        guard let center = environment.signalCenter else { return nil }
+        return SignalBadgeModel.badgeText(center.unreadCount(for: .app(appID: row.id)))
     }
 
     // MARK: - Grid mode
@@ -218,7 +235,8 @@ struct LauncherView: View {
 
     private func gridCell(_ row: AppRow, isSelected: Bool, tokens: DesignTokens) -> some View {
         VStack(spacing: 8) {
-            NeonAppTile(symbol: row.icon, tokens: tokens, size: 46)
+            NeonAppTile(symbol: row.icon, tokens: tokens, size: 46, badge: badge(for: row),
+                        badgeStatus: badgeStatus(for: row))
             Text(row.displayName)
                 .font(AinkradFont.display(11, weight: isSelected ? .medium : .regular))
                 .foregroundStyle(tokens.foreground.opacity(isSelected ? 0.95 : 0.7))

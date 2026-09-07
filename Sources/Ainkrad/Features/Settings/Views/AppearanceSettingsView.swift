@@ -78,7 +78,7 @@ struct AppearanceSettingsView: View {
             AinkradSettingsPanel(
                 title: "Overlays",
                 hint: "Lower opacity — and blur — let the workspace show through the Launcher, "
-                    + "Settings, App Store, and other overlays."
+                    + "Settings, App Store, notifications, and every other overlay."
             ) {
                 overlayControls(tokens: tokens)
             }

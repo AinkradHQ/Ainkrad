@@ -122,7 +122,7 @@ struct PluginLifecycleTeardownTests {
             themeManager: ThemeManager(persistence: InMemoryPersistenceStore()),
             hub: AgentContextRegistryHub(),
             actionHub: AgentActionRegistryHub(),
-            launchHub: PluginLaunchHub(),
+            launchHub: PluginLaunchHub(), signalHub: SignalEmitterHub(),
             declaredPresentation: .pane,
             appAppearanceStore: AppAppearanceStore(persistence: InMemoryPersistenceStore()))
     }

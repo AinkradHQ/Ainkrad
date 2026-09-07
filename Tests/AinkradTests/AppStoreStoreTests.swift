@@ -288,3 +288,78 @@ struct AppStoreLightboxTests {
         #expect(store.lightbox == nil)
     }
 }
+
+/// The `onOperationFinished` hook the Signal feed listens on. Separate suite so
+/// the existing store tests keep their own shape.
+@MainActor
+struct AppStoreStoreOperationHookTests {
+    private func entry(_ id: String) -> CatalogEntry {
+        CatalogEntry(appID: id, displayName: id.capitalized, icon: "app", description: "desc",
+                     version: "1.0.0", apiVersion: 1,
+                     downloadURL: URL(string: "https://e/\(id).zip")!,
+                     sha256: "x", sourceRepo: "o/\(id)")
+    }
+
+    private func makeStore(_ service: FakeAppStoreService) -> AppStoreStore {
+        AppStoreStore(service: service, registry: BuiltInAppRegistry(persistence: InMemoryPersistenceStore()))
+    }
+
+    @Test("a successful install reports the operation with no error")
+    func installSuccess() async {
+        let service = FakeAppStoreService()
+        service.cachedCatalog = [entry("raven")]
+        let store = makeStore(service)
+        var seen: [(AppStoreStore.Operation, String, Bool)] = []
+        store.onOperationFinished = { op, id, error in seen.append((op, id, error != nil)) }
+
+        await store.install("raven")
+        #expect(seen.count == 1)
+        #expect(seen[0].0 == .install)
+        #expect(seen[0].1 == "raven")
+        #expect(seen[0].2 == false)
+    }
+
+    @Test("a failed install reports the error rather than staying silent")
+    func installFailure() async {
+        let service = FakeAppStoreService()
+        service.cachedCatalog = [entry("raven")]
+        service.installError = .notInstalled("raven")
+        let store = makeStore(service)
+        var seen: [(AppStoreStore.Operation, String, Bool)] = []
+        store.onOperationFinished = { op, id, error in seen.append((op, id, error != nil)) }
+
+        await store.install("raven")
+        #expect(seen.count == 1)
+        #expect(seen[0].2 == true, "a silent failed install is the case this hook exists for")
+    }
+
+    @Test("an update is reported as an update, not as an install")
+    func updateIsDistinct() async {
+        let service = FakeAppStoreService()
+        service.cachedCatalog = [entry("quest")]
+        let store = makeStore(service)
+        var operations: [AppStoreStore.Operation] = []
+        store.onOperationFinished = { op, _, _ in operations.append(op) }
+
+        await store.update("quest")
+        #expect(operations == [.update],
+                "install and update have separate kinds so one can be muted alone")
+    }
+
+    @Test("a reinstall prompt does not report an operation until it actually runs")
+    func pendingReinstallIsNotAnOutcome() async {
+        let service = FakeAppStoreService()
+        service.cachedCatalog = [entry("raven")]
+        service.retained = ["raven"]
+        let store = makeStore(service)
+        var count = 0
+        store.onOperationFinished = { _, _, _ in count += 1 }
+
+        await store.install("raven")      // becomes a pending-reinstall prompt
+        #expect(count == 0, "nothing happened yet, so the feed must stay quiet")
+        #expect(store.pendingReinstall == "raven")
+
+        await store.restoreAndInstall("raven")
+        #expect(count == 1)
+    }
+}

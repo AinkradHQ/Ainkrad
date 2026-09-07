@@ -30,7 +30,7 @@ struct PluginLoaderTests {
             themeManager: ThemeManager(persistence: InMemoryPersistenceStore()),
             hub: AgentContextRegistryHub(),
             actionHub: AgentActionRegistryHub(),
-            launchHub: PluginLaunchHub(),
+            launchHub: PluginLaunchHub(), signalHub: SignalEmitterHub(),
             declaredPresentation: presentation,
             appAppearanceStore: AppAppearanceStore(persistence: InMemoryPersistenceStore())
         )

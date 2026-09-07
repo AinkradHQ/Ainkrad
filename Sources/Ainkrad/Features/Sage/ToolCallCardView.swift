@@ -108,8 +108,8 @@ struct ToolCallCardView: View {
         // Running: breathe the whole row (icon / text / chevron) together.
         return Group {
             if isPending && !reduceMotion {
-                TimelineView(.animation) { context in
-                    let wave = 0.5 + 0.5 * sin(context.date.timeIntervalSinceReferenceDate / AinkradMotion.durationBase)
+                BudgetedTimelineView { date in
+                    let wave = 0.5 + 0.5 * sin(date.timeIntervalSinceReferenceDate / AinkradMotion.durationBase)
                     row.opacity(0.5 + 0.5 * wave)
                 }
             } else {

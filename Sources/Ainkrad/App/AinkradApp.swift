@@ -1,4 +1,6 @@
 import SwiftUI
+import UserNotifications
+import os
 import AinkradAppKit
 import AinkradHostRuntime
 
@@ -16,6 +18,11 @@ struct AinkradHostApp: App {
     @State private var environment: AppEnvironment
 
     init() {
+        // FIRST statement in the process's own code: everything below this line,
+        // including Home resolution and its `exit(0)` recovery path, is then
+        // covered by the handler.
+        CrashSentinel.install()
+        LaunchSignpost.begin()
         FontRegistrar.registerBundledFonts()
         let home: Home
         // First run: no pointer, so nothing to resolve. The app does NOT ask for a
@@ -58,7 +65,9 @@ struct AinkradHostApp: App {
             // `NSApp.terminate` would do nothing.
             exit(0)
         }
+        let bootState = AinkradSignposts.begin(AinkradSignposts.launch, "app-environment-init")
         let environment = AppEnvironment.bootstrap(home: home)
+        AinkradSignposts.end(AinkradSignposts.launch, "app-environment-init", bootState)
         environment.isProvisionalHome = provisional
         // Re-gate on an incomplete marker: a real Home whose wizard was
         // force-quit part-way, or one completed at an older `setupVersion` that
@@ -98,7 +107,7 @@ struct AinkradHostApp: App {
     /// Everything else that outlives a view body lives INSIDE `AppEnvironment`
     /// (`skillWatcher`, `customCommandWatcher`, `fileChangeWatcher`,
     /// `scheduleRunner`, `remoteChannelService`, `mcpServerRegistry`,
-    /// `lspServerRegistry`, `menuBarController`) and is rebuilt wholesale by
+    /// `lspServerRegistry`) and is rebuilt wholesale by
     /// `bootstrap`. `KeyboardShortcutMonitor.MonitoringView` re-reads its
     /// `environment` through `updateNSView` when the `@State` swaps.
     ///
@@ -129,46 +138,17 @@ struct AinkradHostApp: App {
     /// exists across a swap. It is nonetheless inert: its `Timer` block is
     /// `[weak self]` and a scratch home has no schedules, so `tick` is a no-op.
     private static func install(_ environment: AppEnvironment, into appDelegate: AinkradAppDelegate) {
-        // The status item is the one surface that escapes the setup gate: it
-        // lives on `NSStatusBar.system` and its popover is anchored outside the
-        // window, so neither the scrim nor the window-local key monitor reaches
-        // it. Suppress it for as long as the gate is up. This is wired here, the
-        // single place every environment (boot AND swap) passes through, so the
-        // two paths cannot diverge. `[weak environment]` because the environment
-        // owns the controller, which owns this closure.
-        //
-        // Lowering the gate does not re-run this, so the two places that lower
-        // it — `SetupDoneStepView.finish()` and the `alreadyConfigured` re-seat
-        // in `SetupOverlayView` — call `install()` themselves. It is guarded
-        // idempotent, so a redundant call is free.
-        environment.menuBarController?.isSuppressed = { [weak environment] in
-            environment?.isSetupPresented ?? false
-        }
-        // Retire the outgoing status item first: `NSStatusBar` would otherwise
-        // keep showing it, still bound to the previous environment's presence.
-        // No-op on the initial boot, where there is no previous controller.
-        //
-        // Re-installing the incoming one happens HERE rather than being left to
-        // the caller. On the initial boot `applicationDidFinishLaunching` does
-        // the install, but by swap time that has long since fired — a caller
-        // who merely assigned would be left with a torn-down status item and no
-        // menu bar, and nothing in the code would say so. Gated on there having
-        // BEEN an outgoing controller, so the boot path is untouched and the
-        // delegate still owns the first install. (`MenuBarController.install()`
-        // is guarded idempotent anyway: `guard statusItem == nil`.)
-        //
-        // During the wizard's swap this `install()` is a deliberate no-op: the
-        // gate is still up, so `isSuppressed` refuses. The menu bar therefore
-        // stays absent from launch until setup finishes, rather than reappearing
-        // at the swap — which is the point, since the swap happens at step 2 of 8.
-        if appDelegate.menuBarController !== environment.menuBarController,
-           let outgoing = appDelegate.menuBarController {
-            outgoing.teardown()
-            environment.menuBarController?.install()
-        }
         appDelegate.quitCoordinator = environment.quitCoordinator
-        appDelegate.menuBarController = environment.menuBarController
         appDelegate.assistantSessionStore = environment.assistantSessionStore
+        appDelegate.signalSocketServer = environment.signalSocketServer
+        appDelegate.signalBannerResponder = environment.signalBannerResponder
+        // Registered here as well as in `applicationDidFinishLaunching`,
+        // because by swap time that has long since fired and a swapped
+        // environment would otherwise leave the delegate pointing at the
+        // previous center. Assigning the same object twice is free.
+        if let responder = environment.signalBannerResponder {
+            UNUserNotificationCenter.current().delegate = responder
+        }
     }
 
     var body: some Scene {
@@ -207,6 +187,23 @@ struct AinkradHostApp: App {
                 // Motion accessibility toggle — see GlobalSettings.uiReduceMotion.
                 // Default false = motion on.
                 .environment(\.ainkradReduceMotion, environment.generalSettingsStore.uiReduceMotion)
+                // Motion budget source, MUST sit directly below the
+                // ainkradReduceMotion injection above — it reads that
+                // environment value, so applied above it the budget would
+                // silently see reduceMotion == false for the process
+                // lifetime (see ainkradMotionBudgetSource()'s doc comment).
+                .ainkradMotionBudgetSource()
+                // Settings -> Appearance -> Overlays, injected once here rather
+                // than threaded through every call site. Before this, only the
+                // surfaces that opted into `hudPanelChrome` obeyed the slider;
+                // anything built on the SDK's `AinkradPanel` -- the whole
+                // notification family, and every plugin panel -- was pinned at
+                // 0.94 and always blurred, so the controls looked broken to a
+                // user who had just moved them.
+                .environment(\.ainkradSurfaceOpacity,
+                             environment.generalSettingsStore.overlayBackgroundOpacity)
+                .environment(\.ainkradSurfaceBlur,
+                             environment.generalSettingsStore.overlayBlurEnabled)
                 .preferredColorScheme(.dark)
         }
         .windowStyle(.hiddenTitleBar)
@@ -255,6 +252,23 @@ struct AinkradHostApp: App {
                 }
                 .keyboardShortcut(.tab, modifiers: .option)
                 .disabled(isGated)
+
+                // ⌥⌘N and ⇧⌥⌘N, chosen after auditing every existing binding:
+                // ⌘K, ⌘⇧N, ⌥⇥ and ⌘F are all taken. ⌘⇧N in particular is New
+                // Workspace, which an earlier draft of the plan wanted for the
+                // feed.
+                Button("Notifications") {
+                    environment.isSignalDropdownPresented.toggle()
+                }
+                .keyboardShortcut("n", modifiers: [.command, .option])
+                .disabled(isGated)
+
+                Button("All Notifications…") {
+                    environment.isSignalDropdownPresented = false
+                    environment.isSignalFeedPresented = true
+                }
+                .keyboardShortcut("n", modifiers: [.command, .option, .shift])
+                .disabled(isGated)
             }
         }
     }
@@ -287,5 +301,21 @@ extension EnvironmentValues {
     var setupHomeInstaller: SetupHomeInstaller? {
         get { self[SetupHomeInstallerKey.self] }
         set { self[SetupHomeInstallerKey.self] = newValue }
+    }
+}
+
+/// Holds the open launch interval between `AinkradHostApp.init` and
+/// `applicationDidFinishLaunching`, which are two different types.
+enum LaunchSignpost {
+    nonisolated(unsafe) private static var state: OSSignpostIntervalState?
+
+    static func begin() {
+        state = AinkradSignposts.begin(AinkradSignposts.launch, "launch-to-first-frame")
+    }
+
+    static func end() {
+        guard let state else { return }
+        AinkradSignposts.end(AinkradSignposts.launch, "launch-to-first-frame", state)
+        Self.state = nil
     }
 }

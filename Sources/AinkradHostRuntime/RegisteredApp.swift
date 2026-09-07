@@ -45,6 +45,23 @@ public struct RegisteredApp: Identifiable {
     /// The host calls this at most once per app and caches the result, so the
     /// server can hold the app's live state.
     public var mcpServerFactory: (@MainActor () -> MCPAppServer)? = nil
+    /// Builds this app's Signal observer, or `nil` when the app does not
+    /// conform to `AinkradAppSignalObserving`. Opt-in at both ends, like
+    /// `teardown` and `mcpServerFactory`.
+    ///
+    /// Called only when the user has APPROVED the app's declared
+    /// subscriptions. An app that declared nothing, or was refused, never has
+    /// this invoked — so a refusal costs the app nothing it was already doing,
+    /// and a declaration alone cannot cause an observer to be constructed.
+    public var signalObserverFactory: (@MainActor () -> any PluginSignalObserver)? = nil
+    /// The raw `AinkradSignalSubscriptions` strings from the bundle's
+    /// Info.plist, unparsed.
+    ///
+    /// Carried as written so the host can report the ones it had to DROP.
+    /// Parsing here and keeping only the survivors would make a developer's
+    /// typo into a subscription that simply never fires, with nothing anywhere
+    /// to say why.
+    public var declaredSignalSubscriptions: [String] = []
 
     public init(id: String, displayName: String, icon: String, summary: String = "",
                 isEnabledByDefault: Bool, source: AppSource,
@@ -107,6 +124,9 @@ extension RegisteredApp {
         // for why (an added requirement would break already-compiled bundles).
         if let mcpCapable = app as? AinkradAppMCP.Type {
             registered.mcpServerFactory = { mcpCapable.makeMCPServer(host: host) }
+        }
+        if let observing = app as? AinkradAppSignalObserving.Type {
+            registered.signalObserverFactory = { observing.makeSignalObserver(host: host) }
         }
         return registered
     }

@@ -11,6 +11,12 @@ import AinkradHostRuntime
 /// "no persistent workspace indicator" — approved as part of the
 /// OS-direction visual redesign (clickable, brand-diamond styling).
 struct HUDBar: View {
+    /// The bar's own height, named so anything anchoring beneath it can read
+    /// the number instead of copying it. The bell dropdown used a hardcoded
+    /// 34 — this height plus a gap — which would have drifted the moment the
+    /// bar changed.
+    static let height: CGFloat = 30
+
     @Environment(AppEnvironment.self) private var environment
     @State private var statusMonitor = SystemStatusMonitor()
 
@@ -43,10 +49,19 @@ struct HUDBar: View {
             // this region of the fused title bar in windowed mode.
             Spacer()
 
+            if let center = environment.signalCenter {
+                SignalBellButton(unread: center.totalUnread,
+                                 isMuted: center.rules.suppression.isSuppressing(at: Date()),
+                                 arrivalToken: center.arrivalToken,
+                                 tokens: tokens) {
+                    environment.isSignalDropdownPresented.toggle()
+                }
+            }
+
             workspaceDots(tokens: tokens)
         }
         .padding(.horizontal, 14)
-        .frame(height: 30)
+        .frame(height: Self.height)
         .contentShape(Rectangle())
         // Reveal the traffic lights the moment the pointer is anywhere in the
         // status-bar strip, and keep them while it stays — hover tracking is

@@ -13,15 +13,18 @@ final class RunManager {
     private var document: AgentRunsDocument
     private let persistence: PersistenceStore
     private let runner: AgentRunRunner
-    private let notifier: RunNotifier?
+    /// The notification feed. A completed run's banner comes from here: the
+    /// separate run notifier that used to own it is gone, along with the routing
+    /// exemption that kept the two from posting twice.
+    private weak var signalCenter: SignalCenter?
     private let maxConcurrent: Int
     private var tasks: [UUID: Task<Void, Never>] = [:]
 
     init(persistence: PersistenceStore, runner: AgentRunRunner,
-         notifier: RunNotifier? = nil, maxConcurrent: Int = 2) {
+         signalCenter: SignalCenter? = nil, maxConcurrent: Int = 2) {
         self.persistence = persistence
         self.runner = runner
-        self.notifier = notifier
+        self.signalCenter = signalCenter
         self.maxConcurrent = max(1, maxConcurrent)
         self.document = persistence.load(AgentRunsDocument.self) ?? AgentRunsDocument()
 
@@ -126,7 +129,7 @@ final class RunManager {
         document.runs[i].finishedAt = Date()
         tasks[id] = nil
         save()
-        notifier?.notifyCompleted(document.runs[i])
+        signalCenter?.emit(.runCompleted(document.runs[i]), from: .host)
         pump()
     }
 
@@ -135,6 +138,10 @@ final class RunManager {
         document.runs[i].logs.append(line)
         save()
     }
+
+    /// Attached after construction: the center is built in `finalizeBootstrap`,
+    /// which runs after this manager exists. Held weakly, as at init.
+    func attachSignalCenter(_ center: SignalCenter) { signalCenter = center }
 
     private func index(_ id: UUID) -> Int? { document.runs.firstIndex { $0.id == id } }
     private func save() { persistence.save(document) }

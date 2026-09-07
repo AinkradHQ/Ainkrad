@@ -36,6 +36,17 @@ final class AppStoreStore {
     private let service: AppStoreServing
     private let registry: BuiltInAppRegistry
 
+    /// What kind of long operation finished, for `onOperationFinished`.
+    enum Operation: String, Sendable {
+        case install, update
+    }
+    /// Fired when an install/update finishes, successfully or not. A callback
+    /// rather than a `SignalCenter` dependency: this store's job is the app
+    /// store, and it should not know that a notification feed exists. Same
+    /// idiom as `BuiltInAppRegistry.onAppTornDown`.
+    @ObservationIgnored
+    var onOperationFinished: ((Operation, String, Error?) -> Void)?
+
     init(service: AppStoreServing, registry: BuiltInAppRegistry) {
         self.service = service
         self.registry = registry
@@ -148,27 +159,29 @@ final class AppStoreStore {
 
     func install(_ id: String) async {
         if service.hasRetainedData(appID: id) { pendingReinstall = id; return }
-        await run(id) { try await self.service.install(appID: id) }
+        await run(id, .install) { try await self.service.install(appID: id) }
     }
 
     /// Reinstall keeping the retained settings.
     func restoreAndInstall(_ id: String) async {
         service.restoreRetainedData(appID: id)
         pendingReinstall = nil
-        await run(id) { try await self.service.install(appID: id) }
+        await run(id, .install) { try await self.service.install(appID: id) }
     }
 
     /// Reinstall discarding the retained settings (fresh defaults).
     func resetAndInstall(_ id: String) async {
         service.discardRetainedData(appID: id)
         pendingReinstall = nil
-        await run(id) { try await self.service.install(appID: id) }
+        await run(id, .install) { try await self.service.install(appID: id) }
     }
 
     /// Dismiss the reinstall prompt without installing.
     func cancelReinstall() { pendingReinstall = nil }
 
-    func update(_ id: String) async  { await run(id) { try await self.service.update(appID: id) } }
+    func update(_ id: String) async  {
+        await run(id, .update) { try await self.service.update(appID: id) }
+    }
 
     func uninstall(_ id: String) {
         do { try service.uninstall(appID: id) }
@@ -221,12 +234,20 @@ final class AppStoreStore {
 
     /// Runs an async action for one app id, tracking busy + surfacing errors,
     /// always clearing busy and recomputing rows afterwards.
-    private func run(_ id: String, _ op: @escaping () async throws -> Void) async {
+    private func run(_ id: String, _ operation: Operation,
+                     _ op: @escaping () async throws -> Void) async {
         busy.insert(id)
+        var failure: Error?
         do { try await op() }
-        catch let e as AppStoreError { error = e }
-        catch { self.error = .download(String(describing: error)) }
+        catch let e as AppStoreError { error = e; failure = e }
+        catch {
+            self.error = .download(String(describing: error))
+            failure = error
+        }
         busy.remove(id)
         reloadRows()
+        // After `reloadRows()`, so an observer that reads this store sees
+        // settled state rather than mid-operation state.
+        onOperationFinished?(operation, id, failure)
     }
 }

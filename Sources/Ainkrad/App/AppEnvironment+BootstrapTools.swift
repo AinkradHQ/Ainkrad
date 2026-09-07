@@ -43,6 +43,7 @@ extension AppEnvironment {
         agentTools: [any AgentTool],
         mcpServerRegistry: MCPServerRegistry,
         canvasStore: ScryStore,
+        signalReadAccess: SignalReadAccess,
         toolStreamStore: ToolStreamStore,
         terminalController: TerminalProcessController
     ) {
@@ -106,6 +107,13 @@ extension AppEnvironment {
             TodoWriteTool(),
             PresentPlanTool(),
         ]
+        // Registered unconditionally, unlike the memory tools above, because
+        // the feed's existence is not known yet — the center is created in
+        // `finalizeBootstrap`, after this array is consumed. The access handle
+        // resolves at call time and reports unavailability as a result rather
+        // than an error.
+        let signalReadAccess = SignalReadAccess()
+        agentTools.append(SignalSearchTool(access: signalReadAccess))
         // M8 web tools (read-class, gated like reads). web_fetch uses a
         // redirect-validating client so a 302 to a private host is never
         // dispatched; web_search hits a fixed Brave endpoint (key in SecretStore).
@@ -249,7 +257,7 @@ extension AppEnvironment {
         agentTools.append(GlobTool(rootProvider: searchRootProvider))
 
         return (sandboxProfileStore, cloudCredentialsStore, executionRouter, agentTools, mcpServerRegistry, canvasStore,
-                toolStreamStore, terminalController)
+                signalReadAccess, toolStreamStore, terminalController)
     }
 
     /// Fourth block of `bootstrap()`: Model Router / Usage / Failover

@@ -28,11 +28,13 @@ public final class HostServicesImpl: HostServices, PluginInstanceIdentity {
     public let actions: AgentActionProvider
     public let apps: PluginAppLauncher
     public let presentation: PluginPresentationControl
+    public let signals: PluginSignalEmitter
     private let themeManager: ThemeManager
 
     public init(appID: String, dataRootURL: URL, secretStore: SecretStore, themeManager: ThemeManager,
          hub: AgentContextRegistryHub, actionHub: AgentActionRegistryHub,
          launchHub: PluginLaunchHub,
+         signalHub: SignalEmitterHub,
          declaredPresentation: PluginPresentation,
          appAppearanceStore: AppAppearanceStore) {
         self.documents = ScopedPluginDocumentStore(directory: dataRootURL.appendingPathComponent(appID, isDirectory: true))
@@ -49,6 +51,7 @@ public final class HostServicesImpl: HostServices, PluginInstanceIdentity {
         self.context = HostContextRegistry(appID: appID, hub: hub)
         self.actions = HostActionRegistry(appID: appID, hub: actionHub)
         self.apps = HostAppLauncher(appID: appID, hub: launchHub)
+        self.signals = HostSignalEmitter(appID: appID, hub: signalHub)
         self.presentation = HostPresentationControl(
             appID: appID, declaredDefault: declaredPresentation, store: appAppearanceStore)
         armThemeSync()
@@ -105,7 +108,11 @@ public final class ScopedPluginDocumentStore: PluginDocumentStore {
     public func setData(_ data: Data?, forKey key: String) {
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         guard let data else { try? FileManager.default.removeItem(at: fileURL(key)); return }
-        try? data.write(to: fileURL(key), options: .atomic)
+        do {
+            try data.write(to: fileURL(key), options: .atomic)
+        } catch {
+            Log.persistence.error("Failed to write \(data.count, privacy: .public) bytes to \(self.fileURL(key).lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+        }
     }
 }
 

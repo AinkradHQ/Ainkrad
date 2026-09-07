@@ -124,6 +124,7 @@ final class AppEnvironmentTests {
             sounds: sounds,
             agentContextHub: agentContextHub,
             agentActionHub: agentActionHub,
+            signalHub: SignalEmitterHub(),
             sandboxProfileStore: sandboxProfileStore,
             executionRouter: executionRouter,
             cloudCredentialsStore: cloudCredentialsStore,

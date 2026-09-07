@@ -85,6 +85,8 @@ final class AppEnvironment {
     let sounds: SoundPlaying
     let agentContextHub: AgentContextRegistryHub
     let agentActionHub: AgentActionRegistryHub
+    /// Routes a tapped feed action back to the app that published it.
+    let signalEmitterHub: SignalEmitterHub
     /// M7 Slice 6 (Security & Sandboxing): the persisted store of built-in +
     /// user-defined `SandboxProfile`s the router resolves against.
     let sandboxProfileStore: SandboxProfileStore
@@ -234,11 +236,42 @@ final class AppEnvironment {
     /// exists. Retained here so the settings surface and menu-bar presence read
     /// the SAME live `status`.
     let remoteChannelService: RemoteChannelService
-    /// Owns the `NSStatusItem`/popover for the app's lifetime. `var`/optional
-    /// (not an `init` param) because its content closure captures `self` —
-    /// it's built in `bootstrap()` right after `environment` itself exists,
-    /// then installed/torn down by `AinkradAppDelegate`.
-    var menuBarController: MenuBarController?
+    /// The Signal feed. Built in `finalizeBootstrap` (it needs the sound engine
+    /// and the window state), so `var`/optional.
+    var signalCenter: SignalCenter?
+    /// Whether notifications make a sound, and how loud. Held here because
+    /// Settings binds to it, and built in `finalizeBootstrap` alongside the
+    /// second sound engine it drives.
+    var notificationSounds: NotificationSoundStore?
+    /// Routes a clicked macOS banner back to its event. Held here so
+    /// `AinkradApp.install(_:into:)` can hand it to the app delegate on both
+    /// boot and environment swap, exactly as it does the socket server.
+    var signalBannerResponder: SignalBannerResponder?
+    /// Where the user last left the feed. Built in the bootstrap beside the
+    /// preferences store it sits next to on disk.
+    var signalViewStateStore: SignalViewStateStore?
+    /// Token → source for external emitters. Held here because Settings needs
+    /// it to mint and revoke, not only bootstrap.
+    var signalTokens: SignalTokenRegistry?
+    /// What each open pane reports it is showing. Not optional: an empty
+    /// registry is meaningful (no app reports locators) and a nil one would
+    /// make every call site check for something that is always there.
+    let paneLocators = PaneLocatorRegistry()
+    /// Declared and approved cross-app subscriptions (generation 10).
+    var signalSubscriptions: SignalSubscriptionRegistry?
+    /// App ids whose declared subscriptions the user has not answered yet.
+    /// Drives the consent prompt; empty is the normal state.
+    var pendingSubscriptionApprovals: [String] = []
+    /// External ingress. Optional because a socket that cannot bind must
+    /// degrade to "no external ingress", never to a failed launch.
+    var signalSocketServer: SignalSocketServer?
+    /// Shared toast stack, presented over the window by `RootView`.
+    let signalToasts = SignalToastModel()
+    /// True while the bell's dropdown is open. Separate from the overlay flag:
+    /// the dropdown is a glance, the overlay is the feed.
+    var isSignalDropdownPresented = false
+    /// True while the in-window feed island is open.
+    var isSignalFeedPresented = false
     /// Skill `/name` command names currently registered into `commandRegistry`
     /// — tracked so `resyncSkillCommands()` (Task 13) knows exactly which
     /// entries to drop before re-registering the current binding set, without
@@ -314,6 +347,7 @@ final class AppEnvironment {
         sounds: SoundPlaying,
         agentContextHub: AgentContextRegistryHub,
         agentActionHub: AgentActionRegistryHub,
+        signalHub: SignalEmitterHub,
         sandboxProfileStore: SandboxProfileStore,
         executionRouter: ExecutionRouter,
         cloudCredentialsStore: CloudCredentialsStore,
@@ -394,6 +428,7 @@ final class AppEnvironment {
         self.sounds = sounds
         self.agentContextHub = agentContextHub
         self.agentActionHub = agentActionHub
+        self.signalEmitterHub = signalHub
         self.sandboxProfileStore = sandboxProfileStore
         self.executionRouter = executionRouter
         self.cloudCredentialsStore = cloudCredentialsStore
@@ -489,14 +524,18 @@ final class AppEnvironment {
     /// its own. Tests pass a throwaway `Home` (`TestHome.make()`).
     /// `defaults` is the legacy import source (`.standard`).
     static func bootstrap(home: Home, defaults: UserDefaults = .standard) -> AppEnvironment {
+        let sp0 = AinkradSignposts.begin(AinkradSignposts.launch, "boot-core-stores")
         let (
             persistence, secrets, registry, themeManager, workspaceManager, pluginDirs,
             pluginDataRoot, retainedDataRoot, agentContextHub, agentActionHub, pluginLaunchHub,
+            signalHub,
             appAppearanceStore, webSearchSettingsStore, mediaSettingsStore, sessionShareStore, loader, mcpConfigStore, skillsRoot, appStore, appStoreStore, appIconStore,
             generalSettingsStore, skySettingsStore, sounds, connectionStore, discoveredModelsStore,
             assistantDocuments
         ) = bootstrapCoreStores(home: home, defaults: defaults)
+        AinkradSignposts.end(AinkradSignposts.launch, "boot-core-stores", sp0)
 
+        let sp1 = AinkradSignposts.begin(AinkradSignposts.launch, "boot-agentkit-core")
         let (
             streamingHTTP, agentConfigStore, agentContextSettingsStore, agentContextService,
             agentPermissionStore, memoryService, userProfileStore, lspServerRegistry, editJournal,
@@ -504,10 +543,12 @@ final class AppEnvironment {
         ) = bootstrapAgentKitCore(
             persistence: persistence, workspaceManager: workspaceManager, agentContextHub: agentContextHub,
             skillsRoot: skillsRoot, home: home)
+        AinkradSignposts.end(AinkradSignposts.launch, "boot-agentkit-core", sp1)
 
+        let sp2 = AinkradSignposts.begin(AinkradSignposts.launch, "boot-execution-and-tools")
         let (
             sandboxProfileStore, cloudCredentialsStore, executionRouter, agentTools, mcpServerRegistry, canvasStore,
-            toolStreamStore, terminalController
+            signalReadAccess, toolStreamStore, terminalController
         ) = bootstrapExecutionAndTools(
             home: home,
             persistence: persistence, secrets: secrets, lspServerRegistry: lspServerRegistry,
@@ -515,7 +556,9 @@ final class AppEnvironment {
             agentContextHub: agentContextHub, memoryService: memoryService, mcpConfigStore: mcpConfigStore,
             appRegistry: registry, pluginLaunchHub: pluginLaunchHub, skillRegistry: skillRegistry,
             permissionMode: { [weak agentPermissionStore] in agentPermissionStore?.mode ?? .ask })
+        AinkradSignposts.end(AinkradSignposts.launch, "boot-execution-and-tools", sp2)
 
+        let sp3 = AinkradSignposts.begin(AinkradSignposts.launch, "boot-model-routing")
         let (
             modelCatalogService, agentStore, modelCatalog, modelPriceTable, routerOutcomeStore, modelRouter,
             usageTracker, runtimeOptionsStore, localModelProbe, localModelAvailability, authProfileStore,
@@ -524,7 +567,9 @@ final class AppEnvironment {
             persistence: persistence, assistantDocuments: assistantDocuments,
             secrets: secrets, connectionStore: connectionStore,
             discoveredModelsStore: discoveredModelsStore)
+        AinkradSignposts.end(AinkradSignposts.launch, "boot-model-routing", sp3)
 
+        let sp4 = AinkradSignposts.begin(AinkradSignposts.launch, "boot-session-and-runs")
         let (
             subagentCoordinator, runManager, assistantSessionStore, scheduleStore, scheduleRunner, triggerDispatcher,
             fileChangeWatcher, assistantWorkingDirectory, workspaceFileIndex, agentSession, voiceService, menuBarPresence,
@@ -542,6 +587,7 @@ final class AppEnvironment {
             agentActionHub: agentActionHub, agentTools: agentTools, mcpServerRegistry: mcpServerRegistry,
             skillRegistry: skillRegistry, skillCommandStore: skillCommandStore,
             toolStreamStore: toolStreamStore, terminalController: terminalController)
+        AinkradSignposts.end(AinkradSignposts.launch, "boot-session-and-runs", sp4)
 
         let environment = AppEnvironment(
             persistence: persistence,
@@ -565,7 +611,7 @@ final class AppEnvironment {
             skySettingsStore: skySettingsStore,
             sounds: sounds,
             agentContextHub: agentContextHub,
-            agentActionHub: agentActionHub,
+            agentActionHub: agentActionHub, signalHub: signalHub,
             sandboxProfileStore: sandboxProfileStore,
             executionRouter: executionRouter,
             cloudCredentialsStore: cloudCredentialsStore,
@@ -620,9 +666,10 @@ final class AppEnvironment {
             localModelAvailability: localModelAvailability, mcpServerRegistry: mcpServerRegistry,
             lspServerRegistry: lspServerRegistry, persistence: persistence, secrets: secrets,
             themeManager: themeManager, agentContextHub: agentContextHub, agentActionHub: agentActionHub,
+            signalHub: signalHub, signalReadAccess: signalReadAccess,
             pluginLaunchHub: pluginLaunchHub, appAppearanceStore: appAppearanceStore,
             pluginDataRoot: pluginDataRoot, pluginDirs: pluginDirs, loader: loader, registry: registry,
-            workspaceManager: workspaceManager, defaults: defaults
+            workspaceManager: workspaceManager, home: home, defaults: defaults
         )
 
         return environment

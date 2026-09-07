@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import AinkradSignal
 @testable import Ainkrad
 import AinkradHostRuntime
 
@@ -38,10 +39,20 @@ struct RunManagerTests {
         func releaseAll() { conts.forEach { $0.resume() }; conts.removeAll() }
     }
 
-    @Test func runCompletesPersistsAndNotifies() async {
+    /// The notification half of this test used `RecordingRunNotifier`, which is
+    /// gone with the notifier it doubled. The behaviour it protected — a
+    /// completed run is *observable*, not silent — is preserved by asserting the
+    /// feed recorded it.
+    @Test func runCompletesPersistsAndNotifies() async throws {
         let p = InMemoryPersistenceStore()
-        let notifier = RecordingRunNotifier()
-        let mgr = RunManager(persistence: p, runner: InstantRunner(), notifier: notifier)
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("signal-\(UUID().uuidString).sqlite")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let center = SignalCenter(store: try SignalStore(url: url),
+                                  deliverer: nil,
+                                  contextProvider: RunManagerTestsContext())
+
+        let mgr = RunManager(persistence: p, runner: InstantRunner(), signalCenter: center)
         let run = mgr.enqueue(prompt: "task-a")
         // Let the run task settle.
         await Task.yield(); await Task.yield()
@@ -50,7 +61,7 @@ struct RunManagerTests {
         let stored = reloaded.runs.first { $0.id == run.id }
         #expect(stored?.status == .done)
         #expect(stored?.result == "result:task-a")
-        #expect(notifier.notified.contains { $0.id == run.id })
+        #expect(center.recent.contains { $0.kind == "run.finished" })
     }
 
     @Test func relaunchMarksRunningAsInterrupted() {
@@ -117,4 +128,10 @@ struct RunManagerTests {
         #expect(runner.receivedPostures.contains(posture))
         #expect(runner.receivedPostures.contains(nil))
     }
+}
+
+/// Present-and-looking context, so a completed run's routing is deterministic.
+private struct RunManagerTestsContext: SignalContextProviding {
+    var deliveryContext = DeliveryContext(hostIsFrontmost: true, visibleAppIDs: [],
+                                          systemDoNotDisturb: false, hostFocusMode: false)
 }

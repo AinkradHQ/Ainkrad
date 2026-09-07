@@ -14,7 +14,12 @@ settings:
     # system to attach a saved grant to, so it re-prompts on every access.
     CODE_SIGN_STYLE: Automatic
     CODE_SIGN_IDENTITY: "Apple Development"
-    DEVELOPMENT_TEAM: PSY67XNHG4
+    # RT9AA68C38 -- read from the Developer ID Application certificate that
+    # actually signs releases ("Developer ID Application: ULINK sp. z o.o.
+    # (RT9AA68C38)"). This was PSY67XNHG4, which no longer has a signing
+    # identity on this machine; a release signed under a team the cert does not
+    # belong to cannot be notarized, and notarytool needs --team-id to match.
+    DEVELOPMENT_TEAM: RT9AA68C38
     CODE_SIGNING_REQUIRED: YES
     CODE_SIGNING_ALLOWED: YES
     # NOTE: Release deliberately does NOT override the identity above.
@@ -35,11 +40,11 @@ settings:
     # entitlement, failing the build if it does not.
 
 packages:
-  # AinkradAppKit — the Built-in App SDK (github.com/AhmedMElhalaby/AinkradAppKit).
+  # AinkradAppKit — the Built-in App SDK (github.com/AinkradHQ/AinkradAppKit).
   # DYNAMIC library: the host embeds one copy; plugin bundles resolve it at
   # runtime (a static copy per binary would break dynamic protocol casts).
   AinkradAppKit:
-    url: https://github.com/AhmedMElhalaby/AinkradAppKit
+    url: https://github.com/AinkradHQ/AinkradAppKit
     # Apps-over-MCP: AinkradAppMCP + MCPAppServer (PR #18) and the per-tool
     # `requiresLiveApp` flag (PR #20), plus resource `purpose`/`resultProvider`
     # (feat/resource-description-and-errors). Always a merge commit on
@@ -65,7 +70,107 @@ packages:
     # AinkradPanel gaining a `blending` parameter so a panel hosted in its own
     # NSPanel can sample .behindWindow instead of rendering as a flat slab
     # (PR #27). Default unchanged, so no existing surface moves.
-    revision: 60036ad9abe5d0ca4e84109bcc78a51f7b8578f0
+    # AinkradSignal target: the event envelope, kind validation, the pure
+    # routing function and the SQLite+FTS5 event store (Signal M1 Tasks 1-6),
+    # plus the umbrella re-export that makes the module reachable by
+    # consumers at all. A new TARGET, not a renamed symbol - the API
+    # generation stays 8 and every existing plugin pin remains loadable.
+    # Generation 9: HostServices.signals + PluginSignalEmitter, and the Signal
+    # feed components moved into the UI kit. minSupportedAPIVersion is 8, so
+    # every installed generation-8 bundle keeps loading.
+    # M3: SignalWire — the external wire payload, which carries a token and
+    # deliberately no source, plus the SignalAction decoder fix that stops a
+    # partial action object from sinking a whole notification as "malformed"
+    # (merge of feat/signal-wire-format). Still generation 9: additive only,
+    # abi-check clean on both AinkradAppKitContract and AinkradSignal.
+    # M3: SignalSocketPath + SignalSocketClient — the socket path convention
+    # and the connect-write-close, shared with `ainkrad notify` so the CLI
+    # cannot drift from what the host's listener accepts (merge of
+    # feat/signal-socket-client).
+    # Generation 10: SignalSubscription + PluginSignalObserver (declared
+    # cross-app read, user-approved at install), PluginInfoKey
+    # .signalSubscriptions, and SignalDeepLink.locator + the
+    # ainkradPaneLocator environment sink for pane-level deep-link focus.
+    #
+    # minSupportedAPIVersion is apiVersion - 2 here, NOT - 1: every plugin
+    # bundle installed in the field is still generation 8, so a floor of 9
+    # would have launched this host with none of the user's apps.
+    # Plus SignalSubscription.kindDescription / builtInSourceName, so the
+    # consent prompt can say "Raven" rather than "raven".
+    # Plus AinkradAppSignalObserving — the static factory the host casts to,
+    # without which PluginSignalObserver was unreachable.
+    # M4 Phase 1: SignalStore.event(id:) — the single-row lookup a clicked
+    # macOS banner needs, since its userInfo carries an id and nothing else —
+    # and RoutingRules.urgentBypass, with Focus now suppressing toast and sound
+    # rather than only the banner. Both additive; abi-check clean. Generation
+    # unchanged at 10: nothing here is plugin-facing.
+    # M4 Phase 2: SuppressionWindow (quiet hours + snooze), RoutingRules
+    # .interruptFloor / .soundOverride / .suppression, route(_:rules:context:now:)
+    # as an OVERLOAD keeping the old symbol, and SignalStore.kindActivity for the
+    # per-kind control rows. All additive; abi-check clean; generation still 10.
+    # M4: SignalFeedRow/SignalFeedList gain a `menuItems` closure (separate
+    # initialisers, the old ones untouched), and SignalStore moves to schema
+    # v2 — `kind` is indexed in the FTS table, which requires DROPping and
+    # rebuilding it. Migration runs on open and is idempotent; verified against
+    # a copy of a real 62-event database.
+    # Phase 3: SignalStore.markUnread / .delete, the SignalSourceRail
+    # component, and SignalPresentation.sourceGroups for group-by-app.
+    # Phase 3 close-out: SignalRowState.isPinned (writable since M1, readable
+    # only now) and SignalFeedRow's pin glyph plus full-body expansion.
+    # Phase 4: toast actions, hover-to-pause with a remaining-time hairline,
+    # a dismissal that drifts toward the bell, and reduce-motion throughout.
+    # Phase 5: accessibility labels on the feed row, rail and toast — severity
+    # spoken first, time spoken in words, actions exposed as a11y actions.
+    # Phase 5: arrow-key traversal of the feed, owned by the list, plus the
+    # focus ring and Color.contrastRatio.
+    # Phase 6: SignalHealth — read rate, median acknowledge, noisiest kinds,
+    # all derived from columns the store already had. Nothing leaves the machine.
+    # Phase 7: accessibility on the SETTINGS controls, which had none at all —
+    # captioned rows name their group, segments report selection, and the
+    # toggle, stepper and slider carry values. AinkradSlider was a bare
+    # DragGesture with no accessibility, so it was inoperable without a
+    # pointer: the notification volume could not be changed at all.
+    # Additive modifiers only; abi-check clean on Contract and Signal, and
+    # every plugin pin is an ancestor of this revision.
+    # Phase 8: ainkradSurfaceOpacity / ainkradSurfaceBlur -- the host injects
+    # Settings -> Appearance -> Overlays once at its root, and AinkradPanel
+    # reads it, so a HUD surface anywhere (host or plugin) follows those
+    # controls instead of a hardcoded 0.94. Both are new @Entry environment
+    # values, NOT defaulted init parameters, so no existing symbol is
+    # re-mangled -- the d5d994b failure. Plus hover and selection motion on
+    # SignalSourceRail.
+    #
+    # Phase 9: AinkradMenuButton -- a left-click pull-down drawn in the app's
+    # own language. SwiftUI's `Menu` renders a stock AppKit menu, which sat
+    # inside the HUD looking like another application; the kit already drew a
+    # correct menu but only right-click could reach it. Also carries the two
+    # surface values across the floating panel's window boundary, without
+    # which a menu ignored Appearance -> Overlays while every panel around it
+    # obeyed. Purely additive: one new public type, nothing removed.
+    #
+    # 0.17.2: urgent notifications are audible. `.urgent` promised "never
+    # silent" and inserted only a toast/banner and a badge -- sound comes from
+    # the severity table, where only `.failure` earns one, so an agent BLOCKED
+    # on the user (`.info` severity, nothing has gone wrong) raised a toast and
+    # made no sound. Behaviour-only: the AinkradSignal public surface is
+    # byte-identical to e264efb.
+    #
+    # Pin safety, checked by hand because `make abi-check` covers only
+    # AinkradAppKitContract and AinkradSignal, NOT AinkradAppKitUI where this
+    # change lives: the public-declaration diff over AinkradAppKitUI between
+    # 189d30f and 1601f08 is EMPTY -- nothing removed, nothing re-mangled --
+    # so a plugin pinned behind this still loads.
+    #
+    # Merge of feat/ainkrad-log into development: the shared AinkradLog
+    # subsystem, plus the motion budget itself -- AinkradMotionBudget (the
+    # decision type, priority invisible > inactive > lowPower/reduceMotion),
+    # ainkradMotionBudgetSource() (the @Environment observer the host attaches
+    # once at its root), and BudgetedTimelineView (replaces
+    # TimelineView(.animation) at decorative call sites, capping their redraw
+    # rate to the budget instead of display refresh rate). Additive only --
+    # abi-check clean on AinkradAppKitContract and AinkradSignal, generation
+    # unchanged.
+    revision: 91ed630a24dc187f8988c104d16a640d3ee7562c
 
 targets:
   AinkradHostRuntime:
@@ -104,11 +209,12 @@ targets:
       # diagram renderer in CanvasDiagramView (Task 10). Everything else
       # stays native SwiftUI per the Cardinal HUD design language.
       - sdk: WebKit.framework
+      - sdk: MetricKit.framework
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ainkrad.app
-        MARKETING_VERSION: "0.17.0"
-        CURRENT_PROJECT_VERSION: "19"
+        MARKETING_VERSION: "0.18.0"
+        CURRENT_PROJECT_VERSION: "18"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_NSHumanReadableCopyright: ""

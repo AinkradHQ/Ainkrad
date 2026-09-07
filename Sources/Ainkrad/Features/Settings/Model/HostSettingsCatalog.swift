@@ -20,8 +20,42 @@ enum HostSettingsCatalog {
             appearance(environment),
             soundAndVoice(environment),
             keyboard(environment)
-        ] + IntelligenceSettingsCatalog.pages(environment: environment)
+        ] + notificationsPages(environment) + IntelligenceSettingsCatalog.pages(environment: environment)
           + AppSettingsCatalog.pages(environment: environment))
+    }
+
+    // MARK: - Notifications
+
+    /// Wraps the hand-rolled `SignalSettingsPane` in a catalog page, so it is
+    /// searchable and deep-linkable like every other setting.
+    ///
+    /// **This pane existed and was unreachable.** It was built in M1, rendered
+    /// in a snapshot for review, and never placed in the navigation — so every
+    /// delivery rule, the retention limits and "Clear feed" were live code with
+    /// no way in. Found while adding the cross-app access section, whose
+    /// Revoke control would have been just as unreachable.
+    ///
+    /// Returns an empty array when the center does not exist (the feed degraded
+    /// to nothing at launch): a settings page that cannot show the truth about
+    /// the subsystem it configures is worse than an absent one.
+    private static func notificationsPages(_ environment: AppEnvironment) -> [SettingsPage] {
+        guard let center = environment.signalCenter else { return [] }
+        let page = SettingsPath(["workspace", "notifications"])
+        return [SettingsPage(
+            path: page, title: "Notifications", icon: "bell",
+            group: .workspace, order: 5,
+            groups: [
+                SettingsGroup(path: page.appending("feed"), title: "Notifications", fields: [
+                    SettingsField(
+                        path: page.appending("feed").appending("pane"),
+                        label: "Notifications",
+                        help: "What each source may interrupt you with, how long the feed "
+                            + "keeps events, and which apps may read other apps' notifications.",
+                        keywords: ["notification", "signal", "feed", "toast", "banner",
+                                   "badge", "mute", "retention", "subscription", "permission"],
+                        kind: .custom(AnyView(NotificationsSettingsView(center: center))))
+                ])
+            ])]
     }
 
     // MARK: - General

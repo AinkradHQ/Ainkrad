@@ -16,9 +16,10 @@ struct RunsPanelView: View {
     let tokens: DesignTokens
 
     var body: some View {
-        ScrollView {
+        let runningCount = manager.active.filter { $0.status == .running }.count
+        return ScrollView {
             VStack(alignment: .leading, spacing: AinkradSpacing.lg) {
-                header
+                header(runningCount: runningCount)
                 sectionPanel(title: "Active", runs: manager.active, showControls: true)
                 sectionPanel(title: "History", runs: manager.history, showControls: false)
             }
@@ -28,9 +29,8 @@ struct RunsPanelView: View {
 
     // MARK: - Header
 
-    private var header: some View {
-        let runningCount = manager.active.filter { $0.status == .running }.count
-        return HStack(spacing: AinkradSpacing.md) {
+    private func header(runningCount: Int) -> some View {
+        HStack(spacing: AinkradSpacing.md) {
             AinkradIconGlyph(systemName: "list.bullet.rectangle.portrait", filled: true)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Runs")
@@ -61,7 +61,7 @@ struct RunsPanelView: View {
                     .font(AinkradFont.display(11))
                     .foregroundStyle(tokens.foreground.opacity(0.45))
             } else {
-                VStack(alignment: .leading, spacing: 2) {
+                LazyVStack(alignment: .leading, spacing: 2) {
                     ForEach(runs) { run in
                         row(for: run, showControls: showControls)
                     }

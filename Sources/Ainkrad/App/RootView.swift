@@ -1,4 +1,5 @@
 import SwiftUI
+import AinkradAppKit
 
 /// The single window's content: every workspace's tile layout stays
 /// mounted (hidden when inactive) so running sessions survive switching;
@@ -15,6 +16,23 @@ struct RootView: View {
         presented = presented || environment.isComponentGalleryPresented
         #endif
         return presented
+    }
+
+    /// The notification overlays animate on their OWN flags, deliberately not
+    /// by joining `isOverlayPresented`.
+    ///
+    /// That value also drives `OverlayBackdrop(isBlurred:)`, which blurs the
+    /// whole workspace behind a summoned overlay. The bell dropdown is
+    /// explicitly not a modal (see `SignalBellDropdownOverlay`), so folding it
+    /// in there would dim the workspace behind a five-row glance.
+    ///
+    /// Until this existed, neither notification overlay animated at all: both
+    /// carried a `.transition`, but no animation transaction ever ran for the
+    /// flags that presented them, so a transition that looked correct in the
+    /// diff produced a hard pop on screen.
+    private var signalOverlayDepth: Int {
+        (environment.isSignalDropdownPresented ? 1 : 0)
+            + (environment.isSignalFeedPresented ? 2 : 0)
     }
 
     /// The app of the focused pane in the active workspace, so Settings can
@@ -77,6 +95,8 @@ struct RootView: View {
                 .transition(.opacity)
             }
 
+            signalOverlays
+
             if environment.isQuickAskPresented {
                 QuickAskOverlayView {
                     environment.isQuickAskPresented = false
@@ -110,6 +130,13 @@ struct RootView: View {
                 .transition(.opacity)
             }
 
+            // Toasts. Above the workspace and every dismissible overlay, but
+            // deliberately BELOW the first-run gate (zIndex 100) and the quit
+            // confirmation (200): a toast is not interactive enough to matter,
+            // and one floating over the gate would be another surface the
+            // scrim cannot cover.
+            signalToasts
+
             // The first-run gate. Deliberately no `onDismiss` closure, no scrim
             // tap and no escape handler — that trio is exactly what makes every
             // overlay above dismissible, and this one must not be. It sits last
@@ -122,6 +149,7 @@ struct RootView: View {
             }
         }
         .animation(reduceMotion ? nil : .easeOut(duration: 0.16), value: isOverlayPresented)
+        .animation(reduceMotion ? nil : AinkradMotion.present, value: signalOverlayDepth)
         .background(KeyboardShortcutMonitor(environment: environment, pushToTalkController: environment.voiceService.pushToTalk))
         // Each HUD overlay plays `.overlayOpen`/`.overlayClose` as it's
         // summoned/dismissed (AIN-108) — centralized here rather than in each
@@ -157,6 +185,133 @@ struct RootView: View {
         }
     }
 
+    /// The feed's overlays: the bell dropdown and the full feed.
+    ///
+    /// Extracted from the main `ZStack` because that body outgrew the type
+    /// checker once these were added — SwiftUI's inference cost is
+    /// superlinear in a single builder, so a large ZStack must be split rather
+    /// than grown.
+    @ViewBuilder
+    private var signalOverlays: some View {
+        if environment.isSignalDropdownPresented, let center = environment.signalCenter {
+            // Anchored below the top bar on the trailing edge, under the bell
+            // that opened it. Presented here rather than as an overlay on
+            // `HUDBar`, because that strip is 30pt tall and would clip it.
+            SignalBellDropdownOverlay(center: center, hub: environment.signalEmitterHub) {
+                environment.isSignalDropdownPresented = false
+            } onViewAll: {
+                environment.isSignalDropdownPresented = false
+                environment.isSignalFeedPresented = true
+            }
+            .zIndex(60)
+        }
+
+        // The consent prompt. Raised as a HUD overlay rather than inline in the
+        // App Store's install flow, because an install is not the only way an
+        // app arrives — `ainkrad dev`, a sideload and a catalog update all end
+        // with a declared subscription nobody has answered, and a prompt that
+        // only existed in the store flow would silently skip all three.
+        //
+        // Below the first-run gate and the quit confirmation, like every other
+        // dismissible overlay: a permission prompt floating over the gate
+        // would be the one surface the scrim cannot cover.
+        if let appID = environment.pendingSubscriptionApprovals.first,
+           let subscriptions = environment.signalSubscriptions,
+           let app = environment.registry.allApps.first(where: { $0.id == appID }) {
+            SubscriptionApprovalView(
+                appName: app.displayName,
+                subscriptions: subscriptions.declared(for: appID),
+                displayName: { id in
+                    environment.registry.allApps.first { $0.id == id }?.displayName ?? id
+                },
+                // True when this app was approved before and has widened its
+                // list. `isApproved` is false either way, so the flag comes
+                // from whether anything was ever approved for it.
+                isReapproval: subscriptions.hasEverBeenApproved(appID: appID),
+                onAllow: {
+                    subscriptions.approve(appID: appID)
+                    if let factory = app.signalObserverFactory {
+                        subscriptions.register(observer: factory(), appID: appID)
+                    }
+                    environment.pendingSubscriptionApprovals.removeFirst()
+                },
+                onDeny: {
+                    // Nothing is recorded as denied: the app simply stays
+                    // unapproved, which is the same state it was in before
+                    // asking. Storing a "denied" verdict would mean deciding
+                    // when to ask again, and the honest answer — when the app
+                    // changes what it wants — is exactly what an absent
+                    // approval already expresses.
+                    subscriptions.revoke(appID: appID)
+                    environment.pendingSubscriptionApprovals.removeFirst()
+                })
+                .transition(.opacity)
+                .zIndex(70)
+        }
+
+        if environment.isSignalFeedPresented, let center = environment.signalCenter {
+            SignalFeedOverlayView(
+                center: center,
+                hub: environment.signalEmitterHub,
+                onDismiss: { environment.isSignalFeedPresented = false },
+                viewStateStore: environment.signalViewStateStore,
+                // The rail's "Notification settings…" lands in Settings, on the
+                // Notifications page, rather than opening a second control
+                // surface that would then disagree with the first.
+                onConfigureSource: { _ in
+                    environment.isSignalFeedPresented = false
+                    environment.isSettingsPresented = true
+                })
+            // Scale from just under, like every other summoned HUD panel,
+            // rather than the bare cross-fade it had: a fade alone reads as a
+            // web modal, and the feed is the largest surface in the family.
+            .transition(reduceMotion
+                        ? .opacity
+                        : .scale(scale: 0.97).combined(with: .opacity))
+        }
+    }
+
+    /// Transient toasts, top-trailing under the bell that counts them.
+    ///
+    /// Above the workspace and every dismissible overlay, but deliberately
+    /// BELOW the first-run gate (zIndex 100) and the quit confirmation (200): a
+    /// toast floating over the gate would be another surface the scrim cannot
+    /// cover.
+    private var signalToasts: some View {
+        SignalToastStack(
+            model: environment.signalToasts,
+            now: Date(),
+            onActivate: { event in
+                guard let center = environment.signalCenter else { return }
+                // Go to the source, not to the feed. A toast names one specific
+                // thing; sending the user to a list of everything makes them
+                // find it again. Only an event with nowhere to go falls back.
+                center.activate(event)
+                if !event.hasDestination { environment.isSignalFeedPresented = true }
+                // Acted on, so it goes: a toast still sitting there after it
+                // took you somewhere reads as though the tap did nothing.
+                environment.signalToasts.dismiss(id: event.id)
+            },
+            onAction: { event, action in
+                let hub = environment.signalEmitterHub
+                if action.isDestructive {
+                    // A destructive action never fires straight off a toast:
+                    // the user clicked something that appeared over their work,
+                    // not a confirmation. The feed owns the dialog.
+                    environment.signalToasts.dismiss(id: event.id)
+                    environment.isSignalFeedPresented = true
+                    return
+                }
+                SignalActionRouter(hub: hub).dispatch(event, action)
+                environment.signalToasts.dismiss(id: event.id)
+            })
+        // Clear of the 30pt top bar, so a toast never covers the clock or the
+        // bell whose count it corresponds to.
+        .padding(.top, 34)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+        .allowsHitTesting(!environment.isSetupPresented)
+        .zIndex(50)
+    }
 }
 
 /// Everything an overlay sits in front of: the ambient sky, the HUD bar, the

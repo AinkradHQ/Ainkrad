@@ -190,9 +190,25 @@ public final class PluginLoader {
         if let mcpCapable = appType as? AinkradAppMCP.Type {
             mcpServerFactory = { mcpCapable.makeMCPServer(host: host) }
         }
+        // Generation 10, same discipline again. The factory is captured here
+        // but NOT called: construction waits until the user has approved the
+        // app's declared subscriptions.
+        var signalObserverFactory: (@MainActor () -> any PluginSignalObserver)?
+        if let observing = appType as? AinkradAppSignalObserving.Type {
+            signalObserverFactory = { observing.makeSignalObserver(host: host) }
+        }
+        // Read straight from the Info.plist, deliberately outside
+        // `PluginBundleMetadata.parse`. That parse is ABI-frozen and strict, so
+        // folding this key into it would make every generation-8 and -9 bundle
+        // — none of which can carry the key — fail to parse and vanish from the
+        // user's launcher. A notification feature must not uninstall apps.
+        let declaredSubscriptions =
+            (info[PluginInfoKey.signalSubscriptions] as? [String]) ?? []
         return .success(.plugin(appType, url: url, apiVersion: metadata.apiVersion, host: host,
                                 presentation: metadata.presentation, teardown: teardown,
-                                mcpServerFactory: mcpServerFactory))
+                                mcpServerFactory: mcpServerFactory,
+                                signalObserverFactory: signalObserverFactory,
+                                declaredSignalSubscriptions: declaredSubscriptions))
     }
 }
 
@@ -204,7 +220,9 @@ extension RegisteredApp {
     public static func plugin(_ app: any AinkradApp.Type, url: URL, apiVersion: Int, host: HostServices,
                               presentation: PluginPresentation,
                               teardown: (@MainActor () -> Void)? = nil,
-                              mcpServerFactory: (@MainActor () -> MCPAppServer)? = nil) -> RegisteredApp {
+                              mcpServerFactory: (@MainActor () -> MCPAppServer)? = nil,
+                              signalObserverFactory: (@MainActor () -> any PluginSignalObserver)? = nil,
+                              declaredSignalSubscriptions: [String] = []) -> RegisteredApp {
         var registered = RegisteredApp(
             id: app.id,
             displayName: app.displayName,
@@ -232,6 +250,8 @@ extension RegisteredApp {
         )
         registered.teardown = teardown
         registered.mcpServerFactory = mcpServerFactory
+        registered.signalObserverFactory = signalObserverFactory
+        registered.declaredSignalSubscriptions = declaredSignalSubscriptions
         registered.settingsCatalog = { app.settingsCatalog(host: host) }
         return registered
     }

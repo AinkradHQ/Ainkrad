@@ -224,6 +224,70 @@ def build() -> dict[str, list[float]]:
         partials=SOFT, decay_tau=0.14, attack_ms=6,
     )
 
+    # --- notification cues -------------------------------------------------
+    #
+    # A family of their own, not reused chrome. A notification's whole job is
+    # to say WHICH kind of thing happened before the user has read a word, and
+    # three borrowed interface clicks cannot do that. Each of these is
+    # recognisable at low volume and distinct from the others at low volume,
+    # which is the only test that matters — nobody runs notifications loud.
+
+    # signalArrive: one soft high chime, short tail. The most frequent cue, so
+    # it is the least eventful thing in the family: heard often, noticed once.
+    sounds["signalArrive"] = _tone(
+        duration=0.13, freq_start=1046.50, freq_end=1174.66,
+        partials=GLASSY, decay_tau=0.05, attack_ms=3,
+    )
+
+    # signalWarn: two notes descending a whole tone (A5 -> G5). Falling reads
+    # as "something slipped" without the finality of the failure cue.
+    sounds["signalWarn"] = _concat(
+        _tone(duration=0.10, freq_start=880.00, freq_end=880.00,
+              partials=GLASSY, decay_tau=0.05, attack_ms=3),
+        _tone(duration=0.20, freq_start=783.99, freq_end=783.99,
+              partials=GLASSY, decay_tau=0.11, attack_ms=3),
+        gap=0.012,
+    )
+
+    # signalFail: three descending notes (F5 -> D5 -> A4) on the rounder
+    # stack, with the longest tail in the family. Low and unhurried so it
+    # carries at a volume where a bright chime would vanish.
+    sounds["signalFail"] = _concat(
+        _tone(duration=0.11, freq_start=698.46, freq_end=698.46,
+              partials=SOFT, decay_tau=0.06, attack_ms=4),
+        _tone(duration=0.11, freq_start=587.33, freq_end=587.33,
+              partials=SOFT, decay_tau=0.06, attack_ms=4),
+        _tone(duration=0.34, freq_start=440.00, freq_end=440.00,
+              partials=SOFT, decay_tau=0.20, attack_ms=5),
+        gap=0.010,
+    )
+
+    # signalUrgent: the failure cue with a leading tick. The tick is what the
+    # ear catches first, so "someone is waiting on you" is distinguishable
+    # from "something broke" before the phrase has finished.
+    sounds["signalUrgent"] = _concat(
+        _tone(duration=0.05, freq_start=1567.98, freq_end=1567.98,
+              partials=GLASSY, decay_tau=0.02, attack_ms=1),
+        _tone(duration=0.11, freq_start=698.46, freq_end=698.46,
+              partials=SOFT, decay_tau=0.06, attack_ms=4),
+        _tone(duration=0.11, freq_start=587.33, freq_end=587.33,
+              partials=SOFT, decay_tau=0.06, attack_ms=4),
+        _tone(duration=0.34, freq_start=440.00, freq_end=440.00,
+              partials=SOFT, decay_tau=0.20, attack_ms=5),
+        gap=0.010,
+    )
+
+    # signalResolve: two notes rising a fourth (D5 -> G5) — deliberately the
+    # inverse shape of signalWarn, so a fixed thing sounds like the undoing of
+    # the thing that broke rather than merely another event.
+    sounds["signalResolve"] = _concat(
+        _tone(duration=0.10, freq_start=587.33, freq_end=587.33,
+              partials=GLASSY, decay_tau=0.05, attack_ms=3),
+        _tone(duration=0.22, freq_start=783.99, freq_end=783.99,
+              partials=GLASSY, decay_tau=0.12, attack_ms=3),
+        gap=0.012,
+    )
+
     return sounds
 
 

@@ -78,7 +78,8 @@ struct BlockView: View {
     var body: some View {
         let tokens = environment.themeManager.tokens
 
-        return PaneContent(app: app, topInset: contentTopInset, fallback: tokens.surface)
+        return PaneContent(app: app, topInset: contentTopInset, fallback: tokens.surface,
+                           paneLocator: environment.paneLocators.sink(forBlock: block.id))
             .overlay(alignment: .top) { grabStrip(tokens: tokens) }
         // The pane body is clear, so a translucent app (Terminal scheme
         // opacity, Git Mage transparency, Sage opacity) reveals whatever
@@ -349,6 +350,15 @@ private struct PaneContent: View {
     let app: RegisteredApp?
     let topInset: CGFloat
     let fallback: Color
+    /// Lets the hosted app say which of its own things this pane is showing, so
+    /// a notification can focus the pane that produced it rather than the
+    /// first pane of that app.
+    ///
+    /// Safe to hold here BECAUSE it is memoized per block and `Equatable` by
+    /// identity — see `PaneLocatorRegistry.sink(forBlock:)`. A freshly built
+    /// closure would compare unequal on every render and undo the whole point
+    /// of this view's input list.
+    let paneLocator: SignalPaneLocatorSink
 
     var body: some View {
         if let app {
@@ -363,6 +373,7 @@ private struct PaneContent: View {
                 }
                 app.makeRootView()
                     .padding(.top, topInset)
+                    .environment(\.ainkradPaneLocator, paneLocator)
             }
         } else {
             fallback

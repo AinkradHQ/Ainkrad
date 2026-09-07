@@ -8,6 +8,9 @@ enum ClaudeOAuthError: Error, Equatable {
     case tokenEndpoint(status: Int, body: String)
     case malformedResponse
     case allEndpointsFailed
+    /// The response was not an HTTP response at all — a non-http(s) URL, or a
+    /// custom `URLProtocol`. Previously a force-cast, so this crashed.
+    case nonHTTPResponse
 }
 
 /// Transport seam so token exchange/refresh is unit-testable without real HTTP.
@@ -19,7 +22,11 @@ protocol OAuthTokenTransport: Sendable {
 struct URLSessionTokenTransport: OAuthTokenTransport {
     func post(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
         let (data, resp) = try await URLSession.shared.data(for: request)
-        return (data, resp as! HTTPURLResponse)
+        guard let http = resp as? HTTPURLResponse else {
+            Log.settings.error("OAuth token endpoint returned a non-HTTP response")
+            throw ClaudeOAuthError.nonHTTPResponse
+        }
+        return (data, http)
     }
 }
 

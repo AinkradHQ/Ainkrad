@@ -8,7 +8,7 @@ struct AgentToolSchema: Sendable, Equatable {
     let parameters: JSONValue   // JSON Schema object
 }
 
-enum ToolPermissionClass: Sendable { case read, write, memory }
+enum ToolPermissionClass: Sendable, Equatable { case read, write, memory }
 
 struct ToolResult: Sendable, Equatable {
     let content: String

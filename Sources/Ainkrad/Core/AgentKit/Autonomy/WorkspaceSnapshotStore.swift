@@ -23,7 +23,11 @@ final class WorkspaceSnapshotStore {
         let blobName = UUID().uuidString + ".blob"
         let dest = dir.appendingPathComponent(blobName)
         if let data = fm.contents(atPath: path) {
-            try? data.write(to: dest)
+            do {
+                try data.write(to: dest)
+            } catch {
+                Log.persistence.error("Failed to write \(data.count, privacy: .public) bytes to \(dest.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            }
             return FileSnapshot(path: path, existedBefore: true, blobName: blobName)
         }
         return FileSnapshot(path: path, existedBefore: true, blobName: nil)
@@ -34,7 +38,12 @@ final class WorkspaceSnapshotStore {
             guard let blobName = snapshot.blobName else { return }
             let blob = root.appendingPathComponent(checkpointID.uuidString).appendingPathComponent(blobName)
             if let data = try? Data(contentsOf: blob) {
-                try? data.write(to: URL(fileURLWithPath: snapshot.path))
+                let restoreURL = URL(fileURLWithPath: snapshot.path)
+                do {
+                    try data.write(to: restoreURL)
+                } catch {
+                    Log.persistence.error("Failed to write \(data.count, privacy: .public) bytes to \(restoreURL.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+                }
             }
         } else if fm.fileExists(atPath: snapshot.path) {
             try? fm.removeItem(atPath: snapshot.path)

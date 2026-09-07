@@ -130,6 +130,20 @@ ln -s /Applications "$STAGE/Applications"
 hdiutil create -volname "Ainkrad ${VERSION}" -srcfolder "$STAGE" -ov -format UDZO "$DMG" >/dev/null
 rm -rf "$STAGE"
 
+# Sign the DISK IMAGE itself, not just the app inside it. Notarizing and
+# stapling a DMG is enough for Gatekeeper to let a download through, but an
+# unsigned container has no signature for `spctl` (or a cautious user running
+# `codesign -dv`) to evaluate at all -- it reports "code object is not signed
+# at all". Apple recommends signing the image; doing so costs one command and
+# removes the ambiguity from the artifact people actually download.
+#
+# Must happen BEFORE notarization: the notary service hashes what it is given,
+# and signing afterwards would invalidate the stapled ticket.
+if [[ "$SIGNED" == true ]]; then
+  codesign --force --timestamp --sign "$SIGN_IDENTITY" "$DMG"
+  codesign --verify --strict --verbose=2 "$DMG"
+fi
+
 # --- notarize + staple -----------------------------------------------------
 NOTARIZED=false
 if [[ "$SIGNED" == true ]]; then
@@ -192,7 +206,13 @@ if [[ "$PUBLISH" == true ]]; then
     gh release upload "$TAG" "$ASSET" --clobber
   else
     echo "▸ Creating release ${TAG}…"
+    # `--target` is NOT optional. Without it `gh release create` tags the
+    # repository's DEFAULT BRANCH head, not the commit this bundle was built
+    # from -- so the uploaded zip and its sha256 can come from code the tag does
+    # not contain. That shipped: the host's v0.17.1 tag landed on the previous
+    # release's commit while its asset held 79 newer commits.
     gh release create "$TAG" "$ASSET" \
+      --target "$(git rev-parse HEAD)" \
       --title "Ainkrad ${VERSION}" \
       --generate-notes
   fi

@@ -21,6 +21,15 @@ enum UISound: String, CaseIterable {
     case toggle
     case confirm
     case error
+    // Notifications get their own family rather than borrowing the three
+    // above. A notification's whole job is to say WHICH kind of thing
+    // happened before the user has read a word, and three reused interface
+    // clicks cannot do that.
+    case signalArrive
+    case signalWarn
+    case signalFail
+    case signalUrgent
+    case signalResolve
 
     /// The bundled wav's base-name (without extension), under
     /// `Resources/Sounds/`.
@@ -42,6 +51,11 @@ enum UISound: String, CaseIterable {
         case .toggle: return "Toggle"
         case .confirm: return "Confirm"
         case .error: return "Error"
+        case .signalArrive: return "Notification"
+        case .signalWarn: return "Notification — Warning"
+        case .signalFail: return "Notification — Failure"
+        case .signalUrgent: return "Notification — Urgent"
+        case .signalResolve: return "Notification — Resolved"
         }
     }
 
@@ -61,6 +75,11 @@ enum UISound: String, CaseIterable {
         case .toggle: return "An app is enabled or disabled."
         case .confirm: return "A confirmation action."
         case .error: return "Something goes wrong."
+        case .signalArrive: return "A notification arrives."
+        case .signalWarn: return "A warning notification arrives."
+        case .signalFail: return "A failure notification arrives."
+        case .signalUrgent: return "Something is waiting on you."
+        case .signalResolve: return "A failure is followed by a success."
         }
     }
 }

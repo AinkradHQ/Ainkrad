@@ -21,7 +21,12 @@ final class MemoryStore {
 
     func write(_ text: String, to file: MemoryFile) {
         ensureRoot()
-        try? text.write(to: paths.url(for: file), atomically: true, encoding: .utf8)
+        let url = paths.url(for: file)
+        do {
+            try text.write(to: url, atomically: true, encoding: .utf8)
+        } catch {
+            Log.persistence.error("Failed to write \(text.utf8.count, privacy: .public) bytes to \(url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+        }
         onChange?(file)
     }
 

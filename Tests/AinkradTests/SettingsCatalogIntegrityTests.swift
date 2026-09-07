@@ -50,7 +50,13 @@ struct HostSettingsCatalogIntegrityTests {
     func workspacePages() {
         let titles = HostSettingsCatalog.build(environment: .preview())
             .pages(in: .workspace).map(\.title)
-        #expect(titles == ["General", "You", "Appearance", "Sound & Voice", "Keyboard"])
+        // Notifications is last (order 5), added in M3. The pane itself was
+        // built in M1 and never placed in the navigation — its delivery rules,
+        // retention limits and "Clear feed" were live code with no way to
+        // reach them, which is precisely what this test exists to catch and
+        // could not, because an absent page breaks no expectation.
+        #expect(titles == ["General", "You", "Appearance", "Sound & Voice", "Keyboard",
+                           "Notifications"])
     }
 
     /// Every field in the live catalog must be genuinely reachable, not just

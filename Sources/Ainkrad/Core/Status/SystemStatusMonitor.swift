@@ -34,6 +34,10 @@ final class SystemStatusMonitor {
                 self?.battery = Self.readBattery()
             }
         }
+        // Tolerance: the status bar shows slightly stale time/battery (off by up to 15s)
+        // is harmless — users read the status bar, not glance for the exact second.
+        // Letting macOS coalesce this with other timers is a clear win.
+        timer.tolerance = 15
         RunLoop.main.add(timer, forMode: .common)
         clockTimer = timer
 

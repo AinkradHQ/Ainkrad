@@ -168,7 +168,6 @@ extension AppEnvironment {
         let backgroundToolRegistry = AgentToolRegistry(
             tools: backgroundAgentTools,
             dynamicTools: { [weak mcpServerRegistry] in mcpServerRegistry?.currentTools() ?? [] })
-        let runNotifier = UserNotificationRunNotifier()
         let runManager = RunManager(
             persistence: persistence,
             runner: BackgroundRunRunner(makeSession: { posture in
@@ -196,7 +195,7 @@ extension AppEnvironment {
                 session.credentialResolver = credentialResolver   // subscription works in background runs too
                 return session
             }),
-            notifier: runNotifier, maxConcurrent: 2)
+ maxConcurrent: 2)
 
         // Persisted history of Sage chats, surfaced by the block's history
         // sidebar (Sage session-history-sidebar Task 4) — one instance shared

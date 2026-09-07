@@ -21,6 +21,8 @@ extension AppEnvironment {
         themeManager: ThemeManager,
         agentContextHub: AgentContextRegistryHub,
         agentActionHub: AgentActionRegistryHub,
+        signalHub: SignalEmitterHub,
+        signalReadAccess: SignalReadAccess,
         pluginLaunchHub: PluginLaunchHub,
         appAppearanceStore: AppAppearanceStore,
         pluginDataRoot: URL,
@@ -28,15 +30,301 @@ extension AppEnvironment {
         loader: PluginLoader,
         registry: BuiltInAppRegistry,
         workspaceManager: WorkspaceManager,
+        home: Home,
         defaults: UserDefaults
     ) {
-        // Built after `environment` exists so the content closure can inject
-        // `self` for `MenuBarPopoverView`'s `.environment(_:)` — mirrors how
-        // `launcherStore.presentOverlay`/`pluginLaunchHub` below capture
-        // `[weak environment]` rather than being wired inside the initializer.
-        environment.menuBarController = MenuBarController(presence: environment.menuBarPresence) { [weak environment] in
-            guard let environment else { return AnyView(EmptyView()) }
-            return AnyView(MenuBarPopoverView(presence: environment.menuBarPresence).environment(environment))
+        // MARK: Signal (notification feed)
+        //
+        // Built here rather than in `bootstrapCoreStores` because it needs the
+        // sound engine, the window state, and `environment` itself for the
+        // popover's content closure — mirrors how `launcherStore.presentOverlay`/
+        // `pluginLaunchHub` below capture `[weak environment]` rather than
+        // being wired inside the initializer.
+        let signalPreferencesStore = SignalPreferencesStore(
+            url: home.cacheRoot.deletingLastPathComponent()
+                .appendingPathComponent("signal-preferences.json"))
+        let signalContextProvider = HostDeliveryContextProvider()
+        let loadedSignalPreferences = signalPreferencesStore.load()
+        // Its OWN engine, on its own settings. Sharing `environment.sounds`
+        // meant General → Sound's chrome master silenced failure alerts, and
+        // the Notifications pane never said so.
+        let notificationSoundStore = NotificationSoundStore(
+            settings: loadedSignalPreferences.sound)
+        // WHETHER a notification cue plays is this store's business; WHICH
+        // asset it plays is chosen in Settings → Sound, which writes to the
+        // general store. Reading it here is what makes that choice take effect
+        // — without it the per-event picker moved, previewed correctly, and
+        // changed nothing about the sound an actual notification made.
+        notificationSoundStore.effectSource = { [weak environment] event in
+            environment?.generalSettingsStore.effect(for: event) ?? event
+        }
+        let notificationSounds = SoundEngine(settings: notificationSoundStore,
+                                             overrideDirectory: home.shared(.sounds))
+        let signalCenter = AppEnvironment.makeSignalCenter(
+            storeURL: AppEnvironment.signalStoreURL(
+                applicationSupport: home.cacheRoot.deletingLastPathComponent()),
+            preferences: loadedSignalPreferences,
+            sound: notificationSounds,
+            toast: environment.signalToasts,
+            contextProvider: signalContextProvider,
+            badge: { _ in
+                // Per-app badges are M2's `SignalBadgeModel`; the menu-bar
+                // badge is driven by `onUnreadChanged` below, which covers
+                // every path that changes the count rather than only delivery.
+            })
+        // "Visible" means the app has a surface the user can actually see, so
+        // routing can tell "you are looking at Raven" from "Raven is installed".
+        // `isAppOpen` is the host's own answer to that question and covers both
+        // tiled panes and overlay presentation.
+        signalContextProvider.visibleAppIDs = { [weak environment] in
+            guard let environment else { return [] }
+            return Set(environment.registry.enabledApps.map(\.id)
+                .filter { environment.isAppOpen($0) })
+        }
+        // One writer for all three fields: a callback that rebuilt
+        // SignalPreferences from two of them would drop whichever it forgot.
+        let saveSignalPreferences = { [weak signalCenter, weak notificationSoundStore] in
+            guard let signalCenter else { return }
+            signalPreferencesStore.save(SignalPreferences(
+                rules: signalCenter.rules,
+                retention: signalCenter.retention,
+                sound: notificationSoundStore?.settings ?? NotificationSoundSettings()))
+        }
+        signalCenter.onRulesChanged = { _ in saveSignalPreferences() }
+        signalCenter.onRetentionChanged = { _ in saveSignalPreferences() }
+        notificationSoundStore.onChange = { _ in saveSignalPreferences() }
+        // Tapping a feed row opens the app that published it, with the event's
+        // payload — the same cross-app launch path `HostServices.apps` uses, so
+        // a deep link behaves exactly like an app opening another app.
+        //
+        // Factored into one closure because there are now two ways in: a deep
+        // link, which names a destination and carries a payload, and a bare
+        // reveal for the far more common notification that names no
+        // destination at all. Everything after "which app" is identical, and
+        // two copies of this would drift.
+        let reveal: (String, String?, Data?) -> Void = { [weak environment] appID, locator, payload in
+            guard let environment else { return }
+            let declared = environment.registry.allApps
+                .first { $0.id == appID }?.presentation ?? .pane
+            let effective = environment.appAppearanceStore
+                .presentationOverride(appID) ?? declared
+            let action = SignalReveal.action(
+                appID: appID,
+                presentsAsOverlay: effective == .overlay,
+                workspaces: environment.workspaceManager.workspaces.map { workspace in
+                    SignalRevealWorkspace(
+                        id: workspace.id,
+                        panes: workspace.tileLayout.blocks.map {
+                            SignalRevealWorkspace.Pane(
+                                appID: $0.appID, blockID: $0.id,
+                                locator: environment.paneLocators.locator(forBlock: $0.id))
+                        })
+                },
+                activeWorkspaceID: environment.workspaceManager.activeWorkspaceID,
+                // Generation 10: the app's own name for what the notification
+                // is about. With three Rune panes open this is what makes the
+                // click land on the session that called, instead of the first
+                // pane of that app.
+                locator: locator)
+
+            // Enqueue only where something will actually collect it. The hub
+            // holds ONE pending payload per app, so enqueuing on the `.focus`
+            // path — where no pane is created and nothing pulls — left the
+            // payload to be picked up by the next unrelated pane and clobbered
+            // any legitimate pending launch on the way. See
+            // `SignalRevealAction.deliversPayload`.
+            //
+            // A payload-less reveal must not enqueue AT ALL, for the same
+            // reason: an empty payload is still a payload as far as the hub is
+            // concerned, and it would evict a real one.
+            if let payload, action.deliversPayload {
+                pluginLaunchHub.enqueue(target: appID,
+                                        payload: String(decoding: payload, as: UTF8.self))
+            }
+
+            switch action {
+            case .presentOverlay:
+                environment.presentedOverlayAppID = appID
+            case .focus(let workspaceID, let blockID):
+                // Focus what is already there. Going through `requestOpen`
+                // appended a SECOND pane, so following a notification took the
+                // user further from the session that called them.
+                if workspaceID != environment.workspaceManager.activeWorkspaceID {
+                    environment.workspaceManager.switchTo(workspaceID)
+                }
+                environment.workspaceManager.activeWorkspace.tileLayout.focus(blockID)
+            case .openNewPane:
+                pluginLaunchHub.requestOpen(appID)
+            }
+        }
+        signalCenter.onActivateDeepLink = { link in
+            reveal(link.appID, link.locator, link.payload)
+        }
+        // The fallback for the majority of notifications, which name no
+        // destination: go to the app that published it, carrying nothing.
+        signalCenter.onRevealSource = { appID in reveal(appID, nil, nil) }
+        environment.signalCenter = signalCenter
+        environment.notificationSounds = notificationSoundStore
+        // Beside the preferences, not inside them: this is where the user was
+        // LOOKING, not what they decided. Losing it is a minor annoyance, and
+        // it must never be able to corrupt a routing rule.
+        environment.signalViewStateStore = SignalViewStateStore(
+            url: home.cacheRoot.deletingLastPathComponent()
+                .appendingPathComponent("signal-view-state.json"))
+
+        // The banner's way back in. `onOpenFeed` covers both "the event is
+        // gone" and "the event had nowhere to go" — in either case showing the
+        // record beats appearing to ignore the click.
+        let bannerResponder = SignalBannerResponder(center: signalCenter)
+        bannerResponder.onOpenFeed = { [weak environment] in
+            environment?.isSignalFeedPresented = true
+        }
+        environment.signalBannerResponder = bannerResponder
+        signalCenter.onInvokeAction = { [weak environment] event, action in
+            guard let environment else { return }
+            let hub = environment.signalEmitterHub
+            if action.isDestructive {
+                // Never fire a destructive action straight off a banner: the
+                // user clicked a notification, not a confirmation. The feed
+                // owns the confirmation dialog, so hand off to it.
+                environment.isSignalFeedPresented = true
+                return
+            }
+            SignalActionRouter(hub: hub).dispatch(event, action)
+        }
+        // Reading a row in-app pulls its banner out of Notification Center, so
+        // the two surfaces agree about what is still outstanding.
+        // Static because withdrawal touches no instance state — it asks
+        // UNUserNotificationCenter directly — so there is nothing to be gained
+        // from threading `makeSignalCenter`'s private channel out to here.
+        signalCenter.onRead = { UserNotificationBannerChannel.withdraw(ids: $0) }
+        // The read side gains its feed, mirroring `signalHub.attach(sink:)`
+        // below. `signal_search` was registered at tool-assembly time, before
+        // this center existed, and has been reporting the feed as unavailable
+        // until now.
+        signalReadAccess.attach(signalCenter)
+        // Recent notable events as assistant context, alongside `host.memory`.
+        // A closure, so every turn reads the feed as it is rather than a
+        // snapshot taken at launch — and read-only: `SageSignalContext` calls
+        // only `page` and `search`, so Sage answering "what failed today?"
+        // cannot change the answer.
+        _ = agentContextHub.register(appID: "host.signal") { [weak signalCenter] in
+            guard let signalCenter else { return nil }
+            let summary = SageSignalContext(center: signalCenter).summary()
+            // An empty feed contributes NOTHING rather than a snapshot saying
+            // so: a sentence asserting an absence spends context the user's
+            // actual question does not get.
+            guard !summary.isEmpty else { return nil }
+            return AgentContextSnapshot(kind: "notifications",
+                                        title: "Recent notifications",
+                                        text: summary)
+        }
+
+        // External ingress (M3). Everything below is supplementary: in-process
+        // emission is already wired above and is untouched by any failure here.
+        let signalTokens = SignalTokenRegistry(secrets: environment.secrets)
+        environment.signalTokens = signalTokens
+        // Declared cross-app subscriptions (generation 10). Fan-out runs
+        // AFTER the center's own delivery, so a subscribing app can never see
+        // an event before the user's own surfaces do.
+        let subscriptions = SignalSubscriptionRegistry(
+            store: SignalSubscriptionStore(
+                url: home.cacheRoot.deletingLastPathComponent()
+                    .appendingPathComponent("signal-subscriptions.json")))
+        environment.signalSubscriptions = subscriptions
+        signalCenter.onEventRecorded = { [weak subscriptions] event in
+            subscriptions?.fanOut(event)
+        }
+
+        // Load every enabled app's declared subscriptions, and register an
+        // observer for the ones the user already approved.
+        //
+        // Approval is consulted per event inside `fanOut`, so registering an
+        // observer here is not itself a grant — but the FACTORY is only called
+        // for an approved app, so a refused app never even constructs one.
+        for app in environment.registry.allApps where !app.declaredSignalSubscriptions.isEmpty {
+            let parsed = SignalSubscription.parseReportingInvalid(
+                app.declaredSignalSubscriptions, excluding: app.id)
+            subscriptions.setDeclared(parsed.subscriptions, for: app.id)
+
+            // A dropped pattern is a developer's typo, and silence would turn
+            // it into a subscription that simply never fires with nothing
+            // anywhere to say why.
+            if !parsed.invalid.isEmpty {
+                signalCenter.emit(
+                    .subscriptionsDropped(displayName: app.displayName,
+                                          patterns: parsed.invalid),
+                    from: .host)
+            }
+
+            if subscriptions.isApproved(appID: app.id), let factory = app.signalObserverFactory {
+                subscriptions.register(observer: factory(), appID: app.id)
+            }
+        }
+
+        // Anything left unapproved becomes the prompt. Raised after bootstrap
+        // rather than during it: the window has to exist before an overlay can
+        // be shown in it, and an app whose approval is pending is simply not
+        // observing in the meantime — a safe state to sit in indefinitely.
+        environment.pendingSubscriptionApprovals = subscriptions.appsAwaitingApproval()
+
+        // Pair the CLI if it is not already paired, so `ainkrad notify` works
+        // out of the box rather than needing a visit to Settings first. Minted
+        // once — see `ensurePaired`, which refuses to rotate a token that is
+        // still good and would otherwise break every installed hook on launch.
+        SignalCLIPairing.ensurePaired(registry: signalTokens)
+
+        let ingress = SignalIngressCoordinator(
+            center: signalCenter,
+            tokens: signalTokens,
+            limiter: SignalRateLimiter())
+        let socketURL = AppEnvironment.signalSocketURL()
+        let socketServer = SignalSocketServer(url: socketURL) { data in
+            ingress.accept(data)
+        }
+        do {
+            try socketServer.start()
+            environment.signalSocketServer = socketServer
+        } catch {
+            // One warning into the feed, then carry on. A notification
+            // subsystem that stops the app launching is worse than no
+            // notification subsystem — the same rule `makeSignalCenter`
+            // follows when the store cannot be opened.
+            //
+            // Recorded rather than only logged because the consequence is
+            // invisible otherwise: hooks and scripts would post into nothing
+            // and no one would know why.
+            signalCenter.emit(.externalIngressUnavailable(reason: String(describing: error)),
+                              from: .host)
+        }
+
+        // The hub was built in `bootstrapCoreStores`, before the feed existed;
+        // this is where it gains something to record into.
+        signalHub.attach(sink: signalCenter)
+        // `RunManager` is built in `bootstrapSession`, before this runs, so the
+        // center is attached rather than injected.
+        environment.runManager.attachSignalCenter(signalCenter)
+
+        // App-store outcomes into the feed. An install or update is exactly the
+        // kind of thing the user starts and then looks away from, which is what
+        // the feed is for.
+        environment.appStoreStore.onOperationFinished = { [weak environment] operation, appID, error in
+            guard let environment, let center = environment.signalCenter else { return }
+            // Prefer the registry's display name; fall back to the id, which is
+            // all there is for an app that failed before it registered.
+            let name = environment.registry.allApps.first { $0.id == appID }?.displayName ?? appID
+            switch (operation, error) {
+            case (.install, nil):
+                center.emit(.appInstalled(displayName: name), from: .host)
+            case (.install, let error?):
+                center.emit(.appInstallFailed(displayName: name,
+                                              reason: Self.describe(error)), from: .host)
+            case (.update, nil):
+                center.emit(.appUpdated(displayName: name), from: .host)
+            case (.update, let error?):
+                center.emit(.appUpdateFailed(displayName: name,
+                                             reason: Self.describe(error)), from: .host)
+            }
         }
 
         // Launch-time external I/O (local-model probes, MCP connect, LSP
@@ -60,7 +348,10 @@ extension AppEnvironment {
                     await localModelAvailability.refresh(
                         connections: connectionStore.connections, probe: localModelProbe,
                         tokenFor: { connectionStore.token(for: $0) })
-                    try? await Task.sleep(for: .seconds(30))
+                    // Jitter: `Task.sleep` has no tolerance, so spread the wakeup
+                    // over a 5s window rather than waking every client on the
+                    // same 30s boundary.
+                    try? await Task.sleep(for: .seconds(30 + Double.random(in: 0...5)))
                 }
             }
 
@@ -83,7 +374,7 @@ extension AppEnvironment {
         // in a directory the plugin no longer reads.
         let runeHost = HostServicesImpl(appID: "rune", dataRootURL: pluginDataRoot,
                                             secretStore: secrets, themeManager: themeManager,
-                                            hub: agentContextHub, actionHub: agentActionHub, launchHub: pluginLaunchHub,
+                                            hub: agentContextHub, actionHub: agentActionHub, launchHub: pluginLaunchHub, signalHub: signalHub,
                                             declaredPresentation: .pane, appAppearanceStore: appAppearanceStore)
         TerminalSettingsMigration.runIfNeeded(
             legacyRawPayload: { (persistence as? FileDocumentStore)?.rawPayloadData(forID: $0) },
@@ -93,14 +384,14 @@ extension AppEnvironment {
         // directly), scoped like any other app for its documents/secrets/theme/context.
         let sageHost = HostServicesImpl(appID: "sage", dataRootURL: pluginDataRoot,
                                              secretStore: secrets, themeManager: themeManager,
-                                             hub: agentContextHub, actionHub: agentActionHub, launchHub: pluginLaunchHub,
+                                             hub: agentContextHub, actionHub: agentActionHub, launchHub: pluginLaunchHub, signalHub: signalHub,
                                              declaredPresentation: .pane, appAppearanceStore: appAppearanceStore)
 
         // Live Scry (M7 Slice 7) is likewise a host-embedded built-in — its
         // pane reads `AppEnvironment.canvasStore` directly (see `ScryApp`).
         let scryHost = HostServicesImpl(appID: "scry", dataRootURL: pluginDataRoot,
                                           secretStore: secrets, themeManager: themeManager,
-                                          hub: agentContextHub, actionHub: agentActionHub, launchHub: pluginLaunchHub,
+                                          hub: agentContextHub, actionHub: agentActionHub, launchHub: pluginLaunchHub, signalHub: signalHub,
                                           declaredPresentation: .pane, appAppearanceStore: appAppearanceStore)
 
         // Hoard (M1) — a host-embedded built-in like Sage and Scry. It
@@ -108,7 +399,7 @@ extension AppEnvironment {
         // `AppEnvironment` directly.
         let hoardHost = HostServicesImpl(appID: "hoard", dataRootURL: pluginDataRoot,
                                          secretStore: secrets, themeManager: themeManager,
-                                         hub: agentContextHub, actionHub: agentActionHub, launchHub: pluginLaunchHub,
+                                         hub: agentContextHub, actionHub: agentActionHub, launchHub: pluginLaunchHub, signalHub: signalHub,
                                          declaredPresentation: .pane, appAppearanceStore: appAppearanceStore)
 
         // Hoard' MCP server and agent context are built HERE, not in
@@ -141,6 +432,14 @@ extension AppEnvironment {
         }
 
         let loaded = loader.loadAll(from: pluginDirs)
+        // A bundle that fails to load is the most confusing failure in the
+        // product: the app is simply absent, with nothing on screen saying why.
+        // It was already recorded in `registry.loadFailures` and read by the
+        // App Store overlay only — so a user who never opens that overlay had
+        // no way to find out.
+        for failure in loaded.failures {
+            signalCenter.emit(.pluginLoadFailed(failure), from: .host)
+        }
         registry.install(
             builtIn: [
                 RegisteredApp.builtIn(
@@ -245,5 +544,16 @@ extension AppEnvironment {
         }
 
         Log.app.info("AppEnvironment bootstrapped with \(registry.allApps.count) registered app(s)")
+    }
+
+    /// A user-facing reason string. `AppStoreError` already writes for humans;
+    /// anything else falls back to its description rather than being dropped,
+    /// because "failed to install" with no reason is the least useful
+    /// notification the feed could carry.
+    private static func describe(_ error: Error) -> String {
+        if let storeError = error as? AppStoreError {
+            return String(describing: storeError)
+        }
+        return String(describing: error)
     }
 }
