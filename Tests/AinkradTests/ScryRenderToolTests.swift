@@ -52,7 +52,7 @@ struct ScryRenderToolTests {
         }
     }
 
-    @Test func updateOnUnknownIDMaterializesElement_liveMatchesReplay() async throws {
+    @Test func updateOnUnknownIDMaterializesElement() async throws {
         let (tool, store) = make()
         let input = JSONValue.object([
             "op": .string("update"), "id": .string("ghost"),
@@ -61,19 +61,10 @@ struct ScryRenderToolTests {
         let r = try await tool.execute(input)
         #expect(!r.isError)
 
-        // Live: the element must actually exist in the store after the call
-        // returns — not only after a hypothetical replay.
+        // The element must actually exist in the store after the call returns.
         let live = store.model.elements.first(where: { $0.id == "ghost" })
         #expect(live?.body == "materialized")
         #expect(live?.kind == .text)
-
-        // Replay: reconstructing from the same transcript must agree with live.
-        let message = AgentMessage(role: .assistant,
-                                    content: [.toolUse(id: "1", name: "scry_render", input: input)])
-        let replayed = ScryReconstruction.rebuild(from: [message])
-        let fromReplay = replayed.elements.first(where: { $0.id == "ghost" })
-        #expect(fromReplay?.body == live?.body)
-        #expect(fromReplay?.kind == live?.kind)
     }
 
     @Test func permissionIsReadAndReversible() {

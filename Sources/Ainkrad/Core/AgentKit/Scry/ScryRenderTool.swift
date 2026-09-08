@@ -71,22 +71,20 @@ struct ScryRenderTool: AgentTool {
             guard let id = input["id"]?.stringValue, !id.isEmpty else {
                 throw ToolError.message("scry_render update requires \"id\".")
             }
-            var m = store.model
-            ScryReconstruction.apply(input, to: &m)          // create-or-merge, mirrors replay
-            guard let updated = m.elements.first(where: { $0.id == id }) else {
-                return ToolResult(content: "No scry element \(id) to update.", isError: false)
+            if var existing = store.model.elements.first(where: { $0.id == id }) {
+                ScryElementDecoder.merge(input, into: &existing)
+                store.upsert(existing)
+            } else {
+                // Update of an element that isn't there creates it, so a
+                // streaming caller never silently loses a write.
+                var created = try ScryElementDecoder.element(from: input)
+                created.id = id
+                store.upsert(created)
             }
-            // `store.upsert`, NOT `store.update(id:)`: the latter early-returns when
-            // `id` isn't already in the LIVE store, silently dropping the write even
-            // though `apply` just materialized it above — divergence from what
-            // `ScryReconstruction.rebuild` would produce for the same transcript.
-            store.upsert(updated)
             return ToolResult(content: "Updated scry element \(id).", isError: false)
 
-        default: // add — unknown kinds are isolated to .unknown, never thrown
-            guard let e = ScryReconstruction.element(from: input, fallbackID: UUID().uuidString) else {
-                throw ToolError.message("scry_render add requires an element body/kind.")
-            }
+        default:
+            let e = try ScryElementDecoder.element(from: input)
             let id = store.add(e)
             return ToolResult(content: "Rendered scry element \(id) (\(e.kind.rawValue)).",
                               isError: false)
