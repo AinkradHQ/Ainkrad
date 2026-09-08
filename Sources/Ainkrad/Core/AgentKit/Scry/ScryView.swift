@@ -19,6 +19,9 @@ struct ScryView: View {
     // runtime — if it never fires, degrading to "builds too much" is far
     // safer than silently dropping every card below ~2 viewports.
     @State private var visibleTop: CGFloat?
+    // Ids currently playing media — exempted from culling so scrolling a
+    // playing card away doesn't tear down its player mid-playback.
+    @State private var playingIDs: Set<String> = []
 
     var body: some View {
         let tokens = environment.themeManager.tokens
@@ -32,17 +35,18 @@ struct ScryView: View {
                     // Flow cards.
                     ForEach(elements) { element in
                         if let rect = frames[element.id],
-                           isVisible(rect, viewportHeight: proxy.size.height) {
+                           isVisible(rect, id: element.id, viewportHeight: proxy.size.height) {
                             ScryCard(element: element, store: store, tokens: tokens,
                                      rect: rect, isFloating: false,
                                      containerSize: proxy.size,
                                      reduceMotion: reduceMotion)
                         }
                     }
-                    // Floating (user-placed) cards, above the flow.
-                    ForEach(elements) { element in
+                    // Floating (user-placed) cards, above the flow, most-
+                    // recently-dragged last so it renders on top of the rest.
+                    ForEach(floatingElements(elements)) { element in
                         if let rect = overrides[element.id],
-                           isVisible(rect, viewportHeight: proxy.size.height) {
+                           isVisible(rect, id: element.id, viewportHeight: proxy.size.height) {
                             ScryCard(element: element, store: store, tokens: tokens,
                                      rect: rect, isFloating: true,
                                      containerSize: proxy.size,
@@ -64,15 +68,31 @@ struct ScryView: View {
             }
             .coordinateSpace(name: "scry-scroll")
             .onPreferenceChange(ScryScrollOffsetKey.self) { visibleTop = $0 }
+            .onPreferenceChange(ScryPlayingCardsKey.self) { playingIDs = $0 }
             .overlay {
                 if elements.isEmpty { emptyState(tokens: tokens) }
             }
         }
     }
 
+    /// Floating (overridden) elements, ordered so the most-recently-dragged
+    /// one is last — `ForEach` renders in array order and `ZStack` stacks
+    /// later views on top, so this ordering is what actually makes the last
+    /// card dragged win the stacking fight.
+    private func floatingElements(_ elements: [ScryElement]) -> [ScryElement] {
+        let order = store.overrideOrder
+        let overridden = elements.filter { store.overrides[$0.id] != nil }
+        return overridden.sorted { lhs, rhs in
+            let li = order.firstIndex(of: lhs.id) ?? -1
+            let ri = order.firstIndex(of: rhs.id) ?? -1
+            return li < ri
+        }
+    }
+
     /// Whether a card's rect is near enough the viewport to be worth building.
     /// Fails open: with no offset yet, everything is considered visible.
-    private func isVisible(_ rect: ScryRect, viewportHeight: CGFloat) -> Bool {
+    private func isVisible(_ rect: ScryRect, id: String, viewportHeight: CGFloat) -> Bool {
+        if playingIDs.contains(id) { return true }
         guard let visibleTop else { return true }
         let margin = viewportHeight
         let top = visibleTop - margin
@@ -93,9 +113,22 @@ struct ScryView: View {
 
 /// Scroll offset of the Scry content, used to cull offscreen cards.
 private struct ScryScrollOffsetKey: PreferenceKey {
-    nonisolated(unsafe) static var defaultValue: CGFloat = 0
+    static let defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value = nextValue()
+    }
+}
+
+/// Element ids whose media player is currently playing. Culling removes a
+/// card from the hierarchy, which tears down `ScryMediaCard`'s `@State`
+/// player — silently stopping playback with no explanation if the user has
+/// scrolled a playing card out of the margin. `ScryMediaCard` reports its own
+/// playing state up via this key; `ScryView` exempts those ids from culling.
+/// Internal (not `private`), so `ScryMediaCard` in `Cards/` can set it.
+struct ScryPlayingCardsKey: PreferenceKey {
+    static let defaultValue: Set<String> = []
+    static func reduce(value: inout Set<String>, nextValue: () -> Set<String>) {
+        value.formUnion(nextValue())
     }
 }
 
@@ -175,6 +208,9 @@ private struct ScryCard: View {
             )
             .frame(width: previewRect.width, height: previewRect.height)
             .offset(x: previewRect.x, y: previewRect.y)
+            // Floating (user-placed) cards always sit above the flow, even
+            // if a future change ever interleaves the two `ForEach`es.
+            .zIndex(isFloating ? 1 : 0)
     }
 
     private var controls: some View {

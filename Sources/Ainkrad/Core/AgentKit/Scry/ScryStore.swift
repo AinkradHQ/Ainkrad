@@ -16,6 +16,11 @@ final class ScryStore {
 
     private var models: [String: ScryModel] = [:]
     private var overridesBySession: [String: [String: ScryRect]] = [:]
+    // Drag recency for the floating pass: `overrides` itself is an unordered
+    // map, so it records no memory of which card was dragged most recently.
+    // The design calls for floating cards to render with the most-recently
+    // dragged one last (on top) — this array is that ordering, oldest first.
+    private var overrideOrderBySession: [String: [String]] = [:]
 
     var sessionID: String
 
@@ -28,6 +33,11 @@ final class ScryStore {
     /// Rects for cards the user has dragged or resized. A card with an entry
     /// here leaves the auto-layout flow and floats at that rect.
     var overrides: [String: ScryRect] { overridesBySession[sessionID] ?? [:] }
+
+    /// Ids with an override, oldest-dragged first — the order the floating
+    /// pass should render in so the most-recently-dragged card ends up last
+    /// (on top).
+    var overrideOrder: [String] { overrideOrderBySession[sessionID] ?? [] }
 
     @discardableResult
     func add(_ element: ScryElement) -> String {
@@ -60,6 +70,7 @@ final class ScryStore {
         var o = overrides
         o.removeValue(forKey: id)
         overridesBySession[sessionID] = o
+        removeFromOverrideOrder(id)
     }
 
     func setPinned(id: String, _ pinned: Bool) {
@@ -70,15 +81,28 @@ final class ScryStore {
         var o = overrides
         o[id] = rect
         overridesBySession[sessionID] = o
+
+        var order = overrideOrder
+        order.removeAll { $0 == id }
+        order.append(id)
+        overrideOrderBySession[sessionID] = order
     }
 
     func clearOverrides() {
         overridesBySession[sessionID] = [:]
+        overrideOrderBySession[sessionID] = []
     }
 
     func clear() {
         models[sessionID] = ScryModel()
         overridesBySession[sessionID] = [:]
+        overrideOrderBySession[sessionID] = []
+    }
+
+    private func removeFromOverrideOrder(_ id: String) {
+        var order = overrideOrder
+        order.removeAll { $0 == id }
+        overrideOrderBySession[sessionID] = order
     }
 
     // MARK: - helpers
@@ -106,5 +130,8 @@ final class ScryStore {
         var o = overrides
         for id in evictedIDs { o.removeValue(forKey: id) }
         overridesBySession[sessionID] = o
+        var order = overrideOrder
+        order.removeAll { evictedIDs.contains($0) }
+        overrideOrderBySession[sessionID] = order
     }
 }

@@ -64,6 +64,30 @@ struct ScryStoreTests {
         #expect(s.overrides.isEmpty)
     }
 
+    @Test("overrideOrder tracks drag recency: re-dragging an id moves it to the end")
+    func overrideOrderTracksRecency() {
+        let s = ScryStore()
+        _ = s.add(ScryElement(id: "a", kind: .card, body: ""))
+        _ = s.add(ScryElement(id: "b", kind: .card, body: ""))
+        s.setOverride(id: "a", ScryRect(x: 0, y: 0, width: 10, height: 10))
+        s.setOverride(id: "b", ScryRect(x: 0, y: 0, width: 10, height: 10))
+        #expect(s.overrideOrder == ["a", "b"])
+        // Dragging "a" again should bring it to the end, not stay put.
+        s.setOverride(id: "a", ScryRect(x: 5, y: 5, width: 10, height: 10))
+        #expect(s.overrideOrder == ["b", "a"])
+    }
+
+    @Test("removing a card also drops it from overrideOrder")
+    func overrideOrderDropsOnRemove() {
+        let s = ScryStore()
+        _ = s.add(ScryElement(id: "a", kind: .card, body: ""))
+        _ = s.add(ScryElement(id: "b", kind: .card, body: ""))
+        s.setOverride(id: "a", ScryRect(x: 0, y: 0, width: 10, height: 10))
+        s.setOverride(id: "b", ScryRect(x: 0, y: 0, width: 10, height: 10))
+        s.remove(id: "a")
+        #expect(s.overrideOrder == ["b"])
+    }
+
     @Test("sessions are isolated, including their overrides")
     func sessionIsolation() {
         let s = ScryStore(sessionID: "A")

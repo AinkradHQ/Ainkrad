@@ -14,7 +14,8 @@ struct ScryImageCard: View {
             // `data:` URL (e.g. from `image_generate`) — decode the bytes directly;
             // AsyncImage/URLSession does not load the `data:` scheme.
             Image(nsImage: nsImage).resizable().scaledToFit()
-        } else if let url = URL(string: element.body), url.scheme?.hasPrefix("http") == true {
+        } else if let url = URL(string: element.body), let scheme = url.scheme?.lowercased(),
+                  scheme == "http" || scheme == "https" {
             AsyncImage(url: url) { $0.resizable().scaledToFit() } placeholder: { AinkradSpinner(size: 20) }
         } else {
             Text("Image unavailable")
