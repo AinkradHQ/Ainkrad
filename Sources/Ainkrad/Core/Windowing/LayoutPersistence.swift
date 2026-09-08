@@ -54,6 +54,49 @@ struct LayoutStateSnapshot: PersistableDocument {
 
     var workspaces: [WorkspaceSnapshot]
     var activeWorkspaceIndex: Int
+
+    /// True when `name` is still the auto-generated "Workspace <n>" that
+    /// `WorkspaceManager.createWorkspace()` mints — i.e. the user opened a
+    /// workspace but never named it. Naming one is the signal that it is
+    /// worth keeping across launches; an unnamed one was scratch space.
+    static func isAutoNamed(_ name: String) -> Bool {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        guard trimmed.hasPrefix("Workspace ") else { return false }
+        let suffix = trimmed.dropFirst("Workspace ".count)
+        return !suffix.isEmpty && suffix.allSatisfy(\.isNumber)
+    }
+
+    /// The snapshot as it should be applied at launch.
+    ///
+    /// Three things happen here, all so that opening the app never resumes
+    /// the last session on the user's behalf:
+    ///
+    /// 1. Workspaces the user never named are dropped — main is always kept,
+    ///    regardless of its name.
+    /// 2. Pane trees are dropped unless `restoringPanes` is true
+    ///    (Settings → General → "Restore layout on launch", default off), so
+    ///    no app starts itself.
+    /// 3. The active workspace is forced to main, so a launch always lands on
+    ///    the home island rather than wherever the last session left off.
+    ///
+    /// This returns a value; the PERSISTED document is left untouched, so
+    /// turning pane restore back on still finds the last saved layout.
+    func launchState(restoringPanes: Bool) -> LayoutStateSnapshot {
+        let kept = workspaces
+            .filter { $0.isMain || !Self.isAutoNamed($0.name) }
+            .map { workspace in
+                WorkspaceSnapshot(
+                    name: workspace.name,
+                    isMain: workspace.isMain,
+                    viewMode: workspace.viewMode,
+                    root: restoringPanes ? workspace.root : nil
+                )
+            }
+        return LayoutStateSnapshot(
+            workspaces: kept,
+            activeWorkspaceIndex: kept.firstIndex(where: { $0.isMain }) ?? 0
+        )
+    }
 }
 
 extension TileLayout {

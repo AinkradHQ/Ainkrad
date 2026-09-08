@@ -71,6 +71,20 @@ enum HostSettingsCatalog {
             groups: [
                 SettingsGroup(path: startup, title: "Workspace", fields: [
                     SettingsField(
+                        path: startup.appending("restoreLayout"),
+                        label: "Restore layout on launch",
+                        help: "Reopen the apps that were tiled in each workspace when you "
+                            + "last quit. Off, workspaces come back empty and nothing "
+                            + "starts until you open it.",
+                        keywords: ["restore", "reopen", "launch", "startup", "session",
+                                   "layout", "tabs", "panes"],
+                        kind: .toggle(Binding(
+                            get: { store.restoreLayoutOnLaunch },
+                            set: { store.setRestoreLayoutOnLaunch($0) })),
+                        defaultDescription: "Off",
+                        isModified: { store.restoreLayoutOnLaunch != false },
+                        reset: { store.setRestoreLayoutOnLaunch(false) }),
+                    SettingsField(
                         path: startup.appending("fullScreenStatusBar"),
                         label: "Show status bar in full-screen",
                         help: "Clock, network, and battery in the title strip while full-screen.",

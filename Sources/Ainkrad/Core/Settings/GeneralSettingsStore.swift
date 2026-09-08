@@ -29,6 +29,9 @@ final class GeneralSettingsStore: SoundSettingsProviding {
     /// at the host root. Toggled in Settings → Appearance → Motion; default
     /// false = motion on.
     private(set) var uiReduceMotion: Bool
+    /// Whether a relaunch reopens the apps that were tiled at quit
+    /// (Settings → General → Workspace). Default false — see `GlobalSettings`.
+    private(set) var restoreLayoutOnLaunch: Bool
     private let persistence: PersistenceStore
 
     init(persistence: PersistenceStore) {
@@ -48,6 +51,14 @@ final class GeneralSettingsStore: SoundSettingsProviding {
         self.overlayBlurEnabled = settings.overlayBlurEnabled
         self.launcherViewMode = settings.launcherViewMode
         self.uiReduceMotion = settings.uiReduceMotion
+        self.restoreLayoutOnLaunch = settings.restoreLayoutOnLaunch
+    }
+
+    func setRestoreLayoutOnLaunch(_ isOn: Bool) {
+        restoreLayoutOnLaunch = isOn
+        var settings = persistence.load(GlobalSettings.self) ?? GlobalSettings()
+        settings.restoreLayoutOnLaunch = isOn
+        persistence.save(settings)
     }
 
     func setLauncherViewMode(_ mode: LauncherViewMode) {
