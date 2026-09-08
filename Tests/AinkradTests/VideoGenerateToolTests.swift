@@ -20,7 +20,7 @@ struct VideoGenerateToolTests {
     }
 
     @Test func gracefulWhenNotConfigured() async throws {
-        let canvas = ScryStore(persistence: InMemoryPersistenceStore(), sessionKey: "s")
+        let canvas = ScryStore(sessionID: "s")
         let tool = VideoGenerateTool(backend: StubBackend(configured: false), store: canvas, mediaStore: tempStore())
         let result = try await tool.execute(.object(["prompt": .string("a wave")]))
         #expect(result.isError == false)
@@ -29,7 +29,7 @@ struct VideoGenerateToolTests {
     }
 
     @Test func rendersVideoElementAndWritesFile() async throws {
-        let canvas = ScryStore(persistence: InMemoryPersistenceStore(), sessionKey: "s")
+        let canvas = ScryStore(sessionID: "s")
         let tool = VideoGenerateTool(backend: StubBackend(configured: true), store: canvas, mediaStore: tempStore())
         _ = try await tool.execute(.object(["prompt": .string("a wave")]))
         let element = try #require(canvas.model.elements.first)
@@ -40,13 +40,13 @@ struct VideoGenerateToolTests {
     }
 
     @Test func requiresPrompt() async {
-        let canvas = ScryStore(persistence: InMemoryPersistenceStore(), sessionKey: "s")
+        let canvas = ScryStore(sessionID: "s")
         let tool = VideoGenerateTool(backend: StubBackend(configured: true), store: canvas, mediaStore: tempStore())
         await #expect(throws: ToolError.self) { _ = try await tool.execute(.object(["prompt": .string("")])) }
     }
 
     @Test func isReadClassAndReversible() {
-        let canvas = ScryStore(persistence: InMemoryPersistenceStore(), sessionKey: "s")
+        let canvas = ScryStore(sessionID: "s")
         let tool = VideoGenerateTool(backend: StubBackend(configured: true), store: canvas, mediaStore: tempStore())
         #expect(tool.permission == .read)
         #expect(tool.isIrreversible(.object([:])) == false)

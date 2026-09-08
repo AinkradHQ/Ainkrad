@@ -93,7 +93,7 @@ final class AppEnvironmentTests {
         let scheduleRunner = ScheduleRunner(store: scheduleStore, runs: runManager)
         let fileChangeWatcher = FileChangeWatcher()
         let menuBarPresence = MenuBarPresence(runs: RunManagerMenuBarAdapter(manager: runManager))
-        let canvasStore = ScryStore(persistence: persistence)
+        let canvasStore = ScryStore()
         let toolStreamStore = ToolStreamStore()
         let voiceService = VoiceService(persistence: persistence, connections: connectionStore)
         voiceService.attachSession(agentSession)

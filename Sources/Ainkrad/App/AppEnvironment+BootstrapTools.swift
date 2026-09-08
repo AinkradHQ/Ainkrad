@@ -204,11 +204,12 @@ extension AppEnvironment {
         // M7 Slice 7 (Live Scry): `scry_render` only draws structured cards
         // from agent-supplied data — it executes nothing and touches no files
         // or system state (see `ScryRenderTool`), so it's appended alongside
-        // the other read-class tools. `canvasStore` defaults to sessionKey
+        // the other read-class tools. `scryStore` defaults to sessionID
         // "default" (PROVISIONAL — per-session keying awaits a stable session
-        // identifier from Slice 5; see Task 12 brief).
-        let canvasStore = ScryStore(persistence: persistence)
-        agentTools.append(ScryRenderTool(store: canvasStore))
+        // identifier from Slice 5; see Task 12 brief). In-memory only: nothing
+        // on the mutation path touches disk (see `ScryStore`).
+        let scryStore = ScryStore()
+        agentTools.append(ScryRenderTool(store: scryStore))
 
         // Media tools (read-class, render to the Live Scry). Key in SecretStore.
         agentTools.append(ImageGenerateTool(
@@ -222,7 +223,7 @@ extension AppEnvironment {
                 google: GoogleImagenBackend(secrets: secrets, http: URLSessionDataHTTPClient()),
                 huggingface: HuggingFaceImageBackend(secrets: secrets, http: URLSessionDataHTTPClient()),
                 auxHTTP: URLSessionDataHTTPClient()),
-            store: canvasStore))
+            store: scryStore))
         // Generated media (image/video/speech output) is irreplaceable —
         // re-running a prompt yields different output — so it lives in the
         // vault, not the cache. Shared across the video and speech tools.
@@ -235,7 +236,7 @@ extension AppEnvironment {
                 luma: LumaVideoBackend(secrets: secrets, http: URLSessionDataHTTPClient()),
                 fal: FalVideoBackend(secrets: secrets, http: URLSessionDataHTTPClient()),
                 auxHTTP: URLSessionDataHTTPClient()),
-            store: canvasStore, mediaStore: generatedMediaStore))
+            store: scryStore, mediaStore: generatedMediaStore))
         agentTools.append(SpeakTool(
             synth: RoutingSpeechSynthesizer(
                 persistence: persistence, secrets: secrets, onDevice: SystemSpeechSynthesizer(),
@@ -243,7 +244,7 @@ extension AppEnvironment {
             producer: RoutingSpeechAudioProducer(
                 persistence: persistence, secrets: secrets, http: URLSessionDataHTTPClient(),
                 onDevice: OnDeviceSpeechAudioProducer()),
-            store: canvasStore, mediaStore: generatedMediaStore))
+            store: scryStore, mediaStore: generatedMediaStore))
 
         // M8 code-search tools (read-class). Share the assistant workspace root,
         // resolved live so a folder change is reflected without re-registering —
@@ -256,7 +257,7 @@ extension AppEnvironment {
         agentTools.append(GrepTool(rootProvider: searchRootProvider))
         agentTools.append(GlobTool(rootProvider: searchRootProvider))
 
-        return (sandboxProfileStore, cloudCredentialsStore, executionRouter, agentTools, mcpServerRegistry, canvasStore,
+        return (sandboxProfileStore, cloudCredentialsStore, executionRouter, agentTools, mcpServerRegistry, scryStore,
                 signalReadAccess, toolStreamStore, terminalController)
     }
 

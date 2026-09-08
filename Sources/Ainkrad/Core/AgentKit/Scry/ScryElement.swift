@@ -48,7 +48,7 @@ enum ScrySizeHint: String, Codable, Sendable, CaseIterable {
 }
 
 struct ScryElement: Codable, Equatable, Identifiable, Sendable {
-    let id: String
+    var id: String
     var kind: ScryElementKind
     var title: String?
     var body: String

@@ -7,7 +7,7 @@ import AinkradHostRuntime
 @MainActor
 struct ScryRenderToolTests {
     private func make() -> (ScryRenderTool, ScryStore) {
-        let store = ScryStore(persistence: InMemoryPersistenceStore(), sessionKey: "s")
+        let store = ScryStore(sessionID: "s")
         return (ScryRenderTool(store: store), store)
     }
 

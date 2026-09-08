@@ -69,11 +69,11 @@ private struct ScryCard: View {
     @State private var isHovering = false
     @GestureState private var dragStart: ScryRect?
     @GestureState private var resizeStart: ScryRect?
-    // Perf fix (I2/M1): live-drag/resize preview state ONLY — the store is a
-    // synchronous full-document atomic-write persistence layer (`ScryStore.
-    // commit`), so writing it on every `DragGesture.onChanged` tick was a disk
-    // write per pixel of movement. These hold the in-flight visual delta;
-    // the store is committed exactly once, in `.onEnded`.
+    // Perf fix (I2/M1): live-drag/resize preview state ONLY, kept even though
+    // `ScryStore` is in-memory now — committing on every `DragGesture.
+    // onChanged` tick would still re-layout the whole surface per pixel of
+    // movement. These hold the in-flight visual delta; the store is
+    // committed exactly once, in `.onEnded`.
     @State private var dragPreviewOffset: CGSize = .zero
     @State private var resizePreviewSize: CGSize?
     @State private var hasBroughtToFrontThisDrag = false
@@ -111,16 +111,18 @@ private struct ScryCard: View {
                     }
                     .onChanged { v in
                         if !hasBroughtToFrontThisDrag {
-                            store.bringToFront(id: element.id)
+                            let top = store.model.nextZ
+                            store.update(id: element.id) { $0.z = top }
                             hasBroughtToFrontThisDrag = true
                         }
                         dragPreviewOffset = v.translation
                     }
                     .onEnded { v in
                         let base = dragStart ?? element.rect
-                        store.move(id: element.id,
-                                   to: CGPoint(x: base.x + v.translation.width,
-                                               y: base.y + v.translation.height))
+                        store.update(id: element.id) {
+                            $0.rect.x = base.x + Double(v.translation.width)
+                            $0.rect.y = base.y + Double(v.translation.height)
+                        }
                         dragPreviewOffset = .zero
                         hasBroughtToFrontThisDrag = false
                     }
@@ -157,9 +159,12 @@ private struct ScryCard: View {
                     }
                     .onEnded { v in
                         let base = resizeStart ?? element.rect
-                        store.resize(id: element.id,
-                                     to: CGSize(width: max(160, base.width + v.translation.width),
-                                                height: max(100, base.height + v.translation.height)))
+                        let width = max(160, base.width + Double(v.translation.width))
+                        let height = max(100, base.height + Double(v.translation.height))
+                        store.update(id: element.id) {
+                            $0.rect.width = width
+                            $0.rect.height = height
+                        }
                         resizePreviewSize = nil
                     }
             )

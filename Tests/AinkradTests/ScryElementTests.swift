@@ -38,10 +38,6 @@ struct ScryElementTests {
         m.remove(id: "a")
         #expect(m.elements.isEmpty)
     }
-
-    @Test func documentIDIsStable() {
-        #expect(ScryWorkspaceDocument.documentID == "agent-canvas")
-    }
 }
 
 @Suite("ScrySizeHint")
