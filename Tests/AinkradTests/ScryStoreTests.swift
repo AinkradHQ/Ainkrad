@@ -91,4 +91,44 @@ struct ScryStoreTests {
         s.sessionID = "A"
         #expect(s.model.elements.count == 1)
     }
+
+    @Test("an all-pinned model is left over the cap")
+    func allPinnedLeftOverCap() {
+        let s = ScryStore()
+        for i in 0..<(ScryStore.cardCap + 5) {
+            _ = s.add(ScryElement(id: "e\(i)", kind: .text, body: "", pinned: true))
+        }
+        #expect(s.model.elements.count == ScryStore.cardCap + 5)
+        #expect(s.model.elements.allSatisfy { $0.pinned })
+    }
+
+    @Test("remove drops the element's override entry")
+    func removeDropsOverride() {
+        let s = ScryStore()
+        _ = s.add(ScryElement(id: "a", kind: .card, body: ""))
+        s.setOverride(id: "a", ScryRect(x: 1, y: 2, width: 3, height: 4))
+        #expect(s.overrides["a"] != nil)
+        s.remove(id: "a")
+        #expect(s.overrides["a"] == nil)
+    }
+
+    @Test("eviction by the cap drops the evicted card's override entry")
+    func evictionDropsOverride() {
+        let s = ScryStore()
+        let firstID = "e0"
+        _ = s.add(ScryElement(id: firstID, kind: .card, body: ""))
+        s.setOverride(id: firstID, ScryRect(x: 1, y: 2, width: 3, height: 4))
+        #expect(s.overrides[firstID] != nil)
+
+        for i in 1..<(ScryStore.cardCap + 1) {
+            _ = s.add(ScryElement(id: "e\(i)", kind: .text, body: ""))
+        }
+        #expect(!s.model.elements.contains { $0.id == firstID })
+        #expect(s.overrides[firstID] == nil)
+
+        // Re-adding under the same (agent-supplied, stable) id must not
+        // resurrect the stale override.
+        _ = s.add(ScryElement(id: firstID, kind: .card, body: "back"))
+        #expect(s.overrides[firstID] == nil)
+    }
 }

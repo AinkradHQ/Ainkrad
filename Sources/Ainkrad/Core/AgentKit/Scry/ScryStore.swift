@@ -35,14 +35,14 @@ final class ScryStore {
         if e.id.isEmpty { e.id = UUID().uuidString }
         var m = model
         m.upsert(e)
-        commit(evicting(m))
+        commitEvicting(m)
         return e.id
     }
 
     func upsert(_ element: ScryElement) {
         var m = model
         m.upsert(element)
-        commit(evicting(m))
+        commitEvicting(m)
     }
 
     func update(id: String, mutate: (inout ScryElement) -> Void) {
@@ -87,15 +87,24 @@ final class ScryStore {
         models[sessionID] = m
     }
 
-    /// Drops oldest-first until the model is within the cap, skipping pinned
-    /// cards. If every card is pinned the model is left over the cap rather
-    /// than discarding something the user asked to keep.
-    private func evicting(_ m: ScryModel) -> ScryModel {
+    /// Evicts oldest-first until `m` is within the cap, skipping pinned
+    /// cards (if every card is pinned, `m` is left over the cap rather than
+    /// discarding something the user asked to keep), then commits — clearing
+    /// each evicted card's override so a later re-add under the same id
+    /// (agent-supplied ids are stable strings, not UUIDs) never resurrects a
+    /// stale user-drag rect for a card that no longer exists.
+    private func commitEvicting(_ m: ScryModel) {
         var m = m
+        var evictedIDs: [String] = []
         while m.elements.count > Self.cardCap,
               let victim = m.elements.first(where: { !$0.pinned }) {
             m.remove(id: victim.id)
+            evictedIDs.append(victim.id)
         }
-        return m
+        commit(m)
+        guard !evictedIDs.isEmpty else { return }
+        var o = overrides
+        for id in evictedIDs { o.removeValue(forKey: id) }
+        overridesBySession[sessionID] = o
     }
 }
