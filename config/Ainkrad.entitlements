@@ -25,5 +25,9 @@
 	     `Bundle.load()` is ever called. dyld's check is replaced, not dropped. -->
 	<key>com.apple.security.cs.disable-library-validation</key>
 	<true/>
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)com.ainkrad.app</string>
+	</array>
 </dict>
 </plist>

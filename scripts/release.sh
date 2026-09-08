@@ -182,6 +182,50 @@ BUILT_VERSION="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "
 SIGNED=false
 if [[ -n "${SIGN_IDENTITY:-}" ]]; then
   echo "▸ Signing with: ${SIGN_IDENTITY}"
+
+  # The app claims `keychain-access-groups` (see config/Ainkrad.entitlements),
+  # and that entitlement is only honoured with a matching provisioning profile
+  # embedded in the bundle. xcodebuild embeds the DEVELOPMENT profile it signed
+  # with, which does not match a Developer ID signature: AMFI SIGKILLs such a
+  # bundle the instant it launches, so the DMG would ship an app that dies on
+  # open with no error a user can act on. (Verified directly: Developer ID
+  # signature plus development profile, exit 137.) Swap in the Developer ID
+  # profile before signing, and refuse to build if there is not one.
+  DEVID_PROFILE="${DEVID_PROFILE:-config/Ainkrad-DeveloperID.provisionprofile}"
+  if [[ ! -f "$DEVID_PROFILE" ]]; then
+    echo "error: no Developer ID provisioning profile at ${DEVID_PROFILE}." >&2
+    echo "       Create one at developer.apple.com (Profiles -> + -> Developer ID," >&2
+    echo "       App ID com.ainkrad.app with Keychain Sharing enabled), save it there," >&2
+    echo "       or point DEVID_PROFILE at it. Without it the signed app is killed" >&2
+    echo "       at launch by AMFI. Refusing to continue." >&2
+    exit 1
+  fi
+  if security cms -D -i "$DEVID_PROFILE" 2>/dev/null | grep -q 'ProvisionedDevices'; then
+    echo "error: ${DEVID_PROFILE} is a DEVELOPMENT profile (it lists ProvisionedDevices)." >&2
+    echo "       A Developer ID signature with a development profile is SIGKILLed" >&2
+    echo "       at launch. Refusing to continue." >&2
+    exit 1
+  fi
+  cp "$DEVID_PROFILE" "$APP_PATH/Contents/embedded.provisionprofile"
+
+  # `config/Ainkrad.entitlements` writes the access group as
+  # $(AppIdentifierPrefix)com.ainkrad.app. Xcode expands that build variable
+  # into a .xcent when IT signs; plain codesign does NOT — it would sign the
+  # literal string "$(AppIdentifierPrefix)com.ainkrad.app", which matches no
+  # access group at all and gets the app SIGKILLed by AMFI the moment a user
+  # opens it. (Verified: signing a bundle with the unexpanded string, exit 137.)
+  # So expand it here, from the prefix the profile itself was issued for, and
+  # sign with the result.
+  APP_PREFIX="$(security cms -D -i "$DEVID_PROFILE" 2>/dev/null \
+    | plutil -extract 'Entitlements.com\.apple\.application-identifier' raw - 2>/dev/null \
+    | cut -d. -f1)"
+  if [[ ! "$APP_PREFIX" =~ ^[A-Z0-9]{10}$ ]]; then
+    echo "error: could not read the App ID prefix from ${DEVID_PROFILE} (got '${APP_PREFIX}')." >&2
+    exit 1
+  fi
+  SIGN_ENTITLEMENTS="$(mktemp -t ainkrad-entitlements).plist"
+  sed "s/\$(AppIdentifierPrefix)/${APP_PREFIX}./g" config/Ainkrad.entitlements > "$SIGN_ENTITLEMENTS"
+  trap 'rm -f "$SIGN_ENTITLEMENTS"' EXIT
   # Inside-out: sign every nested dylib/framework first, then the app bundle,
   # each with the hardened runtime + a secure timestamp (both required for
   # notarization). --deep is intentionally avoided (Apple discourages it).
@@ -189,7 +233,7 @@ if [[ -n "${SIGN_IDENTITY:-}" ]]; then
     codesign --force --options runtime --timestamp --sign "$SIGN_IDENTITY" "$item"
   done < <(find "$APP_PATH/Contents/Frameworks" \( -name '*.dylib' -o -name '*.framework' \) -print0 2>/dev/null)
   codesign --force --options runtime --timestamp \
-    --entitlements config/Ainkrad.entitlements \
+    --entitlements "$SIGN_ENTITLEMENTS" \
     --sign "$SIGN_IDENTITY" "$APP_PATH"
   codesign --verify --strict --verbose=2 "$APP_PATH"
 
@@ -204,6 +248,26 @@ if [[ -n "${SIGN_IDENTITY:-}" ]]; then
        | grep -q 'com.apple.security.cs.disable-library-validation'; then
     echo "error: signed app is missing com.apple.security.cs.disable-library-validation." >&2
     echo "       Under the hardened runtime NO plugin would load. Refusing to continue." >&2
+    exit 1
+  fi
+
+  # keychain-access-groups is what lets every build read the same secrets with
+  # no per binary ACL. Dropped from the signature, the shipped app silently
+  # falls back to the legacy keychain, cannot see anything it stored before,
+  # and starts asking for the login password again on every rebuilt binary.
+  SIGNED_ENTITLEMENTS="$(codesign -d --entitlements :- "$APP_PATH" 2>/dev/null)"
+  if ! grep -q "${APP_PREFIX}.com.ainkrad.app" <<<"$SIGNED_ENTITLEMENTS"; then
+    echo "error: signed app is missing the ${APP_PREFIX}.com.ainkrad.app keychain access group." >&2
+    echo "       Stored secrets would be unreachable and the Keychain password" >&2
+    echo "       prompt would return on every build. Refusing to continue." >&2
+    exit 1
+  fi
+  # An unexpanded build variable is worse than a missing entitlement: the app is
+  # killed at launch instead of merely losing access, and `grep keychain` alone
+  # would have happily passed it.
+  if grep -q 'AppIdentifierPrefix' <<<"$SIGNED_ENTITLEMENTS"; then
+    echo "error: signed app carries an UNEXPANDED \$(AppIdentifierPrefix) access group." >&2
+    echo "       AMFI kills such a bundle on launch. Refusing to continue." >&2
     exit 1
   fi
   SIGNED=true
