@@ -102,6 +102,16 @@ struct ScryStoreTests {
         #expect(s.model.elements.allSatisfy { $0.pinned })
     }
 
+    @Test("a drag records an override without mutating the element")
+    func dragRecordsOverrideOnly() {
+        let s = ScryStore()
+        let id = s.add(ScryElement(id: "a", kind: .card, body: "x"))
+        let before = s.model.elements.first!
+        s.setOverride(id: id, ScryRect(x: 200, y: 300, width: 400, height: 250))
+        #expect(s.model.elements.first! == before)   // element untouched
+        #expect(s.overrides[id]?.x == 200)
+    }
+
     @Test("remove drops the element's override entry")
     func removeDropsOverride() {
         let s = ScryStore()
