@@ -3,6 +3,13 @@ import AVKit
 import AinkradAppKit
 import AinkradHostRuntime
 
+/// Hard reference to an AVKit ObjC class so the linker binds AVKit.framework.
+/// `import AVKit` alone autolinks only the `_AVKit_SwiftUI` shim used by
+/// `VideoPlayer`; that shim's `VideoPlayerView` subclasses `AVPlayerView`, and
+/// with AVKit absent from the load commands the Swift runtime aborts the first
+/// time a `VideoPlayer` is instantiated. Keep this — it is load-bearing.
+private let scryAVKitLinkAnchor: AnyObject.Type = AVPlayerView.self
+
 /// Pure table-body → rows parser (markdown pipe table or CSV). Unit-tested.
 /// Detects the separator from the body (`|` wins over `,`), then drops a
 /// markdown separator row (all-dash cells) so header/data rows line up.

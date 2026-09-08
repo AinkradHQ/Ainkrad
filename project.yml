@@ -210,6 +210,12 @@ targets:
       # stays native SwiftUI per the Cardinal HUD design language.
       - sdk: WebKit.framework
       - sdk: MetricKit.framework
+      # AVKit must be linked EXPLICITLY. Scry's video/audio elements use SwiftUI's
+      # `VideoPlayer`, which autolinks only the `_AVKit_SwiftUI` shim — that shim's
+      # `VideoPlayerView` subclasses AVKit's ObjC `AVPlayerView`, so without AVKit
+      # in the load commands the Swift runtime aborts the moment a VideoPlayer is
+      # built ("failed to demangle superclass ... 'So12AVPlayerViewC'").
+      - sdk: AVKit.framework
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ainkrad.app
