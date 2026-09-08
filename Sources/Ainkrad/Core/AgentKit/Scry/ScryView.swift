@@ -14,7 +14,11 @@ struct ScryView: View {
     @Environment(\.ainkradReduceMotion) private var reduceMotion
     let store: ScryStore
 
-    @State private var visibleTop: CGFloat = 0
+    // Fails open: `nil` means "no offset delivered yet, so cull nothing."
+    // The scroll preference is the one mechanism here nobody has verified at
+    // runtime — if it never fires, degrading to "builds too much" is far
+    // safer than silently dropping every card below ~2 viewports.
+    @State private var visibleTop: CGFloat?
 
     var body: some View {
         let tokens = environment.themeManager.tokens
@@ -31,6 +35,7 @@ struct ScryView: View {
                            isVisible(rect, viewportHeight: proxy.size.height) {
                             ScryCard(element: element, store: store, tokens: tokens,
                                      rect: rect, isFloating: false,
+                                     containerSize: proxy.size,
                                      reduceMotion: reduceMotion)
                         }
                     }
@@ -40,6 +45,7 @@ struct ScryView: View {
                            isVisible(rect, viewportHeight: proxy.size.height) {
                             ScryCard(element: element, store: store, tokens: tokens,
                                      rect: rect, isFloating: true,
+                                     containerSize: proxy.size,
                                      reduceMotion: reduceMotion)
                         }
                     }
@@ -65,7 +71,9 @@ struct ScryView: View {
     }
 
     /// Whether a card's rect is near enough the viewport to be worth building.
+    /// Fails open: with no offset yet, everything is considered visible.
     private func isVisible(_ rect: ScryRect, viewportHeight: CGFloat) -> Bool {
+        guard let visibleTop else { return true }
         let margin = viewportHeight
         let top = visibleTop - margin
         let bottom = visibleTop + viewportHeight + margin
@@ -99,6 +107,7 @@ private struct ScryCard: View {
     let tokens: DesignTokens
     let rect: ScryRect
     let isFloating: Bool
+    let containerSize: CGSize
     let reduceMotion: Bool
     @State private var isHovering = false
     @GestureState private var dragStart: ScryRect?
@@ -126,6 +135,18 @@ private struct ScryCard: View {
         return r
     }
 
+    /// A dropped card must stay reachable: origin can't go negative (that
+    /// clips the card off the top/left with no way to scroll back to it),
+    /// and it can't be dropped so far right that no sliver of it remains
+    /// inside the container's width.
+    private func clamped(_ r: ScryRect) -> ScryRect {
+        var r = r
+        let minVisible: Double = 40
+        r.x = max(0, min(r.x, max(0, Double(containerSize.width) - minVisible)))
+        r.y = max(0, r.y)
+        return r
+    }
+
     var body: some View {
         ScryElementView(element: element, tokens: tokens)
             .overlay(alignment: .topTrailing) { if isHovering { controls } }
@@ -148,7 +169,7 @@ private struct ScryCard: View {
                         var newRect = base
                         newRect.x = base.x + Double(v.translation.width)
                         newRect.y = base.y + Double(v.translation.height)
-                        store.setOverride(id: element.id, newRect)
+                        store.setOverride(id: element.id, clamped(newRect))
                         dragPreviewOffset = .zero
                     }
             )

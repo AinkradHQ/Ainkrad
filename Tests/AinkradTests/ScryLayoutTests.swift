@@ -77,4 +77,14 @@ struct ScryLayoutTests {
         #expect(ScryLayout.frames(for: els, in: wide, overrides: [:])
                 == ScryLayout.frames(for: els, in: wide, overrides: [:]))
     }
+
+    @Test("content height spans an overridden card placed below the flow")
+    func contentHeightSpansOverrides() {
+        let els = [element("a", .text, .medium)]
+        let flowOnly = ScryLayout.contentHeight(for: els, in: wide, overrides: [:])
+        let farBelow = ScryRect(x: 100, y: 3000, width: 300, height: 200)
+        let withOverride = ScryLayout.contentHeight(for: els, in: wide, overrides: ["a": farBelow])
+        #expect(withOverride > flowOnly)
+        #expect(withOverride >= 3000 + 200)
+    }
 }

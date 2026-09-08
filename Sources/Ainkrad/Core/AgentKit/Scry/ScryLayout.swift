@@ -82,7 +82,12 @@ enum ScryLayout {
                               in size: CGSize,
                               overrides: [String: ScryRect]) -> CGFloat {
         let frames = frames(for: elements, in: size, overrides: overrides)
-        let bottom = frames.values.map { CGFloat($0.y + $0.height) }.max() ?? 0
-        return bottom + padding
+        // Must also span overridden (floating) cards: `frames` excludes them
+        // by design, so a card dragged below the flow's bottom would
+        // otherwise shrink the scrollable content and strand itself outside
+        // the reachable region.
+        let flowBottom = frames.values.map { CGFloat($0.y + $0.height) }.max() ?? 0
+        let overrideBottom = overrides.values.map { CGFloat($0.y + $0.height) }.max() ?? 0
+        return max(flowBottom, overrideBottom) + padding
     }
 }
