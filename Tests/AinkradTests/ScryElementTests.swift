@@ -43,3 +43,35 @@ struct ScryElementTests {
         #expect(ScryWorkspaceDocument.documentID == "agent-canvas")
     }
 }
+
+@Suite("ScrySizeHint")
+struct ScrySizeHintTests {
+    @Test("each kind has a sensible default size")
+    func kindDefaults() {
+        #expect(ScrySizeHint.default(for: .status) == .small)
+        #expect(ScrySizeHint.default(for: .table) == .full)
+        #expect(ScrySizeHint.default(for: .diagram) == .large)
+        #expect(ScrySizeHint.default(for: .chart) == .large)
+        #expect(ScrySizeHint.default(for: .video) == .large)
+        #expect(ScrySizeHint.default(for: .text) == .medium)
+        #expect(ScrySizeHint.default(for: .unknown) == .medium)
+    }
+
+    @Test("an element with no explicit hint takes its kind's default")
+    func derivesFromKind() {
+        #expect(ScryElement(id: "a", kind: .table, body: "").sizeHint == .full)
+        #expect(ScryElement(id: "b", kind: .status, body: "").sizeHint == .small)
+    }
+
+    @Test("an explicit hint wins over the kind default")
+    func explicitWins() {
+        #expect(ScryElement(id: "c", kind: .table, body: "", sizeHint: .small).sizeHint == .small)
+    }
+
+    @Test("an unknown size string decodes to the kind default, never a throw")
+    func unknownSizeDecodes() throws {
+        let json = #"{"id":"d","kind":"table","body":"x","sizeHint":"gigantic"}"#
+        let e = try JSONDecoder().decode(ScryElement.self, from: Data(json.utf8))
+        #expect(e.sizeHint == .full)
+    }
+}
