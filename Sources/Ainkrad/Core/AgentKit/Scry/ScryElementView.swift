@@ -8,6 +8,24 @@ struct ScryElementRenderError: Error {
     let message: String
 }
 
+/// The inline error card shape, shared by `ScryElementView` (for any kind
+/// whose `buildContent()` throws) and `ScryTextCard` (whose markdown parse
+/// failure is caught internally so it stays a real `View`, per the uniform
+/// `(element:tokens:)` dispatcher contract).
+struct ScryErrorCard: View {
+    let tokens: DesignTokens
+    let message: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 6) {
+            Circle().fill(tokens.danger).frame(width: 7, height: 7).padding(.top, 3)
+            Text("Render error: \(message)")
+                .font(AinkradFont.display(11))
+                .foregroundStyle(tokens.danger.opacity(0.9))
+        }
+    }
+}
+
 /// Renders one scry element. A failure in any branch degrades to an inline
 /// error card; an unknown kind degrades to a placeholder — never a crash,
 /// and never takes any other element on the canvas down with it.
@@ -33,14 +51,14 @@ struct ScryElementView: View {
         } catch {
             let message = (error as? ScryElementRenderError)?.message
                 ?? String(describing: error)
-            return AnyView(errorCard(message))
+            return AnyView(ScryErrorCard(tokens: tokens, message: message))
         }
     }
 
     private func buildContent() throws -> AnyView {
         switch element.kind {
         case .text, .markdown:
-            return AnyView(try ScryTextCard(element: element, tokens: tokens).content())
+            return AnyView(ScryTextCard(element: element, tokens: tokens))
         case .table:
             return AnyView(ScryTableCard(element: element, tokens: tokens))
         case .code:
@@ -72,14 +90,5 @@ struct ScryElementView: View {
         .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(ChamferShape(cut: AinkradRadius.md).fill(tokens.surfaceElevated.opacity(0.45)))
-    }
-
-    private func errorCard(_ message: String) -> some View {
-        HStack(alignment: .top, spacing: 6) {
-            Circle().fill(tokens.danger).frame(width: 7, height: 7).padding(.top, 3)
-            Text("Render error: \(message)")
-                .font(AinkradFont.display(11))
-                .foregroundStyle(tokens.danger.opacity(0.9))
-        }
     }
 }
