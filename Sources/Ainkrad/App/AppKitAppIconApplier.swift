@@ -15,6 +15,13 @@ final class AppKitAppIconApplier: NSObject, AppIconApplying {
     /// of `GlobalSettings`. Absent = the bundle carries no stamp of ours.
     private static let stampedIconKey = "appIcon.stampedBundleResource"
 
+    /// UserDefaults key holding the `CFBundleVersion` that was current when
+    /// `stampedIconKey` was recorded. The stamp lives inside the `.app`
+    /// bundle and is lost on update/reinstall while `UserDefaults` survives
+    /// it — without this, a stale "already stamped" record from a previous
+    /// bundle would suppress re-stamping the new one forever.
+    private static let stampedBundleVersionKey = "appIcon.stampedBundleVersion"
+
     private var choice: AppIconChoice = .auto
     private var appearance: AppIconAppearance = .system
     private var theme: Theme = .neonBlue
@@ -55,9 +62,12 @@ final class AppKitAppIconApplier: NSObject, AppIconApplying {
     private func stampBundleIcon(resource: String, iconURL: URL) {
         let defaults = UserDefaults.standard
         let bundleURL = Bundle.main.bundleURL
+        let currentBundleVersion = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
         let decision = BundleAppIcon.decide(
             resolved: resource,
             lastWritten: defaults.string(forKey: Self.stampedIconKey),
+            lastWrittenBundleVersion: defaults.string(forKey: Self.stampedBundleVersionKey),
+            currentBundleVersion: currentBundleVersion,
             matchesShippedIcon: shippedIconMatches(iconURL))
 
         switch decision {
@@ -69,6 +79,7 @@ final class AppKitAppIconApplier: NSObject, AppIconApplying {
                 return
             }
             defaults.removeObject(forKey: Self.stampedIconKey)
+            defaults.removeObject(forKey: Self.stampedBundleVersionKey)
         case .write(let name):
             guard let image = NSImage(contentsOf: iconURL),
                   NSWorkspace.shared.setIcon(image, forFile: bundleURL.path, options: []) else {
@@ -76,6 +87,7 @@ final class AppKitAppIconApplier: NSObject, AppIconApplying {
                 return
             }
             defaults.set(name, forKey: Self.stampedIconKey)
+            defaults.set(currentBundleVersion, forKey: Self.stampedBundleVersionKey)
         }
     }
 

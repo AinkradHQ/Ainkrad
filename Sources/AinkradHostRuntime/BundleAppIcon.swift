@@ -12,6 +12,13 @@
 /// rarely as possible: only when the resolved icon actually changes, and never
 /// when the shipped icon is already the right one — hence `clear`, which puts
 /// an already-stamped bundle back to a strict-clean state.
+///
+/// Open questions this trade-off has NOT measured (both are keyed to code
+/// identity, same as the `codesign --verify --strict` failure above):
+/// whether `spctl --assess` still passes on a stamped bundle, and whether TCC
+/// grants (Screen Recording, Accessibility, Automation) survive a relaunch
+/// after stamping. Treat both as unverified, not as "fine because codesign
+/// --verify was checked" — that check does not cover them.
 public enum BundleAppIconDecision: Equatable {
     /// The bundle already shows the right icon — touch nothing.
     case none
@@ -26,16 +33,36 @@ public enum BundleAppIcon {
     ///   - resolved: the `.icns` base-name the user's settings resolve to.
     ///   - lastWritten: the name last stamped by this app, or `nil` if the
     ///     bundle carries no stamp.
+    ///   - lastWrittenBundleVersion: the bundle version (`CFBundleVersion`) that
+    ///     was current when `lastWritten` was recorded, or `nil` if unknown.
+    ///     The stamp itself lives inside the `.app` bundle and does not survive
+    ///     an app update/reinstall, while `UserDefaults` does — so bookkeeping
+    ///     from a previous bundle no longer describes reality and must be
+    ///     treated as if no stamp existed.
+    ///   - currentBundleVersion: the running app's `CFBundleVersion`.
     ///   - matchesShippedIcon: whether `resolved` is byte-for-byte the icon the
     ///     bundle already ships as `AppIcon.icns`.
     public static func decide(resolved: String,
                               lastWritten: String?,
+                              lastWrittenBundleVersion: String? = nil,
+                              currentBundleVersion: String? = nil,
                               matchesShippedIcon: Bool) -> BundleAppIconDecision {
+        // Staleness is only detectable when both versions are actually known;
+        // callers that don't pass version info (or tests exercising the
+        // version-agnostic behavior) get the old, un-versioned semantics.
+        let staleBookkeeping = lastWritten != nil
+            && lastWrittenBundleVersion != nil
+            && currentBundleVersion != nil
+            && lastWrittenBundleVersion != currentBundleVersion
+        let effectiveLastWritten = staleBookkeeping ? nil : lastWritten
+
         if matchesShippedIcon {
             // The shipped icon is already correct, so a stamp would only add
-            // signature detritus for no visible change. Remove one if present.
-            return lastWritten == nil ? .none : .clear
+            // signature detritus for no visible change. Remove one if present
+            // (but only if it's actually on THIS bundle — nothing to clear on
+            // a bundle we never wrote).
+            return (effectiveLastWritten == nil || staleBookkeeping) ? .none : .clear
         }
-        return resolved == lastWritten ? .none : .write(resolved)
+        return resolved == effectiveLastWritten ? .none : .write(resolved)
     }
 }
