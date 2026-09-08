@@ -93,12 +93,21 @@ struct ComposerCommandsWiringTests {
         #expect(session.messages.last?.text.contains("Nothing to compact") == true)
     }
 
+    /// Deliberately does NOT touch `NSPasteboard.general`. This test used to
+    /// assert against the real clipboard, which meant every `xcodebuild test`
+    /// — including one an agent ran in the background — threw away whatever the
+    /// developer had copied. A test must not clobber a resource that belongs to
+    /// the person running it, so `/export` writes through a `TextPasteboard`
+    /// seam and this drives a recording double.
     @Test func exportRendersMarkdownAndCopiesItToThePasteboard() {
-        let reg = CommandRegistry(builtins: BuiltinCommands.make(runtime: nil, usage: nil, router: nil, catalog: nil))
+        let pasteboard = RecordingPasteboard()
+        let reg = CommandRegistry(builtins: BuiltinCommands.make(
+            runtime: nil, usage: nil, router: nil, catalog: nil, pasteboard: pasteboard))
         let session = TestSessionFactory.make(commands: reg)
         let result = reg.run("/export", on: TestSessionFactory.make(commands: reg))
         // Fresh empty session: nothing to export yet, not a stub message.
         #expect(result == .handled(note: "Nothing to export yet."))
+        #expect(pasteboard.copied == nil, "an empty session must not write to the clipboard at all")
 
         session.send("hello there")
         let exportResult = reg.run("/export", on: session)
@@ -106,7 +115,7 @@ struct ComposerCommandsWiringTests {
         #expect(note.contains("Copied the transcript"))
         #expect(!note.lowercased().contains("isn't implemented"))
 
-        let clipboard = NSPasteboard.general.string(forType: .string)
+        let clipboard = pasteboard.copied
         #expect(clipboard?.contains("# Conversation") == true)
         #expect(clipboard?.contains("hello there") == true)
     }
@@ -165,5 +174,22 @@ struct ComposerCommandsWiringTests {
         // Unwedge cleanly so the test doesn't leak a parked continuation.
         session.deny(reason: "test cleanup")
         await session.currentTask?.value
+    }
+}
+
+
+/// Captures what `/export` would have put on the clipboard.
+final class RecordingPasteboard: TextPasteboard, @unchecked Sendable {
+    private let lock = NSLock()
+    private var value: String?
+
+    var copied: String? {
+        lock.lock(); defer { lock.unlock() }
+        return value
+    }
+
+    func copy(_ text: String) {
+        lock.lock(); defer { lock.unlock() }
+        value = text
     }
 }
