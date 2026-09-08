@@ -35,8 +35,12 @@ struct ScryMediaCard: View {
     let element: ScryElement
     let tokens: DesignTokens
 
-    @State private var player: AVPlayer?
+    @State private var current: (url: URL, player: AVPlayer)?
+    @State private var hasResolved = false
+    @State private var isPlaying = false
+    @State private var statusObservation: NSKeyValueObservation?
 
+    private var player: AVPlayer? { current?.player }
     private var isAudio: Bool { element.kind == .audio }
 
     var body: some View {
@@ -49,18 +53,50 @@ struct ScryMediaCard: View {
                         .aspectRatio(16.0 / 9.0, contentMode: .fit)
                         .clipShape(ChamferShape(cut: AinkradRadius.md))
                 }
-            } else {
+            } else if hasResolved {
+                // `.task` has actually run and found nothing playable — a
+                // genuine failure, not just "hasn't resolved yet".
                 Text(isAudio ? "Audio unavailable" : "Video unavailable")
                     .font(AinkradFont.display(12))
                     .foregroundStyle(tokens.foreground.opacity(0.4))
+            } else {
+                // `.task` runs after the first render, so without this branch
+                // "unavailable" would flash for one confident, wrong frame
+                // before resolution has even been attempted.
+                Color.clear
             }
         }
         // `id:` keyed on the body, so the player is rebuilt when the URL
         // changes and at no other time.
         .task(id: element.body) {
-            player = ScryMediaURL.playable(element.body).map { AVPlayer(url: $0) }
+            hasResolved = false
+            current = MediaPlayerOwnership.resolve(
+                current: current,
+                url: ScryMediaURL.playable(element.body),
+                make: { AVPlayer(url: $0) })
+            hasResolved = true
+            observePlaying()
         }
-        .onDisappear { player?.pause() }
+        .onDisappear {
+            player?.pause()
+            statusObservation?.invalidate()
+            statusObservation = nil
+        }
+        // Reported up so `ScryView` can exempt a still-playing card from
+        // scroll culling — culling removes the card from the hierarchy,
+        // which would otherwise tear down this `@State` player mid-playback.
+        .preference(key: ScryPlayingCardsKey.self, value: isPlaying ? [element.id] : [])
+    }
+
+    /// KVO on the player's `timeControlStatus`, re-armed whenever the player
+    /// itself changes (a new URL resolved).
+    private func observePlaying() {
+        statusObservation?.invalidate()
+        guard let player else { isPlaying = false; return }
+        statusObservation = player.observe(\.timeControlStatus, options: [.initial, .new]) { observedPlayer, _ in
+            let playing = observedPlayer.timeControlStatus == .playing
+            Task { @MainActor in isPlaying = playing }
+        }
     }
 }
 

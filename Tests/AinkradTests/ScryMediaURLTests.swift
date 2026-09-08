@@ -31,4 +31,17 @@ struct ScryMediaURLTests {
         #expect(ScryMediaURL.playable("not a url at all") == nil)
         #expect(ScryMediaURL.playable("javascript:alert(1)") == nil)
     }
+
+    /// Guards `ScryMediaCard.swift`'s `scryAVKitLinkAnchor`: a hard reference to
+    /// an AVKit ObjC class that exists solely to force the linker to bind
+    /// AVKit.framework. Swift emits no unused-constant warning for an unused
+    /// `private let`, so a future cleanup could delete that anchor silently —
+    /// and the app would abort on the very first `VideoPlayer` it constructs
+    /// (SwiftUI's `VideoPlayer` shim subclasses AVKit's `AVPlayerView`). If
+    /// this test ever fails, AVKit is not in the load commands: go re-add the
+    /// anchor before doing anything else.
+    @Test("AVKit is actually linked into the app")
+    func avKitIsLinked() {
+        #expect(NSClassFromString("AVPlayerView") != nil)
+    }
 }

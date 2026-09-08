@@ -100,13 +100,21 @@ struct GeneratedVideoView: View {
     var onOpen: ((URL) -> Void)? = nil
 
     @State private var isHovering = false
+    @State private var current: (url: URL, player: AVPlayer)?
     @Environment(\.ainkradReduceMotion) private var reduceMotion
 
     private var url: URL? { URL(string: urlString) }
+    private var player: AVPlayer? { current?.player }
 
     var body: some View {
         if let url {
-            VideoPlayer(player: AVPlayer(url: url))
+            Group {
+                if let player {
+                    VideoPlayer(player: player)
+                } else {
+                    Color.clear
+                }
+            }
                 .aspectRatio(16.0 / 9.0, contentMode: .fit)
                 .frame(maxWidth: 360, maxHeight: 240, alignment: .leading)
                 .clipShape(ChamferShape(cut: AinkradRadius.md))
@@ -119,6 +127,14 @@ struct GeneratedVideoView: View {
                     AinkradMenuItem(title: "Copy File", systemName: "doc.on.doc") { copy(url) },
                     AinkradMenuItem(title: "Download…", systemName: "square.and.arrow.down") { download(url) },
                 ])
+                // Keyed on the URL so the player is built once per clip, not on
+                // every hover / body re-evaluation (that used to abort the app
+                // before AVKit was linked, and afterwards churned a fresh
+                // AVPlayer + CoreMedia XPC connection per frame).
+                .task(id: urlString) {
+                    current = MediaPlayerOwnership.resolve(current: current, url: url, make: { AVPlayer(url: $0) })
+                }
+                .onDisappear { player?.pause() }
         }
     }
 
@@ -262,10 +278,19 @@ struct VideoLightboxView: View {
     let tokens: DesignTokens
     let onDismiss: () -> Void
 
+    @State private var current: (url: URL, player: AVPlayer)?
+    private var player: AVPlayer? { current?.player }
+
     var body: some View {
         ZStack {
             Rectangle().fill(.black.opacity(0.85)).ignoresSafeArea().onTapGesture { onDismiss() }
-            VideoPlayer(player: AVPlayer(url: url))
+            Group {
+                if let player {
+                    VideoPlayer(player: player)
+                } else {
+                    Color.clear
+                }
+            }
                 .aspectRatio(16.0 / 9.0, contentMode: .fit)
                 .padding(40)
                 .overlay(alignment: .topTrailing) {
@@ -275,6 +300,10 @@ struct VideoLightboxView: View {
         }
         .onExitCommand { onDismiss() }
         .transition(.opacity)
+        .task(id: url) {
+            current = MediaPlayerOwnership.resolve(current: current, url: url, make: { AVPlayer(url: $0) })
+        }
+        .onDisappear { player?.pause() }
     }
 }
 
