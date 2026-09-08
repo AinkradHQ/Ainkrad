@@ -40,4 +40,12 @@ struct ImageGenerateToolTests {
         #expect(tool.permission == .read)
         #expect(tool.isIrreversible(.object([:])) == false)
     }
+    @Test("a generated image card asks for medium room and is auto-placed")
+    func generatedImageUsesSizeHint() async throws {
+        let (tool, store) = make(configured: true)
+        _ = try await tool.execute(.object(["prompt": .string("a cat")]))
+        let e = try #require(store.model.elements.first)
+        #expect(e.kind == .image)
+        #expect(e.sizeHint == .medium)
+    }
 }

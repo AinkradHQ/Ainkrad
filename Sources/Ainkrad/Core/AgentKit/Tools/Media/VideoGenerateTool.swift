@@ -42,7 +42,8 @@ struct VideoGenerateTool: AgentTool {
         let fileURL = try mediaStore.write(video.data, fileExtension: video.fileExtension)
         let element = ScryElement(
             id: UUID().uuidString, kind: .video,
-            title: input["title"]?.stringValue ?? prompt, body: fileURL.absoluteString)
+            title: input["title"]?.stringValue ?? prompt, body: fileURL.absoluteString,
+            sizeHint: .large)
         let id = store.add(element)
         return ToolResult(content: "Rendered generated video as scry element \(id).", isError: false)
     }

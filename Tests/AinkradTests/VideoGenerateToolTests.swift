@@ -51,6 +51,16 @@ struct VideoGenerateToolTests {
         #expect(tool.permission == .read)
         #expect(tool.isIrreversible(.object([:])) == false)
     }
+
+    @Test("a generated video card asks for large room and is auto-placed")
+    func generatedVideoUsesSizeHint() async throws {
+        let canvas = ScryStore(sessionID: "s")
+        let tool = VideoGenerateTool(backend: StubBackend(configured: true), store: canvas, mediaStore: tempStore())
+        _ = try await tool.execute(.object(["prompt": .string("a wave")]))
+        let e = try #require(canvas.model.elements.first)
+        #expect(e.kind == .video)
+        #expect(e.sizeHint == .large)
+    }
 }
 
 @Suite("RoutingVideoBackend")
