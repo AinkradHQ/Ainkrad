@@ -23,7 +23,7 @@ struct ScryWiringTests {
     }
 
     // Post-review fix (I1): `scry_render` is bound to the FOREGROUND
-    // `canvasStore` (sessionID "default" — the same store `ScryApp` reads).
+    // `scryStore` (sessionID "default" — the same store `ScryApp` reads).
     // The background/headless tool registry `AppEnvironment` builds for
     // `RunManager`-driven runs (background/schedule/trigger) MUST exclude it,
     // mirroring the exact `agentTools.filter { !($0 is ScryRenderTool) }`

@@ -152,7 +152,7 @@ extension AppEnvironment {
         // unresolvable `sandboxProfileID` falls back to the SAME `.background`-
         // tier default as before — fail-closed, never `.host`, never escalation.
         // `scry_render` is EXCLUDED from the background/headless tool list: it's
-        // bound to the foreground `canvasStore` (sessionID "default", the SAME
+        // bound to the foreground `scryStore` (sessionID "default", the SAME
         // store the `ScryApp` pane reads), so an autonomous background/schedule/
         // trigger run calling it would silently mutate the canvas the user is
         // looking at — a cross-session split-brain. The foreground

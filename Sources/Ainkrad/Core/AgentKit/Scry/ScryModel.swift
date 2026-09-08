@@ -12,15 +12,6 @@ struct ScryModel: Codable, Equatable, Sendable {
         elements = try c.decodeIfPresent([ScryElement].self, forKey: .elements) ?? []
     }
 
-    /// Z-ascending (back-to-front), stable for equal z.
-    var ordered: [ScryElement] {
-        elements.enumerated()
-            .sorted { $0.element.z != $1.element.z ? $0.element.z < $1.element.z : $0.offset < $1.offset }
-            .map(\.element)
-    }
-
-    var nextZ: Int { (elements.map(\.z).max() ?? -1) + 1 }
-
     mutating func upsert(_ element: ScryElement) {
         if let i = elements.firstIndex(where: { $0.id == element.id }) {
             elements[i] = element

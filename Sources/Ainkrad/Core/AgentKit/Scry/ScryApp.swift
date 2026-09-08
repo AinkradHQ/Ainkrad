@@ -13,9 +13,9 @@ enum ScryApp: AinkradApp {
     static func makeSettingsView(host: HostServices) -> AnyView { AnyView(EmptyView()) }
 }
 
-/// Thin wrapper so the pane can pull `canvasStore` from the environment.
+/// Thin wrapper so the pane can pull `scryStore` from the environment.
 @MainActor
 private struct ScryHostView: View {
     @Environment(AppEnvironment.self) private var environment
-    var body: some View { ScryView(store: environment.canvasStore) }
+    var body: some View { ScryView(store: environment.scryStore) }
 }

@@ -53,16 +53,14 @@ struct ScryElement: Codable, Equatable, Identifiable, Sendable {
     var title: String?
     var body: String
     var language: String?
-    var rect: ScryRect
-    var z: Int
     var pinned: Bool
     var sizeHint: ScrySizeHint
 
     init(id: String, kind: ScryElementKind, title: String? = nil, body: String,
-         language: String? = nil, rect: ScryRect = .defaultCard, z: Int = 0,
+         language: String? = nil,
          pinned: Bool = false, sizeHint: ScrySizeHint? = nil) {
         self.id = id; self.kind = kind; self.title = title; self.body = body
-        self.language = language; self.rect = rect; self.z = z; self.pinned = pinned
+        self.language = language; self.pinned = pinned
         self.sizeHint = sizeHint ?? .default(for: kind)
     }
 
@@ -76,8 +74,6 @@ struct ScryElement: Codable, Equatable, Identifiable, Sendable {
         title = try c.decodeIfPresent(String.self, forKey: .title)
         body = try c.decodeIfPresent(String.self, forKey: .body) ?? ""
         language = try c.decodeIfPresent(String.self, forKey: .language)
-        rect = try c.decodeIfPresent(ScryRect.self, forKey: .rect) ?? .defaultCard
-        z = try c.decodeIfPresent(Int.self, forKey: .z) ?? 0
         pinned = try c.decodeIfPresent(Bool.self, forKey: .pinned) ?? false
         sizeHint = (try? c.decodeIfPresent(ScrySizeHint.self, forKey: .sizeHint))
             .flatMap { $0 } ?? .default(for: kind)

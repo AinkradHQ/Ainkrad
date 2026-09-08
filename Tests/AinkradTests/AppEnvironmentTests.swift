@@ -93,7 +93,7 @@ final class AppEnvironmentTests {
         let scheduleRunner = ScheduleRunner(store: scheduleStore, runs: runManager)
         let fileChangeWatcher = FileChangeWatcher()
         let menuBarPresence = MenuBarPresence(runs: RunManagerMenuBarAdapter(manager: runManager))
-        let canvasStore = ScryStore()
+        let scryStore = ScryStore()
         let toolStreamStore = ToolStreamStore()
         let voiceService = VoiceService(persistence: persistence, connections: connectionStore)
         voiceService.attachSession(agentSession)
@@ -168,7 +168,7 @@ final class AppEnvironmentTests {
             skillWatcher: SkillWatcher(paths: SkillPaths(root: root.appendingPathComponent("Skills", isDirectory: true))) { },
             skillCommandStore: SkillCommandStore(persistence: persistence),
             menuBarPresence: menuBarPresence,
-            canvasStore: canvasStore,
+            scryStore: scryStore,
             toolStreamStore: toolStreamStore,
             toolHooksStore: ToolHooksStore(persistence: persistence),
             customCommandStore: CustomCommandStore(paths: CustomCommandPaths(

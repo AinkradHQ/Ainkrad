@@ -388,7 +388,7 @@ extension AppEnvironment {
                                              declaredPresentation: .pane, appAppearanceStore: appAppearanceStore)
 
         // Live Scry (M7 Slice 7) is likewise a host-embedded built-in — its
-        // pane reads `AppEnvironment.canvasStore` directly (see `ScryApp`).
+        // pane reads `AppEnvironment.scryStore` directly (see `ScryApp`).
         let scryHost = HostServicesImpl(appID: "scry", dataRootURL: pluginDataRoot,
                                           secretStore: secrets, themeManager: themeManager,
                                           hub: agentContextHub, actionHub: agentActionHub, launchHub: pluginLaunchHub, signalHub: signalHub,

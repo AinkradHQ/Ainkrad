@@ -42,7 +42,7 @@ extension AppEnvironment {
         executionRouter: ExecutionRouter,
         agentTools: [any AgentTool],
         mcpServerRegistry: MCPServerRegistry,
-        canvasStore: ScryStore,
+        scryStore: ScryStore,
         signalReadAccess: SignalReadAccess,
         toolStreamStore: ToolStreamStore,
         terminalController: TerminalProcessController
