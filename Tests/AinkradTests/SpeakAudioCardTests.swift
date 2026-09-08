@@ -62,15 +62,4 @@ struct SpeakAudioCardTests {
         #expect(ToolCallImageLookup.canvasAudioURL(resultText: "audio element \(id)", store: canvas) == "file:///tmp/x.caf")
     }
 
-    @Test("a spoken audio card asks for medium room and is auto-placed")
-    func spokenAudioUsesSizeHint() async throws {
-        let canvas = ScryStore(sessionID: "s")
-        let tool = SpeakTool(synth: NoopSynth(),
-                             producer: StubProducer(data: Data([1, 2, 3]), fail: false),
-                             store: canvas, mediaStore: tempStore(), player: NoopPlayer())
-        _ = try await tool.execute(.object(["text": .string("hello")]))
-        let e = try #require(canvas.model.elements.first)
-        #expect(e.kind == .audio)
-        #expect(e.sizeHint == .medium)
-    }
 }

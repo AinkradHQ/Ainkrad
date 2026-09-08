@@ -31,6 +31,19 @@ struct ScryElementTests {
         #expect(m.elements.map(\.id) == ["a", "b"])
     }
 
+    /// Array position is the entire recency mechanism now that `z` is gone —
+    /// re-upserting an existing id must replace it IN PLACE, not move it to
+    /// the end. An implementation that appended on every upsert instead would
+    /// silently reorder every streaming table update, with nothing failing.
+    @Test func reUpsertReplacesInPlaceRatherThanReordering() {
+        var m = ScryModel()
+        m.upsert(ScryElement(id: "a", kind: .text, body: "1"))
+        m.upsert(ScryElement(id: "b", kind: .text, body: "1"))
+        m.upsert(ScryElement(id: "a", kind: .text, body: "2"))
+        #expect(m.elements.map(\.id) == ["a", "b"])
+        #expect(m.elements.first(where: { $0.id == "a" })?.body == "2")
+    }
+
     @Test func removeDropsElement() {
         var m = ScryModel()
         m.upsert(ScryElement(id: "a", kind: .text, body: ""))

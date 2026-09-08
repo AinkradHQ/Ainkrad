@@ -205,9 +205,11 @@ extension AppEnvironment {
         // from agent-supplied data — it executes nothing and touches no files
         // or system state (see `ScryRenderTool`), so it's appended alongside
         // the other read-class tools. `scryStore` defaults to sessionID
-        // "default" (PROVISIONAL — per-session keying awaits a stable session
-        // identifier from Slice 5; see Task 12 brief). In-memory only: nothing
-        // on the mutation path touches disk (see `ScryStore`).
+        // "default". Per-session keying is built and correct (see `ScryStore`'s
+        // tests) — its per-session dictionaries work — but nothing assigns a
+        // real `sessionID` yet, so until a caller does, the store holds exactly
+        // one session in practice. In-memory only: nothing on the mutation path
+        // touches disk (see `ScryStore`).
         let scryStore = ScryStore()
         agentTools.append(ScryRenderTool(store: scryStore))
 
