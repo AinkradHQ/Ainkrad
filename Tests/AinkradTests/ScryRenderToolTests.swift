@@ -73,3 +73,53 @@ struct ScryRenderToolTests {
         #expect(tool.isIrreversible(.object([:])) == false)
     }
 }
+
+@Suite("scry_render contract")
+@MainActor
+struct ScryRenderContractTests {
+    private func properties() -> [String: JSONValue] {
+        let tool = ScryRenderTool(store: ScryStore())
+        guard case .object(let schema) = tool.parametersSchema,
+              case .object(let props)? = schema["properties"] else { return [:] }
+        return props
+    }
+
+    @Test("the schema exposes no pixel geometry")
+    func noGeometry() {
+        let p = properties()
+        for banned in ["x", "y", "width", "height", "z"] {
+            #expect(p[banned] == nil, "schema still exposes \(banned)")
+        }
+    }
+
+    @Test("the schema exposes a size hint enumerating every case")
+    func sizeExposed() {
+        guard case .object(let size)? = properties()["size"] else {
+            Issue.record("no size property"); return
+        }
+        guard case .array(let cases)? = size["enum"] else {
+            Issue.record("size has no enum"); return
+        }
+        let raws = cases.compactMap(\.stringValue)
+        #expect(Set(raws) == Set(ScrySizeHint.allCases.map(\.rawValue)))
+    }
+
+    @Test("the description tells the agent about size, not coordinates")
+    func descriptionMentionsSize() {
+        let d = ScryRenderTool(store: ScryStore()).description
+        #expect(d.contains("size"))
+        #expect(!d.contains("x/y"))
+    }
+
+    @Test("a size in the payload reaches the stored element")
+    func sizeRoundTrips() async throws {
+        let store = ScryStore()
+        let registry = AgentToolRegistry(tools: [ScryRenderTool(store: store)])
+        let result = await registry.run(ToolCall(
+            id: "1", name: "scry_render",
+            input: .object(["op": .string("add"), "kind": .string("text"),
+                            "body": .string("hi"), "size": .string("full")])))
+        #expect(!result.isError)
+        #expect(store.model.elements.first?.sizeHint == .full)
+    }
+}
