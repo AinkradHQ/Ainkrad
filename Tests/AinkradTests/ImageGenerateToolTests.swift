@@ -14,7 +14,7 @@ struct ImageGenerateToolTests {
         }
     }
     private func make(configured: Bool) -> (ImageGenerateTool, ScryStore) {
-        let store = ScryStore(persistence: InMemoryPersistenceStore(), sessionKey: "s")
+        let store = ScryStore(sessionID: "s")
         return (ImageGenerateTool(backend: StubBackend(configured: configured), store: store), store)
     }
     @Test func addsImageCanvasElement() async throws {

@@ -2,49 +2,102 @@ import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
 
-/// The Live Scry: agent-rendered elements as movable/resizable layered HUD
-/// cards with hover + parallax. The user can rearrange/pin/dismiss; layout
-/// persists per session via `ScryStore`. Reconstructable from the transcript.
+/// The Live Scry: agent-rendered cards, auto-arranged. Cards flow newest-first
+/// into columns; dragging or resizing one records an override in the store and
+/// that card floats above the flow, which re-packs around it.
+///
+/// No pointer parallax: it depended on `z` (now gone) and re-animated every
+/// card on every pointer move. Hover lift and shadow remain.
 @MainActor
 struct ScryView: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.ainkradReduceMotion) private var reduceMotion
     let store: ScryStore
 
-    @State private var hoverPoint: CGPoint = .zero
+    // Fails open: `nil` means "no offset delivered yet, so cull nothing."
+    // The scroll preference is the one mechanism here nobody has verified at
+    // runtime — if it never fires, degrading to "builds too much" is far
+    // safer than silently dropping every card below ~2 viewports.
+    @State private var visibleTop: CGFloat?
+    // Ids currently playing media — exempted from culling so scrolling a
+    // playing card away doesn't tear down its player mid-playback.
+    @State private var playingIDs: Set<String> = []
 
     var body: some View {
         let tokens = environment.themeManager.tokens
         GeometryReader { proxy in
-            ZStack(alignment: .topLeading) {
-                Color.clear.contentShape(Rectangle())
-                    .onContinuousHover { phase in
-                        if case .active(let p) = phase { hoverPoint = p }
+            let elements = store.model.elements
+            let overrides = store.overrides
+            let frames = ScryLayout.frames(for: elements, in: proxy.size,
+                                           overrides: overrides)
+            ScrollView {
+                ZStack(alignment: .topLeading) {
+                    // Flow cards.
+                    ForEach(elements) { element in
+                        if let rect = frames[element.id],
+                           isVisible(rect, id: element.id, viewportHeight: proxy.size.height) {
+                            ScryCard(element: element, store: store, tokens: tokens,
+                                     rect: rect, isFloating: false,
+                                     containerSize: proxy.size,
+                                     reduceMotion: reduceMotion)
+                        }
                     }
-
-                if store.model.elements.isEmpty {
-                    emptyState(tokens: tokens)
-                        .frame(width: proxy.size.width, height: proxy.size.height)
+                    // Floating (user-placed) cards, above the flow, most-
+                    // recently-dragged last so it renders on top of the rest.
+                    ForEach(floatingElements(elements)) { element in
+                        if let rect = overrides[element.id],
+                           isVisible(rect, id: element.id, viewportHeight: proxy.size.height) {
+                            ScryCard(element: element, store: store, tokens: tokens,
+                                     rect: rect, isFloating: true,
+                                     containerSize: proxy.size,
+                                     reduceMotion: reduceMotion)
+                        }
+                    }
                 }
-
-                ForEach(store.model.ordered) { element in
-                    ScryCard(element: element, store: store, tokens: tokens,
-                               parallax: parallax(for: element, in: proxy.size),
-                               reduceMotion: reduceMotion)
-                        .zIndex(Double(element.z))
-                }
+                .background(
+                    GeometryReader { g in
+                        Color.clear.preference(
+                            key: ScryScrollOffsetKey.self,
+                            value: -g.frame(in: .named("scry-scroll")).minY)
+                    })
+                .frame(height: max(proxy.size.height,
+                                   ScryLayout.contentHeight(for: elements, in: proxy.size,
+                                                            overrides: overrides)),
+                       alignment: .topLeading)
+                .frame(maxWidth: .infinity, alignment: .topLeading)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .coordinateSpace(name: "scry-scroll")
+            .onPreferenceChange(ScryScrollOffsetKey.self) { visibleTop = $0 }
+            .onPreferenceChange(ScryPlayingCardsKey.self) { playingIDs = $0 }
+            .overlay {
+                if elements.isEmpty { emptyState(tokens: tokens) }
+            }
         }
     }
 
-    /// Small pointer-driven parallax per card (deeper z drifts less).
-    private func parallax(for element: ScryElement, in size: CGSize) -> CGSize {
-        guard !reduceMotion, size.width > 0 else { return .zero }
-        let dx = (hoverPoint.x / size.width - 0.5) * 8
-        let dy = (hoverPoint.y / size.height - 0.5) * 8
-        let depth = 1.0 / Double(max(1, element.z + 1))
-        return CGSize(width: dx * depth, height: dy * depth)
+    /// Floating (overridden) elements, ordered so the most-recently-dragged
+    /// one is last — `ForEach` renders in array order and `ZStack` stacks
+    /// later views on top, so this ordering is what actually makes the last
+    /// card dragged win the stacking fight.
+    private func floatingElements(_ elements: [ScryElement]) -> [ScryElement] {
+        let order = store.overrideOrder
+        let overridden = elements.filter { store.overrides[$0.id] != nil }
+        return overridden.sorted { lhs, rhs in
+            let li = order.firstIndex(of: lhs.id) ?? -1
+            let ri = order.firstIndex(of: rhs.id) ?? -1
+            return li < ri
+        }
+    }
+
+    /// Whether a card's rect is near enough the viewport to be worth building.
+    /// Fails open: with no offset yet, everything is considered visible.
+    private func isVisible(_ rect: ScryRect, id: String, viewportHeight: CGFloat) -> Bool {
+        if playingIDs.contains(id) { return true }
+        guard let visibleTop else { return true }
+        let margin = viewportHeight
+        let top = visibleTop - margin
+        let bottom = visibleTop + viewportHeight + margin
+        return CGFloat(rect.y + rect.height) >= top && CGFloat(rect.y) <= bottom
     }
 
     private func emptyState(tokens: DesignTokens) -> some View {
@@ -58,32 +111,54 @@ struct ScryView: View {
     }
 }
 
+/// Scroll offset of the Scry content, used to cull offscreen cards.
+private struct ScryScrollOffsetKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
+/// Element ids whose media player is currently playing. Culling removes a
+/// card from the hierarchy, which tears down `ScryMediaCard`'s `@State`
+/// player — silently stopping playback with no explanation if the user has
+/// scrolled a playing card out of the margin. `ScryMediaCard` reports its own
+/// playing state up via this key; `ScryView` exempts those ids from culling.
+/// Internal (not `private`), so `ScryMediaCard` in `Cards/` can set it.
+struct ScryPlayingCardsKey: PreferenceKey {
+    static let defaultValue: Set<String> = []
+    static func reduce(value: inout Set<String>, nextValue: () -> Set<String>) {
+        value.formUnion(nextValue())
+    }
+}
+
 /// One draggable/resizable card wrapping a `ScryElementView`.
 @MainActor
 private struct ScryCard: View {
     let element: ScryElement
     let store: ScryStore
     let tokens: DesignTokens
-    let parallax: CGSize
+    let rect: ScryRect
+    let isFloating: Bool
+    let containerSize: CGSize
     let reduceMotion: Bool
     @State private var isHovering = false
     @GestureState private var dragStart: ScryRect?
     @GestureState private var resizeStart: ScryRect?
-    // Perf fix (I2/M1): live-drag/resize preview state ONLY — the store is a
-    // synchronous full-document atomic-write persistence layer (`ScryStore.
-    // commit`), so writing it on every `DragGesture.onChanged` tick was a disk
-    // write per pixel of movement. These hold the in-flight visual delta;
-    // the store is committed exactly once, in `.onEnded`.
+    // Perf fix (I2/M1): live-drag/resize preview state ONLY, kept even though
+    // `ScryStore` is in-memory now — committing on every `DragGesture.
+    // onChanged` tick would still re-layout the whole surface per pixel of
+    // movement. These hold the in-flight visual delta; the store is
+    // committed exactly once, in `.onEnded`.
     @State private var dragPreviewOffset: CGSize = .zero
     @State private var resizePreviewSize: CGSize?
-    @State private var hasBroughtToFrontThisDrag = false
 
-    /// The rect actually rendered: the committed `element.rect`, overlaid with
-    /// any in-flight drag/resize preview. `element.rect` itself never changes
-    /// mid-gesture (the store isn't written to until `.onEnded`), so it stays
-    /// a stable anchor for the whole gesture.
+    /// The rect actually rendered: the incoming `rect` (flow or override),
+    /// overlaid with any in-flight drag/resize preview. `rect` itself never
+    /// changes mid-gesture (the store isn't written to until `.onEnded`), so
+    /// it stays a stable anchor for the whole gesture.
     private var previewRect: ScryRect {
-        var r = element.rect
+        var r = rect
         r.x += dragPreviewOffset.width
         r.y += dragPreviewOffset.height
         if let size = resizePreviewSize {
@@ -93,40 +168,49 @@ private struct ScryCard: View {
         return r
     }
 
+    /// A dropped card must stay reachable: origin can't go negative (that
+    /// clips the card off the top/left with no way to scroll back to it),
+    /// and it can't be dropped so far right that no sliver of it remains
+    /// inside the container's width.
+    private func clamped(_ r: ScryRect) -> ScryRect {
+        var r = r
+        let minVisible: Double = 40
+        r.x = max(0, min(r.x, max(0, Double(containerSize.width) - minVisible)))
+        r.y = max(0, r.y)
+        return r
+    }
+
     var body: some View {
         ScryElementView(element: element, tokens: tokens)
             .overlay(alignment: .topTrailing) { if isHovering { controls } }
             .overlay(alignment: .bottomTrailing) { if isHovering { resizeHandle } }
             .scaleEffect(isHovering ? 1.01 : 1.0)
-            .offset(parallax)
             .shadow(color: tokens.accentSecondary.opacity(isHovering ? 0.18 : 0.08),
                     radius: isHovering ? 12 : 6)
             .onHover { isHovering = $0 }
             .animation(reduceMotion ? nil : .easeOut(duration: 0.14), value: isHovering)
-            .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: parallax)
             .gesture(
                 DragGesture()
                     .updating($dragStart) { _, state, _ in
-                        if state == nil { state = element.rect }
+                        if state == nil { state = rect }
                     }
                     .onChanged { v in
-                        if !hasBroughtToFrontThisDrag {
-                            store.bringToFront(id: element.id)
-                            hasBroughtToFrontThisDrag = true
-                        }
                         dragPreviewOffset = v.translation
                     }
                     .onEnded { v in
-                        let base = dragStart ?? element.rect
-                        store.move(id: element.id,
-                                   to: CGPoint(x: base.x + v.translation.width,
-                                               y: base.y + v.translation.height))
+                        let base = dragStart ?? rect
+                        var newRect = base
+                        newRect.x = base.x + Double(v.translation.width)
+                        newRect.y = base.y + Double(v.translation.height)
+                        store.setOverride(id: element.id, clamped(newRect))
                         dragPreviewOffset = .zero
-                        hasBroughtToFrontThisDrag = false
                     }
             )
             .frame(width: previewRect.width, height: previewRect.height)
             .offset(x: previewRect.x, y: previewRect.y)
+            // Floating (user-placed) cards always sit above the flow, even
+            // if a future change ever interleaves the two `ForEach`es.
+            .zIndex(isFloating ? 1 : 0)
     }
 
     private var controls: some View {
@@ -148,18 +232,21 @@ private struct ScryCard: View {
             .gesture(
                 DragGesture()
                     .updating($resizeStart) { _, state, _ in
-                        if state == nil { state = element.rect }
+                        if state == nil { state = rect }
                     }
                     .onChanged { v in
-                        let base = resizeStart ?? element.rect
+                        let base = resizeStart ?? rect
                         resizePreviewSize = CGSize(width: max(160, base.width + v.translation.width),
                                                     height: max(100, base.height + v.translation.height))
                     }
                     .onEnded { v in
-                        let base = resizeStart ?? element.rect
-                        store.resize(id: element.id,
-                                     to: CGSize(width: max(160, base.width + v.translation.width),
-                                                height: max(100, base.height + v.translation.height)))
+                        let base = resizeStart ?? rect
+                        let width = max(160, base.width + Double(v.translation.width))
+                        let height = max(100, base.height + Double(v.translation.height))
+                        var newRect = base
+                        newRect.width = width
+                        newRect.height = height
+                        store.setOverride(id: element.id, newRect)
                         resizePreviewSize = nil
                     }
             )

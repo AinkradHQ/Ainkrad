@@ -7,7 +7,7 @@ import AinkradHostRuntime
 @MainActor
 struct ScryRenderToolTests {
     private func make() -> (ScryRenderTool, ScryStore) {
-        let store = ScryStore(persistence: InMemoryPersistenceStore(), sessionKey: "s")
+        let store = ScryStore(sessionID: "s")
         return (ScryRenderTool(store: store), store)
     }
 
@@ -52,7 +52,7 @@ struct ScryRenderToolTests {
         }
     }
 
-    @Test func updateOnUnknownIDMaterializesElement_liveMatchesReplay() async throws {
+    @Test func updateOnUnknownIDMaterializesElement() async throws {
         let (tool, store) = make()
         let input = JSONValue.object([
             "op": .string("update"), "id": .string("ghost"),
@@ -61,24 +61,65 @@ struct ScryRenderToolTests {
         let r = try await tool.execute(input)
         #expect(!r.isError)
 
-        // Live: the element must actually exist in the store after the call
-        // returns — not only after a hypothetical replay.
+        // The element must actually exist in the store after the call returns.
         let live = store.model.elements.first(where: { $0.id == "ghost" })
         #expect(live?.body == "materialized")
         #expect(live?.kind == .text)
-
-        // Replay: reconstructing from the same transcript must agree with live.
-        let message = AgentMessage(role: .assistant,
-                                    content: [.toolUse(id: "1", name: "scry_render", input: input)])
-        let replayed = ScryReconstruction.rebuild(from: [message])
-        let fromReplay = replayed.elements.first(where: { $0.id == "ghost" })
-        #expect(fromReplay?.body == live?.body)
-        #expect(fromReplay?.kind == live?.kind)
     }
 
     @Test func permissionIsReadAndReversible() {
         let (tool, _) = make()
         #expect(tool.permission == .read)
         #expect(tool.isIrreversible(.object([:])) == false)
+    }
+}
+
+@Suite("scry_render contract")
+@MainActor
+struct ScryRenderContractTests {
+    private func properties() -> [String: JSONValue] {
+        let tool = ScryRenderTool(store: ScryStore())
+        guard case .object(let schema) = tool.parametersSchema,
+              case .object(let props)? = schema["properties"] else { return [:] }
+        return props
+    }
+
+    @Test("the schema exposes no pixel geometry")
+    func noGeometry() {
+        let p = properties()
+        for banned in ["x", "y", "width", "height", "z"] {
+            #expect(p[banned] == nil, "schema still exposes \(banned)")
+        }
+    }
+
+    @Test("the schema exposes a size hint enumerating every case")
+    func sizeExposed() {
+        guard case .object(let size)? = properties()["size"] else {
+            Issue.record("no size property"); return
+        }
+        guard case .array(let cases)? = size["enum"] else {
+            Issue.record("size has no enum"); return
+        }
+        let raws = cases.compactMap(\.stringValue)
+        #expect(Set(raws) == Set(ScrySizeHint.allCases.map(\.rawValue)))
+    }
+
+    @Test("the description tells the agent about size, not coordinates")
+    func descriptionMentionsSize() {
+        let d = ScryRenderTool(store: ScryStore()).description
+        #expect(d.contains("size"))
+        #expect(!d.contains("x/y"))
+    }
+
+    @Test("a size in the payload reaches the stored element")
+    func sizeRoundTrips() async throws {
+        let store = ScryStore()
+        let registry = AgentToolRegistry(tools: [ScryRenderTool(store: store)])
+        let result = await registry.run(ToolCall(
+            id: "1", name: "scry_render",
+            input: .object(["op": .string("add"), "kind": .string("text"),
+                            "body": .string("hi"), "size": .string("full")])))
+        #expect(!result.isError)
+        #expect(store.model.elements.first?.sizeHint == .full)
     }
 }

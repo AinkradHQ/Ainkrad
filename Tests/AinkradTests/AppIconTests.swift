@@ -158,3 +158,50 @@ struct AppIconStoreTests {
         #expect(applier.calls.last?.theme == .cyberPurple)
     }
 }
+
+@Suite("Bundle icon stamping")
+struct BundleAppIconTests {
+    @Test("stamps when the resolved icon differs from what is on the bundle")
+    func stampsOnChange() {
+        #expect(BundleAppIcon.decide(resolved: "purple-dark", lastWritten: nil,
+                                     matchesShippedIcon: false) == .write("purple-dark"))
+        #expect(BundleAppIcon.decide(resolved: "purple-dark", lastWritten: "blue-light",
+                                     matchesShippedIcon: false) == .write("purple-dark"))
+    }
+
+    @Test("does nothing when the bundle already carries the resolved icon, from the same bundle version")
+    func noopWhenUnchanged() {
+        #expect(BundleAppIcon.decide(resolved: "purple-dark", lastWritten: "purple-dark",
+                                     lastWrittenBundleVersion: "42", currentBundleVersion: "42",
+                                     matchesShippedIcon: false) == .none)
+    }
+
+    @Test("re-stamps after an app update even though the recorded name matches — the bookkeeping is stale")
+    func restampsAfterBundleUpdate() {
+        #expect(BundleAppIcon.decide(resolved: "purple-dark", lastWritten: "purple-dark",
+                                     lastWrittenBundleVersion: "42", currentBundleVersion: "43",
+                                     matchesShippedIcon: false) == .write("purple-dark"))
+    }
+
+    @Test("no stale stamp to clear on a new bundle version even if the shipped icon now matches")
+    func noClearForStaleStampAfterUpdate() {
+        #expect(BundleAppIcon.decide(resolved: "blue-dark", lastWritten: "purple-dark",
+                                     lastWrittenBundleVersion: "42", currentBundleVersion: "43",
+                                     matchesShippedIcon: true) == .none)
+    }
+
+    @Test("never stamps when the shipped icon is already the right one")
+    func noStampWhenShippedIconMatches() {
+        #expect(BundleAppIcon.decide(resolved: "blue-dark", lastWritten: nil,
+                                     matchesShippedIcon: true) == .none)
+    }
+
+    @Test("clears an existing stamp once the shipped icon becomes correct")
+    func clearsStampWhenShippedIconMatches() {
+        #expect(BundleAppIcon.decide(resolved: "blue-dark", lastWritten: "purple-dark",
+                                     matchesShippedIcon: true) == .clear)
+        // Already clean — clearing again would be a pointless bundle write.
+        #expect(BundleAppIcon.decide(resolved: "blue-dark", lastWritten: nil,
+                                     matchesShippedIcon: true) == .none)
+    }
+}

@@ -23,7 +23,7 @@ struct SpeakAudioCardTests {
     }
 
     @Test func rendersDownloadableAudioElement() async throws {
-        let canvas = ScryStore(persistence: InMemoryPersistenceStore(), sessionKey: "s")
+        let canvas = ScryStore(sessionID: "s")
         let tool = SpeakTool(synth: NoopSynth(),
                              producer: StubProducer(data: Data([1, 2, 3]), fail: false),
                              store: canvas, mediaStore: tempStore(), player: NoopPlayer())
@@ -36,7 +36,7 @@ struct SpeakAudioCardTests {
     }
 
     @Test func fallsBackToPlayWhenProductionFails() async throws {
-        let canvas = ScryStore(persistence: InMemoryPersistenceStore(), sessionKey: "s")
+        let canvas = ScryStore(sessionID: "s")
         let tool = SpeakTool(synth: NoopSynth(),
                              producer: StubProducer(data: Data(), fail: true),
                              store: canvas, mediaStore: tempStore(), player: NoopPlayer())
@@ -57,8 +57,9 @@ struct SpeakAudioCardTests {
     }
 
     @Test func resolvesAudioURLFromResult() {
-        let canvas = ScryStore(persistence: InMemoryPersistenceStore(), sessionKey: "s")
+        let canvas = ScryStore(sessionID: "s")
         let id = canvas.add(ScryElement(id: UUID().uuidString, kind: .audio, title: "Speech", body: "file:///tmp/x.caf"))
         #expect(ToolCallImageLookup.canvasAudioURL(resultText: "audio element \(id)", store: canvas) == "file:///tmp/x.caf")
     }
+
 }

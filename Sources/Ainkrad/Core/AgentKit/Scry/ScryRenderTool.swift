@@ -11,12 +11,13 @@ struct ScryRenderTool: AgentTool {
 
     let name = "scry_render"
     let description = """
-    Render or update the Live Scry — a spatial surface of layered cards — instead of a wall of \
+    Render or update the Live Scry — an auto-arranged surface of cards — instead of a wall of \
     chat text. Use it when output is structured or comparative (tables, diagrams, charts, code, \
     status boards, or several related cards). op: "add" a new element, "update" one in place \
     (stream a table/status as it fills), or "remove" it. kind: text | markdown | table | diagram \
-    (mermaid source in body) | chart | image (url/data in body) | code | status | card. Prefer \
-    normal chat for short conversational answers.
+    (mermaid source in body) | chart | image (url/data in body) | code | status | card. \
+    Placement is automatic — do not attempt to position cards; use size to say how much room a \
+    card needs. Prefer normal chat for short conversational answers.
     """
     let permission: ToolPermissionClass = .read
 
@@ -46,11 +47,14 @@ struct ScryRenderTool: AgentTool {
                 ]),
                 "language": .object(["type": .string("string"),
                                      "description": .string("Language for code elements.")]),
-                "x": .object(["type": .string("number")]),
-                "y": .object(["type": .string("number")]),
-                "width": .object(["type": .string("number")]),
-                "height": .object(["type": .string("number")]),
-                "z": .object(["type": .string("number")]),
+                "size": .object([
+                    "type": .string("string"),
+                    "enum": .array(ScrySizeHint.allCases.map { .string($0.rawValue) }),
+                    "description": .string(
+                        "How much room the card wants: small (a chip), medium (default), "
+                        + "large (charts, diagrams, video), full (spans the row — tables). "
+                        + "Optional; a sensible default is chosen from kind."),
+                ]),
             ]),
             "required": .array([.string("op")]),
         ])
@@ -71,22 +75,20 @@ struct ScryRenderTool: AgentTool {
             guard let id = input["id"]?.stringValue, !id.isEmpty else {
                 throw ToolError.message("scry_render update requires \"id\".")
             }
-            var m = store.model
-            ScryReconstruction.apply(input, to: &m)          // create-or-merge, mirrors replay
-            guard let updated = m.elements.first(where: { $0.id == id }) else {
-                return ToolResult(content: "No scry element \(id) to update.", isError: false)
+            if var existing = store.model.elements.first(where: { $0.id == id }) {
+                ScryElementDecoder.merge(input, into: &existing)
+                store.upsert(existing)
+            } else {
+                // Update of an element that isn't there creates it, so a
+                // streaming caller never silently loses a write.
+                var created = try ScryElementDecoder.element(from: input)
+                created.id = id
+                store.upsert(created)
             }
-            // `store.upsert`, NOT `store.update(id:)`: the latter early-returns when
-            // `id` isn't already in the LIVE store, silently dropping the write even
-            // though `apply` just materialized it above — divergence from what
-            // `ScryReconstruction.rebuild` would produce for the same transcript.
-            store.upsert(updated)
             return ToolResult(content: "Updated scry element \(id).", isError: false)
 
-        default: // add — unknown kinds are isolated to .unknown, never thrown
-            guard let e = ScryReconstruction.element(from: input, fallbackID: UUID().uuidString) else {
-                throw ToolError.message("scry_render add requires an element body/kind.")
-            }
+        default:
+            let e = try ScryElementDecoder.element(from: input)
             let id = store.add(e)
             return ToolResult(content: "Rendered scry element \(id) (\(e.kind.rawValue)).",
                               isError: false)

@@ -388,7 +388,7 @@ extension AppEnvironment {
                                              declaredPresentation: .pane, appAppearanceStore: appAppearanceStore)
 
         // Live Scry (M7 Slice 7) is likewise a host-embedded built-in — its
-        // pane reads `AppEnvironment.canvasStore` directly (see `ScryApp`).
+        // pane reads `AppEnvironment.scryStore` directly (see `ScryApp`).
         let scryHost = HostServicesImpl(appID: "scry", dataRootURL: pluginDataRoot,
                                           secretStore: secrets, themeManager: themeManager,
                                           hub: agentContextHub, actionHub: agentActionHub, launchHub: pluginLaunchHub, signalHub: signalHub,
@@ -495,9 +495,17 @@ extension AppEnvironment {
         }
 
         if let saved = persistence.load(LayoutStateSnapshot.self) {
-            workspaceManager.restore(from: saved)
+            // Launch never resumes the last session: `launchState` drops the
+            // workspaces the user never named, lands on main rather than
+            // wherever they left off, and keeps pane contents only when
+            // Settings → General → "Restore layout on launch" is on (default
+            // off) — so opening the app starts no app on the user's behalf.
+            let restorePanes = environment.generalSettingsStore.restoreLayoutOnLaunch
+            let launch = saved.launchState(restoringPanes: restorePanes)
+            workspaceManager.restore(from: launch)
             workspaceManager.pruneApps(keeping: Set(registry.allApps.map { $0.id }))
-            Log.app.info("Restored workspace layout: \(saved.workspaces.count) workspace(s)")
+            let paneState = restorePanes ? "restored" : "cleared"
+            Log.app.info("Restored workspace layout: \(launch.workspaces.count) of \(saved.workspaces.count) workspace(s) kept, panes \(paneState, privacy: .public), active = main")
         }
         workspaceManager.onStateChange = { [weak workspaceManager] in
             guard let workspaceManager else { return }

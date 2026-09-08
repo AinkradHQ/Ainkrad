@@ -12,7 +12,7 @@ struct ScryWiringTests {
     }
 
     @Test func toolMutatesTheWiredStore() async throws {
-        let store = ScryStore(persistence: InMemoryPersistenceStore(), sessionKey: "default")
+        let store = ScryStore(sessionID: "default")
         let registry = AgentToolRegistry(tools: [ScryRenderTool(store: store)])
         let result = await registry.run(ToolCall(
             id: "1", name: "scry_render",
@@ -23,14 +23,14 @@ struct ScryWiringTests {
     }
 
     // Post-review fix (I1): `scry_render` is bound to the FOREGROUND
-    // `canvasStore` (sessionKey "default" — the same store `ScryApp` reads).
+    // `scryStore` (sessionID "default" — the same store `ScryApp` reads).
     // The background/headless tool registry `AppEnvironment` builds for
     // `RunManager`-driven runs (background/schedule/trigger) MUST exclude it,
     // mirroring the exact `agentTools.filter { !($0 is ScryRenderTool) }`
     // AppEnvironment applies when deriving `backgroundAgentTools` — otherwise
     // an autonomous run could silently mutate the canvas the user is viewing.
     @Test func backgroundRegistryExcludesCanvasRenderButForegroundKeepsIt() {
-        let store = ScryStore(persistence: InMemoryPersistenceStore(), sessionKey: "default")
+        let store = ScryStore(sessionID: "default")
         let agentTools: [any AgentTool] = [ReadFileTool(), ScryRenderTool(store: store)]
         let foregroundRegistry = AgentToolRegistry(tools: agentTools)
         let backgroundAgentTools = agentTools.filter { !($0 is ScryRenderTool) }

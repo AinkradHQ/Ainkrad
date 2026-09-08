@@ -235,7 +235,7 @@ struct SageRootView: View {
                                 AgentTurnTimelineView(steps: steps, tokens: tokens,
                                                       typography: assistantTypography, reduceMotion: reduceMotion,
                                                       toolStream: environment.toolStreamStore,
-                                                      canvasStore: environment.canvasStore,
+                                                      scryStore: environment.scryStore,
                                                       onOpenImage: { lightboxImage = $0 },
                                                       onOpenVideo: { lightboxVideoURL = $0 })
                                     .id(id)

@@ -2,80 +2,167 @@ import Foundation
 import CoreGraphics
 import Testing
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("ScryStore")
 @MainActor
 struct ScryStoreTests {
-    private func store(_ p: PersistenceStore = InMemoryPersistenceStore(),
-                       key: String = "s1") -> ScryStore {
-        ScryStore(persistence: p, sessionKey: key)
-    }
-
-    @Test func addAssignsIDAndZ() {
-        let s = store()
+    @Test("add assigns an id when the element has none")
+    func addAssignsID() {
+        let s = ScryStore()
         let id = s.add(ScryElement(id: "", kind: .text, body: "hi"))
         #expect(!id.isEmpty)
         #expect(s.model.elements.count == 1)
-        #expect(s.model.elements.first?.z == 0)   // first element z == nextZ(0)
     }
 
-    @Test func updateMutatesInPlace() {
-        let s = store()
+    @Test("update mutates in place")
+    func updateInPlace() {
+        let s = ScryStore()
         let id = s.add(ScryElement(id: "e1", kind: .table, body: "row1"))
         s.update(id: id) { $0.body += "\nrow2" }
         #expect(s.model.elements.first?.body == "row1\nrow2")
     }
 
-    @Test func moveAndResizeUpdateRect() {
-        let s = store()
-        let id = s.add(ScryElement(id: "e1", kind: .card, body: ""))
-        s.move(id: id, to: CGPoint(x: 100, y: 120))
-        s.resize(id: id, to: CGSize(width: 500, height: 300))
-        let r = s.model.elements.first!.rect
-        #expect(r.x == 100 && r.y == 120 && r.width == 500 && r.height == 300)
+    @Test("elements keep insertion order, newest last")
+    func appendOrder() {
+        let s = ScryStore()
+        _ = s.add(ScryElement(id: "a", kind: .text, body: ""))
+        _ = s.add(ScryElement(id: "b", kind: .text, body: ""))
+        #expect(s.model.elements.map(\.id) == ["a", "b"])
     }
 
-    @Test func bringToFrontRaisesZ() {
-        let s = store()
-        let a = s.add(ScryElement(id: "a", kind: .text, body: ""))
-        let b = s.add(ScryElement(id: "b", kind: .text, body: ""))
-        s.bringToFront(id: a)
-        let za = s.model.elements.first { $0.id == a }!.z
-        let zb = s.model.elements.first { $0.id == b }!.z
-        #expect(za > zb)
+    @Test("the cap evicts the oldest element")
+    func capEvictsOldest() {
+        let s = ScryStore()
+        for i in 0..<(ScryStore.cardCap + 3) {
+            _ = s.add(ScryElement(id: "e\(i)", kind: .text, body: ""))
+        }
+        #expect(s.model.elements.count == ScryStore.cardCap)
+        #expect(!s.model.elements.contains { $0.id == "e0" })
+        #expect(s.model.elements.contains { $0.id == "e\(ScryStore.cardCap + 2)" })
     }
 
-    @Test func sessionKeySwapOnLiveStoreIsolatesLayouts() {
-        let p = InMemoryPersistenceStore()
-        let s = store(p, key: "A")
-        let idA = s.add(ScryElement(id: "a", kind: .card, body: "in-A"))
-        s.move(id: idA, to: CGPoint(x: 10, y: 20))
+    @Test("a pinned element is never evicted")
+    func pinnedSurvivesEviction() {
+        let s = ScryStore()
+        _ = s.add(ScryElement(id: "keep", kind: .text, body: ""))
+        s.setPinned(id: "keep", true)
+        for i in 0..<(ScryStore.cardCap + 5) {
+            _ = s.add(ScryElement(id: "e\(i)", kind: .text, body: ""))
+        }
+        #expect(s.model.elements.contains { $0.id == "keep" })
+        #expect(s.model.elements.count == ScryStore.cardCap)
+    }
 
-        s.sessionKey = "B"
+    @Test("overrides are recorded per element and clearable")
+    func overrides() {
+        let s = ScryStore()
+        _ = s.add(ScryElement(id: "a", kind: .card, body: ""))
+        #expect(s.overrides.isEmpty)
+        s.setOverride(id: "a", ScryRect(x: 12, y: 34, width: 300, height: 200))
+        #expect(s.overrides["a"]?.x == 12)
+        s.clearOverrides()
+        #expect(s.overrides.isEmpty)
+    }
+
+    @Test("overrideOrder tracks drag recency: re-dragging an id moves it to the end")
+    func overrideOrderTracksRecency() {
+        let s = ScryStore()
+        _ = s.add(ScryElement(id: "a", kind: .card, body: ""))
+        _ = s.add(ScryElement(id: "b", kind: .card, body: ""))
+        s.setOverride(id: "a", ScryRect(x: 0, y: 0, width: 10, height: 10))
+        s.setOverride(id: "b", ScryRect(x: 0, y: 0, width: 10, height: 10))
+        #expect(s.overrideOrder == ["a", "b"])
+        // Dragging "a" again should bring it to the end, not stay put.
+        s.setOverride(id: "a", ScryRect(x: 5, y: 5, width: 10, height: 10))
+        #expect(s.overrideOrder == ["b", "a"])
+    }
+
+    @Test("removing a card also drops it from overrideOrder")
+    func overrideOrderDropsOnRemove() {
+        let s = ScryStore()
+        _ = s.add(ScryElement(id: "a", kind: .card, body: ""))
+        _ = s.add(ScryElement(id: "b", kind: .card, body: ""))
+        s.setOverride(id: "a", ScryRect(x: 0, y: 0, width: 10, height: 10))
+        s.setOverride(id: "b", ScryRect(x: 0, y: 0, width: 10, height: 10))
+        s.remove(id: "a")
+        #expect(s.overrideOrder == ["b"])
+    }
+
+    @Test("sessions are isolated, including their overrides")
+    func sessionIsolation() {
+        let s = ScryStore(sessionID: "A")
+        _ = s.add(ScryElement(id: "a", kind: .card, body: "in-A"))
+        s.setOverride(id: "a", ScryRect(x: 10, y: 20, width: 100, height: 100))
+
+        s.sessionID = "B"
         #expect(s.model.elements.isEmpty)
+        #expect(s.overrides.isEmpty)
+        _ = s.add(ScryElement(id: "b", kind: .text, body: "in-B"))
 
-        let idB = s.add(ScryElement(id: "b", kind: .text, body: "in-B"))
-        #expect(s.model.elements.first?.id == idB)
-
-        s.sessionKey = "A"
-        #expect(s.model.elements.count == 1)
-        let a = s.model.elements.first!
-        #expect(a.id == idA)
-        #expect(a.body == "in-A")
-        #expect(a.rect.x == 10 && a.rect.y == 20)
-        #expect(!s.model.elements.contains { $0.id == idB })
+        s.sessionID = "A"
+        #expect(s.model.elements.map(\.id) == ["a"])
+        #expect(s.overrides["a"]?.x == 10)
     }
 
-    @Test func persistsPerSessionKey() {
-        let p = InMemoryPersistenceStore()
-        let s1 = store(p, key: "alpha")
-        _ = s1.add(ScryElement(id: "e", kind: .text, body: "kept"))
-        // A fresh store for the same session sees the persisted canvas.
-        let s2 = store(p, key: "alpha")
-        #expect(s2.model.elements.first?.body == "kept")
-        // A different session starts empty.
-        let s3 = store(p, key: "beta")
-        #expect(s3.model.elements.isEmpty)
+    @Test("clear empties the active session only")
+    func clearIsPerSession() {
+        let s = ScryStore(sessionID: "A")
+        _ = s.add(ScryElement(id: "a", kind: .text, body: ""))
+        s.sessionID = "B"
+        _ = s.add(ScryElement(id: "b", kind: .text, body: ""))
+        s.clear()
+        #expect(s.model.elements.isEmpty)
+        s.sessionID = "A"
+        #expect(s.model.elements.count == 1)
+    }
+
+    @Test("an all-pinned model is left over the cap")
+    func allPinnedLeftOverCap() {
+        let s = ScryStore()
+        for i in 0..<(ScryStore.cardCap + 5) {
+            _ = s.add(ScryElement(id: "e\(i)", kind: .text, body: "", pinned: true))
+        }
+        #expect(s.model.elements.count == ScryStore.cardCap + 5)
+        #expect(s.model.elements.allSatisfy { $0.pinned })
+    }
+
+    @Test("a drag records an override without mutating the element")
+    func dragRecordsOverrideOnly() {
+        let s = ScryStore()
+        let id = s.add(ScryElement(id: "a", kind: .card, body: "x"))
+        let before = s.model.elements.first!
+        s.setOverride(id: id, ScryRect(x: 200, y: 300, width: 400, height: 250))
+        #expect(s.model.elements.first! == before)   // element untouched
+        #expect(s.overrides[id]?.x == 200)
+    }
+
+    @Test("remove drops the element's override entry")
+    func removeDropsOverride() {
+        let s = ScryStore()
+        _ = s.add(ScryElement(id: "a", kind: .card, body: ""))
+        s.setOverride(id: "a", ScryRect(x: 1, y: 2, width: 3, height: 4))
+        #expect(s.overrides["a"] != nil)
+        s.remove(id: "a")
+        #expect(s.overrides["a"] == nil)
+    }
+
+    @Test("eviction by the cap drops the evicted card's override entry")
+    func evictionDropsOverride() {
+        let s = ScryStore()
+        let firstID = "e0"
+        _ = s.add(ScryElement(id: firstID, kind: .card, body: ""))
+        s.setOverride(id: firstID, ScryRect(x: 1, y: 2, width: 3, height: 4))
+        #expect(s.overrides[firstID] != nil)
+
+        for i in 1..<(ScryStore.cardCap + 1) {
+            _ = s.add(ScryElement(id: "e\(i)", kind: .text, body: ""))
+        }
+        #expect(!s.model.elements.contains { $0.id == firstID })
+        #expect(s.overrides[firstID] == nil)
+
+        // Re-adding under the same (agent-supplied, stable) id must not
+        // resurrect the stale override.
+        _ = s.add(ScryElement(id: firstID, kind: .card, body: "back"))
+        #expect(s.overrides[firstID] == nil)
     }
 }

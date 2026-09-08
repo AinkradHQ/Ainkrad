@@ -200,17 +200,17 @@ final class AppEnvironment {
     /// to and `scry_render` (appended to the shared `agentToolRegistry` in
     /// `bootstrap()`) mutates — same one-instance-shared-everywhere pattern as
     /// `runManager`/`scheduleStore` above.
-    let canvasStore: ScryStore
+    let scryStore: ScryStore
     /// Terminal streaming (Task 7): the store `run_terminal`'s live stdout/stderr
     /// lands in and `AgentTurnTimelineView` reads for the running tool card — one
     /// instance shared by the main `agentSession`'s `RunTerminalTool` and the
-    /// Sage timeline, same pattern as `canvasStore` above.
+    /// Sage timeline, same pattern as `scryStore` above.
     let toolStreamStore: ToolStreamStore
     /// Tool Hooks (M8 assistant-tool-hooks Task 5): persisted, observable CRUD
     /// over user-authored PreToolUse/PostToolUse hooks — one instance shared
     /// by the main `agentSession`'s `ToolHookRunner` and the settings surface
     /// (Task 6) that binds to it, same pattern as `toolStreamStore`/
-    /// `canvasStore` above.
+    /// `scryStore` above.
     let toolHooksStore: ToolHooksStore
     /// File-based custom `/name` slash commands (project + user Markdown files) —
     /// registered into `commandRegistry` after skill commands at bootstrap; see
@@ -387,7 +387,7 @@ final class AppEnvironment {
         skillWatcher: SkillWatcher,
         skillCommandStore: SkillCommandStore,
         menuBarPresence: MenuBarPresence,
-        canvasStore: ScryStore,
+        scryStore: ScryStore,
         toolStreamStore: ToolStreamStore,
         toolHooksStore: ToolHooksStore,
         customCommandStore: CustomCommandStore,
@@ -468,7 +468,7 @@ final class AppEnvironment {
         self.skillWatcher = skillWatcher
         self.skillCommandStore = skillCommandStore
         self.menuBarPresence = menuBarPresence
-        self.canvasStore = canvasStore
+        self.scryStore = scryStore
         self.toolStreamStore = toolStreamStore
         self.toolHooksStore = toolHooksStore
         self.customCommandStore = customCommandStore
@@ -547,7 +547,7 @@ final class AppEnvironment {
 
         let sp2 = AinkradSignposts.begin(AinkradSignposts.launch, "boot-execution-and-tools")
         let (
-            sandboxProfileStore, cloudCredentialsStore, executionRouter, agentTools, mcpServerRegistry, canvasStore,
+            sandboxProfileStore, cloudCredentialsStore, executionRouter, agentTools, mcpServerRegistry, scryStore,
             signalReadAccess, toolStreamStore, terminalController
         ) = bootstrapExecutionAndTools(
             home: home,
@@ -651,7 +651,7 @@ final class AppEnvironment {
             skillWatcher: skillWatcher,
             skillCommandStore: skillCommandStore,
             menuBarPresence: menuBarPresence,
-            canvasStore: canvasStore,
+            scryStore: scryStore,
             toolStreamStore: toolStreamStore,
             toolHooksStore: toolHooksStore,
             customCommandStore: customCommandStore,

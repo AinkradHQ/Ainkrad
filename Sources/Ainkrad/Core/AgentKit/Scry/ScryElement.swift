@@ -29,21 +29,39 @@ enum ScryElementKind: String, Codable, Sendable, CaseIterable {
     }
 }
 
+/// How much room a card asks for. Replaces the agent supplying pixel
+/// coordinates: a model can pick "full" for a table far more reliably than it
+/// can pick an x/y/width/height that does not collide with everything else.
+enum ScrySizeHint: String, Codable, Sendable, CaseIterable {
+    case small, medium, large, full
+
+    /// The hint used when the agent gives none.
+    static func `default`(for kind: ScryElementKind) -> ScrySizeHint {
+        switch kind {
+        case .status:                        return .small
+        case .table:                         return .full
+        case .diagram, .chart, .video:       return .large
+        case .text, .markdown, .code,
+             .image, .audio, .card, .unknown: return .medium
+        }
+    }
+}
+
 struct ScryElement: Codable, Equatable, Identifiable, Sendable {
-    let id: String
+    var id: String
     var kind: ScryElementKind
     var title: String?
     var body: String
     var language: String?
-    var rect: ScryRect
-    var z: Int
     var pinned: Bool
+    var sizeHint: ScrySizeHint
 
     init(id: String, kind: ScryElementKind, title: String? = nil, body: String,
-         language: String? = nil, rect: ScryRect = .defaultCard, z: Int = 0,
-         pinned: Bool = false) {
+         language: String? = nil,
+         pinned: Bool = false, sizeHint: ScrySizeHint? = nil) {
         self.id = id; self.kind = kind; self.title = title; self.body = body
-        self.language = language; self.rect = rect; self.z = z; self.pinned = pinned
+        self.language = language; self.pinned = pinned
+        self.sizeHint = sizeHint ?? .default(for: kind)
     }
 
     // Forward-compatible decode (wave-1 idiom). `id` is required identity;
@@ -56,8 +74,8 @@ struct ScryElement: Codable, Equatable, Identifiable, Sendable {
         title = try c.decodeIfPresent(String.self, forKey: .title)
         body = try c.decodeIfPresent(String.self, forKey: .body) ?? ""
         language = try c.decodeIfPresent(String.self, forKey: .language)
-        rect = try c.decodeIfPresent(ScryRect.self, forKey: .rect) ?? .defaultCard
-        z = try c.decodeIfPresent(Int.self, forKey: .z) ?? 0
         pinned = try c.decodeIfPresent(Bool.self, forKey: .pinned) ?? false
+        sizeHint = (try? c.decodeIfPresent(ScrySizeHint.self, forKey: .sizeHint))
+            .flatMap { $0 } ?? .default(for: kind)
     }
 }

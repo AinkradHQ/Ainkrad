@@ -30,7 +30,7 @@ struct AgentTurnTimelineView: View {
     var toolStream: ToolStreamStore? = nil
     /// Scry store used to resolve an `image_generate` call's rendered image for
     /// inline display. Optional/defaulted so existing call sites/previews compile.
-    var canvasStore: ScryStore? = nil
+    var scryStore: ScryStore? = nil
     /// Presents an inline generated image full-screen (handled at the window root).
     var onOpenImage: ((NSImage) -> Void)? = nil
     /// Presents an inline generated video full-screen (handled at the window root).
@@ -88,13 +88,13 @@ struct AgentTurnTimelineView: View {
         case .tool(let payload):
             let liveText = TimelineLiveOutput.summary(for: step, store: toolStream)
             let imageDataURL: String? = (payload.name == "image_generate")
-                ? canvasStore.flatMap { ToolCallImageLookup.canvasImageDataURL(resultText: payload.result.text, store: $0) }
+                ? scryStore.flatMap { ToolCallImageLookup.canvasImageDataURL(resultText: payload.result.text, store: $0) }
                 : nil
             let videoURL: String? = (payload.name == "video_generate")
-                ? canvasStore.flatMap { ToolCallImageLookup.canvasVideoURL(resultText: payload.result.text, store: $0) }
+                ? scryStore.flatMap { ToolCallImageLookup.canvasVideoURL(resultText: payload.result.text, store: $0) }
                 : nil
             let audioURL: String? = (payload.name == "speak")
-                ? canvasStore.flatMap { ToolCallImageLookup.canvasAudioURL(resultText: payload.result.text, store: $0) }
+                ? scryStore.flatMap { ToolCallImageLookup.canvasAudioURL(resultText: payload.result.text, store: $0) }
                 : nil
             ToolCallCardView(
                 toolName: payload.name,

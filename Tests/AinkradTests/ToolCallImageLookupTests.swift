@@ -13,7 +13,7 @@ struct ToolCallImageLookupTests {
     }
 
     @Test func resolvesImageBodyFromResultText() {
-        let store = ScryStore(persistence: InMemoryPersistenceStore(), sessionKey: "s")
+        let store = ScryStore(sessionID: "s")
         let dataURL = "data:image/png;base64,QUJD"
         let id = store.add(ScryElement(id: UUID().uuidString, kind: .image, title: "x", body: dataURL))
         let resultText = "Rendered generated image as scry element \(id)."
@@ -21,7 +21,7 @@ struct ToolCallImageLookupTests {
     }
 
     @Test func returnsNilForMissingOrNonImage() {
-        let store = ScryStore(persistence: InMemoryPersistenceStore(), sessionKey: "s")
+        let store = ScryStore(sessionID: "s")
         #expect(ToolCallImageLookup.canvasImageDataURL(resultText: nil, store: store) == nil)
         #expect(ToolCallImageLookup.canvasImageDataURL(
             resultText: "no uuid", store: store) == nil)

@@ -59,7 +59,8 @@ struct SpeakTool: AgentTool {
                 player.play(data)
                 let element = ScryElement(
                     id: UUID().uuidString, kind: .audio,
-                    title: "Speech", body: url.absoluteString)
+                    title: "Speech", body: url.absoluteString,
+                    sizeHint: .medium)
                 let id = store.add(element)
                 return ToolResult(content: "Spoke \(text.count) characters (audio element \(id)).", isError: false)
             } catch {

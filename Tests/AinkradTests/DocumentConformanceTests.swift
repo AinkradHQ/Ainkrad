@@ -23,7 +23,6 @@ struct DocumentConformanceTests {
         #expect(SkillCommandsDocument.documentID == "skill-commands")
         #expect(DiscoveredModelsDocument.documentID == "discovered-models")
         #expect(SchedulesDocument.documentID == "agent-schedules")
-        #expect(ScryWorkspaceDocument.documentID == "agent-canvas")
         #expect(VoiceSettingsDocument.documentID == "voice-settings")
     }
 

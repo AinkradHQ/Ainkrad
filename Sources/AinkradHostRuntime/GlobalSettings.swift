@@ -70,6 +70,14 @@ public struct GlobalSettings: PersistableDocument {
     /// Motion & Sound step is where a user turns it off. Sound is the opposite
     /// (see `soundEnabled`): noise is opt-in, movement is not.
     public var uiReduceMotion: Bool = false
+    /// Whether a relaunch reopens the apps that were tiled when you last quit.
+    ///
+    /// Default OFF. Launching should not start work on your behalf — a restored
+    /// pane instantiates whatever app was there (a terminal session, a Scry
+    /// document) before you have asked for it, and a single bad pane then
+    /// crashes every launch. Workspaces, their names and their view modes are
+    /// still restored; only the pane contents are dropped.
+    public var restoreLayoutOnLaunch: Bool = false
 
     public init(theme: Theme = .neonBlue,
          appIconChoice: AppIconChoice = .auto,
@@ -89,7 +97,8 @@ public struct GlobalSettings: PersistableDocument {
          skyEffectEnabled: [String: Bool] = [:],
          overlayBackgroundOpacity: Double = 0.94,
          overlayBlurEnabled: Bool = true,
-         uiReduceMotion: Bool = false) {
+         uiReduceMotion: Bool = false,
+         restoreLayoutOnLaunch: Bool = false) {
         self.theme = theme
         self.appIconChoice = appIconChoice
         self.appIconAppearance = appIconAppearance
@@ -109,6 +118,7 @@ public struct GlobalSettings: PersistableDocument {
         self.overlayBackgroundOpacity = overlayBackgroundOpacity
         self.overlayBlurEnabled = overlayBlurEnabled
         self.uiReduceMotion = uiReduceMotion
+        self.restoreLayoutOnLaunch = restoreLayoutOnLaunch
     }
 
     public init(from decoder: Decoder) throws {
@@ -136,5 +146,9 @@ public struct GlobalSettings: PersistableDocument {
         overlayBackgroundOpacity = try container.decodeIfPresent(Double.self, forKey: .overlayBackgroundOpacity) ?? 0.94
         overlayBlurEnabled = try container.decodeIfPresent(Bool.self, forKey: .overlayBlurEnabled) ?? true
         uiReduceMotion = try container.decodeIfPresent(Bool.self, forKey: .uiReduceMotion) ?? false
+        // Absent key = an install that predates the setting. It must read as
+        // OFF, matching the property default above, so an existing user gets
+        // the new launch behaviour without having to find the switch.
+        restoreLayoutOnLaunch = try container.decodeIfPresent(Bool.self, forKey: .restoreLayoutOnLaunch) ?? false
     }
 }

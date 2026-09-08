@@ -41,7 +41,8 @@ struct ImageGenerateTool: AgentTool {
         let dataURL = "data:\(image.mediaType);base64,\(image.base64)"
         let element = ScryElement(
             id: UUID().uuidString, kind: .image,
-            title: input["title"]?.stringValue ?? prompt, body: dataURL)
+            title: input["title"]?.stringValue ?? prompt, body: dataURL,
+            sizeHint: .medium)
         let id = store.add(element)
         return ToolResult(content: "Rendered generated image as scry element \(id).", isError: false)
     }
