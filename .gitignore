@@ -21,3 +21,7 @@ dist/
 build/
 
 .superpowers/
+
+# Developer ID provisioning profile consumed by scripts/release.sh — pulled
+# from the Apple Developer portal, not source.
+config/*.provisionprofile

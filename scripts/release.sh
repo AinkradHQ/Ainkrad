@@ -15,7 +15,15 @@
 #   scripts/release.sh --publish       # also create/update the GitHub release
 #   VERSION=0.2.0 scripts/release.sh   # override the version (default: project.yml)
 #
-# Signing / notarization (all optional — omit to build unsigned):
+# Publishing REQUIRES notarization. `--publish` refuses an un-notarized build
+# unless ALLOW_UNNOTARIZED names the exact version and ALLOW_UNNOTARIZED_REASON
+# says why; the reason is written into the release notes so a warned build is
+# never mistaken for a clean one. Store credentials once with:
+#
+#   xcrun notarytool store-credentials AinkradNotary \
+#     --apple-id <you@example.com> --team-id RT9AA68C38
+#
+# Signing / notarization (all optional for a LOCAL build — omit to build unsigned):
 #   SIGN_IDENTITY      "Developer ID Application: Name (TEAMID)" — the codesign identity.
 #   NOTARY_PROFILE     Name of a stored `notarytool store-credentials` profile.
 #     …or, instead of a profile:
@@ -77,6 +85,87 @@ if [[ "${SKIP_PREFLIGHT:-}" != "1" ]]; then
   }
 fi
 
+# --- release gates (run BEFORE the multi-minute build) ---------------------
+BUILD_NUMBER="$(grep -m1 'CURRENT_PROJECT_VERSION:' project.yml | sed -E 's/.*"([^"]+)".*/\1/')"
+
+# The app-icon bundle stamp uses CFBundleVersion to tell one install from the
+# next (see `BundleAppIcon`): the bookkeeping lives in UserDefaults, which
+# survives app replacement, while the stamp lives in the .app, which does not.
+# Ship two releases with the same build number and the second silently stops
+# applying the user's chosen icon. Nothing auto-bumps it, so assert it moved.
+# Fetch tags first. `gh release create` tags on the REMOTE, so a local-only tag
+# list can be a release or more behind -- and a guard that compares against a
+# stale baseline reports "safe" while letting the exact defect through. That is
+# how this check first shipped: it passed by comparing v0.20.0 against v0.18.0
+# because v0.19.0 existed only on the remote.
+if ! git fetch --tags --quiet origin 2>/dev/null; then
+  echo "warning: could not fetch tags from origin — the build-number check below" >&2
+  echo "         is comparing against local tags only and may be stale." >&2
+fi
+PREV_TAG="$(git tag --list 'v*' --sort=-v:refname | grep -v "^${TAG}$" | head -1 || true)"
+if [[ -n "$PREV_TAG" ]]; then
+  PREV_BUILD="$(git show "${PREV_TAG}:project.yml" 2>/dev/null \
+    | grep -m1 'CURRENT_PROJECT_VERSION:' | sed -E 's/.*"([^"]+)".*/\1/' || true)"
+  echo "  build number: ${BUILD_NUMBER} (previous release ${PREV_TAG}: ${PREV_BUILD:-unknown})"
+  if [[ -n "$PREV_BUILD" && "$PREV_BUILD" == "$BUILD_NUMBER" ]]; then
+    echo "error: CURRENT_PROJECT_VERSION is still ${BUILD_NUMBER} — same as ${PREV_TAG}." >&2
+    echo "       The app-icon bundle stamp uses it to detect a new install; reusing" >&2
+    echo "       it makes the user's chosen icon silently revert after updating." >&2
+    echo "       Bump CURRENT_PROJECT_VERSION in project.yml and retry." >&2
+    exit 1
+  fi
+fi
+
+# Resolve notary credentials NOW rather than after the build, so a missing
+# profile costs a second instead of five minutes.
+HAVE_NOTARY_CREDS=false
+if [[ -n "${NOTARY_PROFILE:-}" ]]; then
+  HAVE_NOTARY_CREDS=true
+elif [[ -n "${APPLE_ID:-}" && -n "${APPLE_TEAM_ID:-}" && -n "${APPLE_APP_PASSWORD:-}" ]]; then
+  HAVE_NOTARY_CREDS=true
+fi
+
+if [[ "$PUBLISH" == true ]]; then
+  # The escape hatch is scoped to ONE version on purpose. A bare boolean gets
+  # exported into a shell once and then quietly un-notarizes every release
+  # after it -- which is exactly how v0.19.0 shipped un-notarized while v0.18.0
+  # had been fine. A stale value is now inert.
+  HATCH_OPEN=false
+  if [[ "${ALLOW_UNNOTARIZED:-}" == "$VERSION" ]]; then
+    if [[ -z "${ALLOW_UNNOTARIZED_REASON:-}" ]]; then
+      echo "error: ALLOW_UNNOTARIZED=${VERSION} also needs ALLOW_UNNOTARIZED_REASON=\"...\"." >&2
+      echo "       The reason goes into the release notes so nobody downloads a" >&2
+      echo "       warned build thinking it is a clean one." >&2
+      exit 1
+    fi
+    HATCH_OPEN=true
+  elif [[ -n "${ALLOW_UNNOTARIZED:-}" ]]; then
+    echo "error: ALLOW_UNNOTARIZED=${ALLOW_UNNOTARIZED} does not match the version" >&2
+    echo "       being published (${VERSION}). It is scoped to one version so it" >&2
+    echo "       cannot linger from a previous release. Unset it, or set it to ${VERSION}." >&2
+    exit 1
+  fi
+
+  if [[ "$HAVE_NOTARY_CREDS" != true && "$HATCH_OPEN" != true ]]; then
+    echo "error: --publish requires notarization, and no notary credentials are set." >&2
+    echo "       Without it macOS blocks the download and users must allow the app" >&2
+    echo "       in System Settings > Privacy & Security." >&2
+    echo >&2
+    echo "       Store them once (needs a paid Apple Developer membership):" >&2
+    echo "         xcrun notarytool store-credentials AinkradNotary \\" >&2
+    echo "           --apple-id <you@example.com> --team-id ${APPLE_TEAM_ID:-<TEAMID>}" >&2
+    echo "       then re-run with NOTARY_PROFILE=AinkradNotary." >&2
+    echo >&2
+    echo "       To ship un-notarized anyway, deliberately, for THIS version only:" >&2
+    echo "         ALLOW_UNNOTARIZED=${VERSION} ALLOW_UNNOTARIZED_REASON=\"why\"" >&2
+    exit 1
+  fi
+  if [[ -z "${SIGN_IDENTITY:-}" && "$HATCH_OPEN" != true ]]; then
+    echo "error: --publish needs SIGN_IDENTITY (or the ALLOW_UNNOTARIZED hatch)." >&2
+    exit 1
+  fi
+fi
+
 # --- build -----------------------------------------------------------------
 command -v xcodegen >/dev/null 2>&1 && { echo "▸ xcodegen generate"; xcodegen generate >/dev/null; }
 
@@ -93,6 +182,50 @@ BUILT_VERSION="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "
 SIGNED=false
 if [[ -n "${SIGN_IDENTITY:-}" ]]; then
   echo "▸ Signing with: ${SIGN_IDENTITY}"
+
+  # The app claims `keychain-access-groups` (see config/Ainkrad.entitlements),
+  # and that entitlement is only honoured with a matching provisioning profile
+  # embedded in the bundle. xcodebuild embeds the DEVELOPMENT profile it signed
+  # with, which does not match a Developer ID signature: AMFI SIGKILLs such a
+  # bundle the instant it launches, so the DMG would ship an app that dies on
+  # open with no error a user can act on. (Verified directly: Developer ID
+  # signature plus development profile, exit 137.) Swap in the Developer ID
+  # profile before signing, and refuse to build if there is not one.
+  DEVID_PROFILE="${DEVID_PROFILE:-config/Ainkrad-DeveloperID.provisionprofile}"
+  if [[ ! -f "$DEVID_PROFILE" ]]; then
+    echo "error: no Developer ID provisioning profile at ${DEVID_PROFILE}." >&2
+    echo "       Create one at developer.apple.com (Profiles -> + -> Developer ID," >&2
+    echo "       App ID com.ainkrad.app with Keychain Sharing enabled), save it there," >&2
+    echo "       or point DEVID_PROFILE at it. Without it the signed app is killed" >&2
+    echo "       at launch by AMFI. Refusing to continue." >&2
+    exit 1
+  fi
+  if security cms -D -i "$DEVID_PROFILE" 2>/dev/null | grep -q 'ProvisionedDevices'; then
+    echo "error: ${DEVID_PROFILE} is a DEVELOPMENT profile (it lists ProvisionedDevices)." >&2
+    echo "       A Developer ID signature with a development profile is SIGKILLed" >&2
+    echo "       at launch. Refusing to continue." >&2
+    exit 1
+  fi
+  cp "$DEVID_PROFILE" "$APP_PATH/Contents/embedded.provisionprofile"
+
+  # `config/Ainkrad.entitlements` writes the access group as
+  # $(AppIdentifierPrefix)com.ainkrad.app. Xcode expands that build variable
+  # into a .xcent when IT signs; plain codesign does NOT — it would sign the
+  # literal string "$(AppIdentifierPrefix)com.ainkrad.app", which matches no
+  # access group at all and gets the app SIGKILLed by AMFI the moment a user
+  # opens it. (Verified: signing a bundle with the unexpanded string, exit 137.)
+  # So expand it here, from the prefix the profile itself was issued for, and
+  # sign with the result.
+  APP_PREFIX="$(security cms -D -i "$DEVID_PROFILE" 2>/dev/null \
+    | plutil -extract 'Entitlements.com\.apple\.application-identifier' raw - 2>/dev/null \
+    | cut -d. -f1)"
+  if [[ ! "$APP_PREFIX" =~ ^[A-Z0-9]{10}$ ]]; then
+    echo "error: could not read the App ID prefix from ${DEVID_PROFILE} (got '${APP_PREFIX}')." >&2
+    exit 1
+  fi
+  SIGN_ENTITLEMENTS="$(mktemp -t ainkrad-entitlements).plist"
+  sed "s/\$(AppIdentifierPrefix)/${APP_PREFIX}./g" config/Ainkrad.entitlements > "$SIGN_ENTITLEMENTS"
+  trap 'rm -f "$SIGN_ENTITLEMENTS"' EXIT
   # Inside-out: sign every nested dylib/framework first, then the app bundle,
   # each with the hardened runtime + a secure timestamp (both required for
   # notarization). --deep is intentionally avoided (Apple discourages it).
@@ -100,7 +233,7 @@ if [[ -n "${SIGN_IDENTITY:-}" ]]; then
     codesign --force --options runtime --timestamp --sign "$SIGN_IDENTITY" "$item"
   done < <(find "$APP_PATH/Contents/Frameworks" \( -name '*.dylib' -o -name '*.framework' \) -print0 2>/dev/null)
   codesign --force --options runtime --timestamp \
-    --entitlements config/Ainkrad.entitlements \
+    --entitlements "$SIGN_ENTITLEMENTS" \
     --sign "$SIGN_IDENTITY" "$APP_PATH"
   codesign --verify --strict --verbose=2 "$APP_PATH"
 
@@ -115,6 +248,26 @@ if [[ -n "${SIGN_IDENTITY:-}" ]]; then
        | grep -q 'com.apple.security.cs.disable-library-validation'; then
     echo "error: signed app is missing com.apple.security.cs.disable-library-validation." >&2
     echo "       Under the hardened runtime NO plugin would load. Refusing to continue." >&2
+    exit 1
+  fi
+
+  # keychain-access-groups is what lets every build read the same secrets with
+  # no per binary ACL. Dropped from the signature, the shipped app silently
+  # falls back to the legacy keychain, cannot see anything it stored before,
+  # and starts asking for the login password again on every rebuilt binary.
+  SIGNED_ENTITLEMENTS="$(codesign -d --entitlements :- "$APP_PATH" 2>/dev/null)"
+  if ! grep -q "${APP_PREFIX}.com.ainkrad.app" <<<"$SIGNED_ENTITLEMENTS"; then
+    echo "error: signed app is missing the ${APP_PREFIX}.com.ainkrad.app keychain access group." >&2
+    echo "       Stored secrets would be unreachable and the Keychain password" >&2
+    echo "       prompt would return on every build. Refusing to continue." >&2
+    exit 1
+  fi
+  # An unexpanded build variable is worse than a missing entitlement: the app is
+  # killed at launch instead of merely losing access, and `grep keychain` alone
+  # would have happily passed it.
+  if grep -q 'AppIdentifierPrefix' <<<"$SIGNED_ENTITLEMENTS"; then
+    echo "error: signed app carries an UNEXPANDED \$(AppIdentifierPrefix) access group." >&2
+    echo "       AMFI kills such a bundle on launch. Refusing to continue." >&2
     exit 1
   fi
   SIGNED=true
@@ -155,13 +308,33 @@ if [[ "$SIGNED" == true ]]; then
   fi
   if [[ ${#NOTARY_ARGS[@]} -gt 0 ]]; then
     echo "▸ Notarizing (this can take a few minutes)…"
-    xcrun notarytool submit "$DMG" "${NOTARY_ARGS[@]}" --wait
+    SUBMIT_LOG="${DIST}/notarytool-submit.log"
+    xcrun notarytool submit "$DMG" "${NOTARY_ARGS[@]}" --wait 2>&1 | tee "$SUBMIT_LOG"
+    # `notarytool submit --wait` exits 0 even when the submission comes back
+    # Invalid, so the exit code proves nothing -- read the status it printed.
+    if ! grep -qE '^[[:space:]]*status: Accepted' "$SUBMIT_LOG"; then
+      echo "error: notarization did not return Accepted. See ${SUBMIT_LOG}." >&2
+      echo "       Fetch the detail with: xcrun notarytool log <submission-id>" >&2
+      exit 1
+    fi
     echo "▸ Stapling ticket…"
     xcrun stapler staple "$DMG"
     xcrun stapler validate "$DMG"
+    # Gatekeeper's verdict is the only one a user experiences, so ask it
+    # directly rather than inferring success from the steps above. This is the
+    # exact check that distinguished a good v0.18.0 from a bad v0.19.0.
+    if ! spctl -a -vvv -t open --context context:primary-signature "$DMG" 2>&1 \
+         | grep -q 'source=Notarized Developer ID'; then
+      echo "error: the dmg does not evaluate as 'Notarized Developer ID'." >&2
+      echo "       Stapling appeared to succeed but Gatekeeper disagrees." >&2
+      spctl -a -vvv -t open --context context:primary-signature "$DMG" 2>&1 | sed 's/^/       /' >&2
+      exit 1
+    fi
     NOTARIZED=true
   else
-    echo "▸ Signed but no notary credentials — skipping notarization."
+    echo "▸ NOT NOTARIZED: signed, but no notary credentials are configured."
+    echo "  A local build is fine. Publishing this would make macOS block the"
+    echo "  download — see the --publish gate for how to fix or override."
   fi
 fi
 
@@ -171,32 +344,15 @@ $NOTARIZED  && echo "  notarized:  yes" || echo "  notarized:  no"
 
 # --- publish ---------------------------------------------------------------
 if [[ "$PUBLISH" == true ]]; then
-  # Fail CLOSED on an ACCIDENTALLY unsigned release; allow a DELIBERATE one.
-  #
-  # Publishing an un-notarized dmg has a real cost: Gatekeeper blocks it, and
-  # the user has to go to System Settings > Privacy & Security to run it. That
-  # trains exactly the habit that makes malware easy, so it must never happen
-  # by accident.
-  #
-  # But notarization requires a PAID Apple Developer Program membership, and
-  # until that exists an unsigned release is the only release possible. Refusing
-  # outright would mean shipping nothing at all. So it is permitted, loudly, and
-  # only when asked for by name: UNSIGNED_RELEASE=1 states the intent, whereas a
-  # generic "force" flag would get set once and never removed.
+  # The gates that decide WHETHER to publish already ran before the build, so
+  # by here the only job left is to warn loudly and label the artifact.
   if [[ "$NOTARIZED" != true ]]; then
-    if [[ "${UNSIGNED_RELEASE:-}" != "1" ]]; then
-      echo "error: refusing to publish a build that is not signed AND notarized." >&2
-      echo "       signed=${SIGNED} notarized=${NOTARIZED}" >&2
-      echo "       With a Developer ID: set SIGN_IDENTITY + NOTARY_PROFILE." >&2
-      echo "       Without one: UNSIGNED_RELEASE=1 to publish deliberately unsigned." >&2
-      exit 1
-    fi
     echo
-    echo "  ⚠ PUBLISHING UNSIGNED. Users will hit a Gatekeeper block and must"
-    echo "    allow the app in System Settings > Privacy & Security."
-    echo "    Plugin signatures will also NOT be verified at runtime: an"
-    echo "    unsigned host cannot demand a Developer-ID signature it has no"
-    echo "    way to produce (see PluginTrust). The App Store surface says so."
+    echo "  ⚠ PUBLISHING WITHOUT NOTARIZATION (signed, not notarized)."
+    echo "    Reason: ${ALLOW_UNNOTARIZED_REASON}"
+    echo "    macOS will block the download; users must allow the app in"
+    echo "    System Settings > Privacy & Security. Plugin signatures will also"
+    echo "    NOT be verified at runtime (see PluginTrust)."
     echo
   fi
   command -v gh >/dev/null 2>&1 || { echo "error: --publish needs the gh CLI" >&2; exit 1; }
@@ -216,5 +372,20 @@ if [[ "$PUBLISH" == true ]]; then
       --title "Ainkrad ${VERSION}" \
       --generate-notes
   fi
+  # An un-notarized build must be visibly labelled on the release page, or it
+  # looks identical to a clean one to whoever downloads it. Generated notes are
+  # kept and the warning is prepended.
+  if [[ "$NOTARIZED" != true ]]; then
+    echo "▸ Labelling ${TAG} as not notarized…"
+    EXISTING_NOTES="$(gh release view "$TAG" --json body --jq .body || true)"
+    WARNING="> ⚠ **This build is NOT notarized** (${ALLOW_UNNOTARIZED_REASON}).
+> macOS will warn on first launch — allow it in
+> System Settings → Privacy & Security. Plugin signatures are not
+> verified at runtime in this build."
+    gh release edit "$TAG" --notes "${WARNING}
+
+${EXISTING_NOTES}"
+  fi
   echo "✓ Published ${TAG}"
+  $NOTARIZED && echo "  notarized:  yes" || echo "  notarized:  NO — release page is labelled"
 fi

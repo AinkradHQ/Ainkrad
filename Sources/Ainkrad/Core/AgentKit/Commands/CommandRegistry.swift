@@ -54,6 +54,27 @@ final class CommandRegistry {
     }
 }
 
+/// The system clipboard, behind a seam.
+///
+/// `/export` copies the transcript to the clipboard, and its wiring test used to
+/// assert against `NSPasteboard.general` — so EVERY test run, including one an
+/// agent started in the background, silently replaced whatever the developer had
+/// on their clipboard. A test has no business reaching into a shared resource
+/// owned by the person running it. The seam lets the test assert the same
+/// behaviour against a double and leave the real clipboard untouched.
+protocol TextPasteboard: Sendable {
+    func copy(_ text: String)
+}
+
+/// The real thing — what the app always uses.
+struct SystemPasteboard: TextPasteboard {
+    func copy(_ text: String) {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(text, forType: .string)
+    }
+}
+
 /// Factory for the host's built-in commands, constructed once in `AppEnvironment`
 /// (they close over `runtime`/`usage`/`router`/`catalog`) and handed to
 /// `CommandRegistry(builtins:)`.
@@ -67,7 +88,8 @@ enum BuiltinCommands {
     }
 
     static func make(runtime: RuntimeOptionsStore?, usage: UsageTracker?,
-                     router: ModelRouter?, catalog: ModelCatalog?) -> [SlashCommand] {
+                     router: ModelRouter?, catalog: ModelCatalog?,
+                     pasteboard: TextPasteboard = SystemPasteboard()) -> [SlashCommand] {
         [
             SlashCommand(name: "new", summary: "Start a new session", usage: "/new", category: .session) { _, session in
                 session.reset()
@@ -174,9 +196,7 @@ enum BuiltinCommands {
             SlashCommand(name: "export", summary: "Copy the transcript to the clipboard as Markdown", usage: "/export", category: .info) { _, session in
                 guard !session.messages.isEmpty else { return .handled(note: "Nothing to export yet.") }
                 let rendered = ConversationExporter.export(session.messages, format: .markdown)
-                let pasteboard = NSPasteboard.general
-                pasteboard.clearContents()
-                pasteboard.setString(rendered, forType: .string)
+                pasteboard.copy(rendered)
                 return .handled(note: "Copied the transcript to your clipboard as Markdown (\(rendered.count) characters).")
             },
             SlashCommand(name: "undo", summary: "Undo the last turn's file edits + transcript", usage: "/undo", category: .session) { _, session in

@@ -9,6 +9,16 @@ settings:
   base:
     SWIFT_VERSION: "6.0"
     MACOSX_DEPLOYMENT_TARGET: "14.0"
+    # XcodeGen defaults this to YES, and it breaks GUI builds specifically.
+    # XcodeGen also auto generates a "Copy Swift Objective-C Interface Header"
+    # phase for every static library target (AinkradHostRuntime) that shells out
+    # to `ditto`. ditto writes via a TEMP file next to the destination, and that
+    # temp path is not the phase's declared output, so the script sandbox denies
+    # it. `make build` never saw this because -derivedDataPath puts products
+    # inside the project directory, which the sandbox already allows; Xcode's own
+    # DerivedData under ~/Library/Developer is outside it, so building from the
+    # IDE failed with "Sandbox: ditto(...) deny(1) file-write-create".
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
     # Sign with a stable identity so macOS TCC (privacy/folder-access) grants
     # persist — an ad-hoc/unsigned app has no designated requirement for the
     # system to attach a saved grant to, so it re-prompts on every access.
