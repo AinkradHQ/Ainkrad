@@ -180,7 +180,20 @@ packages:
     # rate to the budget instead of display refresh rate). Additive only --
     # abi-check clean on AinkradAppKitContract and AinkradSignal, generation
     # unchanged.
-    revision: 91ed630a24dc187f8988c104d16a640d3ee7562c
+    #
+    # fc88a90: `AinkradListRow` holds a row to one line -- `lineLimit(1)` on
+    # title and subtitle, `layoutPriority(1)` on `trailing` (AinkradAppKit #28).
+    # A long path wrapped the subtitle and starved `trailing`, where a squeezed
+    # `AinkradBadge` wrapped one character per line into a ~230pt stripe. Also
+    # carried: the ScrollView+ForEach CI guard and the AinkradHQ URL rewrite.
+    # Behaviour-only; generation unchanged at 10.
+    #
+    # Pin safety, checked by hand because `make abi-check` does not cover
+    # AinkradAppKitUI: between 91ed630 and fc88a90 the textual interface is
+    # identical (1099 declaration lines each) and the -abi SDK dump differs only
+    # in its own input/output paths (3747 nodes each, so not an empty-module
+    # false clean) -- a plugin pinned behind this still loads.
+    revision: fc88a902158a6fe23ed69ad7bea07110b2dc302a
 
 targets:
   AinkradHostRuntime:
