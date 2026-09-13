@@ -218,7 +218,19 @@ packages:
     # AinkradANSIPalette, AinkradLogBuffer, AinkradLogLine, AinkradLogStream,
     # AinkradLogView) and their members -- and loses none. Additive only, so a
     # plugin pinned behind this still loads.
-    revision: ac1dfa8b91303fe6e5f9bb8c0df8fd60ddf154de
+    #
+    # 7bb80e9: E3 of the kit components plan. Thrall's StateRibbon becomes
+    # `AinkradStackedStatusBar` + `AinkradStatusRun` (#37) -- runs in a fixed
+    # severity order, worst last, each at least 2 pt, the track drawn when
+    # empty. Fixed on the way: the minimum was added without taking the width
+    # back from the other runs, so they overflowed and the capsule clip cut off
+    # the worst-status end. Generation unchanged at 10.
+    #
+    # Pin safety, checked per PR because `make abi-check` does not cover
+    # AinkradAppKitUI: against ac1dfa8 the -abi declaration set gains 15
+    # declarations -- the two new types and their members -- and loses none.
+    # Additive only, so a plugin pinned behind this still loads.
+    revision: 7bb80e9f1d01d468949f6c776dd111c9d6b8d690
 
 targets:
   AinkradHostRuntime:
