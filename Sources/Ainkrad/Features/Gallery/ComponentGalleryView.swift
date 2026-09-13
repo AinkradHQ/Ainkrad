@@ -744,6 +744,7 @@ struct ComponentGalleryView: View {
             wave5IconGlyphRow
             wave5DataTableSample
             wave5MeterRow
+            wave5StackedStatusBarRow
             wave5AppTileRow
             wave5CodeBlockSample
             wave5LogViewSample
@@ -850,6 +851,35 @@ struct ComponentGalleryView: View {
             HStack(spacing: AinkradSpacing.lg) {
                 AinkradMeter(value: 0.42, label: "CPU")
                 AinkradMeter(value: 0.86, label: "Disk", kind: .status(.warning))
+            }
+        }
+    }
+
+    /// The three cases the component exists for: a mixed set, a single failure
+    /// in a large one (2 pt minimum, and it must not be clipped), and empty.
+    private var wave5StackedStatusBarSamples: [(String, [AinkradStatusRun])] {
+        [
+            ("19 running · 28 exited · 1 created",
+             [.init(count: 19, status: .success), .init(count: 28, status: .warning), .init(count: 1, status: .neutral)]),
+            ("1,000 running · 1 dead",
+             [.init(count: 1_000, status: .success), .init(count: 1, status: .danger)]),
+            ("90 running · 2 exited · 3 restarting",
+             [.init(count: 3, status: .danger), .init(count: 2, status: .warning), .init(count: 90, status: .success)]),
+            ("empty — the track still draws", [])
+        ]
+    }
+
+    private var wave5StackedStatusBarRow: some View {
+        VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
+            AinkradCaption("Stacked Status Bar (severity order, worst last; a single failure keeps 2 pt)")
+            VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
+                ForEach(Array(wave5StackedStatusBarSamples.enumerated()), id: \.offset) { _, sample in
+                    HStack(spacing: AinkradSpacing.md) {
+                        AinkradStackedStatusBar(runs: sample.1).frame(width: 64)
+                        AinkradStackedStatusBar(runs: sample.1).frame(width: 220)
+                        AinkradCaption(sample.0)
+                    }
+                }
             }
         }
     }
