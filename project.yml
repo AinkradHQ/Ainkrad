@@ -193,7 +193,19 @@ packages:
     # identical (1099 declaration lines each) and the -abi SDK dump differs only
     # in its own input/output paths (3747 nodes each, so not an empty-module
     # false clean) -- a plugin pinned behind this still loads.
-    revision: fc88a902158a6fe23ed69ad7bea07110b2dc302a
+    #
+    # 148e9cd: E1 of the kit components plan. AinkradDataTable builds rows
+    # lazily (#30), holds text cells to one line with middle truncation and
+    # adds `AinkradTableColumn.accessory(...)` for per-row views (#31), and
+    # makes rows selectable through a second initializer (#33). Also carried:
+    # the docs moved out of the repo (#29). Generation unchanged at 10.
+    #
+    # Pin safety, checked per PR because `make abi-check` does not cover
+    # AinkradAppKitUI: against fc88a90 the textual interface and the -abi
+    # declaration set gain exactly two declarations -- the accessory factory
+    # and init(rows:columns:sort:selection:) -- and lose none. Additive only,
+    # so a plugin pinned behind this still loads.
+    revision: 148e9cda0d7d2d2e9ce4e7739fee99306c6f836e
 
 targets:
   AinkradHostRuntime:
