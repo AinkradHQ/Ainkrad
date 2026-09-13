@@ -59,6 +59,9 @@ struct ComponentGalleryView: View {
     // MARK: Wave 5: Data · Overlays
     @State private var wave5TableSort: AinkradTableSort? = nil
     @State private var wave5TableSelection: Set<String> = ["3"]
+    @State private var wave5Log = ComponentGalleryView.sampleLog()
+    @State private var wave5LogFollowing = true
+    @State private var wave5LogShowsSource = true
     @State private var wave5ListRowSelection = "cpu-core-0"
     @State private var wave5ModalPresented = false
     @State private var wave5SheetPresented = false
@@ -743,6 +746,7 @@ struct ComponentGalleryView: View {
             wave5MeterRow
             wave5AppTileRow
             wave5CodeBlockSample
+            wave5LogViewSample
             wave5OverlayTriggersRow
         }
     }
@@ -872,6 +876,53 @@ struct ComponentGalleryView: View {
                 """,
                 language: "swift"
             )
+        }
+    }
+
+    /// Seed lines covering what the palette maps: plain stdout, 8-colour and
+    /// bold codes, dim text, uncoloured stderr, and a source name long enough
+    /// to be truncated in the source column.
+    private static func sampleLog() -> AinkradLogBuffer {
+        var log = AinkradLogBuffer()
+        log.append("listening on :8080\n", source: "api")
+        log.append("\u{1B}[32m✓\u{1B}[0m migrations applied (12)\n", source: "api")
+        log.append("\u{1B}[33mWARN\u{1B}[0m slow query 812 ms: SELECT * FROM jobs\n", source: "api")
+        log.append("\u{1B}[1;31mERROR\u{1B}[0m connection refused: db:5432\n", source: "runtime-head-hunter")
+        log.append("retrying in 5s\n", stream: .stderr, source: "runtime-head-hunter")
+        log.append("\u{1B}[2mdebug: pool size 16\u{1B}[0m\n", source: "api")
+        log.append("\u{1B}[36mGET\u{1B}[0m /health 200 3 ms\n", source: "api")
+        return log
+    }
+
+    private var wave5LogViewSample: some View {
+        VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
+            AinkradCaption("Log View (ticks every 2 s; turn Follow off and scroll up to read; select, ⌘F, copy)")
+            HStack(spacing: AinkradSpacing.lg) {
+                HStack(spacing: AinkradSpacing.sm) {
+                    AinkradToggle(isOn: $wave5LogFollowing)
+                    AinkradCaption("Follow")
+                }
+                HStack(spacing: AinkradSpacing.sm) {
+                    AinkradToggle(isOn: $wave5LogShowsSource)
+                    AinkradCaption("Source column")
+                }
+            }
+            AinkradLogView(lines: wave5Log.all,
+                           palette: AinkradANSIPalette(theme: galleryTokens, statusColors: galleryStatusColors),
+                           foreground: galleryTokens.foreground,
+                           showsSourcePrefix: wave5LogShowsSource,
+                           isFollowing: wave5LogFollowing)
+                .frame(height: 180)
+                .background(ChamferShape(cut: AinkradRadius.sm).fill(galleryTokens.surface.opacity(0.9)))
+                .task {
+                    // A live tail, so follow mode has something to follow.
+                    var tick = 0
+                    while !Task.isCancelled {
+                        try? await Task.sleep(for: .seconds(2))
+                        tick += 1
+                        wave5Log.append("worker tick \(tick) ok\n", source: "sync-worker")
+                    }
+                }
         }
     }
 

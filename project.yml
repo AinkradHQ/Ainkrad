@@ -205,7 +205,20 @@ packages:
     # declaration set gain exactly two declarations -- the accessory factory
     # and init(rows:columns:sort:selection:) -- and lose none. Additive only,
     # so a plugin pinned behind this still loads.
-    revision: 148e9cda0d7d2d2e9ce4e7739fee99306c6f836e
+    #
+    # ac1dfa8: E2 of the kit components plan. Thrall's log stack moves into
+    # AinkradAppKitUI: the ANSI parser and theme-mapped palette (#34), the
+    # bounded log buffer, fixing UTF-8 and CRLF split across reads (#35), and
+    # `AinkradLogView`, an NSTextView pane with follow mode (#36).
+    # Generation unchanged at 10.
+    #
+    # Pin safety, checked per PR because `make abi-check` does not cover
+    # AinkradAppKitUI: against 148e9cd the -abi declaration set gains 55
+    # declarations -- seven new types (AinkradANSIParser, AinkradStyledRun,
+    # AinkradANSIPalette, AinkradLogBuffer, AinkradLogLine, AinkradLogStream,
+    # AinkradLogView) and their members -- and loses none. Additive only, so a
+    # plugin pinned behind this still loads.
+    revision: ac1dfa8b91303fe6e5f9bb8c0df8fd60ddf154de
 
 targets:
   AinkradHostRuntime:
