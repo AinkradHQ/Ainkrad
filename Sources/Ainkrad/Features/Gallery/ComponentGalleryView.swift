@@ -58,6 +58,7 @@ struct ComponentGalleryView: View {
 
     // MARK: Wave 5: Data · Overlays
     @State private var wave5TableSort: AinkradTableSort? = nil
+    @State private var wave5TableSelection: Set<String> = ["3"]
     @State private var wave5ListRowSelection = "cpu-core-0"
     @State private var wave5ModalPresented = false
     @State private var wave5SheetPresented = false
@@ -821,14 +822,21 @@ struct ComponentGalleryView: View {
         [
             AinkradTableColumn(id: "name", title: "Process", cell: { $0.name }),
             AinkradTableColumn(id: "cpu", title: "CPU %", alignment: .trailing, cell: { $0.cpu }),
-            AinkradTableColumn(id: "status", title: "Status", cell: { $0.status })
+            .accessory(id: "status", title: "Status", alignment: .leading) { row in
+                AinkradBadge(text: row.status,
+                             status: row.status == "Running" ? .success : row.status == "Busy" ? .warning : .neutral)
+            },
+            .accessory(id: "actions") { _ in
+                AinkradIconButton(systemName: "stop.fill", size: 22, tooltip: "Stop") {}
+            }
         ]
     }
 
     private var wave5DataTableSample: some View {
         VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
-            AinkradCaption("Data Table (click a header to sort)")
-            AinkradDataTable(rows: wave5TableRows, columns: wave5TableColumns, sort: $wave5TableSort)
+            AinkradCaption("Data Table (sort by header; click, ⌘-click or ⇧-click rows to select)")
+            AinkradDataTable(rows: wave5TableRows, columns: wave5TableColumns, sort: $wave5TableSort,
+                             selection: $wave5TableSelection)
         }
     }
 
