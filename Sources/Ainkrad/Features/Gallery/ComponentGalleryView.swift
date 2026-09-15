@@ -58,6 +58,10 @@ struct ComponentGalleryView: View {
 
     // MARK: Wave 5: Data · Overlays
     @State private var wave5TableSort: AinkradTableSort? = nil
+    @State private var wave5TableSelection: Set<String> = ["3"]
+    @State private var wave5Log = ComponentGalleryView.sampleLog()
+    @State private var wave5LogFollowing = true
+    @State private var wave5LogShowsSource = true
     @State private var wave5ListRowSelection = "cpu-core-0"
     @State private var wave5ModalPresented = false
     @State private var wave5SheetPresented = false
@@ -740,8 +744,10 @@ struct ComponentGalleryView: View {
             wave5IconGlyphRow
             wave5DataTableSample
             wave5MeterRow
+            wave5StackedStatusBarRow
             wave5AppTileRow
             wave5CodeBlockSample
+            wave5LogViewSample
             wave5OverlayTriggersRow
         }
     }
@@ -821,14 +827,21 @@ struct ComponentGalleryView: View {
         [
             AinkradTableColumn(id: "name", title: "Process", cell: { $0.name }),
             AinkradTableColumn(id: "cpu", title: "CPU %", alignment: .trailing, cell: { $0.cpu }),
-            AinkradTableColumn(id: "status", title: "Status", cell: { $0.status })
+            .accessory(id: "status", title: "Status", alignment: .leading) { row in
+                AinkradBadge(text: row.status,
+                             status: row.status == "Running" ? .success : row.status == "Busy" ? .warning : .neutral)
+            },
+            .accessory(id: "actions") { _ in
+                AinkradIconButton(systemName: "stop.fill", size: 22, tooltip: "Stop") {}
+            }
         ]
     }
 
     private var wave5DataTableSample: some View {
         VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
-            AinkradCaption("Data Table (click a header to sort)")
-            AinkradDataTable(rows: wave5TableRows, columns: wave5TableColumns, sort: $wave5TableSort)
+            AinkradCaption("Data Table (sort by header; click, ⌘-click or ⇧-click rows to select)")
+            AinkradDataTable(rows: wave5TableRows, columns: wave5TableColumns, sort: $wave5TableSort,
+                             selection: $wave5TableSelection)
         }
     }
 
@@ -838,6 +851,35 @@ struct ComponentGalleryView: View {
             HStack(spacing: AinkradSpacing.lg) {
                 AinkradMeter(value: 0.42, label: "CPU")
                 AinkradMeter(value: 0.86, label: "Disk", kind: .status(.warning))
+            }
+        }
+    }
+
+    /// The three cases the component exists for: a mixed set, a single failure
+    /// in a large one (2 pt minimum, and it must not be clipped), and empty.
+    private var wave5StackedStatusBarSamples: [(String, [AinkradStatusRun])] {
+        [
+            ("19 running · 28 exited · 1 created",
+             [.init(count: 19, status: .success), .init(count: 28, status: .warning), .init(count: 1, status: .neutral)]),
+            ("1,000 running · 1 dead",
+             [.init(count: 1_000, status: .success), .init(count: 1, status: .danger)]),
+            ("90 running · 2 exited · 3 restarting",
+             [.init(count: 3, status: .danger), .init(count: 2, status: .warning), .init(count: 90, status: .success)]),
+            ("empty — the track still draws", [])
+        ]
+    }
+
+    private var wave5StackedStatusBarRow: some View {
+        VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
+            AinkradCaption("Stacked Status Bar (severity order, worst last; a single failure keeps 2 pt)")
+            VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
+                ForEach(Array(wave5StackedStatusBarSamples.enumerated()), id: \.offset) { _, sample in
+                    HStack(spacing: AinkradSpacing.md) {
+                        AinkradStackedStatusBar(runs: sample.1).frame(width: 64)
+                        AinkradStackedStatusBar(runs: sample.1).frame(width: 220)
+                        AinkradCaption(sample.0)
+                    }
+                }
             }
         }
     }
@@ -864,6 +906,53 @@ struct ComponentGalleryView: View {
                 """,
                 language: "swift"
             )
+        }
+    }
+
+    /// Seed lines covering what the palette maps: plain stdout, 8-colour and
+    /// bold codes, dim text, uncoloured stderr, and a source name long enough
+    /// to be truncated in the source column.
+    private static func sampleLog() -> AinkradLogBuffer {
+        var log = AinkradLogBuffer()
+        log.append("listening on :8080\n", source: "api")
+        log.append("\u{1B}[32m✓\u{1B}[0m migrations applied (12)\n", source: "api")
+        log.append("\u{1B}[33mWARN\u{1B}[0m slow query 812 ms: SELECT * FROM jobs\n", source: "api")
+        log.append("\u{1B}[1;31mERROR\u{1B}[0m connection refused: db:5432\n", source: "runtime-head-hunter")
+        log.append("retrying in 5s\n", stream: .stderr, source: "runtime-head-hunter")
+        log.append("\u{1B}[2mdebug: pool size 16\u{1B}[0m\n", source: "api")
+        log.append("\u{1B}[36mGET\u{1B}[0m /health 200 3 ms\n", source: "api")
+        return log
+    }
+
+    private var wave5LogViewSample: some View {
+        VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
+            AinkradCaption("Log View (ticks every 2 s; turn Follow off and scroll up to read; select, ⌘F, copy)")
+            HStack(spacing: AinkradSpacing.lg) {
+                HStack(spacing: AinkradSpacing.sm) {
+                    AinkradToggle(isOn: $wave5LogFollowing)
+                    AinkradCaption("Follow")
+                }
+                HStack(spacing: AinkradSpacing.sm) {
+                    AinkradToggle(isOn: $wave5LogShowsSource)
+                    AinkradCaption("Source column")
+                }
+            }
+            AinkradLogView(lines: wave5Log.all,
+                           palette: AinkradANSIPalette(theme: galleryTokens, statusColors: galleryStatusColors),
+                           foreground: galleryTokens.foreground,
+                           showsSourcePrefix: wave5LogShowsSource,
+                           isFollowing: wave5LogFollowing)
+                .frame(height: 180)
+                .background(ChamferShape(cut: AinkradRadius.sm).fill(galleryTokens.surface.opacity(0.9)))
+                .task {
+                    // A live tail, so follow mode has something to follow.
+                    var tick = 0
+                    while !Task.isCancelled {
+                        try? await Task.sleep(for: .seconds(2))
+                        tick += 1
+                        wave5Log.append("worker tick \(tick) ok\n", source: "sync-worker")
+                    }
+                }
         }
     }
 

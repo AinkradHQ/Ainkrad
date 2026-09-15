@@ -180,7 +180,57 @@ packages:
     # rate to the budget instead of display refresh rate). Additive only --
     # abi-check clean on AinkradAppKitContract and AinkradSignal, generation
     # unchanged.
-    revision: 91ed630a24dc187f8988c104d16a640d3ee7562c
+    #
+    # fc88a90: `AinkradListRow` holds a row to one line -- `lineLimit(1)` on
+    # title and subtitle, `layoutPriority(1)` on `trailing` (AinkradAppKit #28).
+    # A long path wrapped the subtitle and starved `trailing`, where a squeezed
+    # `AinkradBadge` wrapped one character per line into a ~230pt stripe. Also
+    # carried: the ScrollView+ForEach CI guard and the AinkradHQ URL rewrite.
+    # Behaviour-only; generation unchanged at 10.
+    #
+    # Pin safety, checked by hand because `make abi-check` does not cover
+    # AinkradAppKitUI: between 91ed630 and fc88a90 the textual interface is
+    # identical (1099 declaration lines each) and the -abi SDK dump differs only
+    # in its own input/output paths (3747 nodes each, so not an empty-module
+    # false clean) -- a plugin pinned behind this still loads.
+    #
+    # 148e9cd: E1 of the kit components plan. AinkradDataTable builds rows
+    # lazily (#30), holds text cells to one line with middle truncation and
+    # adds `AinkradTableColumn.accessory(...)` for per-row views (#31), and
+    # makes rows selectable through a second initializer (#33). Also carried:
+    # the docs moved out of the repo (#29). Generation unchanged at 10.
+    #
+    # Pin safety, checked per PR because `make abi-check` does not cover
+    # AinkradAppKitUI: against fc88a90 the textual interface and the -abi
+    # declaration set gain exactly two declarations -- the accessory factory
+    # and init(rows:columns:sort:selection:) -- and lose none. Additive only,
+    # so a plugin pinned behind this still loads.
+    #
+    # ac1dfa8: E2 of the kit components plan. Thrall's log stack moves into
+    # AinkradAppKitUI: the ANSI parser and theme-mapped palette (#34), the
+    # bounded log buffer, fixing UTF-8 and CRLF split across reads (#35), and
+    # `AinkradLogView`, an NSTextView pane with follow mode (#36).
+    # Generation unchanged at 10.
+    #
+    # Pin safety, checked per PR because `make abi-check` does not cover
+    # AinkradAppKitUI: against 148e9cd the -abi declaration set gains 55
+    # declarations -- seven new types (AinkradANSIParser, AinkradStyledRun,
+    # AinkradANSIPalette, AinkradLogBuffer, AinkradLogLine, AinkradLogStream,
+    # AinkradLogView) and their members -- and loses none. Additive only, so a
+    # plugin pinned behind this still loads.
+    #
+    # 7bb80e9: E3 of the kit components plan. Thrall's StateRibbon becomes
+    # `AinkradStackedStatusBar` + `AinkradStatusRun` (#37) -- runs in a fixed
+    # severity order, worst last, each at least 2 pt, the track drawn when
+    # empty. Fixed on the way: the minimum was added without taking the width
+    # back from the other runs, so they overflowed and the capsule clip cut off
+    # the worst-status end. Generation unchanged at 10.
+    #
+    # Pin safety, checked per PR because `make abi-check` does not cover
+    # AinkradAppKitUI: against ac1dfa8 the -abi declaration set gains 15
+    # declarations -- the two new types and their members -- and loses none.
+    # Additive only, so a plugin pinned behind this still loads.
+    revision: 7bb80e9f1d01d468949f6c776dd111c9d6b8d690
 
 targets:
   AinkradHostRuntime:
@@ -229,7 +279,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ainkrad.app
-        MARKETING_VERSION: "0.19.0"
+        MARKETING_VERSION: "0.20.0"
         CURRENT_PROJECT_VERSION: "19"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: YES
