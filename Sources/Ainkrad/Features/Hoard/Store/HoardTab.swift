@@ -236,7 +236,25 @@ final class HoardTab: Identifiable {
         selection = all.subtracting(selection)
     }
 
-    /// Enter: descend into a directory, or hand a markdown file to Lore.
+    /// Activate an entry: descend into a directory, or hand a markdown file to
+    /// Lore.
+    ///
+    /// ONE activation path, deliberately. Enter and double-click used to be
+    /// different code: Enter went through `activateCursor`, while double-click
+    /// called `descend(into:)` directly — which guards on `isDirectory` and
+    /// silently returns for a file. So teaching Enter to open markdown left
+    /// double-click, the thing anyone actually reaches for in a file manager,
+    /// doing nothing at all.
+    func activate(_ entry: FileEntry) {
+        if entry.isDirectory {
+            descend(into: entry)
+            return
+        }
+        guard Self.isMarkdown(entry.url) else { return }
+        onOpenDocument?(entry.url)
+    }
+
+    /// Enter: activate whatever the cursor is on.
     ///
     /// Files did nothing until generation 11. They still do nothing here for
     /// anything that is not markdown: this is deliberately NOT a general
@@ -248,12 +266,7 @@ final class HoardTab: Identifiable {
     /// without the host), so the old do-nothing behaviour is still the floor.
     func activateCursor() {
         guard let entry = cursorEntry else { return }
-        if entry.isDirectory {
-            descend(into: entry)
-            return
-        }
-        guard Self.isMarkdown(entry.url) else { return }
-        onOpenDocument?(entry.url)
+        activate(entry)
     }
 
     /// Markdown by extension. Lore's own engine registry is the authority on
