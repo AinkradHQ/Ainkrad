@@ -264,7 +264,10 @@ packages:
     # unknown case) -- verified by reading the diff, not assumed from the file
     # list. No declaration moved. The real addition is in AinkradAppKitUI, which
     # abi-check does not cover, and it is purely additive.
-    revision: 43868c968b8c4111f7cfa7d05fd903fcc9277d63
+    #
+    # c465461: AinkradLaunchIntent (#43) -- the shared "open this there" payload
+    # shape E5 uses. Additive; nothing existing moved.
+    revision: c4654613bf10a98fe5cb5ab1ef0eeafb923e5e2d
 
 targets:
   AinkradHostRuntime:
