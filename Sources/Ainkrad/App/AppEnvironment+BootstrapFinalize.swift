@@ -400,7 +400,8 @@ extension AppEnvironment {
         let hoardHost = HostServicesImpl(appID: "hoard", dataRootURL: pluginDataRoot,
                                          secretStore: secrets, themeManager: themeManager,
                                          hub: agentContextHub, actionHub: agentActionHub, launchHub: pluginLaunchHub, signalHub: signalHub,
-                                         declaredPresentation: .pane, appAppearanceStore: appAppearanceStore)
+                                         declaredPresentation: .pane, declaredMode: .basic,
+                                         appAppearanceStore: appAppearanceStore)
 
         // Hoard' MCP server and agent context are built HERE, not in
         // `HoardApp`, for the same reason its settings are: the SDK entry
@@ -416,7 +417,12 @@ extension AppEnvironment {
                     opacity: appAppearanceStore.surfaceOpacity("hoard"),
                     base: themeManager.tokens.background
                 )
-            })
+            },
+            // A built-in declares its default here, where a plugin declares it
+            // in its Info.plist. Hoard opens basic: reaching a file is what it
+            // is opened for, and the sidebar, tabs and preview are for
+            // organising rather than reaching.
+            mode: .basic)
         filesRegistration.mcpServerFactory = { [weak environment] in
             guard let environment else { return MCPAppServer(appID: HoardApp.id) }
             return HoardMCPServer.make(environment: environment)

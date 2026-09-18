@@ -14,7 +14,7 @@ enum HoardApp: AinkradApp {
     static let icon = "folder"
 
     static func makeRootView(host: HostServices) -> AnyView {
-        AnyView(HoardRootView())
+        makeRootView(host: host, mode: .advanced)
     }
 
     static func makeSettingsView(host: HostServices) -> AnyView {
@@ -54,5 +54,23 @@ enum HoardApp: AinkradApp {
             groups: [],
             appID: id
         )
+    }
+}
+
+/// Generation 11: Hoard's basic mode is one directory — no sidebar, no tabs, no
+/// filter, no preview.
+///
+/// Discovered by the cast in `RegisteredApp.builtIn`, the same one that finds
+/// `AinkradAppMCP`. A built-in takes that path rather than `PluginLoader`'s,
+/// which is why the cast had to be added in both places.
+extension HoardApp: AinkradAppModes {
+    static func makeRootView(host: HostServices, mode: PluginMode) -> AnyView {
+        switch mode {
+        case .basic:    return AnyView(HoardRootView(mode: .basic))
+        case .advanced: return AnyView(HoardRootView(mode: .advanced))
+        // Resilient enum: fall back to advanced, never to a stripped view for a
+        // mode this build does not understand.
+        @unknown default: return AnyView(HoardRootView(mode: .advanced))
+        }
     }
 }
