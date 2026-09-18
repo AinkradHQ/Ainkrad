@@ -230,7 +230,22 @@ packages:
     # AinkradAppKitUI: against ac1dfa8 the -abi declaration set gains 15
     # declarations -- the two new types and their members -- and loses none.
     # Additive only, so a plugin pinned behind this still loads.
-    revision: 7bb80e9f1d01d468949f6c776dd111c9d6b8d690
+    #
+    # 2ad9a52: GENERATION 11 -- Basic Mode (#39). PluginMode, AinkradAppModes
+    # (opt-in, found by cast, never a requirement on AinkradApp),
+    # PluginModeControl on HostServices, \.ainkradPaneMode /
+    # \.ainkradSetPaneMode, and the AinkradMode manifest key. Floor moves 8 ->
+    # 9: safe because every bundle installed on 2026-09-18 reports
+    # AinkradAPIVersion 10. PluginBundleMetadata keeps its old initializer and
+    # gains a second -- a defaulted parameter is source-compatible, NOT
+    # ABI-compatible, and adding `mode:` in place removed the old symbol.
+    #
+    # Pin safety: AinkradAppKitUI has NO source change between 7bb80e9 and
+    # 2ad9a52 (verified by diff), so its ABI cannot have moved. The Contract
+    # gains PluginMode + HostServices.mode; the latter is an added protocol
+    # requirement, reviewed in the kit's abi/report-ignore.txt -- a plugin
+    # calls it and never implements it, so no installed bundle needs a witness.
+    revision: 2ad9a52313d27948a785714686254c18c96b286a
 
 targets:
   AinkradHostRuntime:

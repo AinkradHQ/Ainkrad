@@ -1,4 +1,5 @@
 import SwiftUI
+import AinkradAppKit
 import AinkradHostRuntime
 
 /// Slice 3's floating host overlay for `.overlay`-presentation plugin apps —
@@ -8,6 +9,13 @@ import AinkradHostRuntime
 struct PluginOverlayView: View {
     let app: RegisteredApp
     let tokens: DesignTokens
+    /// The mode this overlay opens in — the app's resolved default. An overlay
+    /// is one transient surface rather than a managed pane, so there is no
+    /// `Block` to hold a switched mode; it opens in the default every time.
+    ///
+    /// Declared BEFORE `onDismiss` so the memberwise initializer keeps that
+    /// closure last and the trailing-closure call site still reads naturally.
+    var mode: PluginMode = .advanced
     let onDismiss: () -> Void
 
     @FocusState private var isFocused: Bool
@@ -19,7 +27,7 @@ struct PluginOverlayView: View {
                     .ignoresSafeArea()
                     .onTapGesture { onDismiss() }
 
-                app.makeRootView()
+                app.makeRootView(mode: mode)
                     .frame(width: min(max(560, geo.size.width * 0.42), 700),
                            height: min(max(460, geo.size.height * 0.66), 760))
                     .hudPanelChrome(tokens: tokens)

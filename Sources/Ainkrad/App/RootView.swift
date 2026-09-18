@@ -1,5 +1,6 @@
 import SwiftUI
 import AinkradAppKit
+import AinkradHostRuntime
 
 /// The single window's content: every workspace's tile layout stays
 /// mounted (hidden when inactive) so running sessions survive switching;
@@ -40,6 +41,23 @@ struct RootView: View {
     private var focusedAppID: String? {
         let layout = environment.workspaceManager.activeWorkspace.tileLayout
         return layout.blocks.first { $0.id == layout.focusedBlockID }?.appID
+    }
+
+    /// The floating overlay for an `.overlay`-presentation app.
+    ///
+    /// Its own property rather than inline in `body`: adding the `mode`
+    /// argument pushed that already-large view builder past the type-checker's
+    /// budget ("unable to type-check this expression in reasonable time").
+    @ViewBuilder
+    private var pluginOverlay: some View {
+        if let id = environment.presentedOverlayAppID,
+           let app = environment.registry.allApps.first(where: { $0.id == id }) {
+            let mode = environment.appAppearanceStore.effectiveMode(for: app)
+            PluginOverlayView(app: app, tokens: environment.themeManager.tokens, mode: mode) {
+                environment.presentedOverlayAppID = nil
+            }
+            .transition(.opacity)
+        }
     }
 
     var body: some View {
@@ -122,13 +140,7 @@ struct RootView: View {
                     .zIndex(200)
             }
 
-            if let id = environment.presentedOverlayAppID,
-               let app = environment.registry.allApps.first(where: { $0.id == id }) {
-                PluginOverlayView(app: app, tokens: environment.themeManager.tokens) {
-                    environment.presentedOverlayAppID = nil
-                }
-                .transition(.opacity)
-            }
+            pluginOverlay
 
             // Toasts. Above the workspace and every dismissible overlay, but
             // deliberately BELOW the first-run gate (zIndex 100) and the quit
