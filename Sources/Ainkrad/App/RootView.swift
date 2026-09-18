@@ -53,7 +53,9 @@ struct RootView: View {
         if let id = environment.presentedOverlayAppID,
            let app = environment.registry.allApps.first(where: { $0.id == id }) {
             let mode = environment.appAppearanceStore.effectiveMode(for: app)
-            PluginOverlayView(app: app, tokens: environment.themeManager.tokens, mode: mode) {
+            let size = environment.appAppearanceStore.effectiveOverlaySize(app.id)
+            PluginOverlayView(app: app, tokens: environment.themeManager.tokens,
+                              mode: mode, size: size) {
                 environment.presentedOverlayAppID = nil
             }
             .transition(.opacity)

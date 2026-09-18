@@ -16,6 +16,9 @@ struct PluginOverlayView: View {
     /// Declared BEFORE `onDismiss` so the memberwise initializer keeps that
     /// closure last and the trailing-closure call site still reads naturally.
     var mode: PluginMode = .advanced
+    /// How large to draw it. Fractions of the window with clamps, so the same
+    /// choice reads the same on a laptop and a 32" display.
+    var size: PluginOverlaySize = .default
     let onDismiss: () -> Void
 
     @FocusState private var isFocused: Bool
@@ -28,8 +31,10 @@ struct PluginOverlayView: View {
                     .onTapGesture { onDismiss() }
 
                 app.makeRootView(mode: mode)
-                    .frame(width: min(max(560, geo.size.width * 0.42), 700),
-                           height: min(max(460, geo.size.height * 0.66), 760))
+                    .frame(width: min(max(size.width.min, geo.size.width * size.width.fraction),
+                                      size.width.max),
+                           height: min(max(size.height.min, geo.size.height * size.height.fraction),
+                                       size.height.max))
                     .hudPanelChrome(tokens: tokens)
                     .focusable()
                     .focused($isFocused)
