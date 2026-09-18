@@ -65,6 +65,22 @@ enum AppSettingsCatalog {
                 ]
             }
 
+            // The surface rows, for a host-embedded built-in whose page is the
+            // `.custom` wrap of its own view (Sage, Scry). PREPENDED rather
+            // than returned instead: making them the app's only groups drops
+            // that wrap, and with it every setting the app actually has —
+            // caught by `AppSettingsCatalogTests`' fallback guarantee.
+            //
+            // Hoard is excluded because its own catalog already includes the
+            // group, in the position it chose.
+            if app.source == .builtIn, app.id != HoardApp.id {
+                groups.insert(
+                    BuiltInSurfaceSettings.group(root: root, appID: app.id,
+                                                 appName: app.displayName,
+                                                 environment: environment),
+                    at: 0)
+            }
+
             // Apps that own their appearance are exempt from the host's
             // auto-appended blur group: the Sage has an in-app Appearance
             // tab, and Hoard declares blur beside its own transparency slider
