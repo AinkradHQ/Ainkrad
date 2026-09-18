@@ -31,10 +31,8 @@ struct PluginOverlayView: View {
                     .onTapGesture { onDismiss() }
 
                 app.makeRootView(mode: mode)
-                    .frame(width: min(max(size.width.min, geo.size.width * size.width.fraction),
-                                      size.width.max),
-                           height: min(max(size.height.min, geo.size.height * size.height.fraction),
-                                       size.height.max))
+                    .frame(width: size.resolved(in: geo.size).width,
+                           height: size.resolved(in: geo.size).height)
                     .hudPanelChrome(tokens: tokens)
                     .focusable()
                     .focused($isFocused)

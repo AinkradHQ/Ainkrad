@@ -270,7 +270,8 @@ packages:
     #
     # 15b5799: PluginOverlaySize (#44) -- overlay size as a third per-app axis.
     # Within generation 11, which has not shipped.
-    revision: 15b579959e3123841be3c67dcf4dc91a15205a74
+    # 8682286: overlay sizes are fixed points; large is actually large (#45).
+    revision: 8682286ead7081a57e2a1e10ae8b294fdbad9b09
 
 targets:
   AinkradHostRuntime:
