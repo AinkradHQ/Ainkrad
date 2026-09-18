@@ -17,6 +17,10 @@ struct HoardRootView: View {
     @State private var actions: HoardActions?
     @State private var paneToken: UUID?
     @State private var resolver = ConflictResolver()
+    /// Which mode this pane is in. An input rather than an environment read
+    /// because the whole view is built for it — see `columns(store:actions:)`.
+    var mode: PluginMode = .advanced
+
     @State private var isEditingPath = false
     @State private var watcher: DirectoryWatcher?
     @State private var toast: HoardToastMessage?
@@ -47,23 +51,37 @@ struct HoardRootView: View {
 
     private func paneBody(store: HoardPaneStore, actions: HoardActions) -> some View {
         HStack(spacing: 0) {
-            HoardSidebar(
-                sections: sidebarSections(
-                    home: fileSystem.homeDirectory,
-                    pinned: environment.filesPinnedRoots.roots,
-                    repositories: git.knownRepositoryRoots),
-                currentDirectory: store.activeTab.currentDirectory,
-                iconSize: CGFloat(settings.iconSize),
-                rowPadding: settings.rowVerticalPadding,
-                onSelect: { store.activeTab.navigate(to: $0.url) },
-                onRemove: { environment.filesPinnedRoots.unpin($0.url) }
-            )
+            // Basic mode is ONE directory: no sidebar, no tabs, no filter, no
+            // preview. The sidebar is not merely hidden — building it
+            // enumerates the pinned roots AND every known git repository root,
+            // and the preview renders the cursor's file with syntax
+            // highlighting. Neither runs here.
+            if mode != .basic {
+                HoardSidebar(
+                    sections: sidebarSections(
+                        home: fileSystem.homeDirectory,
+                        pinned: environment.filesPinnedRoots.roots,
+                        repositories: git.knownRepositoryRoots),
+                    currentDirectory: store.activeTab.currentDirectory,
+                    iconSize: CGFloat(settings.iconSize),
+                    rowPadding: settings.rowVerticalPadding,
+                    onSelect: { store.activeTab.navigate(to: $0.url) },
+                    onRemove: { environment.filesPinnedRoots.unpin($0.url) }
+                )
+            }
             VStack(spacing: 0) {
-                HoardTabStrip(store: store)
+                if mode != .basic { HoardTabStrip(store: store) }
                 HStack(spacing: AinkradSpacing.sm) {
                     HoardBreadcrumbBar(tab: store.activeTab, fileSystem: fileSystem,
                                        isEditing: $isEditingPath)
-                    if let search {
+                    if mode == .basic {
+                        Spacer(minLength: AinkradSpacing.sm)
+                        // The way out. Hoard's header is its breadcrumb, so the
+                        // switch rides there rather than in a shell this view
+                        // does not use.
+                        AinkradModeSwitch()
+                            .padding(.trailing, HoardColumnMetrics.headerInset)
+                    } else if let search {
                         HoardFilterField(search: search, focus: $focus)
                             .padding(.trailing, HoardColumnMetrics.headerInset)
                     }
@@ -85,7 +103,7 @@ struct HoardRootView: View {
                     tab: store.activeTab,
                     repoStatus: git.status(forDirectory: store.activeTab.currentDirectory))
             }
-            if settings.showPreview {
+            if settings.showPreview && mode != .basic {
                 PreviewPane(entry: store.activeTab.cursorEntry,
                             itemCount: store.activeTab.visibleEntries.count)
                     .transition(.move(edge: .trailing).combined(with: .opacity))

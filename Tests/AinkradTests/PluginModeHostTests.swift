@@ -1,4 +1,5 @@
 import Testing
+import Foundation
 import SwiftUI
 import AinkradAppKit
 @testable import AinkradHostRuntime
@@ -150,7 +151,45 @@ struct PluginModeHostTests {
                 "clearing one override must not clear the other")
     }
 
+    // MARK: - The built-in apps
+
+    @Test("Hoard offers a basic mode, and Scry deliberately does not")
+    func builtInsOptInIndividually() {
+        // Both take `RegisteredApp.builtIn`'s cast, not `PluginLoader`'s — which
+        // is exactly why that cast had to be added in two places. Scry is the
+        // proof that opting out costs nothing: a HUD canvas the assistant
+        // drives has no meaningful basic mode, and it says so by not conforming.
+        #expect((HoardApp.self as Any) as? AinkradAppModes.Type != nil)
+        #expect((ScryApp.self as Any) as? AinkradAppModes.Type == nil,
+                "Scry is deliberately excluded from Basic Mode")
+    }
+
+    @Test("A built-in's declared mode reaches its registration")
+    func builtInDeclaredModeIsCarried() {
+        // `RegisteredApp.builtIn` used to hardcode `presentation: .pane` and had
+        // no mode at all, so a built-in could not declare either.
+        let registered = RegisteredApp.builtIn(
+            HoardApp.self, host: stubHostServices(), mode: .basic)
+        #expect(registered.mode == .basic)
+        #expect(registered.supportsModes)
+    }
+
     // MARK: - Fixtures
+
+    private func stubHostServices() -> HostServices {
+        HostServicesImpl(
+            appID: "hoard",
+            dataRootURL: URL(fileURLWithPath: NSTemporaryDirectory())
+                .appendingPathComponent(UUID().uuidString),
+            secretStore: InMemorySecretStore(),
+            themeManager: ThemeManager(persistence: InMemoryPersistenceStore()),
+            hub: AgentContextRegistryHub(),
+            actionHub: AgentActionRegistryHub(),
+            launchHub: PluginLaunchHub(), signalHub: SignalEmitterHub(),
+            declaredPresentation: .pane, declaredMode: .basic,
+            appAppearanceStore: AppAppearanceStore(persistence: InMemoryPersistenceStore())
+        )
+    }
 
     private func makeStore() -> AppAppearanceStore {
         AppAppearanceStore(persistence: InMemoryPersistenceStore())
