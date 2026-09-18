@@ -12,7 +12,7 @@ enum SageApp: AinkradApp {
     static let icon = "sparkles"
 
     static func makeRootView(host: HostServices) -> AnyView {
-        AnyView(SageRootView())
+        makeRootView(host: host, mode: .advanced)
     }
 
     static func makeSettingsView(host: HostServices) -> AnyView {
@@ -26,5 +26,29 @@ enum SageApp: AinkradApp {
     /// is unit-testable without `AppEnvironment`.
     static func surfaceFill(opacity: Double, base: Color) -> Color? {
         opacity < 1 ? base.opacity(opacity) : nil
+    }
+}
+
+/// Generation 11: Sage's basic mode is one prompt and its answer.
+///
+/// `showsHeader: false` is not a new configuration invented for this — it is
+/// the one `QuickAskOverlayView` already uses, and it already gates the history
+/// sidebar as well as the header. So basic mode is the Quick Ask surface made
+/// available as a mode, rather than a third rendering of the same transcript.
+extension SageApp: AinkradAppModes {
+    static func makeRootView(host: HostServices, mode: PluginMode) -> AnyView {
+        switch mode {
+        case .basic:
+            // Autofocused for the same reason Quick Ask is: you opened it to
+            // type, and a composer you must click first is the friction this
+            // mode exists to remove.
+            return AnyView(SageRootView(showsHeader: false, autoFocusComposer: true))
+        case .advanced:
+            return AnyView(SageRootView())
+        // Resilient enum: fall back to advanced, never to a stripped view for a
+        // mode this build does not understand.
+        @unknown default:
+            return AnyView(SageRootView())
+        }
     }
 }

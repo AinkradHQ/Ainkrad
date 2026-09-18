@@ -462,7 +462,12 @@ extension AppEnvironment {
                             opacity: appAppearanceStore.surfaceOpacity("sage"),
                             base: themeManager.tokens.background
                         )
-                    }
+                    },
+                    // Advanced by default: the transcript history and the runs
+                    // panel are why Sage is opened as a pane at all. Basic is
+                    // the deliberate switch, and Quick Ask already covers the
+                    // one-off case from the keyboard.
+                    mode: .advanced
                 ),
                 RegisteredApp.builtIn(
                     ScryApp.self,
