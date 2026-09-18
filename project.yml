@@ -245,7 +245,17 @@ packages:
     # gains PluginMode + HostServices.mode; the latter is an added protocol
     # requirement, reviewed in the kit's abi/report-ignore.txt -- a plugin
     # calls it and never implements it, so no installed bundle needs a witness.
-    revision: 2ad9a52313d27948a785714686254c18c96b286a
+    #
+    # c315110: E2 of the Basic Mode plan -- AinkradBasicShell and
+    # AinkradModeSwitch (#40), the shared surface every app's basic mode is
+    # built on. Generation unchanged at 11.
+    #
+    # Pin safety: AinkradAppKitContract has NO source change between 2ad9a52 and
+    # c315110 (verified by diff), so nothing a plugin loads against moved. The
+    # addition is AinkradAppKitUI, which `make abi-check` does not cover -- its
+    # -abi declaration set gains the two new types and their members and loses
+    # none, so a plugin pinned behind this still loads.
+    revision: c315110481461b1b2f14c129401b72d25107aab3
 
 targets:
   AinkradHostRuntime:

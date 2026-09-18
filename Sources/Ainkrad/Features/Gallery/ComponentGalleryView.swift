@@ -17,6 +17,9 @@ struct ComponentGalleryView: View {
     let onDismiss: () -> Void
 
     @State private var galleryTheme: Theme = .neonBlue
+    /// Drives the live Basic Shell sample — the Gallery is not a host pane, so
+    /// it seeds the pane-mode environment itself.
+    @State private var galleryPaneMode: PluginMode = .basic
     @State private var toggleOn = true
     @State private var secureText = "sk-••••••••"
     @State private var textFieldText = "Sample text"
@@ -745,6 +748,7 @@ struct ComponentGalleryView: View {
             wave5DataTableSample
             wave5MeterRow
             wave5StackedStatusBarRow
+            basicShellRow
             wave5AppTileRow
             wave5CodeBlockSample
             wave5LogViewSample
@@ -881,6 +885,40 @@ struct ComponentGalleryView: View {
                     }
                 }
             }
+        }
+    }
+
+    /// Generation 11's Basic Mode surface, shown in both the shapes the nine
+    /// apps need: with primary actions (Git Mage, Thrall, Leyline) and without
+    /// (Lore, Raven, Sage, where the content carries its own).
+    ///
+    /// Both the pane mode and its setter are seeded locally so the switch is
+    /// live here — the Gallery is not a host pane, so without this it would
+    /// render as "Simplify" and do nothing.
+    private var basicShellRow: some View {
+        VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
+            AinkradCaption("Basic Shell (the shared basic-mode surface; the switch is live)")
+            HStack(alignment: .top, spacing: AinkradSpacing.md) {
+                AinkradBasicShell(icon: "wand.and.stars",
+                                  title: "Ainkrad",
+                                  subtitle: "development · 3 behind") {
+                    AinkradButton(title: "Fetch", style: .secondary) {}
+                    AinkradButton(title: "Pull", style: .primary) {}
+                } content: {
+                    AinkradCaption("the one thing you came for")
+                }
+                .frame(width: 320, height: 120)
+                .ainkradPanel()
+
+                AinkradBasicShell(icon: "doc.text", title: "roadmap.md",
+                                  subtitle: "Docs/Plans") {
+                    AinkradCaption("a document, actions in the content")
+                }
+                .frame(width: 280, height: 120)
+                .ainkradPanel()
+            }
+            .environment(\.ainkradPaneMode, galleryPaneMode)
+            .environment(\.ainkradSetPaneMode) { galleryPaneMode = $0 }
         }
     }
 
