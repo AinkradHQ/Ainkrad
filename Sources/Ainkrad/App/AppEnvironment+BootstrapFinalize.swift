@@ -538,7 +538,19 @@ extension AppEnvironment {
             if effective == .overlay {
                 environment.presentedOverlayAppID = appID
             } else {
-                environment.workspaceManager.activeWorkspace.tileLayout.openApp(appID)
+                let block = environment.workspaceManager.activeWorkspace.tileLayout.openApp(appID)
+                // Honour the mode the LAUNCH asked for, when it asked for one.
+                //
+                // Without this the intent's `mode` was carried and then ignored:
+                // Hoard enqueued a document for Lore in `.basic`, the pane
+                // opened in Lore's configured mode (advanced), and only the
+                // BASIC root consumes a pending launch — so the payload sat
+                // unread and the file never opened. Peeked, not taken: the app
+                // itself still consumes it.
+                if let requested = AinkradLaunchIntent
+                    .decode(environment.pluginLaunchHub.peekPending(for: appID))?.mode {
+                    block.mode = requested
+                }
                 environment.presentedOverlayAppID = nil
             }
         }

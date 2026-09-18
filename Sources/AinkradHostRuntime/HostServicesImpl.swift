@@ -29,6 +29,7 @@ public final class HostServicesImpl: HostServices, PluginInstanceIdentity {
     public let apps: PluginAppLauncher
     public let presentation: PluginPresentationControl
     public let mode: PluginModeControl
+    public let overlaySize: PluginOverlaySizeControl
     public let signals: PluginSignalEmitter
     private let themeManager: ThemeManager
 
@@ -58,6 +59,7 @@ public final class HostServicesImpl: HostServices, PluginInstanceIdentity {
             appID: appID, declaredDefault: declaredPresentation, store: appAppearanceStore)
         self.mode = HostModeControl(
             appID: appID, declaredDefault: declaredMode, store: appAppearanceStore)
+        self.overlaySize = HostOverlaySizeControl(appID: appID, store: appAppearanceStore)
         armThemeSync()
     }
 
@@ -111,6 +113,21 @@ public final class HostModeControl: PluginModeControl {
     public var current: PluginMode { store.modeOverride(appID) ?? declaredDefault }
     public func set(_ mode: PluginMode) { store.setModeOverride(appID, mode) }
     public func reset() { store.setModeOverride(appID, nil) }
+}
+
+/// Host-side `PluginOverlaySizeControl`. No declared default from the bundle:
+/// unlike presentation and mode, the size is not something an app knows better
+/// than the user — it depends on the display, not the app.
+@MainActor
+public final class HostOverlaySizeControl: PluginOverlaySizeControl {
+    private let appID: String
+    private let store: AppAppearanceStore
+    public init(appID: String, store: AppAppearanceStore) {
+        self.appID = appID; self.store = store
+    }
+    public var current: PluginOverlaySize { store.effectiveOverlaySize(appID) }
+    public func set(_ size: PluginOverlaySize) { store.setOverlaySizeOverride(appID, size) }
+    public func reset() { store.setOverlaySizeOverride(appID, nil) }
 }
 
 /// Key→data storage confined to a single directory. Keys are sanitized so a

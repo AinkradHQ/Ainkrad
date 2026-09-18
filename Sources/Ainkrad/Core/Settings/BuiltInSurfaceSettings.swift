@@ -62,6 +62,25 @@ enum BuiltInSurfaceSettings {
                     reset: { appearance.setModeOverride(appID, nil) }))
         }
 
+        // Shown only while the app is presented as an overlay: a size that
+        // applies to a surface you are not using is a control that does nothing.
+        if (appearance.presentationOverride(appID) ?? declaredPresentation) == .overlay {
+            fields.append(
+                SettingsField(
+                    path: group.appending("overlaySize"),
+                    label: "Overlay size",
+                    help: "How large \(appName) is drawn when it opens as an overlay. "
+                        + "Applies the next time it is summoned.",
+                    kind: .select(
+                        options: PluginOverlaySize.allCases.map {
+                            SettingsOption(id: $0.rawValue, title: $0.title)
+                        },
+                        selection: Binding(
+                            get: { appearance.effectiveOverlaySize(appID).rawValue },
+                            set: { appearance.setOverlaySizeOverride(appID, PluginOverlaySize(rawValue: $0)) })),
+                    reset: { appearance.setOverlaySizeOverride(appID, nil) }))
+        }
+
         return SettingsGroup(
             path: group,
             title: "Surface",

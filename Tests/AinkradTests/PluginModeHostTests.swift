@@ -127,9 +127,16 @@ struct PluginModeHostTests {
         // quietly keep working: FileDocumentStore walks the chain one step at a
         // time and fails the whole load on a missing step, dropping every
         // user's per-app opacity, blur, presentation override and fonts.
-        #expect(AppAppearanceDocument.currentSchemaVersion == 3)
-        #expect(AppAppearanceDocument.migrators.contains { $0.fromVersion == 2 },
-                "v2 -> v3 needs a migrator even though the payload is unchanged")
+        // Asserted as an unbroken CHAIN rather than a fixed version number: the
+        // version moves whenever a field is added, and a test that just pins it
+        // gets bumped without anyone checking the thing that matters — that
+        // every step from 1 to current has a migrator.
+        let steps = Set(AppAppearanceDocument.migrators.map(\.fromVersion))
+        for version in 1..<AppAppearanceDocument.currentSchemaVersion {
+            // A missing step does not degrade: FileDocumentStore fails the
+            // whole load, and every per-app setting vanishes.
+            #expect(steps.contains(version), "a schema step has no migrator")
+        }
     }
 
     @Test("A mode override survives a round trip")
