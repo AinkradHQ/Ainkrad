@@ -39,6 +39,17 @@ struct HoardOpenDocumentTests {
         #expect(decoded?.isOpenDocument == true)
     }
 
+    @Test("A disabled or missing Lore returns a reason the pane can show")
+    func unavailableReturnsAReason() {
+        // The point: a reason comes BACK, so the pane can toast it. Logging it
+        // and returning nothing is the "recorded, never surfaced" shape.
+        let hub = PluginLaunchHub()
+        hub.setAvailabilityProvider { _ in .disabled }
+        #expect(hub.availability(of: "lore") == .disabled)
+        hub.setAvailabilityProvider { _ in .unknown }
+        #expect(hub.availability(of: "lore") == .unknown)
+    }
+
     @Test("An unavailable Lore is refused before a payload is enqueued")
     func unavailableTargetIsNotEnqueued() {
         // A payload left pending for an app that never opens is a leak that

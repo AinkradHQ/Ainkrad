@@ -322,7 +322,11 @@ struct HoardRootView: View {
         // the store because only the pane can reach the host's launcher, and
         // only the host knows whether Lore is installed at all.
         store.activeTab.onOpenDocument = { [weak environment] url in
-            environment?.openDocumentInLore(url)
+            guard let reason = environment?.openDocumentInLore(url) else { return }
+            // Surfaced, not logged. Pressing Enter and getting nothing, with
+            // only a log line to say why, is the failure this codebase has been
+            // bitten by before.
+            toast = HoardToastMessage(kind: .warning, text: "Can't open that", detail: reason)
         }
         self.actions = HoardActions(
             engine: engine, coordinator: environment.filesPaneCoordinator,

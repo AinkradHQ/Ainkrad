@@ -746,29 +746,28 @@ extension AppEnvironment {
     /// Hoard gets the same availability check a plugin would: Lore may be
     /// uninstalled or switched off.
     ///
-    /// An unavailable Lore is LOGGED, not surfaced. That is a known gap, not a
-    /// decision: pressing Enter and getting nothing with only a log line to say
-    /// why is exactly the "failure recorded, never surfaced" shape this
-    /// codebase has been bitten by before (Leyline's Connect button). Hoard has
-    /// its own toast (`HoardToastMessage`) and that is where this belongs, but
-    /// it lives on the pane, not on `AppEnvironment` — wiring it through is a
-    /// follow-up, not something to fake from here.
+    /// Returns why it could not be opened, or nil on success, so the CALLER
+    /// surfaces it. Hoard's toast lives on the pane and this does not — and a
+    /// failure that is only logged is the "recorded, never surfaced" shape this
+    /// codebase has been bitten by before (Leyline's Connect button).
     ///
     /// `mode: .basic` is stated rather than left to Lore's setting on purpose —
     /// the whole point of clicking a `.md` is to see THAT file, not to arrive
     /// in the vault browser.
+    @discardableResult
     @MainActor
-    func openDocumentInLore(_ url: URL) {
+    func openDocumentInLore(_ url: URL) -> String? {
         let intent = AinkradLaunchIntent(path: url.path, mode: .basic)
-        guard let payload = intent.json else { return }
+        guard let payload = intent.json else { return "That path couldn't be encoded." }
         switch pluginLaunchHub.availability(of: "lore") {
         case .available:
             pluginLaunchHub.enqueue(target: "lore", payload: payload)
             pluginLaunchHub.requestOpen("lore")
+            return nil
         case .disabled:
-            Log.registry.error("Open in Lore: lore is installed but disabled")
+            return "Lore is disabled — enable it in the App Store."
         case .unknown:
-            Log.registry.error("Open in Lore: lore is not installed")
+            return "Lore isn't installed — install it from the App Store."
         }
     }
 }
