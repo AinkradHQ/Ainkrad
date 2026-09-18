@@ -255,7 +255,16 @@ packages:
     # addition is AinkradAppKitUI, which `make abi-check` does not cover -- its
     # -abi declaration set gains the two new types and their members and loses
     # none, so a plugin pinned behind this still loads.
-    revision: c315110481461b1b2f14c129401b72d25107aab3
+    #
+    # 43868c9: AinkradSurfaceSettings (#42) -- the shared "Open as" / "Open in"
+    # rows, so every app's settings say the same thing in the same place.
+    #
+    # Pin safety: the only AinkradAppKitContract change between c315110 and
+    # 43868c9 is a doc comment on PluginMode (#41, which way to fall back on an
+    # unknown case) -- verified by reading the diff, not assumed from the file
+    # list. No declaration moved. The real addition is in AinkradAppKitUI, which
+    # abi-check does not cover, and it is purely additive.
+    revision: 43868c968b8c4111f7cfa7d05fd903fcc9277d63
 
 targets:
   AinkradHostRuntime:
