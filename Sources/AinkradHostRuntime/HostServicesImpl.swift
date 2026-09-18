@@ -28,6 +28,7 @@ public final class HostServicesImpl: HostServices, PluginInstanceIdentity {
     public let actions: AgentActionProvider
     public let apps: PluginAppLauncher
     public let presentation: PluginPresentationControl
+    public let mode: PluginModeControl
     public let signals: PluginSignalEmitter
     private let themeManager: ThemeManager
 
@@ -36,6 +37,7 @@ public final class HostServicesImpl: HostServices, PluginInstanceIdentity {
          launchHub: PluginLaunchHub,
          signalHub: SignalEmitterHub,
          declaredPresentation: PluginPresentation,
+         declaredMode: PluginMode = .advanced,
          appAppearanceStore: AppAppearanceStore) {
         self.documents = ScopedPluginDocumentStore(directory: dataRootURL.appendingPathComponent(appID, isDirectory: true))
         self.secrets = ScopedPluginSecretStore(appID: appID, backing: secretStore)
@@ -54,6 +56,8 @@ public final class HostServicesImpl: HostServices, PluginInstanceIdentity {
         self.signals = HostSignalEmitter(appID: appID, hub: signalHub)
         self.presentation = HostPresentationControl(
             appID: appID, declaredDefault: declaredPresentation, store: appAppearanceStore)
+        self.mode = HostModeControl(
+            appID: appID, declaredDefault: declaredMode, store: appAppearanceStore)
         armThemeSync()
     }
 
@@ -86,6 +90,27 @@ public final class HostPresentationControl: PluginPresentationControl {
     public var current: PluginPresentation { store.presentationOverride(appID) ?? declaredDefault }
     public func set(_ presentation: PluginPresentation) { store.setPresentationOverride(appID, presentation) }
     public func reset() { store.setPresentationOverride(appID, nil) }
+}
+
+/// Host-side `PluginModeControl`: the app's DEFAULT mode — the one a newly
+/// opened pane starts in. Reads/writes the per-appID override in
+/// `AppAppearanceStore`, falling back to the bundle's `AinkradMode`.
+///
+/// Deliberately NOT the mode a pane is currently showing. That is per pane and
+/// lives in `\.ainkradPaneMode`; see `PluginMode.swift` for why the two are
+/// separate. `AppAppearanceStore` is `@Observable`, so a settings edit
+/// propagates without anything extra here.
+@MainActor
+public final class HostModeControl: PluginModeControl {
+    private let appID: String
+    private let declaredDefault: PluginMode
+    private let store: AppAppearanceStore
+    public init(appID: String, declaredDefault: PluginMode, store: AppAppearanceStore) {
+        self.appID = appID; self.declaredDefault = declaredDefault; self.store = store
+    }
+    public var current: PluginMode { store.modeOverride(appID) ?? declaredDefault }
+    public func set(_ mode: PluginMode) { store.setModeOverride(appID, mode) }
+    public func reset() { store.setModeOverride(appID, nil) }
 }
 
 /// Key→data storage confined to a single directory. Keys are sanitized so a
