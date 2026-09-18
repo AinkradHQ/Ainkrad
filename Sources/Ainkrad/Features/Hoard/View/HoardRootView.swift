@@ -318,6 +318,12 @@ struct HoardRootView: View {
         let token = environment.filesPaneCoordinator.register(store)
         self.store = store
         self.paneToken = token
+        // Enter on a markdown file hands it to Lore. Wired here rather than in
+        // the store because only the pane can reach the host's launcher, and
+        // only the host knows whether Lore is installed at all.
+        store.activeTab.onOpenDocument = { [weak environment] url in
+            environment?.openDocumentInLore(url)
+        }
         self.actions = HoardActions(
             engine: engine, coordinator: environment.filesPaneCoordinator,
             resolver: resolver, clipboard: environment.filesClipboard,

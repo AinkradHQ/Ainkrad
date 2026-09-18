@@ -114,6 +114,7 @@ final class AppEnvironmentTests {
             quitCoordinator: quitCoordinator,
             generalSettingsStore: generalSettingsStore,
             appAppearanceStore: appAppearanceStore,
+            pluginLaunchHub: PluginLaunchHub(),
             webSearchSettingsStore: WebSearchSettingsStore(persistence: persistence),
             mediaSettingsStore: MediaSettingsStore(persistence: persistence),
             sessionShareStore: SessionShareStore(

@@ -223,6 +223,10 @@ final class HoardTab: Identifiable {
         placeCursor(at: entry)
     }
 
+    /// Set by the pane when the host can route a document somewhere. Nil means
+    /// "nothing to open into", which is the pre-generation-11 behaviour.
+    var onOpenDocument: ((URL) -> Void)?
+
     func selectAll() {
         selection = Set(visibleEntries.map(\.url))
     }
@@ -232,10 +236,30 @@ final class HoardTab: Identifiable {
         selection = all.subtracting(selection)
     }
 
-    /// Enter: descend into a directory. Files do nothing in M1 — opening
-    /// them arrives with the preview pane in M3.
+    /// Enter: descend into a directory, or hand a markdown file to Lore.
+    ///
+    /// Files did nothing until generation 11. They still do nothing here for
+    /// anything that is not markdown: this is deliberately NOT a general
+    /// file-opener. Widening it to "open whatever with whatever" is a different
+    /// feature with a different set of ways to go wrong, and Enter on a binary
+    /// doing something surprising is worse than Enter doing nothing.
+    ///
+    /// `onOpenDocument` is nil wherever nothing is wired (tests, a pane built
+    /// without the host), so the old do-nothing behaviour is still the floor.
     func activateCursor() {
-        guard let entry = cursorEntry, entry.isDirectory else { return }
-        descend(into: entry)
+        guard let entry = cursorEntry else { return }
+        if entry.isDirectory {
+            descend(into: entry)
+            return
+        }
+        guard Self.isMarkdown(entry.url) else { return }
+        onOpenDocument?(entry.url)
+    }
+
+    /// Markdown by extension. Lore's own engine registry is the authority on
+    /// what it can render, but it lives in the plugin and this is the host —
+    /// so this is the narrow, boring subset rather than a guess at that.
+    static func isMarkdown(_ url: URL) -> Bool {
+        ["md", "markdown", "mdown", "mkd"].contains(url.pathExtension.lowercased())
     }
 }
