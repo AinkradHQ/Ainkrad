@@ -538,7 +538,19 @@ extension AppEnvironment {
             if effective == .overlay {
                 environment.presentedOverlayAppID = appID
             } else {
-                let block = environment.workspaceManager.activeWorkspace.tileLayout.openApp(appID)
+                let layout = environment.workspaceManager.activeWorkspace.tileLayout
+                let intent = AinkradLaunchIntent.decode(environment.pluginLaunchHub.peekPending(for: appID))
+                // A document for an app already open here goes to THAT pane:
+                // focus it and remount its root so it collects the payload.
+                // Documents only — any other launch (an SSH session for Rune)
+                // wants a pane of its own, and a remount would end its session.
+                if let existing = layout.paneForDocument(appID: appID, intent: intent) {
+                    layout.focus(existing.id)
+                    existing.launchGeneration += 1
+                    environment.presentedOverlayAppID = nil
+                    return
+                }
+                let block = layout.openApp(appID)
                 // Honour the mode the LAUNCH asked for, when it asked for one.
                 //
                 // Without this the intent's `mode` was carried and then ignored:
