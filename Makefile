@@ -4,10 +4,10 @@
 # committed. After cloning, run `make` (or `make open`) to generate it.
 # project.yml is the source of truth — re-run `make generate` after editing it.
 
-# The project currently needs the macOS 27 beta SDK; default to Xcode-beta when
+# The project needs the macOS 27 SDK; default to Xcode 27 at /Applications/Xcode.app when
 # it's installed. Override on the command line: `make build DEVELOPER_DIR=…`.
-ifneq ($(wildcard /Applications/Xcode-beta.app),)
-DEVELOPER_DIR ?= /Applications/Xcode-beta.app/Contents/Developer
+ifneq ($(wildcard /Applications/Xcode.app),)
+DEVELOPER_DIR ?= /Applications/Xcode.app/Contents/Developer
 export DEVELOPER_DIR
 endif
 
