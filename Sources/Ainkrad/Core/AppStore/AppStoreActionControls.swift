@@ -61,6 +61,11 @@ struct AppStoreActionControls: View {
                     actionButton("Uninstall", style: .danger, morphsBusy: false, action: onUninstall)
                         .transition(rowTransition)
                 }
+            case .installed where row.needsRestart:
+                actionButton("Restart to Apply", style: .primary, morphsBusy: false,
+                             action: HostRelaunch.relaunch)
+                    .help("The update is installed. Ainkrad keeps running the old version until it restarts.")
+                    .transition(rowTransition)
             case .installed:
                 installedLabel
                     .transition(rowTransition)

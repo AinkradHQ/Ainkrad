@@ -118,6 +118,25 @@ struct AppStoreStoreTests {
         #expect(s.error == nil)
     }
 
+    @Test("updating an app whose bundle is already loaded asks for a restart")
+    func updateOfLoadedBundleNeedsRestart() async {
+        let svc = FakeAppStoreService(); svc.cachedCatalog = [entry("notes", "2.0.0")]
+        svc.installedResult["notes"] = .init(version: "1.0.0", sourceRepo: "o/notes")
+        let s = store(service: svc, loaded: [plugin("notes")])
+        s.isBundleLoaded = { $0 == "notes" }
+        await s.update("notes")
+        #expect(s.rows.first { $0.id == "notes" }?.needsRestart == true)
+    }
+
+    @Test("installing an app that was never loaded needs no restart")
+    func freshInstallNeedsNoRestart() async {
+        let svc = FakeAppStoreService(); svc.cachedCatalog = [entry("notes")]
+        let s = store(service: svc)
+        s.isBundleLoaded = { _ in false }
+        await s.install("notes")
+        #expect(s.rows.first { $0.id == "notes" }?.needsRestart == false)
+    }
+
     @Test("a failing install surfaces the error and leaves rows unchanged")
     func installError() async {
         let svc = FakeAppStoreService(); svc.cachedCatalog = [entry("notes")]
