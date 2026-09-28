@@ -9,15 +9,15 @@ import AinkradHostRuntime
 /// `makeSettingsView` renders inside a single `.custom` field, so old
 /// plugins keep working and stay findable by app name.
 ///
-/// The host-owned "Appearance" group (the per-app blur toggle) is appended as
-/// a NORMAL group, not a block bolted below whatever the app rendered. The
-/// Sage is exempt — it owns its own appearance in its in-app Appearance
-/// tab.
+/// Every page opens on ONE "Appearance" tab: how the app opens (Open as, Open
+/// in, Overlay size), then the app's own appearance fields, then the host's
+/// blur toggle — see `appearanceTab`. There is no separate Surface tab.
 @MainActor
 enum AppSettingsCatalog {
-    /// App ids that declare their own appearance controls and must NOT also
-    /// receive the host's auto-appended blur group.
-    private static var ownsItsAppearance: Set<String> { [SageApp.id, HoardApp.id] }
+    /// Apps that must NOT receive the host's blur toggle: Sage has an in-app
+    /// Appearance tab of its own. (An app that declares a `blur` field — Hoard —
+    /// is skipped by `appearanceTab` without being listed here.)
+    private static var ownsItsAppearance: Set<String> { [SageApp.id] }
 
     static func pages(environment: AppEnvironment) -> [SettingsPage] {
         environment.registry.enabledApps.enumerated().map { index, app in
@@ -65,31 +65,14 @@ enum AppSettingsCatalog {
                 ]
             }
 
-            // The surface rows, for a host-embedded built-in whose page is the
-            // `.custom` wrap of its own view (Sage, Scry). PREPENDED rather
-            // than returned instead: making them the app's only groups drops
-            // that wrap, and with it every setting the app actually has —
-            // caught by `AppSettingsCatalogTests`' fallback guarantee.
-            //
-            // Hoard is excluded because its own catalog already includes the
-            // group, in the position it chose.
-            if app.source == .builtIn, app.id != HoardApp.id {
-                groups.insert(
-                    BuiltInSurfaceSettings.group(root: root, appID: app.id,
-                                                 appName: app.displayName,
-                                                 environment: environment),
-                    at: 0)
-            }
-
-            // Apps that own their appearance are exempt from the host's
-            // auto-appended blur group: the Sage has an in-app Appearance
-            // tab, and Hoard declares blur beside its own transparency slider
-            // (they are one decision — blur does nothing while opaque), so
-            // appending it again would strand a duplicate control in a
-            // trailing group.
-            if !Self.ownsItsAppearance.contains(app.id) {
-                groups.append(appearanceGroup(appID: app.id, root: root, environment: environment))
-            }
+            // The surface rows join the tab for every DECLARED page. A plugin
+            // still rendering one custom view draws them itself (the kit's
+            // `AinkradSurfaceSettings`), so adding them here would show them twice.
+            let declared = isBuiltIn || published != nil
+            let tab = appearanceTab(appID: app.id, appName: app.displayName, root: root,
+                                    taking: &groups, includeSurface: declared,
+                                    environment: environment)
+            if !tab.fields.isEmpty { groups.insert(tab, at: 0) }
 
             return SettingsPage(
                 path: root, title: app.displayName, icon: app.icon,
@@ -144,17 +127,50 @@ enum AppSettingsCatalog {
             fields: group.fields.map { namespaced($0, under: root) })
     }
 
-    /// The blur toggle every app but the Sage gets — the host renders
-    /// the blurred backdrop behind a translucent pane. Mirrors the semantics
-    /// of the former `appAppearanceSection`: `AppAppearanceStore` defaults an
-    /// app's blur to off.
-    private static func appearanceGroup(
-        appID: String, root: SettingsPath, environment: AppEnvironment
+    /// The page's one Appearance tab, built from:
+    ///
+    /// 1. how the app opens — `BuiltInSurfaceSettings`, when `includeSurface`;
+    /// 2. the app's own "Appearance" group, REMOVED from `groups` and merged in
+    ///    (Hoard's transparency, blur and fonts; a plugin's theme);
+    /// 3. the host's blur toggle, unless the app declared one or owns its
+    ///    appearance (Sage has an in-app Appearance tab).
+    ///
+    /// A plugin's own "Surface" group (Raven 0.4.1 declared one) is dropped
+    /// when the host supplies the same rows — the host owns them now.
+    private static func appearanceTab(
+        appID: String, appName: String, root: SettingsPath,
+        taking groups: inout [SettingsGroup], includeSurface: Bool,
+        environment: AppEnvironment
     ) -> SettingsGroup {
+        let path = root.appending("appearance")
+        let isTitled = { (group: SettingsGroup, title: String) in
+            group.title.caseInsensitiveCompare(title) == .orderedSame
+        }
+        let own = groups.first { isTitled($0, "Appearance") }
+        groups.removeAll { isTitled($0, "Appearance") || (includeSurface && isTitled($0, "Surface")) }
+
+        var fields = includeSurface
+            ? BuiltInSurfaceSettings.fields(in: path, appID: appID, appName: appName,
+                                            environment: environment)
+            : []
+        fields += own?.fields ?? []
+        let declaresBlur = fields.contains { $0.path.segments.last == "blur" }
+        if !declaresBlur && !ownsItsAppearance.contains(appID) {
+            fields.append(blurField(appID: appID, group: path, environment: environment))
+        }
+        return SettingsGroup(path: path, title: "Appearance",
+                             footerNote: own?.footerNote ?? "How \(appName) opens, and how it looks.",
+                             fields: fields)
+    }
+
+    /// The blur toggle every app but the Sage gets — the host renders
+    /// the blurred backdrop behind a translucent pane. `AppAppearanceStore`
+    /// defaults an app's blur to off.
+    private static func blurField(
+        appID: String, group: SettingsPath, environment: AppEnvironment
+    ) -> SettingsField {
         let store = environment.appAppearanceStore
-        let group = root.appending("appearance")
-        return SettingsGroup(path: group, title: "Appearance", fields: [
-            SettingsField(
+        return SettingsField(
                 path: group.appending("blur"),
                 label: "Blur",
                 help: "Blur the workspace revealed behind this app when it's translucent.",
@@ -165,6 +181,5 @@ enum AppSettingsCatalog {
                 defaultDescription: "Off",
                 isModified: { store.blurEnabled(appID) != false },
                 reset: { store.setBlurEnabled(appID, false) })
-        ])
     }
 }

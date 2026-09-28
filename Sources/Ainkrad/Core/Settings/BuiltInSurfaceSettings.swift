@@ -3,10 +3,11 @@ import AinkradAppKit
 import AinkradAppKitContract
 import AinkradHostRuntime
 
-/// "Open as" and "Open in" for a host-embedded built-in.
+/// "Open as", "Open in" and "Overlay size" — the first rows of every app's
+/// Appearance tab (`AppSettingsCatalog.appearanceTab`).
 ///
-/// The plugins get these two rows from `AinkradSurfaceSettings`, a kit view.
-/// A built-in cannot: it publishes settings as DECLARED FIELDS through
+/// A plugin that still renders its settings as one custom view draws these
+/// itself, from `AinkradSurfaceSettings`, a kit view. A declared page cannot: it publishes settings as DECLARED FIELDS through
 /// `SettingsCatalog` so they are searchable, deep-linkable and resettable like
 /// every other setting — and wrapping a view in a `.custom` field is exactly
 /// the decay the `.custom` ratchet exists to reject.
@@ -18,18 +19,17 @@ import AinkradHostRuntime
 @MainActor
 enum BuiltInSurfaceSettings {
 
-    /// Nil when the app declares no basic mode — the "Open in" row is then
-    /// omitted rather than shown inert, matching the kit view's own rule.
-    static func group(root: SettingsPath,
-                      appID: String,
-                      appName: String,
-                      environment: AppEnvironment) -> SettingsGroup {
+    /// The "Open in" row is omitted when the app declares no basic mode,
+    /// rather than shown inert, matching the kit view's own rule.
+    static func fields(in group: SettingsPath,
+                       appID: String,
+                       appName: String,
+                       environment: AppEnvironment) -> [SettingsField] {
         let appearance = environment.appAppearanceStore
         let registered = environment.registry.allApps.first { $0.id == appID }
         let declaredPresentation = registered?.presentation ?? .pane
         let declaredMode = registered?.mode ?? .advanced
         let supportsModes = registered?.supportsModes ?? false
-        let group = root.appending("surface")
 
         var fields: [SettingsField] = [
             SettingsField(
@@ -81,10 +81,6 @@ enum BuiltInSurfaceSettings {
                     reset: { appearance.setOverlaySizeOverride(appID, nil) }))
         }
 
-        return SettingsGroup(
-            path: group,
-            title: "Surface",
-            footerNote: "How the host opens \(appName), and how much of it you get.",
-            fields: fields)
+        return fields
     }
 }
