@@ -51,6 +51,16 @@ struct AppSettingsCatalogTests {
         }
     }
 
+    @Test("Appearance is the first tab, and no page keeps a separate Surface tab")
+    func appearanceLeadsAndSurfaceIsMerged() {
+        for page in AppSettingsCatalog.pages(environment: .preview()) where page.appID != SageApp.id {
+            #expect(page.groups.first?.title == "Appearance", "\(page.title) does not open on Appearance")
+            #expect(!page.groups.contains { $0.title == "Surface" }, "\(page.title) still has a Surface tab")
+            #expect(page.groups.filter { $0.title == "Appearance" }.count == 1,
+                    "\(page.title) has more than one Appearance tab")
+        }
+    }
+
     @Test("built-in and installed apps land in different sidebar groups")
     func groupSplit() {
         let pages = AppSettingsCatalog.pages(environment: .preview())

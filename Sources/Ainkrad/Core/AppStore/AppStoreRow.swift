@@ -21,6 +21,9 @@ struct AppStoreRow: Identifiable, Equatable {
     let isManaged: Bool
     /// From the catalog entry, if any (AIN-148). Used by search.
     let author: String?
+    /// Installed or updated while an older copy of its code is loaded: dyld
+    /// never unloads a bundle, so the new version runs only after a restart.
+    var needsRestart = false
 }
 
 extension AppStoreRow {

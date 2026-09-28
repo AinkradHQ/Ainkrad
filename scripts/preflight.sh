@@ -49,6 +49,9 @@ PLUGIN_REPOS=(
   "GitMage:GitMagePlugin"
   "AinkradLore:LorePlugin"
   "AinkradLeyline:LeylinePlugin"
+  "AinkradQuest:QuestPlugin"
+  "AinkradRaven:RavenPlugin"
+  "AinkradThrall:ThrallPlugin"
 )
 
 echo "▸ Preflight (siblings: $SIBLINGS)"

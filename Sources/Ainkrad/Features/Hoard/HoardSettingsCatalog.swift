@@ -25,11 +25,10 @@ import AinkradHostRuntime
 @MainActor
 enum HoardSettingsCatalog {
     static func groups(root: SettingsPath, environment: AppEnvironment) -> [SettingsGroup] {
-        // Surface first: whether Hoard opens basic or advanced decides what you
-        // GET when you open it, which outranks how it looks.
-        [BuiltInSurfaceSettings.group(root: root, appID: HoardApp.id,
-                                      appName: HoardApp.displayName, environment: environment),
-         appearanceGroup(root: root, environment: environment),
+        // The host puts "Open as"/"Open in" at the top of the Appearance group
+        // (`AppSettingsCatalog.appearanceTab`), so how Hoard opens and how it
+        // looks are one tab.
+        [appearanceGroup(root: root, environment: environment),
          listGroup(root: root, environment: environment)]
     }
 

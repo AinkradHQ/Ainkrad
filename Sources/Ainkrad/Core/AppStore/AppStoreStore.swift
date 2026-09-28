@@ -15,6 +15,10 @@ final class AppStoreStore {
     var searchQuery: String = ""
     private(set) var rows: [AppStoreRow] = []
     private(set) var busy: Set<String> = []
+    /// Apps whose new bundle is on disk while the old one is still mapped.
+    private(set) var needsRestart: Set<String> = []
+    /// Seam for tests: whether `<appID>.bundle` is already loaded.
+    var isBundleLoaded: (String) -> Bool = { AppStoreStore.isBundleLoaded(appID: $0) }
     private(set) var isRefreshing = false
     var error: AppStoreError?
     /// Non-nil while a reinstall of this appID awaits the user's Restore/Reset
@@ -132,7 +136,8 @@ final class AppStoreStore {
                 isEnabled: registry.isEnabled(id),
                 kind: kind,
                 isManaged: installedDoc[id] != nil,
-                author: entry?.author))
+                author: entry?.author,
+                needsRestart: needsRestart.contains(id)))
         }
 
         var availableRows: [AppStoreRow] = []
@@ -232,13 +237,26 @@ final class AppStoreStore {
         service.cachedCatalog.first { $0.appID == appID }
     }
 
+    /// True when this process has already loaded `<appID>.bundle` — the store
+    /// installs every plugin at exactly that file name.
+    nonisolated static func isBundleLoaded(appID: String) -> Bool {
+        Bundle.allBundles.contains { $0.isLoaded && $0.bundleURL.lastPathComponent == "\(appID).bundle" }
+    }
+
     /// Runs an async action for one app id, tracking busy + surfacing errors,
     /// always clearing busy and recomputing rows afterwards.
     private func run(_ id: String, _ operation: Operation,
                      _ op: @escaping () async throws -> Void) async {
         busy.insert(id)
+        // Read BEFORE the swap: the loaded `Bundle` keeps its URL after the
+        // new bundle is moved over it, so this still answers afterwards too —
+        // but "was it loaded when we started" is the question.
+        let wasLoaded = isBundleLoaded(id)
         var failure: Error?
-        do { try await op() }
+        do {
+            try await op()
+            if wasLoaded { needsRestart.insert(id) }
+        }
         catch let e as AppStoreError { error = e; failure = e }
         catch {
             self.error = .download(String(describing: error))
