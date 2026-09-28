@@ -81,7 +81,7 @@ struct FileListView: View {
                                 isIgnored: tab.ignoredURLs.contains(entry.url),
                                 isCut: isCut(entry.url),
                                 onTap: { tab.placeCursor(at: entry) },
-                                onDoubleTap: { tab.descend(into: entry) }
+                                onDoubleTap: { tab.activate(entry) }
                             )
                             .fileRowMenu(entry: entry, tab: tab, actions: menuActions)
                             .id(entry.url)
@@ -175,7 +175,7 @@ struct FileListView: View {
                     isSelected: tab.selection.contains(entry.url),
                     iconSize: iconSize * 2.2,
                     onTap: { tab.placeCursor(at: entry) },
-                    onDoubleTap: { tab.descend(into: entry) })
+                    onDoubleTap: { tab.activate(entry) })
                     .fileRowMenu(entry: entry, tab: tab, actions: menuActions)
                     .id(entry.url)
             }

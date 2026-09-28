@@ -51,15 +51,26 @@ struct HoardAppearanceTests {
         #expect(labels.contains("Icon size"))
     }
 
-    @Test("settings are two groups: how it looks, then what the list shows")
+    @Test("settings are three groups: how it opens, how it looks, what the list shows")
     func settingsOrganisation() {
+        // Surface leads as of generation 11: whether Hoard opens basic or
+        // advanced decides what you GET when you open it, which outranks how it
+        // looks. Appearance and List keep their previous order below it.
         let environment = AppEnvironment.preview()
         let groups = HoardSettingsCatalog.groups(
             root: SettingsPath(["app", HoardApp.id]), environment: environment)
-        #expect(groups.map(\.title) == ["Appearance", "List"])
+        #expect(groups.map(\.title) == ["Surface", "Appearance", "List"])
         // Transparency and blur are ONE decision and must stay adjacent.
-        let appearanceLabels = groups[0].fields.map(\.label)
+        let appearanceLabels = groups[1].fields.map(\.label)
         #expect(appearanceLabels.prefix(2) == ["Transparency", "Blur"])
+    }
+
+    @Test("the surface group offers both rows, because Hoard has a basic mode")
+    func surfaceGroupHasBothRows() {
+        let environment = AppEnvironment.preview()
+        let groups = HoardSettingsCatalog.groups(
+            root: SettingsPath(["app", HoardApp.id]), environment: environment)
+        #expect(groups[0].fields.map(\.label) == ["Open as", "Open in"])
     }
 
     @Test("Hoard is exempt from the host's auto-appended blur group")

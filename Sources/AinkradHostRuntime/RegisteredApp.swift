@@ -33,6 +33,16 @@ public struct RegisteredApp: Identifiable {
     /// workspace layout (`.pane`, the default) or summoned as a floating
     /// host overlay (`.overlay`) that auto-dismisses when any app opens.
     public var presentation: PluginPresentation = .pane
+    /// Which mode a newly opened pane of this app starts in (generation 11),
+    /// before any per-app user override is applied. From the bundle's
+    /// `AinkradMode`, or the built-in's declaration.
+    public var mode: PluginMode = .advanced
+    /// Builds the root view for a given mode, or `nil` when the app does not
+    /// conform to `AinkradAppModes` — i.e. it has no basic mode and is always
+    /// advanced. Opt-in at both ends, exactly like `teardown`,
+    /// `mcpServerFactory` and `signalObserverFactory`, and defaulted so every
+    /// existing construction site is unaffected.
+    public var makeRootViewForMode: (@MainActor (PluginMode) -> AnyView)? = nil
     /// Releases everything this instance owns. Non-nil only for a plugin whose
     /// app type opts into `AinkradAppTeardown` — see `RegisteredApp.plugin`.
     ///
@@ -92,6 +102,24 @@ public struct PluginLoadFailure: Equatable {
     }
 }
 
+public extension RegisteredApp {
+    /// Whether this app offers a basic mode at all. Drives whether the host
+    /// shows its "Open in" setting and its mode affordance — an app that never
+    /// conformed must not be offered a switch that does nothing.
+    var supportsModes: Bool { makeRootViewForMode != nil }
+
+    /// The root view for `mode`.
+    ///
+    /// Falls back to the mode-less factory when the app does not conform, so
+    /// every caller can pass a mode unconditionally and a non-conforming app
+    /// behaves exactly as it did before generation 11.
+    @MainActor
+    func makeRootView(mode: PluginMode) -> AnyView {
+        guard let makeRootViewForMode else { return makeRootView() }
+        return makeRootViewForMode(mode)
+    }
+}
+
 extension RegisteredApp {
     /// Adapts a compiled-in app that conforms to the SDK `AinkradApp` contract,
     /// binding it to its scoped host services. `source == .builtIn`, so the
@@ -102,7 +130,9 @@ extension RegisteredApp {
         isEnabledByDefault: Bool = true,
         summary: String = "",
         host: HostServices,
-        chromeFillOverride: (@MainActor () -> Color?)? = nil
+        chromeFillOverride: (@MainActor () -> Color?)? = nil,
+        presentation: PluginPresentation = .pane,
+        mode: PluginMode = .advanced
     ) -> RegisteredApp {
         var registered = RegisteredApp(
             id: app.id,
@@ -117,8 +147,9 @@ extension RegisteredApp {
             // `chromeFill(host:)` can't see (e.g. the Sage's appearance
             // store) supplies it here; otherwise fall back to the SDK path.
             chromeFill: chromeFillOverride ?? { app.chromeFill(host: host) },
-            presentation: .pane
+            presentation: presentation
         )
+        registered.mode = mode
         registered.settingsCatalog = { app.settingsCatalog(host: host) }
         // Discovered by CAST, never a protocol requirement — see PluginLoader
         // for why (an added requirement would break already-compiled bundles).
@@ -127,6 +158,13 @@ extension RegisteredApp {
         }
         if let observing = app as? AinkradAppSignalObserving.Type {
             registered.signalObserverFactory = { observing.makeSignalObserver(host: host) }
+        }
+        // Generation 11. Discovered by CAST for the same reason as the two
+        // above — and it must be done HERE as well as in `PluginLoader`, or the
+        // host-embedded apps (Hoard, Sage, Scry) silently have no basic mode
+        // while every plugin has one.
+        if let modal = app as? AinkradAppModes.Type {
+            registered.makeRootViewForMode = { modal.makeRootView(host: host, mode: $0) }
         }
         return registered
     }

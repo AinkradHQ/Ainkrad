@@ -205,7 +205,8 @@ public final class PluginLoader {
         let declaredSubscriptions =
             (info[PluginInfoKey.signalSubscriptions] as? [String]) ?? []
         return .success(.plugin(appType, url: url, apiVersion: metadata.apiVersion, host: host,
-                                presentation: metadata.presentation, teardown: teardown,
+                                presentation: metadata.presentation, mode: metadata.mode,
+                                teardown: teardown,
                                 mcpServerFactory: mcpServerFactory,
                                 signalObserverFactory: signalObserverFactory,
                                 declaredSignalSubscriptions: declaredSubscriptions))
@@ -219,6 +220,7 @@ extension RegisteredApp {
     @MainActor
     public static func plugin(_ app: any AinkradApp.Type, url: URL, apiVersion: Int, host: HostServices,
                               presentation: PluginPresentation,
+                              mode: PluginMode = .advanced,
                               teardown: (@MainActor () -> Void)? = nil,
                               mcpServerFactory: (@MainActor () -> MCPAppServer)? = nil,
                               signalObserverFactory: (@MainActor () -> any PluginSignalObserver)? = nil,
@@ -253,6 +255,16 @@ extension RegisteredApp {
         registered.signalObserverFactory = signalObserverFactory
         registered.declaredSignalSubscriptions = declaredSignalSubscriptions
         registered.settingsCatalog = { app.settingsCatalog(host: host) }
+        registered.mode = mode
+        // Generation 11, discovered by CAST like the capabilities above. The
+        // theme injection is repeated deliberately: it is what makes a
+        // plugin's scoped theme authoritative for its subtree, and a basic
+        // root that skipped it would render off-theme.
+        if let modal = app as? AinkradAppModes.Type {
+            registered.makeRootViewForMode = { mode in
+                AnyView(modal.makeRootView(host: host, mode: mode).ainkradHostTheme(host.theme))
+            }
+        }
         return registered
     }
 }

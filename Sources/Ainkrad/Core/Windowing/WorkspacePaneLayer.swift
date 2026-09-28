@@ -36,6 +36,16 @@ struct WorkspacePaneLayer: View {
 
     private var manager: WorkspaceManager { environment.workspaceManager }
 
+    /// This pane's effective mode: what the user switched it to, else the app's
+    /// resolved default. `nil` on the block means "keep following the setting",
+    /// so changing the setting moves every pane that was never switched.
+    private func mode(for placement: PanePlacement) -> PluginMode {
+        if let switched = placement.block.mode { return switched }
+        guard let app = registry.allApps.first(where: { $0.id == placement.block.appID })
+        else { return .advanced }
+        return environment.appAppearanceStore.effectiveMode(for: app)
+    }
+
     var body: some View {
         let activeIndex = manager.workspaces.firstIndex { $0.id == manager.activeWorkspaceID } ?? 0
 
@@ -58,6 +68,15 @@ struct WorkspacePaneLayer: View {
                 // context to whichever pane was created last, so with two
                 // terminals open the assistant read the wrong buffer, silently.
                 .environment(\.ainkradPaneIsFocused, placement.isFocusedPane)
+                // Generation 11: the pane's mode, and the way to change it.
+                // Injected HERE, beside focus, for the same reason — it is
+                // per-pane state only the host can answer, and `PaneContent`'s
+                // inputs are deliberately memoized, so a freshly built closure
+                // threaded through it would compare unequal every render.
+                .environment(\.ainkradPaneMode, mode(for: placement))
+                .environment(\.ainkradSetPaneMode) { [block = placement.block] newMode in
+                    block.mode = newMode
+                }
                 .scaleEffect(placement.isVisible ? focusPop : 1)
                 .opacity(placement.isVisible ? 1 : 0)
                 // The visible pane sits on top, which is what lets the keyboard

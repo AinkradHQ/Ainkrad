@@ -230,7 +230,48 @@ packages:
     # AinkradAppKitUI: against ac1dfa8 the -abi declaration set gains 15
     # declarations -- the two new types and their members -- and loses none.
     # Additive only, so a plugin pinned behind this still loads.
-    revision: 7bb80e9f1d01d468949f6c776dd111c9d6b8d690
+    #
+    # 2ad9a52: GENERATION 11 -- Basic Mode (#39). PluginMode, AinkradAppModes
+    # (opt-in, found by cast, never a requirement on AinkradApp),
+    # PluginModeControl on HostServices, \.ainkradPaneMode /
+    # \.ainkradSetPaneMode, and the AinkradMode manifest key. Floor moves 8 ->
+    # 9: safe because every bundle installed on 2026-09-18 reports
+    # AinkradAPIVersion 10. PluginBundleMetadata keeps its old initializer and
+    # gains a second -- a defaulted parameter is source-compatible, NOT
+    # ABI-compatible, and adding `mode:` in place removed the old symbol.
+    #
+    # Pin safety: AinkradAppKitUI has NO source change between 7bb80e9 and
+    # 2ad9a52 (verified by diff), so its ABI cannot have moved. The Contract
+    # gains PluginMode + HostServices.mode; the latter is an added protocol
+    # requirement, reviewed in the kit's abi/report-ignore.txt -- a plugin
+    # calls it and never implements it, so no installed bundle needs a witness.
+    #
+    # c315110: E2 of the Basic Mode plan -- AinkradBasicShell and
+    # AinkradModeSwitch (#40), the shared surface every app's basic mode is
+    # built on. Generation unchanged at 11.
+    #
+    # Pin safety: AinkradAppKitContract has NO source change between 2ad9a52 and
+    # c315110 (verified by diff), so nothing a plugin loads against moved. The
+    # addition is AinkradAppKitUI, which `make abi-check` does not cover -- its
+    # -abi declaration set gains the two new types and their members and loses
+    # none, so a plugin pinned behind this still loads.
+    #
+    # 43868c9: AinkradSurfaceSettings (#42) -- the shared "Open as" / "Open in"
+    # rows, so every app's settings say the same thing in the same place.
+    #
+    # Pin safety: the only AinkradAppKitContract change between c315110 and
+    # 43868c9 is a doc comment on PluginMode (#41, which way to fall back on an
+    # unknown case) -- verified by reading the diff, not assumed from the file
+    # list. No declaration moved. The real addition is in AinkradAppKitUI, which
+    # abi-check does not cover, and it is purely additive.
+    #
+    # c465461: AinkradLaunchIntent (#43) -- the shared "open this there" payload
+    # shape E5 uses. Additive; nothing existing moved.
+    #
+    # 15b5799: PluginOverlaySize (#44) -- overlay size as a third per-app axis.
+    # Within generation 11, which has not shipped.
+    # 8682286: overlay sizes are fixed points; large is actually large (#45).
+    revision: 8682286ead7081a57e2a1e10ae8b294fdbad9b09
 
 targets:
   AinkradHostRuntime:
@@ -279,8 +320,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ainkrad.app
-        MARKETING_VERSION: "0.20.0"
-        CURRENT_PROJECT_VERSION: "20"
+        MARKETING_VERSION: "0.21.0"
+        CURRENT_PROJECT_VERSION: "21"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_NSHumanReadableCopyright: ""

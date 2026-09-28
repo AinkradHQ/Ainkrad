@@ -32,8 +32,8 @@
 #   APPLE_APP_PASSWORD App-specific password (appleid.apple.com → Sign-In & Security).
 #
 # Toolchain:
-#   DEVELOPER_DIR      Overrides the Xcode used. Defaults to Xcode-beta if present
-#                      (this project currently needs the macOS 27 beta SDK).
+#   DEVELOPER_DIR      Overrides the Xcode used. Defaults to /Applications/Xcode.app if present
+#                      (this project needs the macOS 27 SDK).
 #
 # Release checklist:
 #   Before cutting a release, verify every first-party plugin's `AinkradAPIVersion`
@@ -49,8 +49,8 @@ cd "$(dirname "$0")/.."
 REPO_ROOT="$(pwd)"
 
 # --- toolchain -------------------------------------------------------------
-if [[ -z "${DEVELOPER_DIR:-}" && -d /Applications/Xcode-beta.app ]]; then
-  export DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer
+if [[ -z "${DEVELOPER_DIR:-}" && -d /Applications/Xcode.app ]]; then
+  export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
 fi
 
 PUBLISH=false

@@ -18,6 +18,9 @@ import AinkradHostRuntime
 struct BlockView: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.ainkradReduceMotion) private var reduceMotion
+    // Injected per pane by `WorkspacePaneLayer`.
+    @Environment(\.ainkradPaneMode) private var paneMode
+    @Environment(\.ainkradSetPaneMode) private var setPaneMode
     let block: Block
     let tileLayout: TileLayout
     let registry: BuiltInAppRegistry
@@ -239,6 +242,19 @@ struct BlockView: View {
                 tileLayout.duplicate(block.id)
             },
         ]
+        // The way back to basic from advanced. It lives here, in the host,
+        // rather than in nine advanced roots: the pane is chromeless and this
+        // menu is its only host-owned control surface.
+        if app?.supportsModes == true {
+            let isBasic = paneMode == .basic
+            items.append(AinkradMenuItem(
+                title: isBasic ? "Show Everything" : "Simplify",
+                systemName: isBasic ? "arrow.down.left.and.arrow.up.right"
+                                    : "arrow.up.right.and.arrow.down.left"
+            ) {
+                setPaneMode(isBasic ? .advanced : .basic)
+            })
+        }
         if let workspace {
             items.append(AinkradMenuItem(
                 title: isInFocusMode ? "Back to Split Mode" : "Focus Mode",
@@ -360,6 +376,12 @@ private struct PaneContent: View {
     /// of this view's input list.
     let paneLocator: SignalPaneLocatorSink
 
+    /// Read from the environment rather than taken as an input: it is a plain
+    /// `Equatable` value injected one level up in `WorkspacePaneLayer`, so
+    /// switching mode invalidates this view without adding a per-render input
+    /// that would defeat the memoization this view exists for.
+    @Environment(\.ainkradPaneMode) private var paneMode
+
     var body: some View {
         if let app {
             // The app's own background is painted across the WHOLE pane,
@@ -371,7 +393,11 @@ private struct PaneContent: View {
                 if let fill = app.chromeFill() {
                     fill
                 }
-                app.makeRootView()
+                // Generation 11: built FOR the mode, not filtered after the
+                // fact. An app that never opted into `AinkradAppModes` falls
+                // back to its mode-less factory inside this accessor, so this
+                // is unconditional and pre-11 apps are unaffected.
+                app.makeRootView(mode: paneMode)
                     .padding(.top, topInset)
                     .environment(\.ainkradPaneLocator, paneLocator)
             }

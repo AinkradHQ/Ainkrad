@@ -53,6 +53,13 @@ public final class PluginLaunchHub {
 
     public func requestOpen(_ appID: String) { openHandler?(appID) }
 
+    /// Reads the pending payload WITHOUT consuming it.
+    ///
+    /// The open handler needs to know what a launch is asking for — which mode
+    /// to open the pane in — before the target app exists to consume it.
+    /// Consuming here would take the payload the app is about to read.
+    public func peekPending(for appID: String) -> String? { pending[appID] }
+
     public func takePending(for appID: String) -> String? {
         defer { pending[appID] = nil }
         return pending[appID]

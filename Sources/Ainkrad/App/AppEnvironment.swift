@@ -50,6 +50,10 @@ final class AppEnvironment {
     let quitCoordinator: QuitCoordinator
     let generalSettingsStore: GeneralSettingsStore
     let appAppearanceStore: AppAppearanceStore
+    /// The app-to-app launch mailbox. Held here so a host feature (Hoard) can
+    /// send a launch the same way a plugin does, rather than reaching into the
+    /// workspace directly and bypassing the availability check.
+    let pluginLaunchHub: PluginLaunchHub
     /// Hoard' own display settings (icon size, metadata columns). Constructed
     /// in `init` from `persistence` rather than threaded through bootstrap's
     /// parameter list — it depends on nothing else.
@@ -340,6 +344,7 @@ final class AppEnvironment {
         quitCoordinator: QuitCoordinator,
         generalSettingsStore: GeneralSettingsStore,
         appAppearanceStore: AppAppearanceStore,
+        pluginLaunchHub: PluginLaunchHub,
         webSearchSettingsStore: WebSearchSettingsStore,
         mediaSettingsStore: MediaSettingsStore,
         sessionShareStore: SessionShareStore,
@@ -411,6 +416,7 @@ final class AppEnvironment {
         self.quitCoordinator = quitCoordinator
         self.generalSettingsStore = generalSettingsStore
         self.appAppearanceStore = appAppearanceStore
+        self.pluginLaunchHub = pluginLaunchHub
         self.filesSettingsStore = HoardSettingsStore(persistence: persistence)
         self.filesPaneCoordinator = PaneCoordinator()
         self.filesSystemService = LocalFileSystemService()
@@ -605,6 +611,7 @@ final class AppEnvironment {
             quitCoordinator: QuitCoordinator(persistence: persistence, terminator: AppKitTerminationReplier()),
             generalSettingsStore: generalSettingsStore,
             appAppearanceStore: appAppearanceStore,
+            pluginLaunchHub: pluginLaunchHub,
             webSearchSettingsStore: webSearchSettingsStore,
             mediaSettingsStore: mediaSettingsStore,
             sessionShareStore: sessionShareStore,
@@ -730,4 +737,37 @@ final class AppEnvironment {
         previewTeardown?()
     }
     #endif
+}
+
+extension AppEnvironment {
+    /// Hand a markdown file to Lore, in basic mode.
+    ///
+    /// Goes through `PluginLaunchHub` rather than opening a pane directly, so
+    /// Hoard gets the same availability check a plugin would: Lore may be
+    /// uninstalled or switched off.
+    ///
+    /// Returns why it could not be opened, or nil on success, so the CALLER
+    /// surfaces it. Hoard's toast lives on the pane and this does not — and a
+    /// failure that is only logged is the "recorded, never surfaced" shape this
+    /// codebase has been bitten by before (Leyline's Connect button).
+    ///
+    /// `mode: .basic` is stated rather than left to Lore's setting on purpose —
+    /// the whole point of clicking a `.md` is to see THAT file, not to arrive
+    /// in the vault browser.
+    @discardableResult
+    @MainActor
+    func openDocumentInLore(_ url: URL) -> String? {
+        let intent = AinkradLaunchIntent(path: url.path, mode: .basic)
+        guard let payload = intent.json else { return "That path couldn't be encoded." }
+        switch pluginLaunchHub.availability(of: "lore") {
+        case .available:
+            pluginLaunchHub.enqueue(target: "lore", payload: payload)
+            pluginLaunchHub.requestOpen("lore")
+            return nil
+        case .disabled:
+            return "Lore is disabled — enable it in the App Store."
+        case .unknown:
+            return "Lore isn't installed — install it from the App Store."
+        }
+    }
 }

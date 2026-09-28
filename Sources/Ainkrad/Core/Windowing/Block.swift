@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import AinkradAppKit
 
 /// One open Built-in App instance living in a tile. See
 /// Window & Tile Management Architecture.md. Multiple simultaneous Blocks
@@ -16,6 +17,21 @@ final class Block: Identifiable, Equatable {
     /// app's display name" — so a never-renamed pane keeps following the app
     /// rather than freezing a copy of its name.
     var title: String?
+
+    /// This pane's mode, once the user has switched it. `nil` — the normal
+    /// state — means "whatever the app's resolved default is", so a pane keeps
+    /// following the setting instead of freezing a copy of it, exactly as
+    /// `title` follows the app's display name.
+    ///
+    /// Optional rather than seeded at construction because `TileLayout` knows
+    /// nothing of the registry and cannot resolve the default; `BlockView`,
+    /// which holds the `RegisteredApp`, resolves it at render.
+    ///
+    /// Deliberately NOT persisted by `LayoutPersistence`: switching a pane to
+    /// advanced is a thing you did to this pane now, not a new preference. If
+    /// it survived a relaunch, one use of advanced would quietly become the
+    /// default and the setting would erode to whichever mode was used last.
+    var mode: PluginMode?
 
     init(id: UUID = UUID(), appID: String, title: String? = nil) {
         self.id = id

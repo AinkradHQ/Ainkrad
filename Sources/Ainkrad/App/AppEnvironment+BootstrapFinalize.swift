@@ -400,7 +400,8 @@ extension AppEnvironment {
         let hoardHost = HostServicesImpl(appID: "hoard", dataRootURL: pluginDataRoot,
                                          secretStore: secrets, themeManager: themeManager,
                                          hub: agentContextHub, actionHub: agentActionHub, launchHub: pluginLaunchHub, signalHub: signalHub,
-                                         declaredPresentation: .pane, appAppearanceStore: appAppearanceStore)
+                                         declaredPresentation: .pane, declaredMode: .basic,
+                                         appAppearanceStore: appAppearanceStore)
 
         // Hoard' MCP server and agent context are built HERE, not in
         // `HoardApp`, for the same reason its settings are: the SDK entry
@@ -416,7 +417,12 @@ extension AppEnvironment {
                     opacity: appAppearanceStore.surfaceOpacity("hoard"),
                     base: themeManager.tokens.background
                 )
-            })
+            },
+            // A built-in declares its default here, where a plugin declares it
+            // in its Info.plist. Hoard opens basic: reaching a file is what it
+            // is opened for, and the sidebar, tabs and preview are for
+            // organising rather than reaching.
+            mode: .basic)
         filesRegistration.mcpServerFactory = { [weak environment] in
             guard let environment else { return MCPAppServer(appID: HoardApp.id) }
             return HoardMCPServer.make(environment: environment)
@@ -456,7 +462,12 @@ extension AppEnvironment {
                             opacity: appAppearanceStore.surfaceOpacity("sage"),
                             base: themeManager.tokens.background
                         )
-                    }
+                    },
+                    // Advanced by default: the transcript history and the runs
+                    // panel are why Sage is opened as a pane at all. Basic is
+                    // the deliberate switch, and Quick Ask already covers the
+                    // one-off case from the keyboard.
+                    mode: .advanced
                 ),
                 RegisteredApp.builtIn(
                     ScryApp.self,
@@ -527,7 +538,19 @@ extension AppEnvironment {
             if effective == .overlay {
                 environment.presentedOverlayAppID = appID
             } else {
-                environment.workspaceManager.activeWorkspace.tileLayout.openApp(appID)
+                let block = environment.workspaceManager.activeWorkspace.tileLayout.openApp(appID)
+                // Honour the mode the LAUNCH asked for, when it asked for one.
+                //
+                // Without this the intent's `mode` was carried and then ignored:
+                // Hoard enqueued a document for Lore in `.basic`, the pane
+                // opened in Lore's configured mode (advanced), and only the
+                // BASIC root consumes a pending launch — so the payload sat
+                // unread and the file never opened. Peeked, not taken: the app
+                // itself still consumes it.
+                if let requested = AinkradLaunchIntent
+                    .decode(environment.pluginLaunchHub.peekPending(for: appID))?.mode {
+                    block.mode = requested
+                }
                 environment.presentedOverlayAppID = nil
             }
         }

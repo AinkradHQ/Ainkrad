@@ -30,8 +30,8 @@ cd "$(dirname "$0")/.."
 HOST_ROOT="$(pwd)"
 SIBLINGS="$(cd .. && pwd)"
 
-if [[ -z "${DEVELOPER_DIR:-}" && -d /Applications/Xcode-beta.app ]]; then
-  export DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer
+if [[ -z "${DEVELOPER_DIR:-}" && -d /Applications/Xcode.app ]]; then
+  export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
 fi
 
 FAST=false
@@ -159,14 +159,14 @@ echo
 echo "▸ AinkradAppKit ABI baseline"
 if [[ -d "$SIBLINGS/AinkradAppKit" ]]; then
   # ABI_CHECK_FORCE=1 forces AinkradAppKit's abi-check to actually run the
-  # real digester rather than silently skip-and-pass when the beta toolchain
+  # real digester rather than silently skip-and-pass when the Xcode 27 toolchain
   # (the only compiler build that can read the baseline .swiftmodule) is
   # absent. Preflight gates a release, so a missing toolchain here must fail
   # loudly, not sail through as a false pass.
   if (cd "$SIBLINGS/AinkradAppKit" && make abi-check ABI_CHECK_FORCE=1 >/tmp/preflight-abi.log 2>&1); then
     ok "no unreviewed API/ABI changes"
   else
-    fail "abi-check failed — see /tmp/preflight-abi.log (either the ABI actually changed, or this machine is missing the Xcode-beta toolchain the digester requires — check the log for which)"
+    fail "abi-check failed — see /tmp/preflight-abi.log (either the ABI actually changed, or this machine is missing the Xcode 27 toolchain the digester requires — check the log for which)"
     tail -20 /tmp/preflight-abi.log | sed 's/^/    /'
   fi
 else
