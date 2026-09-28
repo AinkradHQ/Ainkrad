@@ -271,7 +271,11 @@ packages:
     # 15b5799: PluginOverlaySize (#44) -- overlay size as a third per-app axis.
     # Within generation 11, which has not shipped.
     # 8682286: overlay sizes are fixed points; large is actually large (#45).
-    revision: 8682286ead7081a57e2a1e10ae8b294fdbad9b09
+    #
+    # 2d8c31d: settings pages tab from two groups; a select with more than four
+    # options is a menu (#48). AinkradAppKit (the renderer) only -- the
+    # contract is unchanged.
+    revision: 2d8c31d08fae964901904f5232b58c5c142d706e
 
 targets:
   AinkradHostRuntime:
@@ -320,8 +324,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ainkrad.app
-        MARKETING_VERSION: "0.21.0"
-        CURRENT_PROJECT_VERSION: "21"
+        MARKETING_VERSION: "0.22.0"
+        CURRENT_PROJECT_VERSION: "22"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_NSHumanReadableCopyright: ""
