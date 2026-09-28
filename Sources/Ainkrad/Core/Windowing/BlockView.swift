@@ -82,7 +82,8 @@ struct BlockView: View {
         let tokens = environment.themeManager.tokens
 
         return PaneContent(app: app, topInset: contentTopInset, fallback: tokens.surface,
-                           paneLocator: environment.paneLocators.sink(forBlock: block.id))
+                           paneLocator: environment.paneLocators.sink(forBlock: block.id),
+                           launchGeneration: block.launchGeneration)
             .overlay(alignment: .top) { grabStrip(tokens: tokens) }
         // The pane body is clear, so a translucent app (Terminal scheme
         // opacity, Git Mage transparency, Sage opacity) reveals whatever
@@ -375,6 +376,8 @@ private struct PaneContent: View {
     /// closure would compare unequal on every render and undo the whole point
     /// of this view's input list.
     let paneLocator: SignalPaneLocatorSink
+    /// `Block.launchGeneration` — a new value remounts the app's root.
+    let launchGeneration: Int
 
     /// Read from the environment rather than taken as an input: it is a plain
     /// `Equatable` value injected one level up in `WorkspacePaneLayer`, so
@@ -398,6 +401,7 @@ private struct PaneContent: View {
                 // back to its mode-less factory inside this accessor, so this
                 // is unconditional and pre-11 apps are unaffected.
                 app.makeRootView(mode: paneMode)
+                    .id(launchGeneration)
                     .padding(.top, topInset)
                     .environment(\.ainkradPaneLocator, paneLocator)
             }

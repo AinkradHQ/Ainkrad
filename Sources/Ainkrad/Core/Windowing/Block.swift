@@ -33,6 +33,12 @@ final class Block: Identifiable, Equatable {
     /// default and the setting would erode to whichever mode was used last.
     var mode: PluginMode?
 
+    /// Bumped to remount this pane's root view, so it runs its `onAppear`
+    /// again — how an already-open pane collects a new launch payload (a
+    /// document to open) without the host opening a second pane. The app's
+    /// state lives in its own store, not the view, so a remount keeps it.
+    var launchGeneration = 0
+
     init(id: UUID = UUID(), appID: String, title: String? = nil) {
         self.id = id
         self.appID = appID
