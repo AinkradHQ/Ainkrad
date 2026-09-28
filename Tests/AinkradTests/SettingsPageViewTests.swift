@@ -156,10 +156,12 @@ struct SettingsPageViewTests {
         #expect(SettingsPageView.rowAreaWidth(page: noMiniMap, totalWidth: total) == total)
     }
 
-    @Test("tabs appear only for pages with three or more groups")
-    func tabsOnlyForTallPages() {
+    /// Two since AppKit #48: an app page with Appearance plus one tab of its
+    /// own was a stacked scroll beside tabbed neighbours.
+    @Test("tabs appear for any page with two or more groups")
+    func tabsForMultiGroupPages() {
         #expect(!SettingsPageView.usesTabs(page: page(groupCount: 1)))
-        #expect(!SettingsPageView.usesTabs(page: page(groupCount: 2)))
+        #expect(SettingsPageView.usesTabs(page: page(groupCount: 2)))
         #expect(SettingsPageView.usesTabs(page: page(groupCount: 3)))
         #expect(SettingsPageView.usesTabs(page: page(groupCount: 4)))
     }
