@@ -425,30 +425,83 @@ private struct PaneContent: View {
 /// up to 184ms (~11 dropped frames), while an idle app drifted 0.9ms. The blur
 /// does not depend on focus at all, so as a separate view with one `Bool` input
 /// SwiftUI compares that input, sees it unchanged, and skips the whole subtree.
+///
+/// ## Why one shared image and not a `drawingGroup`
+///
+/// A `drawingGroup` keeps a pane-sized, full-resolution texture per pane — in
+/// Focus Mode every tab is canvas-sized, so five panes held ~263 MB of
+/// half-float textures of the same blurred picture. At radius 26 nothing
+/// finer than a few points survives the blur, so ONE copy is rendered at half
+/// scale for a fixed canvas and every pane shows it aspect-filled. Size is not
+/// an input: adding a pane, dragging a divider or entering full screen renders
+/// nothing (rendering per size stalled the main thread on every one of those).
 private struct PaneGlassBackdrop: View {
     let isEnabled: Bool
+    @Environment(AppEnvironment.self) private var environment
 
     var body: some View {
         if isEnabled {
-            ZStack {
-                // `isLive: false` — this copy exists only to be blurred at
-                // radius 26, where 30fps starfield drift is not perceptible.
-                // Each blurred pane was running its own full live sky (~570
-                // Scry fills + 18 radial gradients per frame), so three
-                // translucent panes cost four live skies to render one visible
-                // one. The real sky behind the workspace still animates;
-                // nothing the user can actually see stopped moving.
-                AmbientSkyView(isLive: false)
-                FloatingIslandView()
-                    .frame(maxWidth: 860, maxHeight: 574)
+            let key = PaneGlassImageCache.Key(
+                theme: environment.themeManager.currentTheme.rawValue,
+                tokens: environment.themeManager.tokens,
+                effects: environment.skySettingsStore.effectEnabled)
+            GeometryReader { proxy in
+                if let image = PaneGlassImageCache.image(for: key, render: render) {
+                    Image(decorative: image, scale: PaneGlassImageCache.scale)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: proxy.size.width, height: proxy.size.height)
+                        .clipped()
+                }
             }
-            .blur(radius: 26)
-            // The blurred backdrop is a pure function of theme + geometry now
-            // that it no longer animates, so let the compositor cache it as one
-            // texture instead of re-rasterizing the whole stack on every
-            // unrelated pane invalidation.
-            .drawingGroup()
         }
+    }
+
+    private func render() -> CGImage? {
+        let renderer = ImageRenderer(content: backdrop
+            .frame(width: PaneGlassImageCache.canvas.width, height: PaneGlassImageCache.canvas.height)
+            .environment(environment))
+        renderer.scale = PaneGlassImageCache.scale
+        return renderer.cgImage
+    }
+
+    private var backdrop: some View {
+        ZStack {
+            // `isLive: false` — this copy exists only to be blurred at
+            // radius 26, where 30fps starfield drift is not perceptible.
+            // The real sky behind the workspace still animates; nothing the
+            // user can actually see stopped moving.
+            AmbientSkyView(isLive: false)
+            FloatingIslandView()
+                .frame(maxWidth: 860, maxHeight: 574)
+        }
+        .blur(radius: 26)
+    }
+}
+
+/// The one backdrop every pane shows, and what it was rendered for. Not
+/// observed: holding the render must not itself re-render anything.
+@MainActor
+private enum PaneGlassImageCache {
+    static let scale: CGFloat = 0.5
+    /// A typical full-screen canvas; panes of any size aspect-fill from it.
+    static let canvas = CGSize(width: 1712, height: 1008)
+
+    struct Key: Equatable {
+        let theme: String
+        let tokens: DesignTokens
+        let effects: [String: Bool]
+    }
+
+    private static var key: Key?
+    private static var image: CGImage?
+
+    static func image(for key: Key, render: () -> CGImage?) -> CGImage? {
+        if key != self.key {
+            self.key = key
+            image = render()
+        }
+        return image
     }
 }
 
