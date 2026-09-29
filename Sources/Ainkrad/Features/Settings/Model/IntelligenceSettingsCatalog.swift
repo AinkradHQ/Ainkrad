@@ -128,19 +128,7 @@ enum IntelligenceSettingsCatalog {
         return SettingsPage(
             path: page, title: "Skills", icon: "sparkles",
             group: .intelligence, order: 3,
-            groups: [
-                SettingsGroup(path: page.appending("manager"), title: "Skills", fields: [
-                    SettingsField(
-                        path: page.appending("manager").appending("list"),
-                        label: "Skills",
-                        help: "Installed skills and pending proposals.",
-                        keywords: ["skill", "proposal", "command", "slash", "workflow"],
-                        kind: .custom(AnyView(SkillsManagerView(
-                            registry: environment.skillRegistry,
-                            commands: environment.skillCommandStore,
-                            resyncCommands: { environment.resyncSkillCommands() }))))
-                ])
-            ],
+            groups: HostSettingsCatalog.skillGroups(environment, page: page),
             // Evaluated per render, not snapshotted at catalog-build time:
             // proposals can land while the Settings overlay is open, and this
             // badge is the only signal anywhere in the app that any are waiting.
@@ -154,17 +142,7 @@ enum IntelligenceSettingsCatalog {
         return SettingsPage(
             path: page, title: "Tools", icon: "point.3.connected.trianglepath.dotted",
             group: .intelligence, order: 4,
-            groups: [
-                SettingsGroup(path: page.appending("mcp"), title: "MCP servers", fields: [
-                    SettingsField(
-                        path: page.appending("mcp").appending("list"),
-                        label: "MCP servers",
-                        help: "Model Context Protocol servers the assistant can call.",
-                        keywords: ["mcp", "server", "protocol", "tool", "stdio", "integration"],
-                        kind: .custom(AnyView(MCPManagerView(
-                            configStore: environment.mcpServerRegistry.configStore,
-                            registry: environment.mcpServerRegistry))))
-                ]),
+            groups: HostSettingsCatalog.mcpGroups(environment, page: page) + [
                 SettingsGroup(path: page.appending("lsp"), title: "Language servers",
                               footerNote: "LSP servers backing code intelligence.",
                               fields: HostSettingsCatalog.lspFields(environment, group: page.appending("lsp"))),

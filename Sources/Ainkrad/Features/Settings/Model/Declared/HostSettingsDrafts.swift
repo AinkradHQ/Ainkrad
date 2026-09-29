@@ -25,6 +25,23 @@ final class HostSettingsDrafts {
     var lspCommand = ""
     var lspArgs = ""
     var lspGlobs = ""
+    /// MCP servers' editor: which server ("" = a new one), the new server's
+    /// fields, and secret values typed but not yet saved (by Keychain id).
+    var mcpSelection = ""
+    var mcpNew = MCPServerDraft()
+    var mcpSecrets: [String: String] = [:]
+    /// Skills' logic (drafts, bind errors) and the command being bound.
+    @ObservationIgnored private var skillsModel: SkillsManagerViewModel?
+    var newCommand = ""
+    var newCommandSkill = ""
+
+    func skills(_ environment: AppEnvironment) -> SkillsManagerViewModel {
+        if let skillsModel { return skillsModel }
+        let made = SkillsManagerViewModel(registry: environment.skillRegistry, store: environment.skillCommandStore,
+                                          resyncCommands: { [weak environment] in environment?.resyncSkillCommands() })
+        skillsModel = made
+        return made
+    }
     /// The tool hook being composed on Permissions → Tool hooks.
     var hookDraft = ToolHookDraft()
     /// Typed-but-unsaved text for the generation tools' rows, keyed by row id.

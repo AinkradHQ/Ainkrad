@@ -59,7 +59,8 @@ struct SettingsIATests {
             fields.first { $0.keywords.contains(keyword) }
         }
         #expect(field(matching: "api key")?.label == "Connections")
-        #expect(field(matching: "mcp")?.label == "MCP servers")
+        // MCP servers are declared rows now (E7): "mcp" must land on Tools.
+        #expect(field(matching: "mcp").map { Array($0.path.segments.prefix(2)) } == ["intelligence", "tools"])
         // Keyboard is one declared row per shortcut now (E7): "hotkey" must
         // still land on that page.
         #expect(field(matching: "hotkey").map { Array($0.path.segments.prefix(2)) } == ["workspace", "keyboard"])
