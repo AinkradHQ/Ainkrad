@@ -126,7 +126,7 @@ final class LSPServerRegistry {
     /// language so the next file resolution picks up the edited
     /// command/args/globs rather than reusing a client bound to the OLD
     /// config. Mirrors `MCPServerConfigStore.upsert`, fused with the
-    /// reconnect-after-edit hook `MCPManagerView` uses via
+    /// reconnect-after-edit hook the MCP servers tab uses via
     /// `MCPServerRegistry.connectEnabled()` — the LSP equivalent is narrower
     /// (just this one language's cache) since clients are lazy per file
     /// rather than eagerly connected in a batch.

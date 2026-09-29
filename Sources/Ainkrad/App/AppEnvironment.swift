@@ -36,6 +36,8 @@ final class AppEnvironment {
     let secrets: SecretStore
     let registry: BuiltInAppRegistry
     let themeManager: ThemeManager
+    /// Drafts for the declared settings pages — see `HostSettingsDrafts`.
+    let settingsDrafts = HostSettingsDrafts()
     let workspaceManager: WorkspaceManager
     let launcherStore: LauncherStore
     let connectionStore: ConnectionStore

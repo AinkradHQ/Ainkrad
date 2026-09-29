@@ -29,24 +29,11 @@ enum IntelligenceSettingsCatalog {
             path: page, title: "Model & Connections", icon: "brain",
             group: .intelligence, order: 0,
             groups: [
-                SettingsGroup(path: page.appending("connections"), title: "Connections", fields: [
-                    SettingsField(
-                        path: page.appending("connections").appending("list"),
-                        label: "Connections",
-                        help: "Providers, base URLs, and API keys the assistant can reach.",
-                        keywords: ["api key", "token", "openai", "anthropic", "provider",
-                                   "base url", "auth", "subscription", "oauth", "connection"],
-                        kind: .custom(AnyView(SageSettingsView.ConnectionsSection())))
-                ]),
-                SettingsGroup(path: page.appending("picker"), title: "Model", fields: [
-                    SettingsField(
-                        path: page.appending("picker").appending("model"),
-                        label: "Model",
-                        help: "Which model answers, and how much reasoning effort it spends.",
-                        keywords: ["opus", "sonnet", "haiku", "effort", "reasoning", "gpt",
-                                   "claude", "gemini", "llm"],
-                        kind: .custom(AnyView(SageSettingsView.ModelSection())))
-                ])
+                SettingsGroup(path: page.appending("connections"), title: "Connections",
+                              footerNote: "Providers, base URLs, and API keys the assistant can reach.",
+                              fields: HostSettingsCatalog.connectionFields(environment, group: page.appending("connections"))),
+                SettingsGroup(path: page.appending("picker"), title: "Model",
+                              fields: HostSettingsCatalog.modelFields(environment, group: page.appending("picker")))
             ])
     }
 
@@ -54,50 +41,28 @@ enum IntelligenceSettingsCatalog {
 
     private static func permissionsAndSandbox(_ environment: AppEnvironment) -> SettingsPage {
         let page = SettingsPath(["intelligence", "permissions"])
-        let tokens = environment.themeManager.tokens
         return SettingsPage(
             path: page, title: "Permissions & Sandbox", icon: "lock.shield",
             group: .intelligence, order: 1,
             groups: [
-                SettingsGroup(path: page.appending("permissions"), title: "Permissions", fields: [
-                    SettingsField(
-                        path: page.appending("permissions").appending("policy"),
-                        label: "Permissions",
-                        help: "What the assistant may do without asking.",
-                        keywords: ["approve", "allow", "deny", "ask", "auto", "allowlist",
-                                   "full-auto", "permission"],
-                        kind: .custom(AnyView(SageSettingsView.PermissionsSection())))
-                ]),
-                SettingsGroup(path: page.appending("sandbox"), title: "Sandbox", fields: [
-                    SettingsField(
-                        path: page.appending("sandbox").appending("policy"),
-                        label: "Sandbox",
-                        help: "Filesystem and network boundaries for tool execution.",
-                        keywords: ["isolation", "filesystem", "network", "jail", "profile",
-                                   "sandbox", "seatbelt"],
-                        kind: .custom(AnyView(SandboxPolicyUIView(store: environment.sandboxProfileStore))))
-                ]),
+                SettingsGroup(path: page.appending("permissions"), title: "Permissions",
+                              fields: HostSettingsCatalog.agentPermissionFields(environment, group: page.appending("permissions"))),
+                SettingsGroup(path: page.appending("sandbox"), title: "Sandbox",
+                              footerNote: "Trust-tier defaults: the main session runs on the host (trusted); "
+                                  + "background, scheduled, subagent and untrusted-MCP runs get Workspace write "
+                                  + "with the network off.",
+                              fields: HostSettingsCatalog.sandboxFields(environment, group: page.appending("sandbox"))),
+                SettingsGroup(path: page.appending("cloud"), title: "Cloud",
+                              footerNote: "Cloud execution is opt-in per Agent — enable it on an Agent's profile.",
+                              fields: HostSettingsCatalog.cloudFields(environment, group: page.appending("cloud"))),
                 SettingsGroup(path: page.appending("hooks"), title: "Tool hooks",
-                              disclosure: .collapsedByDefault, fields: [
-                    SettingsField(
-                        path: page.appending("hooks").appending("list"),
-                        label: "Tool hooks",
-                        help: "Commands run before or after tool calls.",
-                        keywords: ["hook", "pre", "post", "script", "intercept", "shell"],
-                        kind: .custom(AnyView(ToolHooksSettingsView(
-                            store: environment.toolHooksStore, tokens: tokens))))
-                ]),
+                              footerNote: "Run a shell command before or after a tool call; a hook that runs "
+                                  + "before can block the call.",
+                              fields: HostSettingsCatalog.toolHookFields(environment, group: page.appending("hooks"))),
                 SettingsGroup(path: page.appending("remote"), title: "Remote channel",
-                              disclosure: .collapsedByDefault, fields: [
-                    SettingsField(
-                        path: page.appending("remote").appending("config"),
-                        label: "Remote channel",
-                        help: "Drive the assistant from outside the app.",
-                        keywords: ["remote", "channel", "webhook", "autonomy", "push"],
-                        kind: .custom(AnyView(RemoteChannelSettingsView(
-                            settingsStore: environment.remoteChannelSettingsStore,
-                            service: environment.remoteChannelService))))
-                ])
+                              footerNote: "Drive this agent off-machine over a local, token-authenticated HTTP "
+                                  + "endpoint. Off by default; binds to 127.0.0.1 only.",
+                              fields: HostSettingsCatalog.remoteChannelFields(environment, group: page.appending("remote")))
             ])
     }
 
@@ -108,31 +73,7 @@ enum IntelligenceSettingsCatalog {
         return SettingsPage(
             path: page, title: "Memory", icon: "brain",
             group: .intelligence, order: 2,
-            groups: [
-                SettingsGroup(path: page.appending("index"), title: "Memory", fields: [
-                    SettingsField(
-                        path: page.appending("index").appending("manager"),
-                        label: "Memory",
-                        help: "What the assistant remembers between sessions.",
-                        keywords: ["remember", "recall", "index", "forget", "memory", "embedding"],
-                        kind: .custom(AnyView(memoryView(environment))))
-                ])
-            ])
-    }
-
-    /// The Memory pane, with the same "index couldn't be opened" fallback the
-    /// old hardcoded sidebar row rendered.
-    @ViewBuilder
-    private static func memoryView(_ environment: AppEnvironment) -> some View {
-        if let service = environment.memoryService {
-            MemoryUIView(service: service)
-        } else {
-            AinkradEmptyState(
-                icon: "brain",
-                title: "Memory unavailable",
-                message: "The assistant's memory index couldn't be opened this launch, so it's running memory-less for now. Restart Ainkrad to try again."
-            )
-        }
+            groups: HostSettingsCatalog.memoryGroups(environment, page: page))
     }
 
     // MARK: - Skills
@@ -142,19 +83,7 @@ enum IntelligenceSettingsCatalog {
         return SettingsPage(
             path: page, title: "Skills", icon: "sparkles",
             group: .intelligence, order: 3,
-            groups: [
-                SettingsGroup(path: page.appending("manager"), title: "Skills", fields: [
-                    SettingsField(
-                        path: page.appending("manager").appending("list"),
-                        label: "Skills",
-                        help: "Installed skills and pending proposals.",
-                        keywords: ["skill", "proposal", "command", "slash", "workflow"],
-                        kind: .custom(AnyView(SkillsManagerView(
-                            registry: environment.skillRegistry,
-                            commands: environment.skillCommandStore,
-                            resyncCommands: { environment.resyncSkillCommands() }))))
-                ])
-            ],
+            groups: HostSettingsCatalog.skillGroups(environment, page: page),
             // Evaluated per render, not snapshotted at catalog-build time:
             // proposals can land while the Settings overlay is open, and this
             // badge is the only signal anywhere in the app that any are waiting.
@@ -165,59 +94,19 @@ enum IntelligenceSettingsCatalog {
 
     private static func tools(_ environment: AppEnvironment) -> SettingsPage {
         let page = SettingsPath(["intelligence", "tools"])
-        let tokens = environment.themeManager.tokens
         return SettingsPage(
             path: page, title: "Tools", icon: "point.3.connected.trianglepath.dotted",
             group: .intelligence, order: 4,
-            groups: [
-                SettingsGroup(path: page.appending("mcp"), title: "MCP servers", fields: [
-                    SettingsField(
-                        path: page.appending("mcp").appending("list"),
-                        label: "MCP servers",
-                        help: "Model Context Protocol servers the assistant can call.",
-                        keywords: ["mcp", "server", "protocol", "tool", "stdio", "integration"],
-                        kind: .custom(AnyView(MCPManagerView(
-                            configStore: environment.mcpServerRegistry.configStore,
-                            registry: environment.mcpServerRegistry))))
-                ]),
-                SettingsGroup(path: page.appending("lsp"), title: "Language servers", fields: [
-                    SettingsField(
-                        path: page.appending("lsp").appending("list"),
-                        label: "Language servers",
-                        help: "LSP servers backing code intelligence.",
-                        keywords: ["lsp", "language server", "completion", "diagnostics", "code"],
-                        kind: .custom(AnyView(LSPConfigView(registry: environment.lspServerRegistry))))
-                ]),
-                SettingsGroup(path: page.appending("web"), title: "Web", fields: [
-                    SettingsField(
-                        path: page.appending("web").appending("search"),
-                        label: "Web search",
-                        help: "The search provider the assistant queries.",
-                        keywords: ["search", "browse", "internet", "google", "brave",
-                                   "searxng", "duckduckgo"],
-                        kind: .custom(AnyView(WebToolsSettingsView(
-                            settings: environment.webSearchSettingsStore,
-                            secrets: environment.secrets,
-                            tokens: tokens)))),
-                    SettingsField(
-                        path: page.appending("web").appending("media"),
-                        label: "Media",
-                        help: "Image generation and handling.",
-                        keywords: ["image", "picture", "generate", "media", "diffusion"],
-                        kind: .custom(AnyView(MediaSettingsView(
-                            settings: environment.mediaSettingsStore,
-                            secrets: environment.secrets,
-                            tokens: tokens)))),
-                    SettingsField(
-                        path: page.appending("web").appending("video"),
-                        label: "Video",
-                        help: "Video generation and handling.",
-                        keywords: ["video", "clip", "generate", "movie"],
-                        kind: .custom(AnyView(VideoSettingsView(
-                            persistence: environment.persistence,
-                            secrets: environment.secrets,
-                            tokens: tokens))))
-                ])
+            groups: HostSettingsCatalog.mcpGroups(environment, page: page) + [
+                SettingsGroup(path: page.appending("lsp"), title: "Language servers",
+                              footerNote: "LSP servers backing code intelligence.",
+                              fields: HostSettingsCatalog.lspFields(environment, group: page.appending("lsp"))),
+                SettingsGroup(path: page.appending("web"), title: "Web search",
+                              fields: HostSettingsCatalog.webSearchFields(environment, group: page.appending("web"))),
+                SettingsGroup(path: page.appending("images"), title: "Images",
+                              fields: HostSettingsCatalog.imageFields(environment, group: page.appending("images"))),
+                SettingsGroup(path: page.appending("video"), title: "Video",
+                              fields: HostSettingsCatalog.videoFields(environment, group: page.appending("video")))
             ])
     }
 
@@ -229,15 +118,9 @@ enum IntelligenceSettingsCatalog {
             path: page, title: "Privacy & Data", icon: "eye.slash",
             group: .intelligence, order: 5,
             groups: [
-                SettingsGroup(path: page.appending("context"), title: "Context privacy", fields: [
-                    SettingsField(
-                        path: page.appending("context").appending("policy"),
-                        label: "Context privacy",
-                        help: "What the assistant is allowed to read from your workspace.",
-                        keywords: ["privacy", "context", "redact", "exclude", "data",
-                                   "terminal", "git", "claude.md"],
-                        kind: .custom(AnyView(SageSettingsView.ContextPrivacySection())))
-                ])
+                SettingsGroup(path: page.appending("context"), title: "Context privacy",
+                              footerNote: "What the assistant is allowed to read from your workspace.",
+                              fields: HostSettingsCatalog.contextPrivacyFields(environment, group: page.appending("context")))
             ])
     }
 }

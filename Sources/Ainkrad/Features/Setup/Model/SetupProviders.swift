@@ -50,7 +50,7 @@ enum SetupProviders {
     /// leaves no connection, no Keychain item, and no active-connection id.
     ///
     /// A keyless preset (`ollama`) passes `token: ""` and is probed with
-    /// `.apiKey("")`, exactly as `SageSettingsView+Connections.testConnection`
+    /// `.apiKey("")`, exactly as the Connections tab's Test
     /// does for a connection with no stored secret.
     static func connect(preset: ProviderPreset,
                         token: String,
@@ -137,7 +137,7 @@ enum SetupProviders {
     /// 2. **A credential nobody verified does not satisfy a step whose entire
     ///    purpose is verification.** An earlier version of this asserted that
     ///    "nothing can become active without having passed a probe". That is
-    ///    false: `SageSettingsView+Connections.addConnection` writes a
+    ///    false: the Connections tab's Add writes a
     ///    connection AND its Keychain token with no probe at all, and
     ///    `SageModelPicker.selectConnection` makes any connection active
     ///    unconditionally. So defer → banner → Settings → add a typo'd key →

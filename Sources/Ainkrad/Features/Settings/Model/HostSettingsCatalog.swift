@@ -26,8 +26,8 @@ enum HostSettingsCatalog {
 
     // MARK: - Notifications
 
-    /// Wraps the hand-rolled `SignalSettingsPane` in a catalog page, so it is
-    /// searchable and deep-linkable like every other setting.
+    /// Notifications as declared tabs (`notificationGroups`), searchable and
+    /// deep-linkable like every other setting.
     ///
     /// **This pane existed and was unreachable.** It was built in M1, rendered
     /// in a snapshot for review, and never placed in the navigation — so every
@@ -44,18 +44,7 @@ enum HostSettingsCatalog {
         return [SettingsPage(
             path: page, title: "Notifications", icon: "bell",
             group: .workspace, order: 5,
-            groups: [
-                SettingsGroup(path: page.appending("feed"), title: "Notifications", fields: [
-                    SettingsField(
-                        path: page.appending("feed").appending("pane"),
-                        label: "Notifications",
-                        help: "What each source may interrupt you with, how long the feed "
-                            + "keeps events, and which apps may read other apps' notifications.",
-                        keywords: ["notification", "signal", "feed", "toast", "banner",
-                                   "badge", "mute", "retention", "subscription", "permission"],
-                        kind: .custom(AnyView(NotificationsSettingsView(center: center))))
-                ])
-            ])]
+            groups: notificationGroups(environment, center: center, page: page))]
     }
 
     // MARK: - General
@@ -114,13 +103,8 @@ enum HostSettingsCatalog {
                         isModified: { store.launcherViewMode != LauncherViewMode.allCases[0] },
                         reset: { store.setLauncherViewMode(LauncherViewMode.allCases[0]) })
                 ]),
-                SettingsGroup(path: page.appending("home"), title: "Home", fields: [
-                    SettingsField(
-                        path: page.appending("home").appending("location"),
-                        label: "Ainkrad Home",
-                        help: "The folder holding all of your workspaces and notes.",
-                        keywords: ["vault", "folder", "location", "path", "home", "storage"],
-                        kind: .custom(AnyView(HomeSettingsView()))),
+                SettingsGroup(path: page.appending("home"), title: "Home",
+                              fields: homeFields(environment, group: page.appending("home")) + [
                     SettingsField(
                         path: page.appending("home").appending("rerunSetup"),
                         label: "Re-run setup",
@@ -145,14 +129,11 @@ enum HostSettingsCatalog {
             path: page, title: "You", icon: "person",
             group: .workspace, order: 1,
             groups: [
-                SettingsGroup(path: page.appending("profile"), title: "Profile", fields: [
-                    SettingsField(
-                        path: page.appending("profile").appending("fields"),
-                        label: "About you",
-                        help: "Your name, role and timezone, as the assistant knows them.",
-                        keywords: ["name", "profile", "role", "timezone", "about me", "user"],
-                        kind: .custom(AnyView(UserProfileSettingsView())))
-                ])
+                SettingsGroup(
+                    path: page.appending("profile"), title: "Profile",
+                    footerNote: "These facts are projected into USER.md and the assistant's memory — "
+                        + "they change what it knows about you, not just what it calls you.",
+                    fields: profileFields(environment, group: page.appending("profile")))
             ])
     }
 
@@ -164,37 +145,15 @@ enum HostSettingsCatalog {
             path: page, title: "Appearance", icon: "paintbrush",
             group: .workspace, order: 2,
             groups: [
-                SettingsGroup(path: page.appending("theme"), title: "Theme", fields: [
-                    SettingsField(
-                        path: page.appending("theme").appending("picker"),
-                        label: "Theme",
-                        help: "Accent palette for the whole workspace.",
-                        keywords: ["accent", "color", "dark mode", "neon", "palette"],
-                        kind: .custom(AnyView(AppearanceSettingsView())))
-                ]),
-                SettingsGroup(path: page.appending("livingSky"), title: "Living Sky", fields: [
-                    SettingsField(
-                        path: page.appending("livingSky").appending("controls"),
-                        label: "Living Sky",
-                        help: "The animated backdrop behind the workspace.",
-                        keywords: ["background", "wallpaper", "animation", "parallax"],
-                        kind: .custom(AnyView(LivingSkySettingsView())))
-                ]),
-                // Always expanded. This page is tabbed (3 groups), so the icon
-                // picker already sits behind one hiding mechanism; collapsing
-                // it too is what produced "I can't find the app icons
-                // settings". `AppIconSettingsView` renders its own
-                // `AinkradSettingsPanel(title: "App icon", ...)`, so the tab
-                // label plus that panel's title label it fine without the
-                // catalog's disclosure header.
-                SettingsGroup(path: page.appending("appIcon"), title: "App Icon", fields: [
-                    SettingsField(
-                        path: page.appending("appIcon").appending("picker"),
-                        label: "App icon",
-                        help: "The icon Ainkrad shows in the Dock.",
-                        keywords: ["dock", "icon", "badge"],
-                        kind: .custom(AnyView(AppIconSettingsView())))
-                ])
+                SettingsGroup(path: page.appending("theme"), title: "Theme",
+                              fields: themeFields(environment, group: page.appending("theme"))),
+                SettingsGroup(path: page.appending("overlays"), title: "Overlays",
+                              fields: overlayFields(environment, group: page.appending("overlays"))),
+                SettingsGroup(path: page.appending("livingSky"), title: "Living Sky",
+                              footerNote: "The island artwork itself is never animated.",
+                              fields: livingSkyFields(environment, group: page.appending("livingSky"))),
+                SettingsGroup(path: page.appending("appIcon"), title: "App Icon",
+                              fields: appIconFields(environment, group: page.appending("appIcon")))
             ])
     }
 
@@ -202,7 +161,6 @@ enum HostSettingsCatalog {
 
     private static func soundAndVoice(_ environment: AppEnvironment) -> SettingsPage {
         let page = SettingsPath(["workspace", "soundAndVoice"])
-        let tokens = environment.themeManager.tokens
         return SettingsPage(
             path: page, title: "Sound & Voice", icon: "speaker.wave.2",
             group: .workspace, order: 3,
@@ -216,26 +174,11 @@ enum HostSettingsCatalog {
                 // pane. A correct conversion needs a COMPOSITE row kind the SDK
                 // does not have yet; until then this is the right use of the
                 // escape hatch. Voice, directly below, decomposed cleanly.
-                SettingsGroup(path: page.appending("sound"), title: "Sound", fields: [
-                    SettingsField(
-                        path: page.appending("sound").appending("effects"),
-                        label: "Sound effects",
-                        help: "Workspace interaction sounds.",
-                        keywords: ["audio", "volume", "mute", "chime"],
-                        kind: .custom(AnyView(SoundSettingsView())))
-                ]),
+                SettingsGroup(path: page.appending("sound"), title: "Sound",
+                              fields: soundFields(environment, group: page.appending("sound"))),
                 voiceGroup(environment, page: page),
-                SettingsGroup(path: page.appending("speech"), title: "Speech", fields: [
-                    SettingsField(
-                        path: page.appending("speech").appending("textToSpeech"),
-                        label: "Spoken responses",
-                        help: "How the assistant reads its replies aloud.",
-                        keywords: ["tts", "speak", "read aloud", "voice"],
-                        kind: .custom(AnyView(TTSSettingsView(
-                            persistence: environment.persistence,
-                            secrets: environment.secrets,
-                            tokens: tokens))))
-                ])
+                SettingsGroup(path: page.appending("speech"), title: "Speech",
+                              fields: speechFields(environment, group: page.appending("speech")))
             ])
     }
 
@@ -245,8 +188,6 @@ enum HostSettingsCatalog {
         // `environment.voiceSettingsStore`.
         let settings = environment.voiceService.settings
         let connections = environment.connectionStore
-        let shortcuts = environment.shortcutStore
-        let tokens = environment.themeManager.tokens
 
         func backendTitle(_ kind: TranscriptionBackendKind) -> String {
             kind == .onDevice ? "On-device (private)" : "Provider (Whisper)"
@@ -330,8 +271,8 @@ enum HostSettingsCatalog {
                 reset: { settings.setProviderConnection(nil) }),
             // Not `.secure`: this is a MODEL NAME ("whisper-1"), not a
             // credential. Marking it secure would hide it from search for no
-            // security gain. The TTS API key is the page's only real secret and
-            // it lives in the out-of-scope `TTSSettingsView` pane.
+            // security gain. The TTS API key (Speech group) is the page's only
+            // real secret.
             SettingsField(
                 path: voice.appending("providerModel"),
                 label: "Model",
@@ -358,15 +299,7 @@ enum HostSettingsCatalog {
             // current chord. It is rebound in Settings → Keyboard, so there is
             // nothing to edit; the kit has no informational field kind and one
             // is not worth adding for a single row.
-            SettingsField(
-                path: voice.appending("hotkey"),
-                label: "Push-to-talk hotkey",
-                help: "Change this in Settings → Keyboard.",
-                // Deliberately NOT "hotkey": Keyboard ▸ "Keyboard shortcuts" is
-                // where a chord is actually rebound and must stay the top hit
-                // for that word. This row is a read-only pointer to it.
-                keywords: ["push to talk", "ptt", "chord", "dictation shortcut"],
-                kind: .custom(AnyView(VoiceHotkeyDisplay(shortcuts: shortcuts, tokens: tokens))))
+            hotkeyField(environment, path: voice.appending("hotkey"))
         ])
     }
 
@@ -377,15 +310,6 @@ enum HostSettingsCatalog {
         return SettingsPage(
             path: page, title: "Keyboard", icon: "keyboard",
             group: .workspace, order: 4,
-            groups: [
-                SettingsGroup(path: page.appending("shortcuts"), title: "Shortcuts", fields: [
-                    SettingsField(
-                        path: page.appending("shortcuts").appending("list"),
-                        label: "Keyboard shortcuts",
-                        help: "Global and workspace key bindings.",
-                        keywords: ["hotkey", "binding", "key", "chord", "command"],
-                        kind: .custom(AnyView(ShortcutsSettingsView())))
-                ])
-            ])
+            groups: keyboardGroups(environment, page: page))
     }
 }
