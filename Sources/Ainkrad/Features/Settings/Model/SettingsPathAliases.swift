@@ -23,9 +23,8 @@ enum SettingsPathAliases {
         "assistant.voice":      "workspace.soundAndVoice",
         // Sage's appearance (surface opacity, blur, message font and size) did
         // NOT move to WORKSPACE ▸ Appearance — that page is the workspace
-        // theme, Living Sky, and app icon. Those controls are still
-        // `SageSettingsView.appearanceSection`, which renders on Sage's own
-        // app page.
+        // theme, Living Sky, and app icon. They are the Appearance tab of
+        // Sage's own app page.
         "assistant.appearance": "app.sage",
         // The v0.16.0 app rename. An app's settings page id is derived from its
         // app id, so renaming the app moved its page. These keep a persisted

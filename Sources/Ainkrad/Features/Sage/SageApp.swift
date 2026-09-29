@@ -15,9 +15,9 @@ enum SageApp: AinkradApp {
         makeRootView(host: host, mode: .advanced)
     }
 
-    static func makeSettingsView(host: HostServices) -> AnyView {
-        AnyView(SageSettingsView())
-    }
+    /// Sage's settings are declared by the host (`AppSettingsCatalog`'s
+    /// built-in seam), so there is no view to make.
+    static func makeSettingsView(host: HostServices) -> AnyView { AnyView(EmptyView()) }
 
     /// The Sage's window fill for a given surface opacity. Translucent
     /// (so `TileLayoutView.hasTranslucentPane` triggers and the header unifies

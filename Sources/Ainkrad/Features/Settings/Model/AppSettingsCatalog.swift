@@ -14,10 +14,10 @@ import AinkradHostRuntime
 /// blur toggle — see `appearanceTab`. There is no separate Surface tab.
 @MainActor
 enum AppSettingsCatalog {
-    /// Apps that must NOT receive the host's blur toggle: Sage has an in-app
-    /// Appearance tab of its own. (An app that declares a `blur` field — Hoard —
-    /// is skipped by `appearanceTab` without being listed here.)
-    private static var ownsItsAppearance: Set<String> { [SageApp.id] }
+    /// Apps that must NOT receive the host's blur toggle. None today: an app
+    /// that declares its own `blur` field (Hoard, Sage) is skipped by
+    /// `appearanceTab` without being listed here.
+    private static var ownsItsAppearance: Set<String> { [] }
 
     static func pages(environment: AppEnvironment) -> [SettingsPage] {
         environment.registry.enabledApps.enumerated().map { index, app in
@@ -114,6 +114,10 @@ enum AppSettingsCatalog {
     ) -> [SettingsGroup]? {
         switch appID {
         case HoardApp.id: return HoardSettingsCatalog.groups(root: root, environment: environment)
+        // Sage's page is its appearance, merged into the Appearance tab.
+        case SageApp.id: return [HostSettingsCatalog.sageAppearanceGroup(environment, root: root)]
+        // Scry has nothing of its own to set; the Appearance tab is its page.
+        case ScryApp.id: return []
         default: return nil
         }
     }

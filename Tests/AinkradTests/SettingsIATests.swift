@@ -58,7 +58,9 @@ struct SettingsIATests {
         func field(matching keyword: String) -> SettingsField? {
             fields.first { $0.keywords.contains(keyword) }
         }
-        #expect(field(matching: "api key")?.label == "Connections")
+        // Connections are declared rows now (E7): "api key" must land there.
+        #expect(field(matching: "api key").map { Array($0.path.segments.prefix(3)) }
+                == ["intelligence", "model", "connections"])
         // MCP servers are declared rows now (E7): "mcp" must land on Tools.
         #expect(field(matching: "mcp").map { Array($0.path.segments.prefix(2)) } == ["intelligence", "tools"])
         // Keyboard is one declared row per shortcut now (E7): "hotkey" must

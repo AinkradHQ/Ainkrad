@@ -42,6 +42,39 @@ final class HostSettingsDrafts {
         skillsModel = made
         return made
     }
+    /// Sandbox's editor: the user profile being edited (nil = none chosen)
+    /// and its list fields as typed.
+    var sandboxDraft: SandboxProfile?
+    var sandboxReadable = ""
+    var sandboxWritable = ""
+    var sandboxHosts = ""
+    var sandboxTools = ""
+    var sandboxExplainTool = SandboxPolicyExplainer.sampleToolNames[0]
+    /// The model picker the Model rows read, and the connection it last
+    /// fetched models for (refetched when the active connection changes).
+    @ObservationIgnored private var modelPickerModel: SageModelPickerModel?
+    @ObservationIgnored var modelsFetchedFor: UUID?
+
+    func modelPicker() -> SageModelPickerModel {
+        if let modelPickerModel { return modelPickerModel }
+        let made = SageModelPickerModel()
+        modelPickerModel = made
+        return made
+    }
+    /// Connections: the editor's selection ("" = a new connection), the new
+    /// connection's fields, test results, and one sign-in controller per
+    /// Claude connection. `revision` re-renders after async sign-in steps,
+    /// since the controller is an ObservableObject the catalog doesn't observe.
+    var connectionSelection = ""
+    var newConnectionPreset = "openai"
+    var newConnectionName = ""
+    var newConnectionURL = ""
+    var newConnectionKey = ""
+    var newConnectionSubscription = false
+    var connectionPaste = ""
+    var connectionTests: [UUID: String] = [:]
+    var revision = 0
+    @ObservationIgnored var oauthControllers: [UUID: ClaudeOAuthLoginController] = [:]
     /// The tool hook being composed on Permissions → Tool hooks.
     var hookDraft = ToolHookDraft()
     /// Typed-but-unsaved text for the generation tools' rows, keyed by row id.
