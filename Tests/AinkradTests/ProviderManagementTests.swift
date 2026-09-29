@@ -6,24 +6,18 @@ import Foundation
 @MainActor
 struct ProviderManagementTests {
     @Test func imagePresetsAreValidHTTPSEndpoints() {
-        #expect(!MediaSettingsView.imagePresets.isEmpty)
-        for p in MediaSettingsView.imagePresets {
+        #expect(!HostSettingsCatalog.imagePresets.isEmpty)
+        for p in HostSettingsCatalog.imagePresets {
             #expect(!p.label.isEmpty)
-            #expect(p.baseURL.hasPrefix("https://"))
+            #expect(p.url.hasPrefix("https://"))
         }
     }
 
     @Test func ttsPresetsAreValidHTTPSEndpoints() {
-        #expect(!TTSSettingsView.ttsPresets.isEmpty)
-        for p in TTSSettingsView.ttsPresets {
+        #expect(!HostSettingsCatalog.speechPresets.isEmpty)
+        for p in HostSettingsCatalog.speechPresets {
             #expect(!p.label.isEmpty)
-            #expect(p.baseURL.hasPrefix("https://"))
+            #expect(p.url.hasPrefix("https://"))
         }
-    }
-
-    @Test func providerOptionEquatable() {
-        let a = ProviderOption(id: "openai", label: "OpenAI", configured: true, keyless: false)
-        let b = ProviderOption(id: "openai", label: "OpenAI", configured: true, keyless: false)
-        #expect(a == b)
     }
 }

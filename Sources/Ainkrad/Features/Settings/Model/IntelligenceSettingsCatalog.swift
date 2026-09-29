@@ -165,7 +165,6 @@ enum IntelligenceSettingsCatalog {
 
     private static func tools(_ environment: AppEnvironment) -> SettingsPage {
         let page = SettingsPath(["intelligence", "tools"])
-        let tokens = environment.themeManager.tokens
         return SettingsPage(
             path: page, title: "Tools", icon: "point.3.connected.trianglepath.dotted",
             group: .intelligence, order: 4,
@@ -188,36 +187,12 @@ enum IntelligenceSettingsCatalog {
                         keywords: ["lsp", "language server", "completion", "diagnostics", "code"],
                         kind: .custom(AnyView(LSPConfigView(registry: environment.lspServerRegistry))))
                 ]),
-                SettingsGroup(path: page.appending("web"), title: "Web", fields: [
-                    SettingsField(
-                        path: page.appending("web").appending("search"),
-                        label: "Web search",
-                        help: "The search provider the assistant queries.",
-                        keywords: ["search", "browse", "internet", "google", "brave",
-                                   "searxng", "duckduckgo"],
-                        kind: .custom(AnyView(WebToolsSettingsView(
-                            settings: environment.webSearchSettingsStore,
-                            secrets: environment.secrets,
-                            tokens: tokens)))),
-                    SettingsField(
-                        path: page.appending("web").appending("media"),
-                        label: "Media",
-                        help: "Image generation and handling.",
-                        keywords: ["image", "picture", "generate", "media", "diffusion"],
-                        kind: .custom(AnyView(MediaSettingsView(
-                            settings: environment.mediaSettingsStore,
-                            secrets: environment.secrets,
-                            tokens: tokens)))),
-                    SettingsField(
-                        path: page.appending("web").appending("video"),
-                        label: "Video",
-                        help: "Video generation and handling.",
-                        keywords: ["video", "clip", "generate", "movie"],
-                        kind: .custom(AnyView(VideoSettingsView(
-                            persistence: environment.persistence,
-                            secrets: environment.secrets,
-                            tokens: tokens))))
-                ])
+                SettingsGroup(path: page.appending("web"), title: "Web search",
+                              fields: HostSettingsCatalog.webSearchFields(environment, group: page.appending("web"))),
+                SettingsGroup(path: page.appending("images"), title: "Images",
+                              fields: HostSettingsCatalog.imageFields(environment, group: page.appending("images"))),
+                SettingsGroup(path: page.appending("video"), title: "Video",
+                              fields: HostSettingsCatalog.videoFields(environment, group: page.appending("video")))
             ])
     }
 

@@ -26,7 +26,9 @@ struct SettingsIATests {
     func everyAssistantSectionIsPlaced() {
         let labels = Set(catalog.pages(in: .intelligence).flatMap { $0.allFields.map(\.label) })
         for required in ["Connections", "Model", "Permissions", "Sandbox", "Tool hooks",
-                         "Remote channel", "Context privacy", "Web search", "Media", "Video"] {
+                         "Remote channel", "Context privacy",
+                         // Declared rows now (E7): each tool's provider row.
+                         "Search provider", "Image provider", "Video provider"] {
             #expect(labels.contains(required), "\(required) has no home")
         }
     }
@@ -54,7 +56,9 @@ struct SettingsIATests {
         }
         #expect(field(matching: "api key")?.label == "Connections")
         #expect(field(matching: "mcp")?.label == "MCP servers")
-        #expect(field(matching: "hotkey")?.label == "Keyboard shortcuts")
+        // Keyboard is one declared row per shortcut now (E7): "hotkey" must
+        // still land on that page.
+        #expect(field(matching: "hotkey").map { Array($0.path.segments.prefix(2)) } == ["workspace", "keyboard"])
     }
 
     @Test("Skills is a page of its own")
