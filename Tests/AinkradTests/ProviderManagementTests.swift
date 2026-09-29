@@ -14,10 +14,10 @@ struct ProviderManagementTests {
     }
 
     @Test func ttsPresetsAreValidHTTPSEndpoints() {
-        #expect(!TTSSettingsView.ttsPresets.isEmpty)
-        for p in TTSSettingsView.ttsPresets {
+        #expect(!HostSettingsCatalog.speechPresets.isEmpty)
+        for p in HostSettingsCatalog.speechPresets {
             #expect(!p.label.isEmpty)
-            #expect(p.baseURL.hasPrefix("https://"))
+            #expect(p.url.hasPrefix("https://"))
         }
     }
 

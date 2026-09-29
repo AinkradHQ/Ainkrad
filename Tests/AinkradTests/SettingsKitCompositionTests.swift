@@ -61,7 +61,7 @@ struct SettingsKitCompositionTests {
         //       pane: one row per fact would just be four near-identical text
         //       fields with no shared framing.
         //   25  Task 11 added the Home group to General — one `.custom` field
-        //       (`HomeSettingsView`) showing the wizard-adopted vault location
+        //       (the Home row) showing the wizard-adopted vault location
         //       (path + Reveal in Finder) as a single read-only unit, for the
         //       same reason: it is not a control to decompose, it is a fact
         //       with an action attached.
