@@ -24,7 +24,10 @@ struct SettingsIATests {
 
     @Test("every former Sage tab section has a home in INTELLIGENCE")
     func everyAssistantSectionIsPlaced() {
-        let labels = Set(catalog.pages(in: .intelligence).flatMap { $0.allFields.map(\.label) })
+        // A section's home is a tab (group) title or a row label — declared
+        // managers (E7) are tabs of rows, not one row named after the section.
+        let pages = catalog.pages(in: .intelligence)
+        let labels = Set(pages.flatMap { $0.allFields.map(\.label) + $0.groups.map(\.title) })
         for required in ["Connections", "Model", "Permissions", "Sandbox", "Tool hooks",
                          "Remote channel", "Context privacy",
                          // Declared rows now (E7): each tool's provider row.
@@ -35,7 +38,8 @@ struct SettingsIATests {
 
     @Test("Memory, MCP, Language servers and Skills are catalog pages now")
     func formerSidebarRowsArePlaced() {
-        let labels = Set(catalog.pages(in: .intelligence).flatMap { $0.allFields.map(\.label) })
+        let pages = catalog.pages(in: .intelligence)
+        let labels = Set(pages.flatMap { $0.allFields.map(\.label) + $0.groups.map(\.title) })
         for required in ["Memory", "MCP servers", "Language servers", "Skills"] {
             #expect(labels.contains(required), "\(required) has no home")
         }

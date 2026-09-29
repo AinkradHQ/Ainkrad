@@ -18,6 +18,15 @@ final class HostSettingsDrafts {
     var speechModel: String?
     var speechBaseURL: String?
     @ObservationIgnored var homePath: URL??
+    /// Language servers' editor: which server it shows ("" = a new one) and
+    /// the fields as typed.
+    var lspSelection = ""
+    var lspID = ""
+    var lspCommand = ""
+    var lspArgs = ""
+    var lspGlobs = ""
+    /// The tool hook being composed on Permissions → Tool hooks.
+    var hookDraft = ToolHookDraft()
     /// Typed-but-unsaved text for the generation tools' rows, keyed by row id.
     var text: [String: String] = [:]
     @ObservationIgnored private var videoStore: VideoSettingsStore?

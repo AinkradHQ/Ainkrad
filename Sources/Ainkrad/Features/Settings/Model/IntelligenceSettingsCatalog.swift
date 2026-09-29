@@ -54,7 +54,6 @@ enum IntelligenceSettingsCatalog {
 
     private static func permissionsAndSandbox(_ environment: AppEnvironment) -> SettingsPage {
         let page = SettingsPath(["intelligence", "permissions"])
-        let tokens = environment.themeManager.tokens
         return SettingsPage(
             path: page, title: "Permissions & Sandbox", icon: "lock.shield",
             group: .intelligence, order: 1,
@@ -78,26 +77,13 @@ enum IntelligenceSettingsCatalog {
                         kind: .custom(AnyView(SandboxPolicyUIView(store: environment.sandboxProfileStore))))
                 ]),
                 SettingsGroup(path: page.appending("hooks"), title: "Tool hooks",
-                              disclosure: .collapsedByDefault, fields: [
-                    SettingsField(
-                        path: page.appending("hooks").appending("list"),
-                        label: "Tool hooks",
-                        help: "Commands run before or after tool calls.",
-                        keywords: ["hook", "pre", "post", "script", "intercept", "shell"],
-                        kind: .custom(AnyView(ToolHooksSettingsView(
-                            store: environment.toolHooksStore, tokens: tokens))))
-                ]),
+                              footerNote: "Run a shell command before or after a tool call; a hook that runs "
+                                  + "before can block the call.",
+                              fields: HostSettingsCatalog.toolHookFields(environment, group: page.appending("hooks"))),
                 SettingsGroup(path: page.appending("remote"), title: "Remote channel",
-                              disclosure: .collapsedByDefault, fields: [
-                    SettingsField(
-                        path: page.appending("remote").appending("config"),
-                        label: "Remote channel",
-                        help: "Drive the assistant from outside the app.",
-                        keywords: ["remote", "channel", "webhook", "autonomy", "push"],
-                        kind: .custom(AnyView(RemoteChannelSettingsView(
-                            settingsStore: environment.remoteChannelSettingsStore,
-                            service: environment.remoteChannelService))))
-                ])
+                              footerNote: "Drive this agent off-machine over a local, token-authenticated HTTP "
+                                  + "endpoint. Off by default; binds to 127.0.0.1 only.",
+                              fields: HostSettingsCatalog.remoteChannelFields(environment, group: page.appending("remote")))
             ])
     }
 
@@ -179,14 +165,9 @@ enum IntelligenceSettingsCatalog {
                             configStore: environment.mcpServerRegistry.configStore,
                             registry: environment.mcpServerRegistry))))
                 ]),
-                SettingsGroup(path: page.appending("lsp"), title: "Language servers", fields: [
-                    SettingsField(
-                        path: page.appending("lsp").appending("list"),
-                        label: "Language servers",
-                        help: "LSP servers backing code intelligence.",
-                        keywords: ["lsp", "language server", "completion", "diagnostics", "code"],
-                        kind: .custom(AnyView(LSPConfigView(registry: environment.lspServerRegistry))))
-                ]),
+                SettingsGroup(path: page.appending("lsp"), title: "Language servers",
+                              footerNote: "LSP servers backing code intelligence.",
+                              fields: HostSettingsCatalog.lspFields(environment, group: page.appending("lsp"))),
                 SettingsGroup(path: page.appending("web"), title: "Web search",
                               fields: HostSettingsCatalog.webSearchFields(environment, group: page.appending("web"))),
                 SettingsGroup(path: page.appending("images"), title: "Images",
