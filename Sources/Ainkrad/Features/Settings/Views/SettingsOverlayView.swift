@@ -327,6 +327,7 @@ struct SettingsOverlayView: View {
                     SettingsPageView(page: page,
                                      matchedPaths: index.matchedPaths(q, on: page),
                                      highlightedPath: displayedHighlight)
+                        .id(page.path)
                 }
             } else {
                 AinkradEmptyState(icon: "gearshape", title: "Nothing here",
@@ -334,7 +335,13 @@ struct SettingsOverlayView: View {
             }
         case .browsing:
             if let page = displayedPage {
+                // One identity per page: the view's selected tab is `@State`,
+                // and reused across pages it carried the last page's tab over —
+                // the content clamped to a real tab while the tab bar
+                // highlighted none. A fresh view opens on the first tab (or
+                // the deep-linked one).
                 SettingsPageView(page: page, highlightedPath: displayedHighlight)
+                    .id(page.path)
             } else {
                 AinkradEmptyState(icon: "gearshape", title: "Nothing here",
                                   message: "That settings page is no longer available.")

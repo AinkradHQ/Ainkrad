@@ -79,11 +79,12 @@ extension HostSettingsCatalog {
     }
 
     private static func speechLabel(_ id: String) -> String {
+        // Short: four options draw as a segmented control on the control rail.
         switch id {
-        case "openai": "OpenAI (cloud)"
-        case "elevenlabs": "ElevenLabs (cloud)"
-        case "custom": "Custom (OpenAI-compatible)"
-        default: "On-device (keyless)"
+        case "openai": "OpenAI"
+        case "elevenlabs": "ElevenLabs"
+        case "custom": "Custom"
+        default: "On-device"
         }
     }
 
@@ -101,11 +102,14 @@ extension HostSettingsCatalog {
         var fields = [SettingsField(
             path: group.appending("provider"), label: "Voice provider",
             help: speechSecretID(provider) == nil
-                ? "On-device speech synthesis — no key required, works offline."
-                : "Cloud voices sound more natural but require a key. On-device speech is free and offline.",
+                ? "On-device speech — no key required, works offline."
+                : (configured(provider)
+                    ? "Cloud voices sound more natural but need a key. On-device is free and offline."
+                    : "\(speechLabel(provider)) needs setup: "
+                        + (provider == "custom" ? "a base URL and an API key, below." : "an API key, below.")),
             keywords: ["tts", "speak", "read aloud", "voice", "provider"],
             kind: .select(options: speechProviders.map {
-                SettingsOption(id: $0, title: speechLabel($0) + (configured($0) ? "" : " · needs setup"))
+                SettingsOption(id: $0, title: speechLabel($0))
             }, selection: Binding(get: { settings.document.provider },
                                   set: { settings.setProvider($0); drafts.resetSpeechDrafts() })),
             defaultDescription: speechLabel("onDevice"),
