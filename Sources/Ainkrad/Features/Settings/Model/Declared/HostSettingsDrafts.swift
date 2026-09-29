@@ -18,6 +18,19 @@ final class HostSettingsDrafts {
     var speechModel: String?
     var speechBaseURL: String?
     @ObservationIgnored var homePath: URL??
+    /// Typed-but-unsaved text for the generation tools' rows, keyed by row id.
+    var text: [String: String] = [:]
+    @ObservationIgnored private var videoStore: VideoSettingsStore?
+
+    func video(_ persistence: PersistenceStore) -> VideoSettingsStore {
+        if let videoStore { return videoStore }
+        let made = VideoSettingsStore(persistence: persistence)
+        videoStore = made
+        return made
+    }
+    /// The one shortcut recorder the Keyboard rows share. Stopped when the
+    /// settings overlay closes, so a key pressed later never rebinds anything.
+    let recorder = ShortcutRecorder()
 
     func speech(_ persistence: PersistenceStore) -> SpeechSynthesisSettingsStore {
         if let speechStore { return speechStore }

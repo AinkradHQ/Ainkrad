@@ -82,6 +82,9 @@ struct SettingsOverlayView: View {
                 Color.black.opacity(OverlayChrome.backdropOpacity)
                     .ignoresSafeArea()
                     .onTapGesture { onDismiss() }
+                    // A shortcut still recording when Settings closes would
+                    // rebind whatever key is pressed next, anywhere.
+                    .onDisappear { environment.settingsDrafts.recorder.stop() }
 
                 let size = SettingsGeometry.panelSize(in: geo.size)
                 panel(tokens: tokens)

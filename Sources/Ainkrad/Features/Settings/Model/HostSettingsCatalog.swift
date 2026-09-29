@@ -321,15 +321,6 @@ enum HostSettingsCatalog {
         return SettingsPage(
             path: page, title: "Keyboard", icon: "keyboard",
             group: .workspace, order: 4,
-            groups: [
-                SettingsGroup(path: page.appending("shortcuts"), title: "Shortcuts", fields: [
-                    SettingsField(
-                        path: page.appending("shortcuts").appending("list"),
-                        label: "Keyboard shortcuts",
-                        help: "Global and workspace key bindings.",
-                        keywords: ["hotkey", "binding", "key", "chord", "command"],
-                        kind: .custom(AnyView(ShortcutsSettingsView())))
-                ])
-            ])
+            groups: keyboardGroups(environment, page: page))
     }
 }
