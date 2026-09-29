@@ -235,41 +235,6 @@ struct SignalSnapshotTests {
         try png.write(to: outputDirectory.appendingPathComponent("signal-feed-grouped.png"))
     }
 
-    @Test("render a source's notification sheet, with its kinds")
-    func renderSourceSheet() throws {
-        let theme = Theme.neonBlue
-        var rules = RoutingRules.default
-        let raven = SignalSource.app(appID: "com.ainkrad.raven")
-        rules.interruptFloor[raven] = .warning
-        SignalDeliveryMode.feedOnly.apply(to: &rules, source: raven, kind: "sync.failed")
-
-        let view = ZStack {
-            HostThemeTokens(from: theme).background
-            AinkradPanel(showsBrackets: true) {
-                SourceNotificationSheet(
-                    source: raven, sourceName: "Raven",
-                    rules: .constant(rules),
-                    // Noisiest first, which is the row the user came to find.
-                    activity: [
-                        SignalKindActivity(kind: "sync.failed", count: 19, lastSeen: Date()),
-                        SignalKindActivity(kind: "build.failed", count: 4, lastSeen: Date()),
-                        SignalKindActivity(kind: "index.rebuilt", count: 1, lastSeen: Date()),
-                    ])
-                .frame(width: 520)
-                .padding(AinkradSpacing.md)
-            }
-        }
-            .frame(width: 620, height: 640)
-            .environment(\.ainkradTheme, HostThemeTokens(from: theme))
-            .environment(\.ainkradTypography, Self.hostTypography)
-            .environment(\.ainkradStatusColors, AinkradStatusColors(
-                success: theme.tokens.success, warning: theme.tokens.warning,
-                danger: theme.tokens.danger))
-
-        let png = try Self.render(view, size: CGSize(width: 620, height: 640))
-        try png.write(to: outputDirectory.appendingPathComponent("signal-source-sheet.png"))
-    }
-
     @Test("render the toast stack")
     func renderToastStack() throws {
         let now = Date()
@@ -303,64 +268,6 @@ struct SignalSnapshotTests {
 
         let png = try Self.render(view, size: CGSize(width: 420, height: 340))
         try png.write(to: outputDirectory.appendingPathComponent("signal-toasts.png"))
-    }
-
-    @Test("render the notifications settings pane")
-    func renderSettingsPane() throws {
-        let now = Date()
-        let theme = Theme.neonBlue
-        let url = FileManager.default.temporaryDirectory
-            .appendingPathComponent("signal-\(UUID().uuidString).sqlite")
-        defer { try? FileManager.default.removeItem(at: url) }
-
-        final class NullDeliverer: SignalDeliverer {
-            func deliver(_ event: SignalEvent, to channels: Set<DeliveryChannel>) {}
-        }
-        struct Ctx: SignalContextProviding {
-            var deliveryContext = DeliveryContext(hostIsFrontmost: true, visibleAppIDs: [],
-                                                  systemDoNotDisturb: false, hostFocusMode: false)
-        }
-        let center = SignalCenter(store: try SignalStore(url: url),
-                                  deliverer: NullDeliverer(), contextProvider: Ctx())
-        for event in sampleEvents(now: now) {
-            center.emit(SignalDraft(kind: event.kind, severity: event.severity,
-                                    title: event.title, body: event.body), from: event.source)
-        }
-        // Enough configured state that the pane is not all defaults: one
-        // source off, one with per-kind overrides and a floor, so the status
-        // lines under the rows actually render.
-        center.rules.mutedSources.insert(.sage)
-        SignalDeliveryMode.feedOnly.apply(to: &center.rules,
-                                          source: .app(appID: "com.ainkrad.raven"),
-                                          kind: "build.failed")
-        center.rules.interruptFloor[.app(appID: "com.ainkrad.raven")] = .warning
-        center.rules.urgentBypass.insert(.app(appID: "com.ainkrad.quest"))
-
-        let view = SignalSettingsPane(
-            center: center,
-            sources: [.host, .sage,
-                      .app(appID: "com.ainkrad.raven"), .app(appID: "com.ainkrad.quest")],
-            // Real names, as the live pane supplies. Without it the rows read
-            // as raw bundle ids and wrap, which is a property of the snapshot
-            // rather than of the pane.
-            displayName: { $0.split(separator: ".").last.map(String.init)?.capitalized ?? $0 })
-            .padding(16)
-            .frame(width: 560, alignment: .top)
-            .frame(maxHeight: .infinity, alignment: .top)
-            .background(HostThemeTokens(from: theme).background)
-            .environment(\.ainkradTheme, HostThemeTokens(from: theme))
-            .environment(\.ainkradTypography, Self.hostTypography)
-            .environment(\.ainkradStatusColors, AinkradStatusColors(
-                success: theme.tokens.success,
-                warning: theme.tokens.warning,
-                danger: theme.tokens.danger))
-
-        // Tall enough for the WHOLE pane. At 660 the content overflowed its
-        // frame and the capture began part-way down, so the snapshot silently
-        // omitted the first three panels — including the caption that defines
-        // the vocabulary every control below it uses.
-        let png = try Self.render(view, size: CGSize(width: 560, height: 1500))
-        try png.write(to: outputDirectory.appendingPathComponent("signal-settings.png"))
     }
 
     @Test("render the launcher tiles with unread badges")
@@ -498,21 +405,6 @@ struct SignalSnapshotTests {
             isReapproval: true), width: 420)
         try writeSnapshot(view, size: CGSize(width: 476, height: 500),
                           named: "subscription-reapproval.png")
-    }
-
-    @Test("render the settings section, showing an allowed and a refused app")
-    func renderSettingsSection() throws {
-        let view = themed(SubscriptionSettingsSection(rows: [
-            .init(id: "gitmage", appName: "Git Mage",
-                  subscriptions: SignalSubscription.parse(["app:raven/build.*",
-                                                           "host/run.finished"]),
-                  isApproved: true),
-            .init(id: "leyline", appName: "Leyline",
-                  subscriptions: SignalSubscription.parse(["sage/*"]),
-                  isApproved: false),
-        ], displayName: Self.sampleDisplayNames), width: 420)
-        try writeSnapshot(view, size: CGSize(width: 476, height: 360),
-                          named: "subscription-settings.png")
     }
 
 }

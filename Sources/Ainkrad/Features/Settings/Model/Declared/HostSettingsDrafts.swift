@@ -75,6 +75,10 @@ final class HostSettingsDrafts {
     var connectionTests: [UUID: String] = [:]
     var revision = 0
     @ObservationIgnored var oauthControllers: [UUID: ClaudeOAuthLoginController] = [:]
+    /// Notifications: the source whose details the editor shows ("" = none),
+    /// and the stats window.
+    var notificationSource = ""
+    var healthWindow: NotificationStats.Window = .week
     /// The tool hook being composed on Permissions → Tool hooks.
     var hookDraft = ToolHookDraft()
     /// Typed-but-unsaved text for the generation tools' rows, keyed by row id.

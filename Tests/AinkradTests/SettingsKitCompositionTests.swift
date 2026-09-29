@@ -67,7 +67,7 @@ struct SettingsKitCompositionTests {
         //       with an action attached.
         //
         //   26  M3 added the Notifications page — one `.custom` field
-        //       (`NotificationsSettingsView`) hosting `SignalSettingsPane`.
+        //       (now declared tabs, E7).
         //
         //       This one is a WEAKER justification than the three above, and
         //       recording that honestly matters more than defending it. Sound,
