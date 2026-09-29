@@ -22,7 +22,10 @@ struct AppSettingsCatalogTests {
             // non-adopting plugin: it must be `.custom` (wrapping the app's
             // own `makeSettingsView`) and must carry the app's display name
             // as a keyword, or the app becomes unfindable in search.
+            // Hoard, Sage and Scry have host-declared pages (the built-in seam),
+            // so they never take the fallback.
             guard let appID = page.appID,
+                  ![HoardApp.id, SageApp.id, ScryApp.id].contains(appID),
                   let app = environment.registry.allApps.first(where: { $0.id == appID }),
                   app.settingsCatalog() == nil
             else { continue }

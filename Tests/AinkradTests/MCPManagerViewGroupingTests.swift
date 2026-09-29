@@ -1,7 +1,7 @@
 import Testing
 @testable import Ainkrad
 
-@Suite("MCPManagerView grouping")
+@Suite("MCP server grouping")
 struct MCPManagerViewGroupingTests {
     let configs = [
         MCPServerConfig(id: "brave", displayName: "Brave", transport: .stdio,
@@ -14,37 +14,37 @@ struct MCPManagerViewGroupingTests {
 
     @Test("in-process configs are grouped as apps")
     func appConfigsAreInProcessOnly() {
-        #expect(MCPManagerView.appConfigs(from: configs).map(\.id) == ["gitmage", "terminal"])
+        #expect(MCPServerGrouping.appConfigs(from: configs).map(\.id) == ["gitmage", "terminal"])
     }
 
     @Test("every other transport stays in the external group")
     func externalConfigsExcludeApps() {
-        #expect(MCPManagerView.externalConfigs(from: configs).map(\.id) == ["brave"])
+        #expect(MCPServerGrouping.externalConfigs(from: configs).map(\.id) == ["brave"])
     }
 
     @Test("the two groups partition the configs with no loss or overlap")
     func groupsPartition() {
-        let app = MCPManagerView.appConfigs(from: configs).map(\.id)
-        let external = MCPManagerView.externalConfigs(from: configs).map(\.id)
+        let app = MCPServerGrouping.appConfigs(from: configs).map(\.id)
+        let external = MCPServerGrouping.externalConfigs(from: configs).map(\.id)
         #expect(Set(app).isDisjoint(with: Set(external)))
         #expect(Set(app).union(external) == Set(configs.map(\.id)))
     }
 
     @Test("the app and external trust copy differ")
     func trustHelpDiffersByContext() {
-        #expect(MCPManagerView.appTrustHelp != MCPManagerView.externalTrustHelp)
+        #expect(MCPServerGrouping.appTrustHelp != MCPServerGrouping.externalTrustHelp)
     }
 
     @Test("only the app variant discloses the in-process/live-state grant")
     func trustHelpAppMentionsInProcess() {
-        #expect(MCPManagerView.appTrustHelp.contains("in-process"))
-        #expect(MCPManagerView.appTrustHelp.contains("live state"))
-        #expect(!MCPManagerView.externalTrustHelp.contains("in-process"))
+        #expect(MCPServerGrouping.appTrustHelp.contains("in-process"))
+        #expect(MCPServerGrouping.appTrustHelp.contains("live state"))
+        #expect(!MCPServerGrouping.externalTrustHelp.contains("in-process"))
     }
 
     @Test("both variants disclose auto-approval without prompting and the irreversible-action gate")
     func trustHelpBothDiscloseAutoApproveAndGate() {
-        for help in [MCPManagerView.appTrustHelp, MCPManagerView.externalTrustHelp] {
+        for help in [MCPServerGrouping.appTrustHelp, MCPServerGrouping.externalTrustHelp] {
             #expect(help.contains("without prompting"))
             #expect(help.contains("Irreversible actions still require your confirmation"))
         }
@@ -54,32 +54,32 @@ struct MCPManagerViewGroupingTests {
 
     @Test("a tools-only server reads as tools alone")
     func badgeToolsOnly() {
-        #expect(MCPManagerView.connectedBadgeText(toolCount: 35, resourceCount: 0) == "35 tools")
+        #expect(MCPServerGrouping.connectedBadgeText(toolCount: 35, resourceCount: 0) == "35 tools")
     }
 
     /// The Terminal case: 0 tools by design, 2 resources. Must never read
     /// "0 tools", which users take to mean the app is broken.
     @Test("a resources-only server never reads as 0 tools")
     func badgeResourcesOnly() {
-        let text = MCPManagerView.connectedBadgeText(toolCount: 0, resourceCount: 2)
+        let text = MCPServerGrouping.connectedBadgeText(toolCount: 0, resourceCount: 2)
         #expect(text == "2 resources")
         #expect(!text.contains("0 tool"))
     }
 
     @Test("a server publishing both shows both")
     func badgeBoth() {
-        #expect(MCPManagerView.connectedBadgeText(toolCount: 8, resourceCount: 1)
+        #expect(MCPServerGrouping.connectedBadgeText(toolCount: 8, resourceCount: 1)
                     == "8 tools · 1 resource")
     }
 
     @Test("a server publishing nothing still reports the successful connection")
     func badgeNeither() {
-        #expect(MCPManagerView.connectedBadgeText(toolCount: 0, resourceCount: 0) == "connected")
+        #expect(MCPServerGrouping.connectedBadgeText(toolCount: 0, resourceCount: 0) == "connected")
     }
 
     @Test("counts of one are singular")
     func badgeSingular() {
-        #expect(MCPManagerView.connectedBadgeText(toolCount: 1, resourceCount: 0) == "1 tool")
+        #expect(MCPServerGrouping.connectedBadgeText(toolCount: 1, resourceCount: 0) == "1 tool")
     }
 
     // MARK: - Resource labels

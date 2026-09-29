@@ -15,6 +15,9 @@ final class MemoryStore {
         self.fm = fileManager
     }
 
+    /// Where `file` lives — for opening it in an editor.
+    func url(for file: MemoryFile) -> URL { paths.url(for: file) }
+
     func read(_ file: MemoryFile) -> String {
         (try? String(contentsOf: paths.url(for: file), encoding: .utf8)) ?? ""
     }

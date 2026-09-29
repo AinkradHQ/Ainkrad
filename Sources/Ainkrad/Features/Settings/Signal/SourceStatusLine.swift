@@ -68,7 +68,7 @@ extension SignalSeverity {
     /// Phrased as the floor it sets, not the severity it names — the row reads
     /// "Interrupt me at: anything", not "Interrupt me at: info".
     ///
-    /// Internal rather than private to `SourceNotificationSheet`, because the
+    /// Shared by the Sources tab's "Interrupt me at" row and this line, because the
     /// status line has to describe the same setting in the same words: a floor
     /// that reads "Warnings and failures" in the control and something else on
     /// the row would look like two settings.

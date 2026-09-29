@@ -160,16 +160,18 @@ struct HostSettingsCatalogIntegrityTests {
 
     /// The concrete case from the bug report, pinned by name so a catalog
     /// edit that re-hides it reads as the regression it is.
-    @Test("Permissions & Sandbox is tabbed and every collapsed tab still opens on deep-link")
+    /// Tool hooks and Remote channel were collapsed groups behind tabs — the
+    /// double-hiding the bug report was about. As declared tabs (E7) nothing on
+    /// the page is collapsed, and every tab opens expanded on a deep-link.
+    @Test("Permissions & Sandbox is tabbed, nothing is collapsed, every tab opens on deep-link")
     func permissionsTabsOpen() {
         let catalog = HostSettingsCatalog.build(environment: .preview())
         guard let page = catalog.pages.first(where: { $0.title.contains("Permissions") }) else {
             Issue.record("no Permissions & Sandbox page"); return
         }
         #expect(SettingsPageView.usesTabs(page: page))
-        let collapsed = page.groups.enumerated().filter { $0.element.disclosure == .collapsedByDefault }
-        #expect(collapsed.count >= 2, "expected more than one collapsed group behind tabs")
-        for (index, group) in collapsed {
+        #expect(!page.groups.contains { $0.disclosure == .collapsedByDefault })
+        for (index, group) in page.groups.enumerated() where !group.fields.isEmpty {
             let target = SettingsPageView.deepLinkTarget(page: page, highlightedPath: group.fields[0].path)
             #expect(target?.tabIndex == index)
             #expect(target?.groupIsExpanded == true, "\(group.path) stays collapsed on its own tab")

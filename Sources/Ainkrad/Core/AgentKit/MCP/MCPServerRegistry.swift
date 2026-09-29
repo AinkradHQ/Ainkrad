@@ -21,7 +21,7 @@ enum MCPHealth: Equatable {
 @MainActor
 @Observable
 final class MCPServerRegistry {
-    /// Exposed (not `private`) so the Settings surface (`MCPManagerView`) can
+    /// Exposed (not `private`) so the Settings surface (the MCP servers tab) can
     /// read/mutate configs directly while still calling back into `connectEnabled()`
     /// on this same registry to reconnect after edits.
     let configStore: MCPServerConfigStore
@@ -79,7 +79,7 @@ final class MCPServerRegistry {
     /// Connects every enabled server with no missing secrets and records health.
     /// Bounded/non-hanging: `MCPClient.connect()`/`listTools()` requests already carry
     /// their own timeout, so this introduces no additional unbounded await.
-    /// Re-entrant by design: `MCPManagerView` calls it after every enable/edit,
+    /// Re-entrant by design: the MCP servers tab calls it after every enable/edit,
     /// so it must converge on the store's CURRENT state rather than only add to
     /// what is already live. Anything previously connected is released first —
     /// otherwise a disabled server's tools stayed advertised and callable until

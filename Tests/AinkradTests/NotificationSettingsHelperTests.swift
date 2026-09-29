@@ -91,7 +91,7 @@ struct SignalSettingsSourcesTests {
 
     @Test("nothing configured names nothing")
     func empty() {
-        #expect(SignalSettingsPane.configuredSources(in: .default).isEmpty)
+        #expect(RoutingRules.default.configuredSources.isEmpty)
     }
 
     @Test("every rule that names a source contributes it")
@@ -99,7 +99,7 @@ struct SignalSettingsSourcesTests {
         var rules = RoutingRules.default
         SignalDeliveryMode.off.apply(to: &rules, source: raven)
         SignalDeliveryMode.feedOnly.apply(to: &rules, source: rune, kind: "session.failed")
-        #expect(SignalSettingsPane.configuredSources(in: rules) == [raven, rune])
+        #expect(rules.configuredSources == [raven, rune])
     }
 
     @Test("a floor, a cue or a bypass alone is enough to be listed")
@@ -108,15 +108,15 @@ struct SignalSettingsSourcesTests {
         // again, even for a source that has never emitted.
         var rules = RoutingRules.default
         rules.interruptFloor[raven] = .warning
-        #expect(SignalSettingsPane.configuredSources(in: rules) == [raven])
+        #expect(rules.configuredSources == [raven])
 
         var cue = RoutingRules.default
         cue.soundOverride[rune] = .silent
-        #expect(SignalSettingsPane.configuredSources(in: cue) == [rune])
+        #expect(cue.configuredSources == [rune])
 
         var bypass = RoutingRules.default
         bypass.urgentBypass.insert(raven)
-        #expect(SignalSettingsPane.configuredSources(in: bypass) == [raven])
+        #expect(bypass.configuredSources == [raven])
     }
 }
 
