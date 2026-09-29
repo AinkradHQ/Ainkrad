@@ -425,30 +425,88 @@ private struct PaneContent: View {
 /// up to 184ms (~11 dropped frames), while an idle app drifted 0.9ms. The blur
 /// does not depend on focus at all, so as a separate view with one `Bool` input
 /// SwiftUI compares that input, sees it unchanged, and skips the whole subtree.
+///
+/// ## Why an image and not a `drawingGroup`
+///
+/// A `drawingGroup` keeps a pane-sized, full-resolution texture per pane — in
+/// Focus Mode every tab is canvas-sized, so five panes held ~263 MB of
+/// half-float textures of the same blurred picture. At radius 26 nothing
+/// finer than a few points survives the blur, so it is rendered ONCE per
+/// input at half scale into a plain image (~1.7 MB for a full canvas).
 private struct PaneGlassBackdrop: View {
     let isEnabled: Bool
+    @Environment(AppEnvironment.self) private var environment
+    /// Not observed: holding the last render must not itself re-render.
+    @State private var cache = PaneGlassImageCache()
 
     var body: some View {
         if isEnabled {
-            ZStack {
-                // `isLive: false` — this copy exists only to be blurred at
-                // radius 26, where 30fps starfield drift is not perceptible.
-                // Each blurred pane was running its own full live sky (~570
-                // Scry fills + 18 radial gradients per frame), so three
-                // translucent panes cost four live skies to render one visible
-                // one. The real sky behind the workspace still animates;
-                // nothing the user can actually see stopped moving.
-                AmbientSkyView(isLive: false)
-                FloatingIslandView()
-                    .frame(maxWidth: 860, maxHeight: 574)
+            GeometryReader { proxy in
+                // Sizes in 48 pt steps, so dragging a divider re-renders a few
+                // times, not every frame; the image stretches in between,
+                // which a radius-26 blur hides.
+                let key = PaneGlassImageCache.Key(
+                    width: PaneGlassImageCache.step(proxy.size.width),
+                    height: PaneGlassImageCache.step(proxy.size.height),
+                    theme: environment.themeManager.currentTheme.rawValue,
+                    tokens: environment.themeManager.tokens,
+                    effects: environment.skySettingsStore.effectEnabled)
+                if let image = cache.image(for: key, render: { render(key) }) {
+                    Image(decorative: image, scale: PaneGlassImageCache.scale).resizable()
+                }
             }
-            .blur(radius: 26)
-            // The blurred backdrop is a pure function of theme + geometry now
-            // that it no longer animates, so let the compositor cache it as one
-            // texture instead of re-rasterizing the whole stack on every
-            // unrelated pane invalidation.
-            .drawingGroup()
         }
+    }
+
+    private func render(_ key: PaneGlassImageCache.Key) -> CGImage? {
+        guard key.width > 0, key.height > 0 else { return nil }
+        let renderer = ImageRenderer(content: backdrop
+            .frame(width: CGFloat(key.width), height: CGFloat(key.height))
+            .environment(environment))
+        renderer.scale = PaneGlassImageCache.scale
+        return renderer.cgImage
+    }
+
+    private var backdrop: some View {
+        ZStack {
+            // `isLive: false` — this copy exists only to be blurred at
+            // radius 26, where 30fps starfield drift is not perceptible.
+            // Each blurred pane was running its own full live sky (~570
+            // Scry fills + 18 radial gradients per frame), so three
+            // translucent panes cost four live skies to render one visible
+            // one. The real sky behind the workspace still animates;
+            // nothing the user can actually see stopped moving.
+            AmbientSkyView(isLive: false)
+            FloatingIslandView()
+                .frame(maxWidth: 860, maxHeight: 574)
+        }
+        .blur(radius: 26)
+    }
+}
+
+/// The last backdrop one pane rendered, and what it was rendered for.
+@MainActor
+private final class PaneGlassImageCache {
+    static let scale: CGFloat = 0.5
+
+    static func step(_ length: CGFloat) -> Int { Int((length / 48).rounded(.up)) * 48 }
+
+    struct Key: Equatable {
+        let width: Int, height: Int
+        let theme: String
+        let tokens: DesignTokens
+        let effects: [String: Bool]
+    }
+
+    private var key: Key?
+    private var image: CGImage?
+
+    func image(for key: Key, render: () -> CGImage?) -> CGImage? {
+        if key != self.key {
+            self.key = key
+            image = render()
+        }
+        return image
     }
 }
 
