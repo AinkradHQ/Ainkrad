@@ -140,6 +140,13 @@ extension AppEnvironment {
             if let payload, action.deliversPayload {
                 pluginLaunchHub.enqueue(target: appID,
                                         payload: String(decoding: payload, as: UTF8.self))
+            } else if let payload {
+                // `.focus`: no pane is created, so nothing pulls the launch slot.
+                // An open app that polls (Whisper, to jump to the chat that
+                // notified) collects this within seconds; for any other app it
+                // simply expires, touching nothing.
+                pluginLaunchHub.enqueueTransient(target: appID,
+                                                 payload: String(decoding: payload, as: UTF8.self))
             }
 
             switch action {

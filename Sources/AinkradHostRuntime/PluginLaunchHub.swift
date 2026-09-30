@@ -7,6 +7,7 @@ import Foundation
 @MainActor
 public final class PluginLaunchHub {
     private var pending: [String: String] = [:]
+    private var transient: [String: (payload: String, until: Date)] = [:]
     private var openHandler: ((String) -> Void)?
     private var availabilityProvider: ((String) -> Availability)?
     private var openStateProvider: ((String) -> Bool)?
@@ -60,8 +61,19 @@ public final class PluginLaunchHub {
     /// Consuming here would take the payload the app is about to read.
     public func peekPending(for appID: String) -> String? { pending[appID] }
 
-    public func takePending(for appID: String) -> String? {
-        defer { pending[appID] = nil }
-        return pending[appID]
+    /// A payload for an app that is ALREADY open, from a notification click
+    /// that only focused its pane. Kept apart from `pending` so it can never
+    /// overwrite a real launch, and short-lived so an app that does not poll
+    /// for it never receives it later as some other pane's launch payload.
+    public func enqueueTransient(target appID: String, payload: String,
+                                 lifetime: TimeInterval = 5, now: Date = Date()) {
+        transient[appID] = (payload, now.addingTimeInterval(lifetime))
+    }
+
+    /// A real pending launch wins; otherwise a still-fresh transient payload.
+    public func takePending(for appID: String, now: Date = Date()) -> String? {
+        if let payload = pending.removeValue(forKey: appID) { return payload }
+        guard let entry = transient.removeValue(forKey: appID), entry.until > now else { return nil }
+        return entry.payload
     }
 }
