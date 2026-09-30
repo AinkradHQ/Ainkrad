@@ -282,7 +282,8 @@ packages:
     # a999bea: a coalesced signal keeps the newest title, body and link (#52).
     # 5c1eeca: toasts show the sending app and update repeats in place.
     # 9b44535: compact toast with a large app icon; links carry a symbol.
-    revision: 9b445358a739e891e45c28e8d5077a0660f24599
+    # 97c489b: a toast body is one line, with a chevron to expand it.
+    revision: 97c489b0c72bdbb976e9f49ecc68b1c6d1614496
 
 targets:
   AinkradHostRuntime:
