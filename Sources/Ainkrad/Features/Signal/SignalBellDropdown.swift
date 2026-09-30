@@ -39,6 +39,7 @@ struct SignalBellDropdown: View {
     @State private var readFilter: ReadFilter = .all
     @State private var appFilter: SignalSource?
     @State private var expandedGroups: Set<SignalSource> = []
+    @State private var listHeight: CGFloat = 0
 
     enum ReadFilter: String, CaseIterable, Hashable {
         case all = "All", unread = "Unread"
@@ -82,11 +83,17 @@ struct SignalBellDropdown: View {
                 if groups.isEmpty {
                     empty
                 } else {
-                    ViewThatFits(in: .vertical) {
-                        list
-                        ScrollView { list }.scrollIndicators(.never)
+                    // Sized to the list, up to the cap, then it scrolls. A
+                    // flexible frame took the whole cap and centred one row in it.
+                    ScrollView {
+                        list.background(GeometryReader { geo in
+                            Color.clear.preference(key: ListHeightKey.self, value: geo.size.height)
+                        })
                     }
-                    .frame(maxHeight: Self.maxListHeight)
+                    .scrollIndicators(.never)
+                    .scrollDisabled(listHeight <= Self.maxListHeight)
+                    .frame(height: min(listHeight, Self.maxListHeight))
+                    .onPreferenceChange(ListHeightKey.self) { listHeight = $0 }
                 }
                 footer
             }
@@ -263,4 +270,9 @@ struct SignalBellDropdown: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 22)
     }
+}
+
+private struct ListHeightKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
 }
