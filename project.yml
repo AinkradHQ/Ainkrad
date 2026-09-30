@@ -283,7 +283,8 @@ packages:
     # 5c1eeca: toasts show the sending app and update repeats in place.
     # 9b44535: compact toast with a large app icon; links carry a symbol.
     # 97c489b: a toast body is one line, with a chevron to expand it.
-    revision: 97c489b0c72bdbb976e9f49ecc68b1c6d1614496
+    # 1420c6b: toast actions are icons beside the message, on hover.
+    revision: 1420c6b8867aa32e8f4094490355d74ed10315a3
 
 targets:
   AinkradHostRuntime:
