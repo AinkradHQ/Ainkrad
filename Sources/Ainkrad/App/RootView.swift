@@ -216,7 +216,11 @@ struct RootView: View {
             } onViewAll: {
                 environment.isSignalDropdownPresented = false
                 environment.isSignalFeedPresented = true
+            } onOpenSettings: {
+                environment.isSignalDropdownPresented = false
+                environment.isSettingsPresented = true
             }
+            .environment(\.ainkradSignalIdentity, signalIdentities)
             .zIndex(60)
         }
 
