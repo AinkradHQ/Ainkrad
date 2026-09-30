@@ -275,7 +275,11 @@ packages:
     # 2d8c31d: settings pages tab from two groups; a select with more than four
     # options is a menu (#48). AinkradAppKit (the renderer) only -- the
     # contract is unchanged.
-    revision: 2d8c31d08fae964901904f5232b58c5c142d706e
+    # 75b1002: floating panels stay inside their window (#50). Renderer only.
+    # ecea895: a menu button can open its panel beside the trigger (#51).
+    # Additive renderer API; the contract is unchanged.
+    # 0f21be3: panels keep a margin inside the window's edge (#51).
+    revision: 0f21be31996c4426078c75b7991774a5127f65f8
 
 targets:
   AinkradHostRuntime:
