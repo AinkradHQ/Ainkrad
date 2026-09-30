@@ -29,7 +29,19 @@ struct SettingsOverlayView: View {
     /// chain, so a key handler installed inside it would never fire.
     @State private var paletteHighlight: Int?
 
-    private var catalog: SettingsCatalog { HostSettingsCatalog.build(environment: environment) }
+    /// Built once per render pass, not once per reader. The sidebar reads it
+    /// for every row (through `displayedPage`) and the detail pane again, and
+    /// each read rebuilt every app's catalog, so opening Settings and every
+    /// redraw after it did the whole build dozens of times. `body` clears it;
+    /// the first read in the pass builds it inside `body`, so the view still
+    /// observes everything the build reads.
+    @State private var catalogCache = CatalogCache()
+    private var catalog: SettingsCatalog {
+        if let built = catalogCache.value { return built }
+        let built = HostSettingsCatalog.build(environment: environment)
+        catalogCache.value = built
+        return built
+    }
 
     private var searchMode: SettingsSearchMode {
         SettingsSearchMode(query: query, hasNavigated: hasNavigatedWithQuery)
@@ -76,6 +88,7 @@ struct SettingsOverlayView: View {
 
     var body: some View {
         let tokens = environment.themeManager.tokens
+        let _ = catalogCache.value = nil
 
         GeometryReader { geo in
             ZStack {
@@ -373,4 +386,10 @@ struct SettingsOverlayView: View {
         .frame(height: 34)
     }
 
+}
+
+/// Holds one render pass's catalog. A class so `body` can reset it without
+/// that write being a state change that re-runs `body`.
+private final class CatalogCache {
+    var value: SettingsCatalog?
 }
