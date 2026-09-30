@@ -102,53 +102,94 @@ struct SignalBellDropdown: View {
     }
 
     private var list: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: 4) {
             ForEach(groups, id: \.source) { group in
                 // Filtered to one app, its events are the whole list: grouping
-                // them behind "+N more" would hide exactly what was asked for.
+                // them behind a stack would hide exactly what was asked for.
                 let isFlat = appFilter != nil
                 let isOpen = isFlat || expandedGroups.contains(group.source)
-                let visible = isFlat ? group.events
-                    : isOpen ? Array(group.events.prefix(Self.maxPerGroup)) : [group.events[0]]
-                ForEach(visible) { event in
-                    SignalGlanceRow(event: event,
-                                    repeatCount: repeatCounts[event.id] ?? 1,
-                                    isUnread: !readIDs.contains(event.id),
-                                    now: now,
-                                    onActivate: onActivate,
-                                    onAction: onAction,
-                                    onMarkRead: onMarkRead,
-                                    onDismiss: onDismissEvent)
-                }
-                if !isFlat && group.events.count > 1 {
-                    moreToggle(group.source, remaining: group.events.count - 1, isOpen: isOpen)
+                if isOpen || group.events.count == 1 {
+                    ForEach(isFlat ? group.events : Array(group.events.prefix(Self.maxPerGroup))) { event in
+                        glanceRow(event)
+                    }
+                    if !isFlat && group.events.count > 1 {
+                        HStack {
+                            Spacer()
+                            countChip("Show less", systemName: "chevron.up") { toggle(group.source) }
+                        }
+                        .padding(.trailing, 4)
+                    }
+                } else {
+                    stack(group)
                 }
             }
         }
         .padding(.horizontal, 6)
         .padding(.bottom, 6)
-        .animation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.86), value: expandedGroups)
+        .animation(reduceMotion ? nil : .spring(response: 0.32, dampingFraction: 0.84), value: expandedGroups)
     }
 
-    private func moreToggle(_ source: SignalSource, remaining: Int, isOpen: Bool) -> some View {
-        let name = identities.identity(for: source)?.name ?? SignalPresentation.sourceLabel(source)
-        return Button {
-            if isOpen { expandedGroups.remove(source) } else { expandedGroups.insert(source) }
-        } label: {
-            HStack(spacing: 4) {
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 8, weight: .bold))
-                    .rotationEffect(.degrees(isOpen ? 180 : 0))
-                Text(isOpen ? "Show less from \(name)" : "+\(remaining) more from \(name)")
-                    .font(AinkradFont.display(10, weight: .medium))
+    private func glanceRow(_ event: SignalEvent) -> some View {
+        SignalGlanceRow(event: event,
+                        repeatCount: repeatCounts[event.id] ?? 1,
+                        isUnread: !readIDs.contains(event.id),
+                        now: now,
+                        onActivate: onActivate,
+                        onAction: onAction,
+                        onMarkRead: onMarkRead,
+                        onDismiss: onDismissEvent)
+    }
+
+    /// A collapsed group: the newest event on top of a stack whose edges peek
+    /// out below it (a layer per hidden event, up to two), with the count on
+    /// the stack's edge. Tapping the edges or the count opens the group.
+    private func stack(_ group: (source: SignalSource, events: [SignalEvent])) -> some View {
+        let hidden = group.events.count - 1
+        let layers = min(hidden, 2)
+        return ZStack(alignment: .top) {
+            ForEach((1...max(layers, 1)).reversed(), id: \.self) { depth in
+                ChamferShape(cut: 6)
+                    .fill(theme.surfaceElevated.opacity(depth == 1 ? 0.55 : 0.32))
+                    .overlay(ChamferShape(cut: 6).strokeBorder(theme.accentSecondary.opacity(0.14), lineWidth: 1))
+                    .padding(.horizontal, CGFloat(depth) * 7)
+                    .offset(y: CGFloat(depth) * 5)
+                    .opacity(depth <= layers ? 1 : 0)
+                    .contentShape(Rectangle())
+                    .onTapGesture { toggle(group.source) }
             }
-            .foregroundStyle(theme.accentPrimary.opacity(0.85))
-            .padding(.leading, 48)
-            .padding(.vertical, 3)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
+            glanceRow(group.events[0])
+                .background(ChamferShape(cut: 6).fill(theme.surfaceElevated.opacity(0.9)))
+        }
+        .padding(.bottom, CGFloat(layers) * 5 + 4)
+        .overlay(alignment: .bottomTrailing) {
+            countChip("+\(hidden)", systemName: "chevron.down") { toggle(group.source) }
+                .padding(.trailing, 10)
+                .offset(y: 2)
+        }
+    }
+
+    /// The group count, and "Show less", as one small chamfered chip in the
+    /// accent, rather than a line of link text under the row.
+    private func countChip(_ text: String, systemName: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 3) {
+                Text(text).font(AinkradFont.display(9.5, weight: .semibold)).monospacedDigit()
+                Image(systemName: systemName).font(.system(size: 7, weight: .bold))
+            }
+            .foregroundStyle(theme.accentSecondary)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 2.5)
+            .background(ChamferShape(cut: 3).fill(theme.surface))
+            .background(ChamferShape(cut: 3).fill(theme.accentSecondary.opacity(0.16)))
+            .overlay(ChamferShape(cut: 3).strokeBorder(theme.accentSecondary.opacity(0.4), lineWidth: 1))
+            .contentShape(ChamferShape(cut: 3))
         }
         .buttonStyle(.plain)
+        .help(text == "Show less" ? "Show less" : "Show \(text.dropFirst()) more")
+    }
+
+    private func toggle(_ source: SignalSource) {
+        if expandedGroups.contains(source) { expandedGroups.remove(source) } else { expandedGroups.insert(source) }
     }
 
     private var header: some View {
