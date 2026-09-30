@@ -281,7 +281,8 @@ packages:
     # 0f21be3: panels keep a margin inside the window's edge (#51).
     # a999bea: a coalesced signal keeps the newest title, body and link (#52).
     # 5c1eeca: toasts show the sending app and update repeats in place.
-    revision: 5c1eeca0e4ab6416a8087c4f9d8c40df095d5c9f
+    # 9b44535: compact toast with a large app icon; links carry a symbol.
+    revision: 9b445358a739e891e45c28e8d5077a0660f24599
 
 targets:
   AinkradHostRuntime:
