@@ -125,8 +125,8 @@ struct SignalGlanceRow: View {
         }
     }
 
-    /// The body, with the actions beside it while hovered; the text gives way
-    /// to them rather than being covered.
+    /// The body, with the actions beside it shown while hovered. Their space
+    /// is reserved, so the text never reflows and nothing moves on hover.
     private var bodyLine: some View {
         HStack(alignment: .top, spacing: AinkradSpacing.xs + 2) {
             bodyText
@@ -150,9 +150,12 @@ struct SignalGlanceRow: View {
                     }
                     .allowsHitTesting(false)
                 }
-            if hovering {
-                actions.transition(.opacity.combined(with: .offset(x: 6)))
-            }
+            // Always laid out, only faded: appearing on hover made every row
+            // grow and its text re-truncate under the pointer.
+            actions
+                .opacity(hovering ? 1 : 0)
+                .allowsHitTesting(hovering)
+                .accessibilityHidden(true)
         }
     }
 

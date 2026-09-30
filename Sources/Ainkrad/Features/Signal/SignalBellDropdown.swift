@@ -97,8 +97,12 @@ struct SignalBellDropdown: View {
     private var list: some View {
         VStack(alignment: .leading, spacing: 2) {
             ForEach(groups, id: \.source) { group in
-                let isOpen = expandedGroups.contains(group.source)
-                let visible = isOpen ? Array(group.events.prefix(Self.maxPerGroup)) : [group.events[0]]
+                // Filtered to one app, its events are the whole list: grouping
+                // them behind "+N more" would hide exactly what was asked for.
+                let isFlat = appFilter != nil
+                let isOpen = isFlat || expandedGroups.contains(group.source)
+                let visible = isFlat ? group.events
+                    : isOpen ? Array(group.events.prefix(Self.maxPerGroup)) : [group.events[0]]
                 ForEach(visible) { event in
                     SignalGlanceRow(event: event,
                                     repeatCount: repeatCounts[event.id] ?? 1,
@@ -109,7 +113,7 @@ struct SignalBellDropdown: View {
                                     onMarkRead: onMarkRead,
                                     onDismiss: onDismissEvent)
                 }
-                if group.events.count > 1 {
+                if !isFlat && group.events.count > 1 {
                     moreToggle(group.source, remaining: group.events.count - 1, isOpen: isOpen)
                 }
             }
