@@ -285,7 +285,8 @@ packages:
     # 97c489b: a toast body is one line, with a chevron to expand it.
     # 1420c6b: toast actions are icons beside the message, on hover.
     # ccb6606: toast actions fade in place instead of reflowing.
-    revision: ccb6606cc48d90de966d89ef96c83d1a31cf5af0
+    # ebeeb02: settings tabs switch without cross-fading (#54).
+    revision: ebeeb02ad56fcb10902fd13f4c3ade1da42daa61
 
 targets:
   AinkradHostRuntime:
