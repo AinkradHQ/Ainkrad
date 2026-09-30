@@ -216,7 +216,11 @@ struct RootView: View {
             } onViewAll: {
                 environment.isSignalDropdownPresented = false
                 environment.isSignalFeedPresented = true
+            } onOpenSettings: {
+                environment.isSignalDropdownPresented = false
+                environment.isSettingsPresented = true
             }
+            .environment(\.ainkradSignalIdentity, signalIdentities)
             .zIndex(60)
         }
 
@@ -291,6 +295,17 @@ struct RootView: View {
     /// BELOW the first-run gate (zIndex 100) and the quit confirmation (200): a
     /// toast floating over the gate would be another surface the scrim cannot
     /// cover.
+    /// Who sent each notification, from the live app registry: the name and
+    /// launcher symbol the user knows the app by. Rebuilt with the view, so an
+    /// app installed or renamed shows up on the next notification.
+    private var signalIdentities: SignalIdentityResolver {
+        SignalIdentityResolver(
+            apps: Dictionary(environment.registry.allApps.map {
+                ($0.id, SignalSourceIdentity(name: $0.displayName, symbol: $0.icon))
+            }, uniquingKeysWith: { first, _ in first }),
+            host: SignalSourceIdentity(name: "Ainkrad", symbol: "sparkle"))
+    }
+
     private var signalToasts: some View {
         SignalToastStack(
             model: environment.signalToasts,
@@ -319,6 +334,7 @@ struct RootView: View {
                 SignalActionRouter(hub: hub).dispatch(event, action)
                 environment.signalToasts.dismiss(id: event.id)
             })
+        .environment(\.ainkradSignalIdentity, signalIdentities)
         // Clear of the 30pt top bar, so a toast never covers the clock or the
         // bell whose count it corresponds to.
         .padding(.top, 34)

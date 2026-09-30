@@ -280,7 +280,13 @@ packages:
     # Additive renderer API; the contract is unchanged.
     # 0f21be3: panels keep a margin inside the window's edge (#51).
     # a999bea: a coalesced signal keeps the newest title, body and link (#52).
-    revision: a999bea9b00e23d8c2b6b64426dd3f09091963dc
+    # 5c1eeca: toasts show the sending app and update repeats in place.
+    # 9b44535: compact toast with a large app icon; links carry a symbol.
+    # 97c489b: a toast body is one line, with a chevron to expand it.
+    # 1420c6b: toast actions are icons beside the message, on hover.
+    # ccb6606: toast actions fade in place instead of reflowing.
+    # ebeeb02: settings tabs switch without cross-fading (#54).
+    revision: ebeeb02ad56fcb10902fd13f4c3ade1da42daa61
 
 targets:
   AinkradHostRuntime:
