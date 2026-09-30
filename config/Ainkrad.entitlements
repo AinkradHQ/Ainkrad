@@ -25,6 +25,14 @@
 	     `Bundle.load()` is ever called. dyld's check is replaced, not dropped. -->
 	<key>com.apple.security.cs.disable-library-validation</key>
 	<true/>
+	<!-- The hardened runtime blocks the camera and microphone unless these
+	     are declared, whatever Info.plist says. Plugins run in this process,
+	     so Whisper's calls (Meet, Teams, Slack, WhatsApp) and push to talk
+	     dictation both need them here. -->
+	<key>com.apple.security.device.camera</key>
+	<true/>
+	<key>com.apple.security.device.audio-input</key>
+	<true/>
 	<key>keychain-access-groups</key>
 	<array>
 		<string>$(AppIdentifierPrefix)com.ainkrad.app</string>

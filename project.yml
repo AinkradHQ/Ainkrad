@@ -341,7 +341,8 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_NSHumanReadableCopyright: ""
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.developer-tools
-        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Ainkrad uses the microphone for push-to-talk dictation to the Assistant."
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Ainkrad uses the microphone for push-to-talk dictation to the Assistant, and for calls in apps like Whisper."
+        INFOPLIST_KEY_NSCameraUsageDescription: "Ainkrad uses the camera for video calls in apps like Whisper."
         INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: "Ainkrad transcribes your dictation on-device by default."
         ENABLE_PREVIEWS: YES
         # Required for plugin loading under the hardened runtime — see the
