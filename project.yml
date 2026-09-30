@@ -275,7 +275,8 @@ packages:
     # 2d8c31d: settings pages tab from two groups; a select with more than four
     # options is a menu (#48). AinkradAppKit (the renderer) only -- the
     # contract is unchanged.
-    revision: 2d8c31d08fae964901904f5232b58c5c142d706e
+    # 75b1002: floating panels stay inside their window (#50). Renderer only.
+    revision: 75b100231a449f32dfb2b20223197c0dee558463
 
 targets:
   AinkradHostRuntime:
