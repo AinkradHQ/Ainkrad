@@ -276,7 +276,9 @@ packages:
     # options is a menu (#48). AinkradAppKit (the renderer) only -- the
     # contract is unchanged.
     # 75b1002: floating panels stay inside their window (#50). Renderer only.
-    revision: 75b100231a449f32dfb2b20223197c0dee558463
+    # ecea895: a menu button can open its panel beside the trigger (#51).
+    # Additive renderer API; the contract is unchanged.
+    revision: ecea895e92bd5542cb75cf709f0127c01402f267
 
 targets:
   AinkradHostRuntime:
