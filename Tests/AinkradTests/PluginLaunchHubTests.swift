@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import Ainkrad
 import AinkradHostRuntime
@@ -19,6 +20,31 @@ struct PluginLaunchHubTests {
         hub.enqueue(target: "gitmage", payload: "A")
         #expect(hub.takePending(for: "leyline") == nil)
         #expect(hub.takePending(for: "gitmage") == "A")
+    }
+
+    @Test("a transient payload is delivered while fresh, once")
+    func transientFresh() {
+        let hub = PluginLaunchHub()
+        let t0 = Date(timeIntervalSince1970: 1000)
+        hub.enqueueTransient(target: "whisper", payload: "acct", lifetime: 5, now: t0)
+        #expect(hub.takePending(for: "whisper", now: t0.addingTimeInterval(1)) == "acct")
+        #expect(hub.takePending(for: "whisper", now: t0.addingTimeInterval(2)) == nil)
+    }
+
+    @Test("an expired transient payload is never delivered")
+    func transientExpires() {
+        let hub = PluginLaunchHub()
+        let t0 = Date(timeIntervalSince1970: 1000)
+        hub.enqueueTransient(target: "rune", payload: "stale", lifetime: 5, now: t0)
+        #expect(hub.takePending(for: "rune", now: t0.addingTimeInterval(6)) == nil)
+    }
+
+    @Test("a transient payload never replaces a real pending launch")
+    func transientDoesNotClobber() {
+        let hub = PluginLaunchHub()
+        hub.enqueue(target: "rune", payload: "ssh-session")
+        hub.enqueueTransient(target: "rune", payload: "from-signal")
+        #expect(hub.takePending(for: "rune") == "ssh-session")
     }
 
     @Test("requestOpen fires the wired handler with the app id")
