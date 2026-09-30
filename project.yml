@@ -280,7 +280,8 @@ packages:
     # Additive renderer API; the contract is unchanged.
     # 0f21be3: panels keep a margin inside the window's edge (#51).
     # a999bea: a coalesced signal keeps the newest title, body and link (#52).
-    revision: a999bea9b00e23d8c2b6b64426dd3f09091963dc
+    # 5c1eeca: toasts show the sending app and update repeats in place.
+    revision: 5c1eeca0e4ab6416a8087c4f9d8c40df095d5c9f
 
 targets:
   AinkradHostRuntime:
