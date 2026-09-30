@@ -275,7 +275,18 @@ packages:
     # 2d8c31d: settings pages tab from two groups; a select with more than four
     # options is a menu (#48). AinkradAppKit (the renderer) only -- the
     # contract is unchanged.
-    revision: 2d8c31d08fae964901904f5232b58c5c142d706e
+    # 75b1002: floating panels stay inside their window (#50). Renderer only.
+    # ecea895: a menu button can open its panel beside the trigger (#51).
+    # Additive renderer API; the contract is unchanged.
+    # 0f21be3: panels keep a margin inside the window's edge (#51).
+    # a999bea: a coalesced signal keeps the newest title, body and link (#52).
+    # 5c1eeca: toasts show the sending app and update repeats in place.
+    # 9b44535: compact toast with a large app icon; links carry a symbol.
+    # 97c489b: a toast body is one line, with a chevron to expand it.
+    # 1420c6b: toast actions are icons beside the message, on hover.
+    # ccb6606: toast actions fade in place instead of reflowing.
+    # ebeeb02: settings tabs switch without cross-fading (#54).
+    revision: ebeeb02ad56fcb10902fd13f4c3ade1da42daa61
 
 targets:
   AinkradHostRuntime:
@@ -324,13 +335,14 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ainkrad.app
-        MARKETING_VERSION: "0.24.0"
-        CURRENT_PROJECT_VERSION: "24"
+        MARKETING_VERSION: "0.25.0"
+        CURRENT_PROJECT_VERSION: "25"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_NSHumanReadableCopyright: ""
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.developer-tools
-        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Ainkrad uses the microphone for push-to-talk dictation to the Assistant."
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Ainkrad uses the microphone for push-to-talk dictation to the Assistant, and for calls in apps like Whisper."
+        INFOPLIST_KEY_NSCameraUsageDescription: "Ainkrad uses the camera for video calls in apps like Whisper."
         INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: "Ainkrad transcribes your dictation on-device by default."
         ENABLE_PREVIEWS: YES
         # Required for plugin loading under the hardened runtime — see the

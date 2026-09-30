@@ -14,6 +14,7 @@ struct SignalBellDropdownOverlay: View {
     var hub: SignalEmitterHub?
     let onDismiss: () -> Void
     let onViewAll: () -> Void
+    var onOpenSettings: () -> Void = {}
 
     @Environment(\.ainkradReduceMotion) private var reduceMotion
 
@@ -39,8 +40,11 @@ struct SignalBellDropdownOverlay: View {
                     guard let hub else { return }
                     if SignalActionRouter(hub: hub).invoke(event, action) != nil { onViewAll() }
                 },
+                onMarkRead: { center.markRead(ids: [$0.id]) },
+                onDismissEvent: { center.dismiss(ids: [$0.id]) },
                 onMarkAllRead: { center.markAllRead(filter: .all) },
                 onViewAll: onViewAll,
+                onOpenSettings: onOpenSettings,
                 isMuted: center.rules.suppression.isSuppressing(at: Date()),
                 // A snooze set here is the same field quiet hours use, so the
                 // two cannot disagree about whether now is quiet.
