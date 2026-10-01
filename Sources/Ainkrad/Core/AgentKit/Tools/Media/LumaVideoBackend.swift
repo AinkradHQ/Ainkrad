@@ -33,18 +33,24 @@ struct LumaVideoBackend: VideoBackend {
             throw ToolError.message("Luma did not return a generation id.")
         }
         // 2. Poll.
-        let videoURL = try await VideoJobPolling.poll { [http] in
-            var poll = URLRequest(url: URL(string: "\(baseURL)/generations/\(id)")!, timeoutInterval: 60)
+        let videoURLString = try await VideoJobPolling.poll { [http] in
+            guard let pollURL = URL(string: "\(baseURL)/generations/\(id)") else {
+                throw ToolError.message("Invalid Luma generation URL.")
+            }
+            var poll = URLRequest(url: pollURL, timeoutInterval: 60)
             poll.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
             let (data, _) = try await http.data(for: poll)
             return try Self.pollStatus(in: data)
         }
         // 3. Download.
-        let (bytes, dlResp) = try await http.data(for: URLRequest(url: URL(string: videoURL)!, timeoutInterval: 120))
+        guard let downloadURL = URL(string: videoURLString) else {
+            throw ToolError.message("Luma returned an invalid video URL.")
+        }
+        let (bytes, dlResp) = try await http.data(for: URLRequest(url: downloadURL, timeoutInterval: 120))
         guard (200..<300).contains(dlResp.statusCode), !bytes.isEmpty else {
             throw ToolError.message("Failed to download the Luma video (HTTP \(dlResp.statusCode)).")
         }
-        return GeneratedVideo(data: bytes, fileExtension: MediaFileExtension.forURL(videoURL, default: "mp4"))
+        return GeneratedVideo(data: bytes, fileExtension: MediaFileExtension.forURL(videoURLString, default: "mp4"))
     }
 
     // MARK: - Parsing (pure, testable)
