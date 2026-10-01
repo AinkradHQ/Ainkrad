@@ -69,4 +69,30 @@ struct VideoBackendsTests {
         #expect(FalVideoBackend.videoURL(in: Data(#"{"video":{"url":"https://cdn/v.mp4"}}"#.utf8)) == "https://cdn/v.mp4")
         #expect(FalVideoBackend.videoURL(in: Data(#"{"url":"https://cdn/v2.mp4"}"#.utf8)) == "https://cdn/v2.mp4")
     }
+
+    // MARK: Task 0.5 regression tests
+
+    @Test func falEmptyStatusURLThrows() async {
+        #expect(URL(string: "") == nil)
+        let backend = FalVideoBackend(secrets: keyed(FalVideoBackend.secretID), http: JSONHTTP(json: #"{"status_url":"","response_url":""}"#))
+        await #expect(throws: ToolError.self) {
+            try await backend.generateVideo(prompt: "test")
+        }
+    }
+
+    @Test func falInvalidVideoURLThrows() async {
+        #expect(URL(string: "") == nil)
+        let backend = FalVideoBackend(secrets: keyed(FalVideoBackend.secretID), http: JSONHTTP(json: #"{"status_url":"https://x/s","response_url":"https://x/r","status":"COMPLETED","url":""}"#))
+        await #expect(throws: ToolError.self) {
+            try await backend.generateVideo(prompt: "test")
+        }
+    }
+
+    @Test func lumaInvalidVideoURLThrows() async {
+        #expect(URL(string: "") == nil)
+        let backend = LumaVideoBackend(secrets: keyed(LumaVideoBackend.secretID), http: JSONHTTP(json: #"{"id":"g1","state":"completed","assets":{"video":""}}"#))
+        await #expect(throws: ToolError.self) {
+            try await backend.generateVideo(prompt: "test")
+        }
+    }
 }

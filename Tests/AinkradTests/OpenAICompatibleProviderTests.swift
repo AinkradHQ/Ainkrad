@@ -96,4 +96,20 @@ struct OpenAICompatibleProviderTests {
             model: AgentModelConfig(model: "llama3.2", effort: "xhigh"), credential: .apiKey("")) {}
         #expect(try #require(seen).value(forHTTPHeaderField: "authorization") == nil)
     }
+
+    @Test("invalid base URL yields .failed instead of crashing")
+    func invalidBaseURLFailsInsteadOfCrashing() async throws {
+        try #require(URL(string: "http://[::1/chat/completions") == nil)
+        let provider = OpenAICompatibleProvider(http: StubStreamingHTTPClient(chunks: [], captured: nil), baseURL: "http://[::1")
+        var out: [AgentEvent] = []
+        for try await e in provider.send(messages: [AgentMessage(role: .user, text: "hi")], system: "sys", tools: [],
+                                          model: AgentModelConfig(model: "gpt-5", effort: "xhigh"),
+                                          credential: .apiKey("sk-secret")) { out.append(e) }
+        #expect(out.count == 1)
+        if case .failed(let message) = out.first {
+            #expect(!message.contains("sk-secret"))
+        } else {
+            Issue.record("expected .failed event")
+        }
+    }
 }
