@@ -594,6 +594,23 @@ extension AppEnvironment {
         }
 
         Log.app.info("AppEnvironment bootstrapped with \(registry.allApps.count) registered app(s)")
+
+        #if DEBUG
+        if let (openAppID, payload) = parseDebugOpenAppArguments({ UserDefaults.standard.string(forKey: $0) }) {
+            let registered = registry.allApps.first { $0.id == openAppID }
+            if let registered, registry.isEnabled(openAppID) {
+                if let payload {
+                    pluginLaunchHub.enqueue(target: openAppID, payload: payload)
+                }
+                pluginLaunchHub.requestOpen(openAppID)
+                Log.app.info("DEBUG launch arg: opened app \(openAppID, privacy: .public)")
+            } else if registered == nil {
+                Log.app.info("DEBUG launch arg: unknown app \(openAppID, privacy: .public)")
+            } else {
+                Log.app.info("DEBUG launch arg: disabled app \(openAppID, privacy: .public)")
+            }
+        }
+        #endif
     }
 
     /// A user-facing reason string. `AppStoreError` already writes for humans;
@@ -607,3 +624,15 @@ extension AppEnvironment {
         return String(describing: error)
     }
 }
+
+#if DEBUG
+/// Parses `-AinkradOpenApp <appID>` and optional `-AinkradOpenAppPayload <payload>` using a key-value lookup.
+func parseDebugOpenAppArguments(_ value: (String) -> String?) -> (appID: String, payload: String?)? {
+    guard let rawAppID = value("AinkradOpenApp") else { return nil }
+    let appID = rawAppID.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !appID.isEmpty else { return nil }
+    let rawPayload = value("AinkradOpenAppPayload")?.trimmingCharacters(in: .whitespacesAndNewlines)
+    let payload = (rawPayload?.isEmpty ?? true) ? nil : rawPayload
+    return (appID, payload)
+}
+#endif
