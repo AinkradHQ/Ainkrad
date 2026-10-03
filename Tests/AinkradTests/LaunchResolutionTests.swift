@@ -254,4 +254,29 @@ struct LaunchResolutionTests {
         #expect(second.vaultRoot.standardizedFileURL == first.vaultRoot.standardizedFileURL)
         #expect(!FileManager.default.fileExists(atPath: elsewhere.path))
     }
+
+    #if DEBUG
+    @Test func debugFixtureRootParsing() {
+        #expect(parseDebugFixtureRootArgument { key in key == "AinkradFixtureRoot" ? "/tmp/test-fixture" : nil } == URL(fileURLWithPath: "/tmp/test-fixture").standardizedFileURL)
+        #expect(parseDebugFixtureRootArgument { key in key == "AinkradFixtureRoot" ? "   " : nil } == nil)
+        #expect(parseDebugFixtureRootArgument { _ in nil } == nil)
+    }
+
+    @Test func debugFixtureDirectoryResolution() throws {
+        let base = FileManager.default.temporaryDirectory
+            .appendingPathComponent("fixture-test-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: base) }
+
+        let lookup: (String) -> String? = { key in
+            key == "AinkradFixtureRoot" ? base.path : nil
+        }
+
+        let pointerDir = defaultFixturePointerDirectory(lookup)
+        let cacheDir = defaultFixtureCacheRoot(lookup)
+
+        #expect(pointerDir.standardizedFileURL == base.appendingPathComponent("Pointer", isDirectory: true).standardizedFileURL)
+        #expect(cacheDir.standardizedFileURL == base.appendingPathComponent("Cache", isDirectory: true).standardizedFileURL)
+        #expect(FileManager.default.fileExists(atPath: base.path))
+    }
+    #endif
 }

@@ -28,9 +28,8 @@ enum HomeAdoption {
     @MainActor
     static func adoptAndRebuild(
         chosen: URL,
-        pointerDirectory: URL = AinkradHome.defaultPointerDirectory(),
-        cacheRoot: URL = AinkradHome.defaultCacheRoot(
-            bundleID: Bundle.main.bundleIdentifier ?? "com.ainkrad.app"),
+        pointerDirectory: URL = defaultHostPointerDirectory(),
+        cacheRoot: URL = defaultHostCacheRoot(),
         legacyContainer: URL? = VaultMigration.legacyContainerURL(),
         defaults: UserDefaults = .standard,
         install: (AppEnvironment) -> Void

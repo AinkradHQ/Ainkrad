@@ -39,9 +39,8 @@ enum LaunchHomeResolver {
 
     static func resolveOrAdopt(
         chooseVault: VaultChooser = LaunchHomeResolver.presentFolderChooser,
-        pointerDirectory: URL = AinkradHome.defaultPointerDirectory(),
-        cacheRoot: URL = AinkradHome.defaultCacheRoot(
-            bundleID: Bundle.main.bundleIdentifier ?? "com.ainkrad.app"),
+        pointerDirectory: URL = defaultHostPointerDirectory(),
+        cacheRoot: URL = defaultHostCacheRoot(),
         // Injected so a test never touches — let alone marks as migrated — the real
         // machine's legacy container. `nil` means "nothing to migrate".
         legacyContainer: URL? = VaultMigration.legacyContainerURL()
@@ -163,9 +162,8 @@ enum LaunchHomeResolver {
     static func resolveWithRecovery(
         chooseVault: VaultChooser = LaunchHomeResolver.presentFolderChooser,
         present: (LaunchRecovery.Prompt) -> LaunchRecovery.Action = LaunchHomeResolver.presentAlert,
-        pointerDirectory: URL = AinkradHome.defaultPointerDirectory(),
-        cacheRoot: URL = AinkradHome.defaultCacheRoot(
-            bundleID: Bundle.main.bundleIdentifier ?? "com.ainkrad.app"),
+        pointerDirectory: URL = defaultHostPointerDirectory(),
+        cacheRoot: URL = defaultHostCacheRoot(),
         legacyContainer: URL? = VaultMigration.legacyContainerURL()
     ) throws -> Home {
         // Set once the user picks a folder from a recovery alert. It bypasses

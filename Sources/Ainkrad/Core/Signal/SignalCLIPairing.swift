@@ -33,7 +33,7 @@ enum SignalCLIPairing {
     /// deletes the app's container should not silently lose a credential their
     /// hooks depend on. `Notify.defaultConfigURL()` derives the same path.
     static func configURL() -> URL {
-        AinkradHome.defaultPointerDirectory().appendingPathComponent("cli-signal.json")
+        defaultHostPointerDirectory().appendingPathComponent("cli-signal.json")
     }
 
     /// Ensures the CLI config holds a token the registry recognises.
