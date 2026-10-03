@@ -257,26 +257,30 @@ struct LaunchResolutionTests {
 
     #if DEBUG
     @Test func debugFixtureRootParsing() {
-        #expect(parseDebugFixtureRootArgument { key in key == "AinkradFixtureRoot" ? "/tmp/test-fixture" : nil } == URL(fileURLWithPath: "/tmp/test-fixture").standardizedFileURL)
-        #expect(parseDebugFixtureRootArgument { key in key == "AinkradFixtureRoot" ? "   " : nil } == nil)
-        #expect(parseDebugFixtureRootArgument { _ in nil } == nil)
+        #expect(parseDebugFixtureRootArgument { @Sendable key in key == "AinkradFixtureRoot" ? "/tmp/test-fixture" : nil } == URL(fileURLWithPath: "/tmp/test-fixture").standardizedFileURL)
+        #expect(parseDebugFixtureRootArgument { @Sendable key in key == "AinkradFixtureRoot" ? "   " : nil } == nil)
+        #expect(parseDebugFixtureRootArgument { @Sendable _ in nil } == nil)
     }
 
-    @Test func debugFixtureDirectoryResolution() throws {
+    @Test @MainActor func debugFixtureDirectoryResolution() throws {
         let base = FileManager.default.temporaryDirectory
             .appendingPathComponent("fixture-test-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: base) }
 
-        let lookup: (String) -> String? = { key in
+        let lookup: ArgumentLookup = { @Sendable key in
             key == "AinkradFixtureRoot" ? base.path : nil
         }
 
-        let pointerDir = defaultFixturePointerDirectory(lookup)
-        let cacheDir = defaultFixtureCacheRoot(lookup)
-
-        #expect(pointerDir.standardizedFileURL == base.appendingPathComponent("Pointer", isDirectory: true).standardizedFileURL)
-        #expect(cacheDir.standardizedFileURL == base.appendingPathComponent("Cache", isDirectory: true).standardizedFileURL)
+        let roots = resolveDebugFixtureRoots(lookup)
+        #expect(roots != nil)
+        #expect(roots?.pointerDirectory.standardizedFileURL == base.appendingPathComponent("Pointer", isDirectory: true).standardizedFileURL)
+        #expect(roots?.cacheRoot.standardizedFileURL == base.appendingPathComponent("Cache", isDirectory: true).standardizedFileURL)
+        #expect(roots?.defaultVaultRoot.standardizedFileURL == base.appendingPathComponent("Vault", isDirectory: true).standardizedFileURL)
         #expect(FileManager.default.fileExists(atPath: base.path))
+
+        let socketURL = AppEnvironment.signalSocketURL()
+        // Signal socket URL derives from cache root parent
+        #expect(socketURL.lastPathComponent == "signal.sock")
     }
     #endif
 }

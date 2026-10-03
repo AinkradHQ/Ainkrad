@@ -56,6 +56,14 @@ enum LaunchHomeResolver {
             throw Failure.notAnAinkradHome(path: url.path)
 
         case .unset:
+            #if DEBUG
+            if let roots = resolveDebugFixtureRoots() {
+                return try adopt(roots.defaultVaultRoot,
+                                 pointerDirectory: pointerDirectory,
+                                 cacheRoot: cacheRoot,
+                                 legacyContainer: legacyContainer)
+            }
+            #endif
             guard let chosen = chooseVault() else { throw Failure.setupCancelled }
             return try adopt(chosen,
                              pointerDirectory: pointerDirectory,

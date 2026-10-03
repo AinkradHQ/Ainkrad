@@ -33,23 +33,17 @@ struct AinkradHostApp: App {
         // user authors may be written while this flag is up.
         var provisional = false
         do {
-            if case .unset = AinkradHome.resolve() {
+            #if DEBUG
+            let isFixtureMode = resolveDebugFixtureRoots() != nil
+            #else
+            let isFixtureMode = false
+            #endif
+            if !isFixtureMode, case .unset = AinkradHome.resolve() {
                 home = LaunchHomeResolver.provisionalHome()
                 provisional = true
-            } else if LaunchHomeResolver.isRunningTests {
-                // The test bundle is hosted by this app, so this initialiser also
-                // runs under `xcodebuild test`. Resolving for real there would
-                // present a modal folder chooser and hang the suite forever on any
-                // machine without a configured Home — and would write a pointer and
-                // migrate the developer's real container as a side effect of
-                // running tests. A provisional Home keeps the host inert;
-                // `LaunchHomeResolver` is tested directly, not through this
-                // initialiser.
+            } else if !isFixtureMode, LaunchHomeResolver.isRunningTests {
                 home = LaunchHomeResolver.provisionalHome()
             } else {
-                // `.missing`/`.foreign` keep their native-alert recovery: those are
-                // not first run, and the user already has a Home to be reunited
-                // with rather than a wizard to walk through.
                 home = try LaunchHomeResolver.resolveWithRecovery()
             }
         } catch {

@@ -74,7 +74,10 @@ extension AppEnvironment {
     /// discovery step between them is exactly how a socket ends up bound
     /// somewhere the CLI never looks.
     static func signalSocketURL(bundleID: String? = nil) -> URL {
-        SignalSocketPath.default(bundleID: bundleID
+        if bundleID == nil {
+            return defaultHostCacheRoot().deletingLastPathComponent().appendingPathComponent("signal.sock")
+        }
+        return SignalSocketPath.default(bundleID: bundleID
             ?? Bundle.main.bundleIdentifier
             ?? "com.ainkrad.app")
     }
