@@ -1,3 +1,4 @@
+// design-lint: allow-file hex-color theme palette data until default.theme (3.3)
 import SwiftUI
 
 /// Semantic color tokens for one theme. Views read these — never a raw hex

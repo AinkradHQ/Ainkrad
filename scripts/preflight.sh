@@ -281,6 +281,18 @@ for url, rev in pairs:
 )
 rm -rf "$PIN_CACHE"
 
+# --- 3c. Guardrail copies ---------------------------------------------------
+echo
+echo "▸ Guardrail copies"
+# The canonical guardrail files live in AinkradAppKit and are copied per repo
+# by guardrails-sync.sh. A drifted copy means this repo lints with stale
+# rules, so drift fails preflight — including --fast.
+if "$SIBLINGS/AinkradAppKit/scripts/guardrails-sync.sh" --check; then
+  ok "guardrail copies in sync"
+else
+  fail "guardrail copies drifted — run AinkradAppKit/scripts/guardrails-sync.sh to resync"
+fi
+
 # --- 4. Tests ---------------------------------------------------------------
 if [[ "$FAST" == true ]]; then
   echo
