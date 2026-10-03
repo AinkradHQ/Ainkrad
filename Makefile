@@ -37,10 +37,10 @@ open: generate ## Generate the project and open it in Xcode
 # succeeds and `./build/.../Ainkrad.app` stays whatever it was: during M9 that
 # was a three-week-old binary that failed to launch with a dyld symbol error,
 # and the build kept "succeeding".
-build: generate ## Build the app (Debug)
+build: lint generate ## Build the app (Debug)
 	xcodebuild -scheme $(SCHEME) -configuration Debug -derivedDataPath build -destination 'platform=macOS' build
 
-test: generate ## Run the test suite
+test: lint generate ## Run the test suite
 	xcodebuild -scheme $(SCHEME) -destination 'platform=macOS' test
 
 release: ## Build a distributable .dmg (see scripts/release.sh)
@@ -65,3 +65,5 @@ sample: generate ## Build the Hello sample plugin and sideload it into DevPlugin
 help: ## List the available targets
 	@grep -E '^[a-z]+:.*## ' $(MAKEFILE_LIST) | sort | \
 		awk 'BEGIN {FS = ":.*## "}; {printf "  %-10s %s\n", $$1, $$2}'
+
+include scripts/guardrails.mk
