@@ -34,7 +34,7 @@ struct AinkradHostApp: App {
         var provisional = false
         do {
             #if DEBUG
-            let isFixtureMode = resolveDebugFixtureRoots() != nil
+            let isFixtureMode = debugFixtureRoots != nil
             #else
             let isFixtureMode = false
             #endif

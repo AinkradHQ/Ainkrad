@@ -262,25 +262,37 @@ struct LaunchResolutionTests {
         #expect(parseDebugFixtureRootArgument { @Sendable _ in nil } == nil)
     }
 
-    @Test @MainActor func debugFixtureDirectoryResolution() throws {
+    @Test func debugFixtureRootsCreateAllThreeSubdirectories() throws {
         let base = FileManager.default.temporaryDirectory
             .appendingPathComponent("fixture-test-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: base) }
+        let lookup: ArgumentLookup = { @Sendable key in key == "AinkradFixtureRoot" ? base.path : nil }
 
-        let lookup: ArgumentLookup = { @Sendable key in
-            key == "AinkradFixtureRoot" ? base.path : nil
+        let roots = try #require(try resolveDebugFixtureRoots(lookup))
+
+        #expect(roots.pointerDirectory.lastPathComponent == "Pointer")
+        #expect(roots.cacheRoot.lastPathComponent == "Cache")
+        #expect(roots.defaultVaultRoot.lastPathComponent == "Vault")
+        // Vault/ must exist before adopt() validates it, or the launch stalls on the recovery alert.
+        for directory in [roots.pointerDirectory, roots.cacheRoot, roots.defaultVaultRoot] {
+            var isDirectory: ObjCBool = false
+            #expect(FileManager.default.fileExists(atPath: directory.path, isDirectory: &isDirectory))
+            #expect(isDirectory.boolValue)
         }
+    }
 
-        let roots = resolveDebugFixtureRoots(lookup)
-        #expect(roots != nil)
-        #expect(roots?.pointerDirectory.standardizedFileURL == base.appendingPathComponent("Pointer", isDirectory: true).standardizedFileURL)
-        #expect(roots?.cacheRoot.standardizedFileURL == base.appendingPathComponent("Cache", isDirectory: true).standardizedFileURL)
-        #expect(roots?.defaultVaultRoot.standardizedFileURL == base.appendingPathComponent("Vault", isDirectory: true).standardizedFileURL)
-        #expect(FileManager.default.fileExists(atPath: base.path))
+    @Test func debugFixtureRootThatIsAFileIsRefused() throws {
+        let file = FileManager.default.temporaryDirectory
+            .appendingPathComponent("fixture-file-\(UUID().uuidString)")
+        try Data().write(to: file)
+        defer { try? FileManager.default.removeItem(at: file) }
+        let lookup: ArgumentLookup = { @Sendable key in key == "AinkradFixtureRoot" ? file.path : nil }
 
-        let socketURL = AppEnvironment.signalSocketURL()
-        // Signal socket URL derives from cache root parent
-        #expect(socketURL.lastPathComponent == "signal.sock")
+        #expect(throws: DebugFixtureRootError.self) { try resolveDebugFixtureRoots(lookup) }
+    }
+
+    @Test func noFixtureArgumentMeansNoFixture() throws {
+        #expect(try resolveDebugFixtureRoots { @Sendable _ in nil } == nil)
     }
     #endif
 }

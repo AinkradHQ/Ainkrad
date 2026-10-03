@@ -74,9 +74,14 @@ extension AppEnvironment {
     /// discovery step between them is exactly how a socket ends up bound
     /// somewhere the CLI never looks.
     static func signalSocketURL(bundleID: String? = nil) -> URL {
-        if bundleID == nil {
-            return defaultHostCacheRoot().deletingLastPathComponent().appendingPathComponent("signal.sock")
+        #if DEBUG
+        // A fixture launch binds its own socket. The real path belongs to the daily host:
+        // a Debug host that binds it unlinks the daily host's socket, and the daily host
+        // stays unreachable until it restarts.
+        if let roots = debugFixtureRoots {
+            return roots.cacheRoot.deletingLastPathComponent().appendingPathComponent("signal.sock")
         }
+        #endif
         return SignalSocketPath.default(bundleID: bundleID
             ?? Bundle.main.bundleIdentifier
             ?? "com.ainkrad.app")

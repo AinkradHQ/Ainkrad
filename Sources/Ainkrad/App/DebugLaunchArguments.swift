@@ -32,58 +32,69 @@ func parseDebugFixtureRootArgument(_ value: ArgumentLookup = { UserDefaults.stan
     return URL(fileURLWithPath: (path as NSString).expandingTildeInPath).standardizedFileURL
 }
 
-/// Resolves and validates `-AinkradFixtureRoot <path>` ONCE at launch.
-///
-/// Returns `DebugFixtureRoots` containing subdirectories under the fixture root if provided,
-/// or `nil` if `-AinkradFixtureRoot` was not supplied.
-/// If the path is specified but is invalid or unwritable, logs an error to `Log.app.error` and `stderr`,
-/// and terminates the process with `exit(1)` (refusing to fall back silently).
-func resolveDebugFixtureRoots(_ value: ArgumentLookup = { UserDefaults.standard.string(forKey: $0) }) -> DebugFixtureRoots? {
-    guard let fixtureURL = parseDebugFixtureRootArgument(value) else { return nil }
+/// Why a fixture root was refused.
+enum DebugFixtureRootError: Error, Equatable {
+    case notAWritableDirectory(String)
+    case cannotCreate(String)
+}
 
-    var isDir: ObjCBool = false
+/// Resolves `-AinkradFixtureRoot <path>` and creates its `Pointer/`, `Cache/` and `Vault/`
+/// subdirectories. `nil` when the argument is absent. Throws instead of exiting so a test can
+/// drive it; the launch-time decision to refuse lives in `debugFixtureRoots` below.
+///
+/// `Vault/` must exist before `LaunchHomeResolver.adopt` validates it — `AinkradHome.validate`
+/// throws `.doesNotExist` for a missing folder, which used to drop the launch into the
+/// recovery alert and leave a fixture host waiting on a modal.
+func resolveDebugFixtureRoots(_ value: ArgumentLookup) throws -> DebugFixtureRoots? {
+    guard let fixtureURL = parseDebugFixtureRootArgument(value) else { return nil }
     let fm = FileManager.default
+    var isDir: ObjCBool = false
     if fm.fileExists(atPath: fixtureURL.path, isDirectory: &isDir) {
-        if !isDir.boolValue || !fm.isWritableFile(atPath: fixtureURL.path) {
-            Log.app.error("DEBUG fixture root path exists but is not a writable directory: \(fixtureURL.path, privacy: .public)")
-            fputs("Ainkrad [DEBUG]: Refusing to start — fixture root \(fixtureURL.path) is not a writable directory.\n", stderr)
-            exit(1)
-        }
-    } else {
-        do {
-            try fm.createDirectory(at: fixtureURL, withIntermediateDirectories: true)
-        } catch {
-            Log.app.error("DEBUG fixture root directory could not be created at \(fixtureURL.path, privacy: .public): \(error.localizedDescription, privacy: .public)")
-            fputs("Ainkrad [DEBUG]: Refusing to start — fixture root directory could not be created at \(fixtureURL.path): \(error.localizedDescription)\n", stderr)
-            exit(1)
+        guard isDir.boolValue, fm.isWritableFile(atPath: fixtureURL.path) else {
+            throw DebugFixtureRootError.notAWritableDirectory(fixtureURL.path)
         }
     }
-
-    return DebugFixtureRoots(
+    let roots = DebugFixtureRoots(
         pointerDirectory: fixtureURL.appendingPathComponent("Pointer", isDirectory: true),
         cacheRoot: fixtureURL.appendingPathComponent("Cache", isDirectory: true),
         defaultVaultRoot: fixtureURL.appendingPathComponent("Vault", isDirectory: true)
     )
+    do {
+        for directory in [roots.pointerDirectory, roots.cacheRoot, roots.defaultVaultRoot] {
+            try fm.createDirectory(at: directory, withIntermediateDirectories: true)
+        }
+    } catch {
+        throw DebugFixtureRootError.cannotCreate(fixtureURL.path)
+    }
+    return roots
 }
+
+/// The fixture roots for this process, resolved exactly once (a global `let` is initialized
+/// lazily and atomically on first access). A fixture path that cannot be used refuses the
+/// launch: falling back to the real Home is the one outcome this flag exists to prevent.
+let debugFixtureRoots: DebugFixtureRoots? = {
+    do {
+        return try resolveDebugFixtureRoots { UserDefaults.standard.string(forKey: $0) }
+    } catch {
+        Log.app.error("DEBUG fixture root refused: \(String(describing: error), privacy: .public)")
+        fputs("Ainkrad [DEBUG]: refusing to start — fixture root unusable: \(error)\n", stderr)
+        exit(1)
+    }
+}()
 #endif
 
-/// Resolves the host pointer directory. In DEBUG builds, checks `-AinkradFixtureRoot <path>`.
-func defaultHostPointerDirectory(value: ArgumentLookup = { UserDefaults.standard.string(forKey: $0) }) -> URL {
+/// The host pointer directory: the fixture's `Pointer/` in a DEBUG fixture launch, else the default.
+func defaultHostPointerDirectory() -> URL {
     #if DEBUG
-    if let roots = resolveDebugFixtureRoots(value) {
-        return roots.pointerDirectory
-    }
+    if let roots = debugFixtureRoots { return roots.pointerDirectory }
     #endif
     return AinkradHome.defaultPointerDirectory()
 }
 
-/// Resolves the host cache root. In DEBUG builds, checks `-AinkradFixtureRoot <path>`.
-func defaultHostCacheRoot(value: ArgumentLookup = { UserDefaults.standard.string(forKey: $0) }, bundleID: String = Bundle.main.bundleIdentifier ?? "com.ainkrad.app") -> URL {
+/// The host cache root: the fixture's `Cache/` in a DEBUG fixture launch, else the default.
+func defaultHostCacheRoot(bundleID: String = Bundle.main.bundleIdentifier ?? "com.ainkrad.app") -> URL {
     #if DEBUG
-    if let roots = resolveDebugFixtureRoots(value) {
-        return roots.cacheRoot
-    }
+    if let roots = debugFixtureRoots { return roots.cacheRoot }
     #endif
     return AinkradHome.defaultCacheRoot(bundleID: bundleID)
 }
-

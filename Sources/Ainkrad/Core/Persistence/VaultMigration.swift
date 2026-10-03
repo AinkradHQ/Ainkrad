@@ -56,6 +56,10 @@ enum VaultMigration {
 
     /// `~/Library/Application Support/<bundle-id>`, the pre-Home container.
     static func legacyContainerURL() -> URL? {
+        #if DEBUG
+        // A fixture launch must never read, migrate or rename the real legacy tree.
+        if debugFixtureRoots != nil { return nil }
+        #endif
         guard let base = FileManager.default
             .urls(for: .applicationSupportDirectory, in: .userDomainMask).first else { return nil }
         let bundleID = Bundle.main.bundleIdentifier ?? "com.ainkrad.app"

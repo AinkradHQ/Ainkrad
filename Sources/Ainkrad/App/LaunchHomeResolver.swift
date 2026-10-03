@@ -57,11 +57,14 @@ enum LaunchHomeResolver {
 
         case .unset:
             #if DEBUG
-            if let roots = resolveDebugFixtureRoots() {
+            if let roots = debugFixtureRoots {
+                // Never migrate (and so never rename) the real machine's legacy container
+                // into a fixture — `legacyContainerURL()` is already nil in fixture mode;
+                // passing nil here makes it independent of what a caller injected.
                 return try adopt(roots.defaultVaultRoot,
                                  pointerDirectory: pointerDirectory,
                                  cacheRoot: cacheRoot,
-                                 legacyContainer: legacyContainer)
+                                 legacyContainer: nil)
             }
             #endif
             guard let chosen = chooseVault() else { throw Failure.setupCancelled }
