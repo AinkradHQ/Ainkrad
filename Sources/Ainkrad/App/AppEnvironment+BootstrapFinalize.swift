@@ -625,14 +625,6 @@ extension AppEnvironment {
     }
 }
 
-#if DEBUG
-/// Parses `-AinkradOpenApp <appID>` and optional `-AinkradOpenAppPayload <payload>` using a key-value lookup.
-func parseDebugOpenAppArguments(_ value: (String) -> String?) -> (appID: String, payload: String?)? {
-    guard let rawAppID = value("AinkradOpenApp") else { return nil }
-    let appID = rawAppID.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !appID.isEmpty else { return nil }
-    let rawPayload = value("AinkradOpenAppPayload")?.trimmingCharacters(in: .whitespacesAndNewlines)
-    let payload = (rawPayload?.isEmpty ?? true) ? nil : rawPayload
-    return (appID, payload)
-}
-#endif
+
+
+
