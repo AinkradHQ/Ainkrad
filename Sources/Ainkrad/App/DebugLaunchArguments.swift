@@ -1,6 +1,7 @@
 import Foundation
 import os
 import AinkradAppKit
+import AinkradHostRuntime
 
 /// Key-value argument lookup closure type.
 typealias ArgumentLookup = @Sendable (String) -> String?
@@ -21,6 +22,73 @@ func parseDebugOpenAppArguments(_ value: ArgumentLookup = { UserDefaults.standar
     let rawPayload = value("AinkradOpenAppPayload")?.trimmingCharacters(in: .whitespacesAndNewlines)
     let payload = (rawPayload?.isEmpty ?? true) ? nil : rawPayload
     return (appID, payload)
+}
+
+/// Parses `-AinkradOpenGallery 1` using a key-value lookup.
+/// Returns true if the flag is set to "1" or "true".
+func parseDebugOpenGalleryArgument(_ value: ArgumentLookup = { UserDefaults.standard.string(forKey: $0) }) -> Bool {
+    guard let rawValue = value("AinkradOpenGallery") else { return false }
+    let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    return trimmed == "1" || trimmed == "true"
+}
+
+/// Parses `-AinkradGalleryTheme <themeID>` using a key-value lookup.
+/// Returns the matching Theme, or nil if missing or invalid. Logs if invalid.
+func parseDebugGalleryThemeArgument(_ value: ArgumentLookup = { UserDefaults.standard.string(forKey: $0) }) -> Theme? {
+    guard let rawThemeID = value("AinkradGalleryTheme") else { return nil }
+    let themeID = rawThemeID.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !themeID.isEmpty else { return nil }
+    if let theme = Theme(rawValue: themeID) {
+        return theme
+    } else {
+        Log.app.error("DEBUG launch arg: unknown AinkradGalleryTheme '\(themeID, privacy: .public)'")
+        return nil
+    }
+}
+
+/// Parses `-AinkradGallerySection <id>` using a key-value lookup.
+/// Returns the section id string, or nil if absent or empty.
+func parseDebugGallerySectionArgument(_ value: ArgumentLookup = { UserDefaults.standard.string(forKey: $0) }) -> String? {
+    guard let rawSection = value("AinkradGallerySection") else { return nil }
+    let section = rawSection.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !section.isEmpty else { return nil }
+    return section
+}
+
+/// Parses `-AinkradFixtureSeed 1` using a key-value lookup.
+/// Returns true if the flag is set to "1" or "true".
+func parseDebugFixtureSeedArgument(_ value: ArgumentLookup = { UserDefaults.standard.string(forKey: $0) }) -> Bool {
+    guard let rawValue = value("AinkradFixtureSeed") else { return false }
+    let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    return trimmed == "1" || trimmed == "true"
+}
+
+/// Seeds a fixture vault with complete first-run setup state if -AinkradFixtureSeed 1 is passed
+/// together with -AinkradFixtureRoot. If -AinkradFixtureSeed is supplied without -AinkradFixtureRoot,
+/// logs an error and ignores it (never seeds a real Home).
+func seedDebugFixtureIfNeeded(home: Home?, lookup: ArgumentLookup = { UserDefaults.standard.string(forKey: $0) }) {
+    let shouldSeed = parseDebugFixtureSeedArgument(lookup)
+    guard shouldSeed else { return }
+    guard let home = home else {
+        Log.app.error("DEBUG launch arg: -AinkradFixtureSeed passed without -AinkradFixtureRoot; ignoring.")
+        return
+    }
+
+    let vaultConfigURL = home.vaultRoot.appendingPathComponent("Config", isDirectory: true)
+    let persistence = FileDocumentStore(rootURL: vaultConfigURL)
+    
+    if persistence.load(SetupDocument.self) == nil {
+        let setupDoc = SetupDocument(
+            completedAt: Date(timeIntervalSince1970: 0),
+            setupVersion: 1,
+            deferredSteps: []
+        )
+        persistence.save(setupDoc)
+    }
+
+    if persistence.load(GlobalSettings.self) == nil {
+        persistence.save(GlobalSettings())
+    }
 }
 
 /// Parses `-AinkradFixtureRoot <path>` using a key-value lookup.
@@ -74,7 +142,8 @@ func resolveDebugFixtureRoots(_ value: ArgumentLookup) throws -> DebugFixtureRoo
 /// launch: falling back to the real Home is the one outcome this flag exists to prevent.
 let debugFixtureRoots: DebugFixtureRoots? = {
     do {
-        return try resolveDebugFixtureRoots { UserDefaults.standard.string(forKey: $0) }
+        let lookup: ArgumentLookup = { UserDefaults.standard.string(forKey: $0) }
+        return try resolveDebugFixtureRoots(lookup)
     } catch {
         Log.app.error("DEBUG fixture root refused: \(String(describing: error), privacy: .public)")
         fputs("Ainkrad [DEBUG]: refusing to start — fixture root unusable: \(error)\n", stderr)
