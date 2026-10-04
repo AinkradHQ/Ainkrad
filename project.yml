@@ -286,7 +286,8 @@ packages:
     # 1420c6b: toast actions are icons beside the message, on hover.
     # ccb6606: toast actions fade in place instead of reflowing.
     # ebeeb02: settings tabs switch without cross-fading (#54).
-    revision: ebeeb02ad56fcb10902fd13f4c3ade1da42daa61
+    # e3aa233: Epic 3 skin token contract: skin model, theme loader, environment bridge (T3.1, T3.2, T3.4a).
+    revision: e3aa2337ac79c045cbbb857bf23dd255b7f85591
 
 targets:
   AinkradHostRuntime:
@@ -308,6 +309,11 @@ targets:
     platform: macOS
     sources:
       - path: Sources/Ainkrad
+        excludes:
+          - "Resources/Themes"
+      - path: Sources/Ainkrad/Resources/Themes
+        buildPhase: resources
+        type: folder
     dependencies:
       # The shared plugin runtime (loader, RegisteredApp, HostServicesImpl,
       # theming/persistence/AgentKit hubs it depends on) — see Sources/AinkradHostRuntime.
@@ -391,6 +397,9 @@ targets:
     platform: macOS
     sources:
       - path: Sources/AinkradDevHost
+      - path: Sources/Ainkrad/Resources/Themes
+        buildPhase: resources
+        type: folder
     dependencies:
       # The shared plugin runtime (loader, RegisteredApp, HostServicesImpl,
       # theming/persistence/AgentKit hubs it depends on) — see Sources/AinkradHostRuntime.

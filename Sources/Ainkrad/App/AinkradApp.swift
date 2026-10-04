@@ -165,14 +165,9 @@ struct AinkradHostApp: App {
                 // Bridges the host's theme/typography into the SDK's env
                 // keys so `AinkradAppKit` components (Gallery, and any
                 // plugin that opts in) render theme-correctly. Reading
-                // `themeManager.currentTheme`/`uiFontFamily`/`uiFontScale`
+                // `themeManager.skin`/`uiFontFamily`/`uiFontScale`
                 // here — all `@Observable` — keeps this live on theme change.
-                .environment(\.ainkradTheme, HostThemeTokens(from: environment.themeManager.currentTheme))
-                .environment(\.ainkradStatusColors, AinkradStatusColors(
-                    success: environment.themeManager.tokens.success,
-                    warning: environment.themeManager.tokens.warning,
-                    danger: environment.themeManager.tokens.danger
-                ))
+                .ainkradSkin(environment.themeManager.skin)
                 .environment(\.ainkradTypography, AinkradTypography(
                     fontFamilyName: environment.themeManager.uiFontFamily.fontName,
                     scale: environment.themeManager.uiFontScale.multiplier

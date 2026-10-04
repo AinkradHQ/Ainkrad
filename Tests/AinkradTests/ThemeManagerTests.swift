@@ -18,7 +18,7 @@ final class ThemeManagerTests {
     func defaultsToNeonBlue() {
         let manager = makeManager()
         #expect(manager.currentTheme == .neonBlue)
-        #expect(manager.tokens == DesignTokens.neonBlue)
+        #expect(manager.tokens == LegacyDesignTokens.neonBlue)
     }
 
     @Test("setTheme updates currentTheme and tokens immediately")
@@ -27,7 +27,7 @@ final class ThemeManagerTests {
         let manager = makeManager()
         manager.setTheme(.cyberPurple)
         #expect(manager.currentTheme == .cyberPurple)
-        #expect(manager.tokens == DesignTokens.cyberPurple)
+        #expect(manager.tokens == LegacyDesignTokens.cyberPurple)
     }
 
     @Test("setTheme persists the selection through SettingsStore")
@@ -49,7 +49,7 @@ final class ThemeManagerTests {
         #expect(manager.accentColorHex == "FF00AA")
 
         manager.setAccentColorHex(nil)
-        #expect(manager.tokens == DesignTokens.neonBlue)
+        #expect(manager.tokens == LegacyDesignTokens.neonBlue)
         #expect(manager.accentColorHex == nil)
     }
 
@@ -76,7 +76,7 @@ final class ThemeManagerTests {
         manager.setTheme(.gruvbox)
 
         #expect(manager.accentColorHex == nil)
-        #expect(manager.tokens.accentPrimary == DesignTokens.gruvbox.accentPrimary)
+        #expect(manager.tokens.accentPrimary == LegacyDesignTokens.gruvbox.accentPrimary)
 
         // And it's cleared in persistence too.
         let reloaded = makeManager()
