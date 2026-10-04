@@ -16,7 +16,9 @@ import AinkradHostRuntime
 struct ComponentGalleryView: View {
     let onDismiss: () -> Void
 
-    @State private var galleryTheme: Theme = .neonBlue
+    @State private var galleryTheme: Theme = {
+        parseDebugGalleryThemeArgument() ?? .neonBlue
+    }()
     /// Drives the live Basic Shell sample — the Gallery is not a host pane, so
     /// it seeds the pane-mode environment itself.
     @State private var galleryPaneMode: PluginMode = .basic
@@ -104,22 +106,29 @@ struct ComponentGalleryView: View {
         VStack(alignment: .leading, spacing: 0) {
             header
             themeSwitcher
-            ScrollView {
-                VStack(alignment: .leading, spacing: AinkradSpacing.xl) {
-                    foundationSection
-                    scalesSection
-                    panelSection
-                    cardSection
-                    pickersSection
-                    formControlsSection
-                    stateViewsSection
-                    sectionHeaderSection
-                    wave2Section
-                    wave3Section
-                    wave4Section
-                    wave5Section
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: AinkradSpacing.xl) {
+                        foundationSection.id("foundation")
+                        scalesSection.id("scales")
+                        panelSection.id("panel")
+                        cardSection.id("card")
+                        pickersSection.id("pickers")
+                        formControlsSection.id("formControls")
+                        stateViewsSection.id("stateViews")
+                        sectionHeaderSection.id("sectionHeader")
+                        wave2Section.id("wave2")
+                        wave3Section.id("wave3")
+                        wave4Section.id("wave4")
+                        wave5Section.id("wave5")
+                    }
+                    .padding(AinkradSpacing.lg)
                 }
-                .padding(AinkradSpacing.lg)
+                .onAppear {
+                    if let sectionID = parseDebugGallerySectionArgument() {
+                        proxy.scrollTo(sectionID, anchor: .top)
+                    }
+                }
             }
         }
         .ainkradPanel()

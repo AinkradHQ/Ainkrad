@@ -610,6 +610,10 @@ extension AppEnvironment {
                 Log.app.info("DEBUG launch arg: disabled app \(openAppID, privacy: .public)")
             }
         }
+        if parseDebugOpenGalleryArgument({ UserDefaults.standard.string(forKey: $0) }) {
+            environment.isComponentGalleryPresented = true
+            Log.app.info("DEBUG launch arg: presented Component Gallery")
+        }
         #endif
     }
 

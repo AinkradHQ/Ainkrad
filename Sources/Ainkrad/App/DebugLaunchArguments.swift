@@ -1,6 +1,7 @@
 import Foundation
 import os
 import AinkradAppKit
+import AinkradHostRuntime
 
 /// Key-value argument lookup closure type.
 typealias ArgumentLookup = @Sendable (String) -> String?
@@ -21,6 +22,37 @@ func parseDebugOpenAppArguments(_ value: ArgumentLookup = { UserDefaults.standar
     let rawPayload = value("AinkradOpenAppPayload")?.trimmingCharacters(in: .whitespacesAndNewlines)
     let payload = (rawPayload?.isEmpty ?? true) ? nil : rawPayload
     return (appID, payload)
+}
+
+/// Parses `-AinkradOpenGallery 1` using a key-value lookup.
+/// Returns true if the flag is set to "1" or "true".
+func parseDebugOpenGalleryArgument(_ value: ArgumentLookup = { UserDefaults.standard.string(forKey: $0) }) -> Bool {
+    guard let rawValue = value("AinkradOpenGallery") else { return false }
+    let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    return trimmed == "1" || trimmed == "true"
+}
+
+/// Parses `-AinkradGalleryTheme <themeID>` using a key-value lookup.
+/// Returns the matching Theme, or nil if missing or invalid. Logs if invalid.
+func parseDebugGalleryThemeArgument(_ value: ArgumentLookup = { UserDefaults.standard.string(forKey: $0) }) -> Theme? {
+    guard let rawThemeID = value("AinkradGalleryTheme") else { return nil }
+    let themeID = rawThemeID.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !themeID.isEmpty else { return nil }
+    if let theme = Theme(rawValue: themeID) {
+        return theme
+    } else {
+        Log.app.error("DEBUG launch arg: unknown AinkradGalleryTheme '\(themeID, privacy: .public)'")
+        return nil
+    }
+}
+
+/// Parses `-AinkradGallerySection <id>` using a key-value lookup.
+/// Returns the section id string, or nil if absent or empty.
+func parseDebugGallerySectionArgument(_ value: ArgumentLookup = { UserDefaults.standard.string(forKey: $0) }) -> String? {
+    guard let rawSection = value("AinkradGallerySection") else { return nil }
+    let section = rawSection.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !section.isEmpty else { return nil }
+    return section
 }
 
 /// Parses `-AinkradFixtureRoot <path>` using a key-value lookup.
