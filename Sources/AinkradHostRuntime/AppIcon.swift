@@ -1,14 +1,14 @@
 /// The user's app-icon COLOR setting. `.auto` follows the current theme.
 /// Persisted as `GlobalSettings.appIconChoice` (v1 `blue`/`purple` still decode).
-public enum AppIconChoice: String, Codable, CaseIterable { case auto, blue, purple }
+public enum AppIconChoice: String, Codable, CaseIterable, Sendable { case auto, blue, purple }
 
 /// The user's app-icon APPEARANCE setting. `.system` follows the Dock's
 /// light/dark; `.light`/`.dark` pin one variant.
-public enum AppIconAppearance: String, Codable, CaseIterable { case system, light, dark }
+public enum AppIconAppearance: String, Codable, CaseIterable, Sendable { case system, light, dark }
 
 /// A concrete resolved icon color family (never `.auto`). Its rawValue is the
 /// resource-name prefix (`blue`/`purple`).
-public enum AppIconColor: String, CaseIterable { case blue, purple }
+public enum AppIconColor: String, CaseIterable, Codable, Sendable { case blue, purple }
 
 /// Pure mapping from the user's settings + theme + current system appearance to
 /// the bundled composed `.icns` resource base-name. AppKit-free and unit-tested.

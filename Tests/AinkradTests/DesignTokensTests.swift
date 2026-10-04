@@ -30,7 +30,7 @@ struct ThemeTests {
 struct DesignTokensTests {
     @Test("Neon Blue tokens match the documented hex values")
     func neonBlueMatchesDocumentedValues() {
-        let tokens = DesignTokens.neonBlue
+        let tokens = LegacyDesignTokens.neonBlue
         #expect(tokens.background == Color(hex: "0A0E17"))
         #expect(tokens.surface == Color(hex: "111827"))
         #expect(tokens.surfaceElevated == Color(hex: "1A2233"))
@@ -42,7 +42,7 @@ struct DesignTokensTests {
 
     @Test("Cyber Purple tokens match the documented hex values")
     func cyberPurpleMatchesDocumentedValues() {
-        let tokens = DesignTokens.cyberPurple
+        let tokens = LegacyDesignTokens.cyberPurple
         #expect(tokens.background == Color(hex: "080814"))
         #expect(tokens.surface == Color(hex: "141420"))
         #expect(tokens.surfaceElevated == Color(hex: "1F182E"))
@@ -54,7 +54,7 @@ struct DesignTokensTests {
 
     @Test("Theme.tokens resolves to the matching static palette")
     func themeResolvesToMatchingPalette() {
-        #expect(Theme.neonBlue.tokens == DesignTokens.neonBlue)
-        #expect(Theme.cyberPurple.tokens == DesignTokens.cyberPurple)
+        #expect(Theme.neonBlue.tokens == LegacyDesignTokens.neonBlue)
+        #expect(Theme.cyberPurple.tokens == LegacyDesignTokens.cyberPurple)
     }
 }
