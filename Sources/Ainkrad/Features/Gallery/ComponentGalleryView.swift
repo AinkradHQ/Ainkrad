@@ -14,6 +14,10 @@ import AinkradHostRuntime
 /// touches `ThemeManager.currentTheme`, so the app's real theme (and every
 /// other surface) is unaffected.
 struct ComponentGalleryView: View {
+    init(onDismiss: @escaping () -> Void = {}) {
+        self.onDismiss = onDismiss
+    }
+
     let onDismiss: () -> Void
 
     @State private var galleryTheme: Theme = .neonBlue
@@ -204,6 +208,38 @@ struct ComponentGalleryView: View {
     }
 
     // MARK: - Sections
+
+    @ViewBuilder
+    func gallerySectionView(named sectionName: String, theme: Theme) -> some View {
+        let tokens = HostThemeTokens(from: theme)
+        let statusColors = AinkradStatusColors(
+            success: theme.tokens.success,
+            warning: theme.tokens.warning,
+            danger: theme.tokens.danger
+        )
+        let typography = AinkradTypography.default
+
+        Group {
+            switch sectionName {
+            case "foundation": foundationSection
+            case "scales": scalesSection
+            case "panel": panelSection
+            case "card": cardSection
+            case "pickers": pickersSection
+            case "formControls": formControlsSection
+            case "stateViews": stateViewsSection
+            case "sectionHeader": sectionHeaderSection
+            case "wave2": wave2Section
+            case "wave3": wave3Section
+            case "wave4": wave4Section
+            case "wave5": wave5Section
+            default: EmptyView()
+            }
+        }
+        .environment(\.ainkradTheme, tokens)
+        .environment(\.ainkradStatusColors, statusColors)
+        .environment(\.ainkradTypography, typography)
+    }
 
     private var foundationSection: some View {
         VStack(alignment: .leading, spacing: AinkradSpacing.md) {
