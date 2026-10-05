@@ -1,12 +1,14 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("File formatting")
 struct FileFormattingTests {
     private func entry(_ name: String, dir: Bool = false) -> FileEntry {
-        FileEntry(url: URL(fileURLWithPath: "/x/\(name)"), name: name, isDirectory: dir,
-                  isSymlink: false, isHidden: false, size: 0, modified: Date())
+        FileEntry(
+            url: URL(fileURLWithPath: "/x/\(name)"), name: name, isDirectory: dir,
+            isSymlink: false, isHidden: false, size: 0, modified: Date())
     }
 
     @Test("directories show no size")

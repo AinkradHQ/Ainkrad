@@ -19,7 +19,8 @@ final class GitWorkingTreeSnapshotter {
 
     func snapshot(workingDir: String) async -> (repoRoot: String, sha: String)? {
         guard let rootResult = await run("git rev-parse --show-toplevel", in: workingDir),
-              !rootResult.isError else { return nil }
+            !rootResult.isError
+        else { return nil }
         let repoRoot = rootResult.output.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !repoRoot.isEmpty else { return nil }
         // `git stash create` prints a commit SHA for the current changes, or nothing
@@ -32,7 +33,7 @@ final class GitWorkingTreeSnapshotter {
 
     @discardableResult
     func restore(repoRoot: String, sha: String) async -> Bool {
-        guard !sha.isEmpty else { return true }   // clean tree at capture time — nothing to apply
+        guard !sha.isEmpty else { return true }  // clean tree at capture time — nothing to apply
         // Defense-in-depth: only interpolate values that look like a git object hash.
         guard sha.allSatisfy({ $0.isHexDigit }) && (7...64).contains(sha.count) else { return false }
         guard let checkout = await run("git checkout -- .", in: repoRoot), !checkout.isError else { return false }

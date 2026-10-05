@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 import Foundation
 import Observation
-import AinkradHostRuntime
 
 /// Persisted choice of `video_generate` provider. API keys are Keychain-only via
 /// SecretStore (each backend's `secretID`), never here.
@@ -17,7 +17,10 @@ struct VideoSettingsDocument: PersistableDocument {
     var localURL: String = ""
 
     init(provider: String = "replicate", model: String = "", customBaseURL: String = "", localURL: String = "") {
-        self.provider = provider; self.model = model; self.customBaseURL = customBaseURL; self.localURL = localURL
+        self.provider = provider
+        self.model = model
+        self.customBaseURL = customBaseURL
+        self.localURL = localURL
     }
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -42,8 +45,20 @@ final class VideoSettingsStore {
         self.document = persistence.load(VideoSettingsDocument.self) ?? VideoSettingsDocument()
     }
 
-    func setProvider(_ id: String) { document.provider = id; persistence.save(document) }
-    func setModel(_ m: String) { document.model = m; persistence.save(document) }
-    func setCustomBaseURL(_ u: String) { document.customBaseURL = u; persistence.save(document) }
-    func setLocalURL(_ u: String) { document.localURL = u; persistence.save(document) }
+    func setProvider(_ id: String) {
+        document.provider = id
+        persistence.save(document)
+    }
+    func setModel(_ m: String) {
+        document.model = m
+        persistence.save(document)
+    }
+    func setCustomBaseURL(_ u: String) {
+        document.customBaseURL = u
+        persistence.save(document)
+    }
+    func setLocalURL(_ u: String) {
+        document.localURL = u
+        persistence.save(document)
+    }
 }

@@ -1,17 +1,21 @@
-import Testing
-import Foundation
 import AinkradSignal
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @MainActor
 @Suite("Signal cue selection")
 struct SignalCueTests {
     private let raven = SignalSource.app(appID: "raven")
-    private func event(_ severity: SignalSeverity,
-                       importance: SignalImportance = .normal,
-                       source: SignalSource? = nil) -> SignalEvent {
-        SignalEvent(source: source ?? raven, kind: "k", severity: severity,
-                    title: "t", proposedImportance: importance)
+    private func event(
+        _ severity: SignalSeverity,
+        importance: SignalImportance = .normal,
+        source: SignalSource? = nil
+    ) -> SignalEvent {
+        SignalEvent(
+            source: source ?? raven, kind: "k", severity: severity,
+            title: "t", proposedImportance: importance)
     }
 
     @Test("severity picks the cue when nothing else applies")
@@ -26,8 +30,10 @@ struct SignalCueTests {
     func urgencyWins() {
         // "Something is waiting on you" is a different fact from "something
         // broke", and an .info event can be the more urgent of the two.
-        #expect(SignalCue.cue(for: event(.info, importance: .urgent),
-                              rules: .default) == .signalUrgent)
+        #expect(
+            SignalCue.cue(
+                for: event(.info, importance: .urgent),
+                rules: .default) == .signalUrgent)
     }
 
     @Test("a per-source silent choice outranks everything")
@@ -106,8 +112,9 @@ struct SignalBurstGateTests {
         var gate = SignalBurstGate()
         let start = Date()
         let warning = gate.admits(start, rank: SignalCue.rank(.warning))
-        let failure = gate.admits(start.addingTimeInterval(0.5),
-                                  rank: SignalCue.rank(.failure))
+        let failure = gate.admits(
+            start.addingTimeInterval(0.5),
+            rank: SignalCue.rank(.failure))
         #expect(warning)
         // Without this, a warning at t=0 silences a failure at t=0.5 — the
         // burst gate would reliably suppress exactly the sound worth hearing.
@@ -129,8 +136,9 @@ struct SignalBurstGateTests {
         var gate = SignalBurstGate()
         let start = Date()
         let first = gate.admits(start, rank: SignalCue.rank(.failure))
-        let second = gate.admits(start.addingTimeInterval(0.5),
-                                 rank: SignalCue.rank(.failure))
+        let second = gate.admits(
+            start.addingTimeInterval(0.5),
+            rank: SignalCue.rank(.failure))
         // Strictly greater, not greater-or-equal — the same rule
         // `SignalToastModel` uses for which toast may displace which.
         #expect(first)

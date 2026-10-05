@@ -44,9 +44,13 @@ enum SignalDeliveryMode: String, CaseIterable, Identifiable {
     /// user actually picks it, merely looking at the row cannot destroy the
     /// richer setting.
     init(rules: RoutingRules, source: SignalSource) {
-        if rules.mutedSources.contains(source) { self = .off }
-        else if rules.sourceOverrides[source] == [.feed] { self = .feedOnly }
-        else { self = .everything }
+        if rules.mutedSources.contains(source) {
+            self = .off
+        } else if rules.sourceOverrides[source] == [.feed] {
+            self = .feedOnly
+        } else {
+            self = .everything
+        }
     }
 
     /// Writes the mode into the rules, clearing whatever the other two modes

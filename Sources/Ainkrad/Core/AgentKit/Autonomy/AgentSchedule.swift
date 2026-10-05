@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// A payload-carrying enum with a hand-written `Codable` conformance (M7 Wave
 /// B): a future case this build doesn't know yet must decode to `.unknown`
@@ -38,8 +38,9 @@ enum ScheduleTrigger: Codable, Equatable, Sendable {
             return
         }
         if let nested = try? container.nestedContainer(keyedBy: FileChangeKeys.self, forKey: .fileChange) {
-            self = .fileChange(path: try nested.decode(String.self, forKey: .path),
-                                glob: try nested.decodeIfPresent(String.self, forKey: .glob))
+            self = .fileChange(
+                path: try nested.decode(String.self, forKey: .path),
+                glob: try nested.decodeIfPresent(String.self, forKey: .glob))
             return
         }
         if let nested = try? container.nestedContainer(keyedBy: GitChangeKeys.self, forKey: .gitChange) {
@@ -87,8 +88,8 @@ enum ScheduleTrigger: Codable, Equatable, Sendable {
 /// The explicit, saved permission/sandbox posture a schedule runs with. Set at
 /// creation; the scheduler never escalates beyond it.
 struct SavedExecutionPosture: Codable, Equatable, Sendable {
-    var permissionMode: String            // AgentPermissionMode.rawValue
-    var sandboxProfileID: String?         // PROVISIONAL — projects into Slice 6 AgentExecutionPolicy
+    var permissionMode: String  // AgentPermissionMode.rawValue
+    var sandboxProfileID: String?  // PROVISIONAL — projects into Slice 6 AgentExecutionPolicy
 
     init(permissionMode: String, sandboxProfileID: String? = nil) {
         self.permissionMode = permissionMode
@@ -113,12 +114,20 @@ struct AgentSchedule: Codable, Equatable, Identifiable, Sendable {
     var lastFired: Date?
     var lastRunID: UUID?
 
-    init(id: UUID = UUID(), name: String, trigger: ScheduleTrigger, prompt: String,
-         agentID: UUID? = nil, enabled: Bool = true, posture: SavedExecutionPosture,
-         lastFired: Date? = nil, lastRunID: UUID? = nil) {
-        self.id = id; self.name = name; self.trigger = trigger; self.prompt = prompt
-        self.agentID = agentID; self.enabled = enabled; self.posture = posture
-        self.lastFired = lastFired; self.lastRunID = lastRunID
+    init(
+        id: UUID = UUID(), name: String, trigger: ScheduleTrigger, prompt: String,
+        agentID: UUID? = nil, enabled: Bool = true, posture: SavedExecutionPosture,
+        lastFired: Date? = nil, lastRunID: UUID? = nil
+    ) {
+        self.id = id
+        self.name = name
+        self.trigger = trigger
+        self.prompt = prompt
+        self.agentID = agentID
+        self.enabled = enabled
+        self.posture = posture
+        self.lastFired = lastFired
+        self.lastRunID = lastRunID
     }
 
     // Forward-compatible decode (wave-1 idiom). `id`/`name`/`trigger`/`prompt`/`posture`

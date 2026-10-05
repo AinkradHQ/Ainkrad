@@ -18,9 +18,11 @@ enum SourceStatusLine {
     /// Nil when the source is entirely at its defaults — a row that says
     /// nothing extra is the common case, and filling it with "nothing
     /// overridden" would be furniture.
-    static func text(rules: RoutingRules,
-                     source: SignalSource,
-                     loudest: SignalKindActivity? = nil) -> String? {
+    static func text(
+        rules: RoutingRules,
+        source: SignalSource,
+        loudest: SignalKindActivity? = nil
+    ) -> String? {
         var parts: [String] = []
 
         let quietKinds = rules.sourceKindOverrides

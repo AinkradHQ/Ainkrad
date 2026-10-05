@@ -44,8 +44,9 @@ struct SystemGitRunner: GitRunning {
         process.waitUntilExit()
 
         guard process.terminationStatus == 0 else {
-            throw GitRunFailure(status: process.terminationStatus,
-                                stderr: String(decoding: errorData, as: UTF8.self))
+            throw GitRunFailure(
+                status: process.terminationStatus,
+                stderr: String(decoding: errorData, as: UTF8.self))
         }
         return String(decoding: data, as: UTF8.self)
     }

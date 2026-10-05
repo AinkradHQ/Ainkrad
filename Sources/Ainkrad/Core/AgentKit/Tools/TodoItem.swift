@@ -1,10 +1,12 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// One entry in the agent's per-session task checklist.
 struct TodoItem: Equatable, Sendable, Identifiable {
     enum Status: String, Equatable, Sendable, CaseIterable {
-        case pending, inProgress = "in_progress", completed
+        case pending
+        case inProgress = "in_progress"
+        case completed
     }
     let content: String
     let status: Status
@@ -19,7 +21,7 @@ extension TodoItem {
         guard case .array(let raw)? = input["items"] else { return [] }
         return raw.compactMap { entry in
             guard let content = entry["content"]?.stringValue,
-                  !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             else { return nil }
             let status = entry["status"]?.stringValue.flatMap(Status.init(rawValue:)) ?? .pending
             return TodoItem(content: content, status: status)

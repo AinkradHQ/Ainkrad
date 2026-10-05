@@ -1,5 +1,5 @@
-import SwiftUI
 import AppKit
+import SwiftUI
 
 /// The single thing that can hold keyboard focus in a Hoard pane.
 ///
@@ -183,18 +183,23 @@ struct HoardKeyboardHandling: ViewModifier {
             // ⌘1–9 jump straight to a tab. ⌘9 is the LAST tab, not the ninth —
             // matching every browser, and the only version that stays useful
             // when there are three tabs open.
-            .onKeyPress(keys: ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
-                        phases: .down) { press in
+            .onKeyPress(
+                keys: ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+                phases: .down
+            ) { press in
                 guard press.modifiers.contains(.command),
-                      let digit = press.key.character.wholeNumberValue else { return .ignored }
+                    let digit = press.key.character.wholeNumberValue
+                else { return .ignored }
                 store.selectTab(at: digit == 9 ? store.tabs.count - 1 : digit - 1)
                 return .handled
             }
             // Opt-in vim layer. Bound ONLY when enabled, so type-to-select
             // keeps working for everyone else.
             .onKeyPress(keys: ["h", "j", "k", "l", "g", "G"], phases: .down) { press in
-                guard vimKeys, navigationEnabled, press.modifiers.isEmpty
-                        || press.modifiers == [.shift] else { return .ignored }
+                guard vimKeys, navigationEnabled,
+                    press.modifiers.isEmpty
+                        || press.modifiers == [.shift]
+                else { return .ignored }
                 switch press.key.character {
                 case "j": tab.moveCursor(by: 1)
                 case "k": tab.moveCursor(by: -1)
@@ -220,23 +225,31 @@ struct HoardKeyboardHandling: ViewModifier {
             // layer, which is the conflict that made vim keys opt-in.
             .onKeyPress(characters: .alphanumerics, phases: .down) { press in
                 guard navigationEnabled,
-                      press.modifiers.isEmpty,
-                      let character = press.characters.first else { return .ignored }
+                    press.modifiers.isEmpty,
+                    let character = press.characters.first
+                else { return .ignored }
                 if vimKeys && "hjklgG".contains(character) { return .ignored }
 
                 let names = tab.visibleEntries.map(\.name)
                 let query: String
                 let start: Int
                 switch typeAhead.append(character) {
-                case .search(let text): query = text; start = 0
-                case .nextMatch(let text): query = text; start = tab.cursorIndex + 1
+                case .search(let text):
+                    query = text
+                    start = 0
+                case .nextMatch(let text):
+                    query = text
+                    start = tab.cursorIndex + 1
                 }
 
                 // A miss is still HANDLED: falling through would hand the key
                 // to whatever else claims it, so a typo would suddenly trigger
                 // an unrelated command.
-                guard let index = typeAheadIndex(in: names, matching: query,
-                                                 from: start) else { return .handled }
+                guard
+                    let index = typeAheadIndex(
+                        in: names, matching: query,
+                        from: start)
+                else { return .handled }
                 tab.moveCursor(by: index - tab.cursorIndex)
                 return .handled
             }
@@ -254,7 +267,8 @@ struct HoardKeyboardHandling: ViewModifier {
             // container holding focus, which it often does not.
             .onKeyPress(keys: ["f"], phases: .down) { press in
                 guard press.modifiers.contains(.command),
-                      !press.modifiers.contains(.shift) else { return .ignored }
+                    !press.modifiers.contains(.shift)
+                else { return .ignored }
                 onOpenFinder(.globalSearch)
                 return .handled
             }
@@ -332,27 +346,31 @@ struct HoardKeyboardHandling: ViewModifier {
 }
 
 extension View {
-    func filesKeyboardHandling(store: HoardPaneStore, actions: HoardActions,
-                               undoStack: UndoStack,
-                               onUndo: @escaping () -> Void,
-                               onRedo: @escaping () -> Void,
-                               onTogglePreview: @escaping () -> Void,
-                               onOpenFinder: @escaping (HoardFinderMode) -> Void,
-                               onFocusFilter: @escaping () -> Void,
-                               onTogglePin: @escaping () -> Void,
-                               isFinderOpen: Bool,
-                               vimKeys: Bool,
-                               focus: FocusState<HoardFocusTarget?>.Binding,
-                               isEditingPath: Binding<Bool>) -> some View {
-        modifier(HoardKeyboardHandling(store: store, actions: actions, undoStack: undoStack,
-                                       onUndo: onUndo, onRedo: onRedo,
-                                       onTogglePreview: onTogglePreview,
-                                       onOpenFinder: onOpenFinder,
-                                       onFocusFilter: onFocusFilter,
-                                       onTogglePin: onTogglePin,
-                                       isFinderOpen: isFinderOpen,
-                                       vimKeys: vimKeys,
-                                       focus: focus,
-                                       isEditingPath: isEditingPath))
+    func filesKeyboardHandling(
+        store: HoardPaneStore, actions: HoardActions,
+        undoStack: UndoStack,
+        onUndo: @escaping () -> Void,
+        onRedo: @escaping () -> Void,
+        onTogglePreview: @escaping () -> Void,
+        onOpenFinder: @escaping (HoardFinderMode) -> Void,
+        onFocusFilter: @escaping () -> Void,
+        onTogglePin: @escaping () -> Void,
+        isFinderOpen: Bool,
+        vimKeys: Bool,
+        focus: FocusState<HoardFocusTarget?>.Binding,
+        isEditingPath: Binding<Bool>
+    ) -> some View {
+        modifier(
+            HoardKeyboardHandling(
+                store: store, actions: actions, undoStack: undoStack,
+                onUndo: onUndo, onRedo: onRedo,
+                onTogglePreview: onTogglePreview,
+                onOpenFinder: onOpenFinder,
+                onFocusFilter: onFocusFilter,
+                onTogglePin: onTogglePin,
+                isFinderOpen: isFinderOpen,
+                vimKeys: vimKeys,
+                focus: focus,
+                isEditingPath: isEditingPath))
     }
 }

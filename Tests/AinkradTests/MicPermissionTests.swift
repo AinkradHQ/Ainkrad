@@ -1,12 +1,14 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 final class FakeMicPermission: MicPermissionProviding, @unchecked Sendable {
     var status: MicAuthorization
     var grantOnRequest: Bool
     init(status: MicAuthorization, grantOnRequest: Bool = true) {
-        self.status = status; self.grantOnRequest = grantOnRequest
+        self.status = status
+        self.grantOnRequest = grantOnRequest
     }
     func request() async -> Bool {
         status = grantOnRequest ? .authorized : .denied

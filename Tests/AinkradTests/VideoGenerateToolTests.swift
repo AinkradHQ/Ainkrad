@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradHostRuntime
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("VideoGenerateTool")
@@ -15,8 +16,9 @@ struct VideoGenerateToolTests {
     }
 
     private func tempStore() -> GeneratedMediaStore {
-        GeneratedMediaStore(baseDirectory: URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("ainkrad-test-\(UUID().uuidString)", isDirectory: true))
+        GeneratedMediaStore(
+            baseDirectory: URL(fileURLWithPath: NSTemporaryDirectory())
+                .appendingPathComponent("ainkrad-test-\(UUID().uuidString)", isDirectory: true))
     }
 
     @Test func gracefulWhenNotConfigured() async throws {
@@ -70,7 +72,8 @@ struct RoutingVideoBackendTests {
         return RoutingVideoBackend(
             persistence: p,
             secrets: secrets,
-            replicate: ReplicateVideoBackend(secrets: secrets, http: TwoHopHTTP(apiJSON: #"{"output":"https://cdn/x.mp4"}"#)),
+            replicate: ReplicateVideoBackend(
+                secrets: secrets, http: TwoHopHTTP(apiJSON: #"{"output":"https://cdn/x.mp4"}"#)),
             luma: LumaVideoBackend(secrets: InMemorySecretStore(), http: TwoHopHTTP(apiJSON: "{}")),
             fal: FalVideoBackend(secrets: InMemorySecretStore(), http: TwoHopHTTP(apiJSON: "{}")),
             auxHTTP: TwoHopHTTP(apiJSON: "{}"))
@@ -78,14 +81,14 @@ struct RoutingVideoBackendTests {
 
     @Test func defaultsToReplicateConfigured() async throws {
         let r = router(InMemoryPersistenceStore())
-        #expect(r.isConfigured) // replicate keyed
+        #expect(r.isConfigured)  // replicate keyed
         #expect(try await r.generateVideo(prompt: "x").data == Data([9, 9, 9]))
     }
 
     @Test func routesToLumaUnconfiguredWithoutKey() {
         let p = InMemoryPersistenceStore()
         p.save(VideoSettingsDocument(provider: "luma"))
-        #expect(router(p).isConfigured == false) // luma has no key in this fixture
+        #expect(router(p).isConfigured == false)  // luma has no key in this fixture
     }
 }
 

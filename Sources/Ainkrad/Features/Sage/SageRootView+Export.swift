@@ -1,7 +1,7 @@
-import AppKit
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import AppKit
+import SwiftUI
 
 /// Export/redaction flow for `SageRootView` (relocated from
 /// `SageComposerBar+Export.swift` so the modal presents over the full
@@ -39,7 +39,8 @@ extension SageRootView {
     func performExport() {
         let redactions = RedactionList.parse(redactionsText)
 
-        let rendered = ConversationExporter.export(environment.agentSession.messages, format: .markdown, redactions: redactions)
+        let rendered = ConversationExporter.export(
+            environment.agentSession.messages, format: .markdown, redactions: redactions)
 
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()

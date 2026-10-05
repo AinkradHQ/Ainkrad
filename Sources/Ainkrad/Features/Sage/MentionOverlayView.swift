@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// `@`-triggered file-mention overlay: a fuzzy `FileMatch` list from
 /// `WorkspaceFileIndex.search(query:limit:)`, rendered through the shared

@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-@testable import Ainkrad
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 /// Validates the `ConnectionStore` interaction the Sage Connections
 /// settings UI performs (add / reveal / remove a provider API key). The
@@ -17,7 +18,9 @@ struct SageConnectionsTests {
     func addingPersistsConnectionAndSecret() {
         let store = makeStore()
 
-        let connection = store.addConnection(preset: ProviderPreset.preset(id: "claude"), displayName: "Claude Key", baseURL: ProviderPreset.preset(id: "claude").defaultBaseURL, token: "sk-ant-123")
+        let connection = store.addConnection(
+            preset: ProviderPreset.preset(id: "claude"), displayName: "Claude Key",
+            baseURL: ProviderPreset.preset(id: "claude").defaultBaseURL, token: "sk-ant-123")
 
         #expect(connection.kind == .claude)
         #expect(store.connections.map(\.id) == [connection.id])
@@ -27,7 +30,9 @@ struct SageConnectionsTests {
     @Test("token(for:) returns the persisted token")
     func tokenForReturnsPersistedToken() {
         let store = makeStore()
-        let connection = store.addConnection(preset: ProviderPreset.preset(id: "openai"), displayName: "OpenAI Key", baseURL: ProviderPreset.preset(id: "openai").defaultBaseURL, token: "sk-oai-456")
+        let connection = store.addConnection(
+            preset: ProviderPreset.preset(id: "openai"), displayName: "OpenAI Key",
+            baseURL: ProviderPreset.preset(id: "openai").defaultBaseURL, token: "sk-oai-456")
 
         #expect(store.token(for: connection) == "sk-oai-456")
     }
@@ -35,7 +40,9 @@ struct SageConnectionsTests {
     @Test("removeConnection clears both the metadata and the secret")
     func removeClearsMetadataAndSecret() {
         let store = makeStore()
-        let connection = store.addConnection(preset: ProviderPreset.preset(id: "claude"), displayName: "Claude Key", baseURL: ProviderPreset.preset(id: "claude").defaultBaseURL, token: "sk-ant-789")
+        let connection = store.addConnection(
+            preset: ProviderPreset.preset(id: "claude"), displayName: "Claude Key",
+            baseURL: ProviderPreset.preset(id: "claude").defaultBaseURL, token: "sk-ant-789")
 
         store.removeConnection(connection)
 

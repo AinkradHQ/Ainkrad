@@ -1,30 +1,31 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("SkillParser")
 struct SkillParserTests {
     private let valid = """
-    ---
-    name: pdf-processing
-    description: Extract text, tables, and forms from PDF files
-    allowed-tools: read_file, run_terminal
-    triggers:
-      - pdf
-      - "extract from a document"
-    ---
-    # PDF Processing
+        ---
+        name: pdf-processing
+        description: Extract text, tables, and forms from PDF files
+        allowed-tools: read_file, run_terminal
+        triggers:
+          - pdf
+          - "extract from a document"
+        ---
+        # PDF Processing
 
-    1. Read the file.
-    2. Extract with pdftotext.
-    """
+        1. Read the file.
+        2. Extract with pdftotext.
+        """
 
     @Test func parsesFrontMatterAndBody() throws {
         let s = try SkillParser.parse(valid, source: .local)
         #expect(s.name == "pdf-processing")
-        #expect(s.description == "Extract text, tables, and forms from PDF files") // comma-safe scalar
+        #expect(s.description == "Extract text, tables, and forms from PDF files")  // comma-safe scalar
         #expect(s.allowedTools == ["read_file", "run_terminal"])
-        #expect(s.triggers == ["pdf", "extract from a document"])          // unquoted dashed list
+        #expect(s.triggers == ["pdf", "extract from a document"])  // unquoted dashed list
         #expect(s.source == .local)
         #expect(s.body.hasPrefix("# PDF Processing"))
         #expect(s.body.contains("pdftotext"))
@@ -95,18 +96,18 @@ struct SkillParserTests {
 
     @Test func tripleDashInsideBodyDoesNotConfuseParsing() throws {
         let text = """
-        ---
-        name: has-body-delimiters
-        description: body contains its own --- markers
-        ---
-        Section one.
+            ---
+            name: has-body-delimiters
+            description: body contains its own --- markers
+            ---
+            Section one.
 
-        ---
+            ---
 
-        Section two, after a body-internal delimiter.
-        ---
-        Section three.
-        """
+            Section two, after a body-internal delimiter.
+            ---
+            Section three.
+            """
         let s = try SkillParser.parse(text, source: .local)
         #expect(s.name == "has-body-delimiters")
         #expect(s.body.contains("Section one."))

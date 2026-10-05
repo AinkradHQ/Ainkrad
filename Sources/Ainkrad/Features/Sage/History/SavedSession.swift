@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 struct SavedSession: Codable, Equatable, Identifiable {
     var id: UUID
@@ -8,10 +8,15 @@ struct SavedSession: Codable, Equatable, Identifiable {
     var updatedAt: Date
     var messages: [AgentMessage]
 
-    init(id: UUID = UUID(), title: String = "New chat",
-         createdAt: Date, updatedAt: Date, messages: [AgentMessage] = []) {
-        self.id = id; self.title = title
-        self.createdAt = createdAt; self.updatedAt = updatedAt; self.messages = messages
+    init(
+        id: UUID = UUID(), title: String = "New chat",
+        createdAt: Date, updatedAt: Date, messages: [AgentMessage] = []
+    ) {
+        self.id = id
+        self.title = title
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+        self.messages = messages
     }
 }
 
@@ -21,7 +26,8 @@ struct SageSessionsDocument: PersistableDocument {
     var activeID: UUID?
 
     init(sessions: [SavedSession] = [], activeID: UUID? = nil) {
-        self.sessions = sessions; self.activeID = activeID
+        self.sessions = sessions
+        self.activeID = activeID
     }
 
     init(from decoder: Decoder) throws {

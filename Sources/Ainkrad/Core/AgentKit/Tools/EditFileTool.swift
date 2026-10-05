@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/Tools/EditFileTool.swift
 import Foundation
-import AinkradHostRuntime
 
 /// Find/replace file editor. `old_string` must match exactly once. Empty
 /// `old_string` on a non-existent path creates the file. Any path is allowed;
@@ -8,10 +8,10 @@ import AinkradHostRuntime
 struct EditFileTool: AgentTool {
     let name = "edit_file"
     let description = """
-    Replace an exact, unique substring of a file with new text. \
-    `old_string` must appear exactly once. To create a new file, pass an empty \
-    `old_string` and the full contents as `new_string`.
-    """
+        Replace an exact, unique substring of a file with new text. \
+        `old_string` must appear exactly once. To create a new file, pass an empty \
+        `old_string` and the full contents as `new_string`.
+        """
     let permission: ToolPermissionClass = .write
 
     /// Optional advisory LSP integration (Slice 2, Task 17). Defaulted `nil` so every
@@ -27,12 +27,18 @@ struct EditFileTool: AgentTool {
         .object([
             "type": .string("object"),
             "properties": .object([
-                "path": .object(["type": .string("string"),
-                                 "description": .string("Absolute path to the file to edit.")]),
-                "old_string": .object(["type": .string("string"),
-                                       "description": .string("Exact text to replace; must be unique. Empty to create a new file.")]),
-                "new_string": .object(["type": .string("string"),
-                                       "description": .string("Replacement text.")]),
+                "path": .object([
+                    "type": .string("string"),
+                    "description": .string("Absolute path to the file to edit."),
+                ]),
+                "old_string": .object([
+                    "type": .string("string"),
+                    "description": .string("Exact text to replace; must be unique. Empty to create a new file."),
+                ]),
+                "new_string": .object([
+                    "type": .string("string"),
+                    "description": .string("Replacement text."),
+                ]),
             ]),
             "required": .array([.string("path"), .string("old_string"), .string("new_string")]),
         ])
@@ -40,14 +46,19 @@ struct EditFileTool: AgentTool {
 
     // Shared by execute (writes) and approvalPreview (renders) so the edit is
     // computed identically in both.
-    private struct Edit { let path: String; let original: String; let updated: String }
+    private struct Edit {
+        let path: String
+        let original: String
+        let updated: String
+    }
 
     private func computeEdit(_ input: JSONValue) throws -> Edit {
         guard let path = input["path"]?.stringValue, !path.isEmpty else {
             throw ToolError.message("edit_file requires a non-empty \"path\".")
         }
         guard let oldString = input["old_string"]?.stringValue,
-              let newString = input["new_string"]?.stringValue else {
+            let newString = input["new_string"]?.stringValue
+        else {
             throw ToolError.message("edit_file requires \"old_string\" and \"new_string\".")
         }
         let exists = FileManager.default.fileExists(atPath: path)
@@ -102,8 +113,9 @@ struct EditFileTool: AgentTool {
     func approvalPreview(_ input: JSONValue) -> ToolApprovalPreview {
         let path = input["path"]?.stringValue ?? "?"
         guard let edit = try? computeEdit(input) else {
-            return ToolApprovalPreview(title: "Edit file", summary: path,
-                                       diff: nil)
+            return ToolApprovalPreview(
+                title: "Edit file", summary: path,
+                diff: nil)
         }
         return ToolApprovalPreview(
             title: edit.original.isEmpty ? "Create file" : "Edit file",

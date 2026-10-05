@@ -28,7 +28,9 @@ final class MemoryStore {
         do {
             try text.write(to: url, atomically: true, encoding: .utf8)
         } catch {
-            Log.persistence.error("Failed to write \(text.utf8.count, privacy: .public) bytes to \(url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            Log.persistence.error(
+                "Failed to write \(text.utf8.count, privacy: .public) bytes to \(url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
+            )
         }
         onChange?(file)
     }

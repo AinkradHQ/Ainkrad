@@ -1,7 +1,7 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/Usage/UsageTracker.swift
 import Foundation
 import Observation
-import AinkradHostRuntime
 
 /// Persisted usage ledger: cumulative tokens/cost across all sessions, router
 /// savings vs. always-premium, and a per-day breakdown keyed by `yyyy-MM-dd`.
@@ -12,8 +12,10 @@ struct UsageLedgerDocument: PersistableDocument {
     var savingsUSD: Double = 0
     var byDay: [String: TokenUsage] = [:]
 
-    init(cumulative: TokenUsage = .zero, cumulativeCostUSD: Double = 0,
-         savingsUSD: Double = 0, byDay: [String: TokenUsage] = [:]) {
+    init(
+        cumulative: TokenUsage = .zero, cumulativeCostUSD: Double = 0,
+        savingsUSD: Double = 0, byDay: [String: TokenUsage] = [:]
+    ) {
         self.cumulative = cumulative
         self.cumulativeCostUSD = cumulativeCostUSD
         self.savingsUSD = savingsUSD
@@ -61,14 +63,18 @@ final class UsageTracker {
         let key = Self.dayKey()
         ledger.byDay[key] = (ledger.byDay[key] ?? .zero) + usage
 
-        if let cost = prices.cost(model: model, input: usage.input, output: usage.output,
-                                   cacheRead: usage.cacheRead, cacheWrite: usage.cacheWrite) {
+        if let cost = prices.cost(
+            model: model, input: usage.input, output: usage.output,
+            cacheRead: usage.cacheRead, cacheWrite: usage.cacheWrite)
+        {
             sessionCostUSD += cost
             ledger.cumulativeCostUSD += cost
 
             if let baseline = baselineModel,
-               let baseCost = prices.cost(model: baseline, input: usage.input, output: usage.output,
-                                          cacheRead: usage.cacheRead, cacheWrite: usage.cacheWrite) {
+                let baseCost = prices.cost(
+                    model: baseline, input: usage.input, output: usage.output,
+                    cacheRead: usage.cacheRead, cacheWrite: usage.cacheWrite)
+            {
                 ledger.savingsUSD += max(0, baseCost - cost)
             }
         }

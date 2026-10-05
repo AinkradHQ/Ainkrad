@@ -1,6 +1,6 @@
+import AppKit
 // Sources/Ainkrad/Core/AgentKit/Auth/ClaudeOAuthLoginController.swift
 import Foundation
-import AppKit
 
 /// Orchestrates the subscription OAuth login flow for the settings UI:
 /// PKCE + state → open the browser authorize URL → loopback callback (falling
@@ -27,10 +27,14 @@ final class ClaudeOAuthLoginController: ObservableObject {
     /// makes one decision from one predicate for both routes.
     @Published var errorFailure: ConnectionFailure?
 
-    init(store: OAuthCredentialStore,
-         flow: ClaudeOAuthFlow,
-         importer: ClaudeCodeCredentialImporter = ClaudeCodeCredentialImporter()) {
-        self.store = store; self.flow = flow; self.importer = importer
+    init(
+        store: OAuthCredentialStore,
+        flow: ClaudeOAuthFlow,
+        importer: ClaudeCodeCredentialImporter = ClaudeCodeCredentialImporter()
+    ) {
+        self.store = store
+        self.flow = flow
+        self.importer = importer
     }
 
     var canImportFromClaudeCode: Bool { importer.isAvailable }
@@ -49,10 +53,12 @@ final class ClaudeOAuthLoginController: ObservableObject {
     }
 
     func beginLogin(for connection: Connection) async {
-        errorMessage = nil; errorFailure = nil
+        errorMessage = nil
+        errorFailure = nil
         let pkce = PKCE.generate()
         let state = UUID().uuidString
-        pendingPKCE = pkce; pendingState = state
+        pendingPKCE = pkce
+        pendingState = state
         let url = ClaudeOAuthFlow.authorizeURL(state: state, challenge: pkce.challenge)
         authorizeURL = url
         NSWorkspace.shared.open(url)
@@ -62,14 +68,15 @@ final class ClaudeOAuthLoginController: ObservableObject {
             let cb = try await server.waitForCallback(timeout: 300)
             try await complete(cb, for: connection)
         } catch LoopbackError.bindFailed {
-            usePasteFallback = true    // UI shows the paste field + authorizeURL
+            usePasteFallback = true  // UI shows the paste field + authorizeURL
         } catch {
             report(error)
         }
     }
 
     func pasteCode(_ raw: String, for connection: Connection) async {
-        errorMessage = nil; errorFailure = nil
+        errorMessage = nil
+        errorFailure = nil
         do {
             guard let cb = Self.parsePastedCode(raw) else { throw LoopbackError.malformedCallback }
             try await complete(cb, for: connection)
@@ -79,7 +86,8 @@ final class ClaudeOAuthLoginController: ObservableObject {
     }
 
     func importFromClaudeCode(for connection: Connection) {
-        errorMessage = nil; errorFailure = nil
+        errorMessage = nil
+        errorFailure = nil
         do {
             let token = try importer.load()
             store.store(token, for: connection.id, source: .claudeCodeImport)
@@ -100,7 +108,8 @@ final class ClaudeOAuthLoginController: ObservableObject {
     private func report(_ error: Error) {
         if case ClaudeOAuthError.tokenEndpoint(let status, let body) = error, !body.isEmpty {
             Log.settings.error(
-                "Claude OAuth token endpoint \(status, privacy: .public): \(String(body.prefix(300)), privacy: .public)")
+                "Claude OAuth token endpoint \(status, privacy: .public): \(String(body.prefix(300)), privacy: .public)"
+            )
         }
         errorMessage = Self.message(for: error)
         errorFailure = Self.classify(error)
@@ -116,24 +125,24 @@ final class ClaudeOAuthLoginController: ObservableObject {
             switch ConnectionFailure.forHTTP(status: status) {
             case .rateLimited:
                 return "Claude is rate-limiting sign-ins right now. This is temporary and "
-                     + "nothing is wrong with your account — wait a minute and try again, or "
-                     + "use your existing Claude Code login or an API key instead."
+                    + "nothing is wrong with your account — wait a minute and try again, or "
+                    + "use your existing Claude Code login or an API key instead."
             case .serverError:
                 return "Claude's sign-in service is having trouble on its end. This is "
-                     + "temporary — try again shortly, or connect with an API key instead."
+                    + "temporary — try again shortly, or connect with an API key instead."
             case .unauthorized:
                 return "Claude turned down that sign-in. Start it again and approve the "
-                     + "request in the browser, making sure you paste the whole code back."
+                    + "request in the browser, making sure you paste the whole code back."
             default:
                 return "Claude couldn't complete that sign-in. Start it again, or connect "
-                     + "with an API key instead. (The details are in the app log.)"
+                    + "with an API key instead. (The details are in the app log.)"
             }
         case ClaudeOAuthError.allEndpointsFailed:
             return "Couldn't reach Claude to sign in. Check your internet connection and "
-                 + "try again."
+                + "try again."
         case ClaudeOAuthError.malformedResponse:
             return "Claude sent back a sign-in response Ainkrad didn't understand. Try "
-                 + "again, or connect with an API key instead."
+                + "again, or connect with an API key instead."
         default:
             return "Sign-in failed: \(error.localizedDescription)"
         }
@@ -161,9 +170,11 @@ final class ClaudeOAuthLoginController: ObservableObject {
 
     private func complete(_ cb: CallbackResult, for connection: Connection) async throws {
         guard let pkce = pendingPKCE, let state = pendingState else { throw LoopbackError.malformedCallback }
-        guard cb.state.isEmpty || cb.state == state else { throw LoopbackError.malformedCallback } // CSRF guard
+        guard cb.state.isEmpty || cb.state == state else { throw LoopbackError.malformedCallback }  // CSRF guard
         let token = try await flow.exchange(code: cb.code, verifier: pkce.verifier, state: state)
         store.store(token, for: connection.id, source: .freshLogin)
-        pendingPKCE = nil; pendingState = nil; usePasteFallback = false
+        pendingPKCE = nil
+        pendingState = nil
+        usePasteFallback = false
     }
 }

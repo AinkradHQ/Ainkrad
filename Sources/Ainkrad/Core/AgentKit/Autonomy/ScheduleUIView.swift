@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Cardinal-HUD Scheduler: a create editor (name, NL schedule text — compiled
 /// live via `NaturalLanguageCronCompiler` with a next-fire preview — trigger
@@ -24,10 +24,10 @@ struct ScheduleUIView: View {
     }
 
     @State private var draftName = ""
-    @State private var draftWhen = ""          // NL schedule, used when kind == .time
+    @State private var draftWhen = ""  // NL schedule, used when kind == .time
     @State private var draftPrompt = ""
     @State private var draftKind: TriggerKind = .time
-    @State private var draftPath = ""          // used when kind == .fileChange / .gitChange
+    @State private var draftPath = ""  // used when kind == .fileChange / .gitChange
     @State private var draftGlob = ""
 
     var body: some View {
@@ -35,13 +35,17 @@ struct ScheduleUIView: View {
 
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                AinkradSettingsPanel(title: "New schedule",
-                                     hint: "Have the agent run on a timer, a file change, a git change, or an incoming webhook.") {
+                AinkradSettingsPanel(
+                    title: "New schedule",
+                    hint: "Have the agent run on a timer, a file change, a git change, or an incoming webhook."
+                ) {
                     editor(tokens: tokens)
                 }
 
-                AinkradSettingsPanel(title: "Schedules (\(store.schedules.count))",
-                                     hint: "Existing schedules, with enable/disable and last-run status.") {
+                AinkradSettingsPanel(
+                    title: "Schedules (\(store.schedules.count))",
+                    hint: "Existing schedules, with enable/disable and last-run status."
+                ) {
                     list(tokens: tokens)
                 }
             }
@@ -85,8 +89,9 @@ struct ScheduleUIView: View {
                     .foregroundStyle(tokens.foreground.opacity(0.55))
             }
 
-            AinkradTextArea(text: $draftPrompt, placeholder: "What should the agent do?",
-                            minHeight: 60, maxHeight: 160)
+            AinkradTextArea(
+                text: $draftPrompt, placeholder: "What should the agent do?",
+                minHeight: 60, maxHeight: 160)
 
             AinkradButton(title: "Add", style: canAdd ? .primary : .ghost) { addSchedule() }
                 .disabled(!canAdd)
@@ -119,10 +124,15 @@ struct ScheduleUIView: View {
             // keys off the owning `AgentSchedule.id`, never this case's payload.
             trigger = .webhook
         }
-        store.upsert(AgentSchedule(
-            name: draftName, trigger: trigger, prompt: draftPrompt,
-            posture: SavedExecutionPosture(permissionMode: "ask", sandboxProfileID: "workspace-write")))
-        draftName = ""; draftWhen = ""; draftPrompt = ""; draftPath = ""; draftGlob = ""
+        store.upsert(
+            AgentSchedule(
+                name: draftName, trigger: trigger, prompt: draftPrompt,
+                posture: SavedExecutionPosture(permissionMode: "ask", sandboxProfileID: "workspace-write")))
+        draftName = ""
+        draftWhen = ""
+        draftPrompt = ""
+        draftPath = ""
+        draftGlob = ""
     }
 
     // MARK: - List
@@ -133,7 +143,8 @@ struct ScheduleUIView: View {
             AinkradEmptyState(
                 icon: "clock.badge",
                 title: "No schedules yet",
-                message: "Add one above to have the agent run on a timer, a file change, a git change, or an incoming webhook."
+                message:
+                    "Add one above to have the agent run on a timer, a file change, a git change, or an incoming webhook."
             )
         } else {
             LazyVStack(alignment: .leading, spacing: 8) {
@@ -150,7 +161,9 @@ struct ScheduleUIView: View {
                 leading: {
                     Image(systemName: schedule.enabled ? "clock.fill" : "clock")
                         .font(.system(size: 13))
-                        .foregroundStyle((schedule.enabled ? tokens.accentSecondary : tokens.foreground.opacity(0.4)).opacity(0.85))
+                        .foregroundStyle(
+                            (schedule.enabled ? tokens.accentSecondary : tokens.foreground.opacity(0.4)).opacity(0.85)
+                        )
                         .frame(width: 18)
                 },
                 title: schedule.name,

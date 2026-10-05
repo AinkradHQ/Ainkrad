@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Focus Mode's pane switcher: a horizontal tab strip along the TOP edge of
 /// the canvas — one tab per open panel, the active one filling the canvas

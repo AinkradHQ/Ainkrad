@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("MenuBar wiring")
 @MainActor
@@ -12,7 +13,9 @@ struct MenuBarWiringTests {
     /// cleanly (no leaked-continuation misuse warning) once `RunManager.stop`
     /// or process teardown cancels the in-flight task.
     final class HangingRunner: AgentRunRunner {
-        func execute(prompt: String, posture: SavedExecutionPosture?, appendLog: @escaping (String) -> Void) async -> AgentRunOutcome {
+        func execute(prompt: String, posture: SavedExecutionPosture?, appendLog: @escaping (String) -> Void) async
+            -> AgentRunOutcome
+        {
             try? await Task.sleep(for: .seconds(300))
             return .failure("did not complete in test")
         }
@@ -22,7 +25,8 @@ struct MenuBarWiringTests {
         let mgr = RunManager(persistence: InMemoryPersistenceStore(), runner: HangingRunner())
         let run = mgr.enqueue(prompt: "build feature")
         // Let the enqueue → pump → start sequence settle onto `.running`.
-        await Task.yield(); await Task.yield()
+        await Task.yield()
+        await Task.yield()
         try? await Task.sleep(nanoseconds: 20_000_000)
 
         let adapter = RunManagerMenuBarAdapter(manager: mgr)
@@ -33,7 +37,8 @@ struct MenuBarWiringTests {
     @Test func adapterStopRunForwardsToManager() async {
         let mgr = RunManager(persistence: InMemoryPersistenceStore(), runner: HangingRunner())
         let run = mgr.enqueue(prompt: "long task")
-        await Task.yield(); await Task.yield()
+        await Task.yield()
+        await Task.yield()
         try? await Task.sleep(nanoseconds: 20_000_000)
 
         let adapter = RunManagerMenuBarAdapter(manager: mgr)

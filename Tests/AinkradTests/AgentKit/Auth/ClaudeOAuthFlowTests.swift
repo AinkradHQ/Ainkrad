@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 private final class StubTransport: OAuthTokenTransport, @unchecked Sendable {
@@ -8,8 +9,9 @@ private final class StubTransport: OAuthTokenTransport, @unchecked Sendable {
     func post(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
         requests.append(request)
         let (data, status) = responses.removeFirst()
-        let resp = HTTPURLResponse(url: request.url!, statusCode: status,
-                                   httpVersion: nil, headerFields: nil)!
+        let resp = HTTPURLResponse(
+            url: request.url!, statusCode: status,
+            httpVersion: nil, headerFields: nil)!
         return (data, resp)
     }
 }
@@ -18,7 +20,7 @@ private final class StubTransport: OAuthTokenTransport, @unchecked Sendable {
     @Test func pkceChallengeIsS256OfVerifier() {
         let pkce = PKCE.generate()
         #expect(!pkce.verifier.isEmpty)
-        #expect(!pkce.challenge.contains("="))   // base64url, no padding
+        #expect(!pkce.challenge.contains("="))  // base64url, no padding
         #expect(!pkce.challenge.contains("+"))
         #expect(!pkce.challenge.contains("/"))
     }
@@ -37,9 +39,10 @@ private final class StubTransport: OAuthTokenTransport, @unchecked Sendable {
 
     @Test(.timeLimit(.minutes(1))) func exchangeParsesTokenAndSendsClaudeCodeUA() async throws {
         let body = """
-        {"access_token":"AT","refresh_token":"RT","expires_in":3600}
-        """.data(using: .utf8)!
-        let stub = StubTransport(); stub.responses = [(body, 200)]
+            {"access_token":"AT","refresh_token":"RT","expires_in":3600}
+            """.data(using: .utf8)!
+        let stub = StubTransport()
+        stub.responses = [(body, 200)]
         let flow = ClaudeOAuthFlow(transport: stub, clientVersion: "2.1.74")
         let token = try await flow.exchange(code: "C", verifier: "V", state: "S")
         #expect(token.accessToken == "AT")
@@ -51,10 +54,10 @@ private final class StubTransport: OAuthTokenTransport, @unchecked Sendable {
 
     @Test(.timeLimit(.minutes(1))) func exchangeFallsBackToSecondEndpointOn404() async throws {
         let ok = """
-        {"access_token":"AT","refresh_token":"RT","expires_in":10}
-        """.data(using: .utf8)!
+            {"access_token":"AT","refresh_token":"RT","expires_in":10}
+            """.data(using: .utf8)!
         let stub = StubTransport()
-        stub.responses = [(Data("nope".utf8), 404), (ok, 200)]   // 404 = host/route problem → fall through
+        stub.responses = [(Data("nope".utf8), 404), (ok, 200)]  // 404 = host/route problem → fall through
         let flow = ClaudeOAuthFlow(transport: stub, clientVersion: "2.1.74")
         let token = try await flow.exchange(code: "C", verifier: "V", state: "S")
         #expect(token.accessToken == "AT")
@@ -68,21 +71,24 @@ private final class StubTransport: OAuthTokenTransport, @unchecked Sendable {
         let stub = StubTransport()
         stub.responses = [(Data(#"{"error":{"type":"rate_limit_error"}}"#.utf8), 429)]
         let flow = ClaudeOAuthFlow(transport: stub, clientVersion: "2.1.74")
-        await #expect(throws: ClaudeOAuthError.tokenEndpoint(
-            status: 429, body: #"{"error":{"type":"rate_limit_error"}}"#)) {
+        await #expect(
+            throws: ClaudeOAuthError.tokenEndpoint(
+                status: 429, body: #"{"error":{"type":"rate_limit_error"}}"#)
+        ) {
             _ = try await flow.exchange(code: "C", verifier: "V", state: "S")
         }
-        #expect(stub.requests.count == 1)   // did NOT hit the fallback host
+        #expect(stub.requests.count == 1)  // did NOT hit the fallback host
     }
 
     @Test(.timeLimit(.minutes(1))) func refreshKeepsOldRefreshTokenWhenResponseOmitsIt() async throws {
         let body = """
-        {"access_token":"AT2","expires_in":3600}
-        """.data(using: .utf8)!
-        let stub = StubTransport(); stub.responses = [(body, 200)]
+            {"access_token":"AT2","expires_in":3600}
+            """.data(using: .utf8)!
+        let stub = StubTransport()
+        stub.responses = [(body, 200)]
         let flow = ClaudeOAuthFlow(transport: stub, clientVersion: "2.1.74")
         let token = try await flow.refresh(refreshToken: "OLD")
         #expect(token.accessToken == "AT2")
-        #expect(token.refreshToken == "OLD")   // rotated token absent → keep old
+        #expect(token.refreshToken == "OLD")  // rotated token absent → keep old
     }
 }

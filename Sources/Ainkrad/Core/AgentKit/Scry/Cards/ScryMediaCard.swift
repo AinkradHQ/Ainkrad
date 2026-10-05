@@ -1,8 +1,8 @@
-import SwiftUI
 import AVKit
-import Combine
 import AinkradAppKit
 import AinkradHostRuntime
+import Combine
+import SwiftUI
 
 /// Hard reference to an AVKit ObjC class so the linker binds AVKit.framework.
 /// `import AVKit` alone autolinks only the `_AVKit_SwiftUI` shim used by
@@ -18,7 +18,8 @@ enum ScryMediaURL {
     static func playable(_ body: String) -> URL? {
         let trimmed = body.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, let url = URL(string: trimmed),
-              let scheme = url.scheme?.lowercased() else { return nil }
+            let scheme = url.scheme?.lowercased()
+        else { return nil }
         if scheme == "file" {
             return FileManager.default.fileExists(atPath: url.path) ? url : nil
         }
@@ -92,7 +93,10 @@ struct ScryMediaCard: View {
     /// itself changes (a new URL resolved).
     private func observePlaying() {
         statusObservation?.invalidate()
-        guard let player else { isPlaying = false; return }
+        guard let player else {
+            isPlaying = false
+            return
+        }
         statusObservation = player.observe(\.timeControlStatus, options: [.initial, .new]) { observedPlayer, _ in
             let playing = observedPlayer.timeControlStatus == .playing
             Task { @MainActor in isPlaying = playing }
@@ -129,7 +133,8 @@ private final class ScryAudioPlayerObserver: ObservableObject, @unchecked Sendab
                 }
             }
         }
-        statusObservation = player.observe(\.timeControlStatus, options: [.initial, .new]) { [weak self] observedPlayer, _ in
+        statusObservation = player.observe(\.timeControlStatus, options: [.initial, .new]) {
+            [weak self] observedPlayer, _ in
             let playing = observedPlayer.timeControlStatus == .playing
             Task { @MainActor in
                 self?.isPlaying = playing
@@ -193,9 +198,11 @@ private struct ScryAudioTransport: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            AinkradIconButton(systemName: observer.isPlaying ? "pause.fill" : "play.fill",
-                              size: 22,
-                              tooltip: observer.isPlaying ? "Pause" : "Play") {
+            AinkradIconButton(
+                systemName: observer.isPlaying ? "pause.fill" : "play.fill",
+                size: 22,
+                tooltip: observer.isPlaying ? "Pause" : "Play"
+            ) {
                 observer.togglePlayPause()
             }
             VStack(alignment: .leading, spacing: 3) {

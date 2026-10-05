@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/Autonomy/ScriptedBatchTool.swift
 import Foundation
-import AinkradHostRuntime
 
 /// `AgentTool` that batches multiple steps into one sandboxed script run
 /// (collapses a multi-step pipeline into a single pass), routed through
@@ -20,20 +20,24 @@ struct ScriptedBatchTool: AgentTool {
 
     let name = "run_tool_script"
     let description = """
-    Run a script that batches multiple steps in one sandboxed pass (collapses a multi-step \
-    pipeline). Runs ONLY inside a sandbox with the profile's tool allow-list and resource \
-    limits; unavailable if no sandbox backend is configured.
-    """
+        Run a script that batches multiple steps in one sandboxed pass (collapses a multi-step \
+        pipeline). Runs ONLY inside a sandbox with the profile's tool allow-list and resource \
+        limits; unavailable if no sandbox backend is configured.
+        """
     let permission: ToolPermissionClass = .write
 
     var parametersSchema: JSONValue {
         .object([
             "type": .string("object"),
             "properties": .object([
-                "script": .object(["type": .string("string"),
-                                   "description": .string("The script to run inside the sandbox.")]),
-                "working_dir": .object(["type": .string("string"),
-                                        "description": .string("Absolute working directory inside the sandbox.")]),
+                "script": .object([
+                    "type": .string("string"),
+                    "description": .string("The script to run inside the sandbox."),
+                ]),
+                "working_dir": .object([
+                    "type": .string("string"),
+                    "description": .string("Absolute working directory inside the sandbox."),
+                ]),
             ]),
             "required": .array([.string("script")]),
         ])
@@ -46,8 +50,9 @@ struct ScriptedBatchTool: AgentTool {
             throw ToolError.message("run_tool_script requires a non-empty \"script\".")
         }
         guard let router = executionRouter else {
-            return ToolResult(content: "Scripted batching is unavailable: no sandbox backend (requires Slice 6).",
-                              isError: true)
+            return ToolResult(
+                content: "Scripted batching is unavailable: no sandbox backend (requires Slice 6).",
+                isError: true)
         }
         let workingDir = input["working_dir"]?.stringValue
         do {
@@ -55,14 +60,16 @@ struct ScriptedBatchTool: AgentTool {
             // policy is threaded through here yet, so this always resolves to
             // the tier's restrictive default (never escalates, never host).
             let (backend, profile) = try await router.route(tier: .subagent, policy: nil)
-            let result = try await backend.run(ExecutionRequest(
-                command: script, workingDir: workingDir, profile: profile))
+            let result = try await backend.run(
+                ExecutionRequest(
+                    command: script, workingDir: workingDir, profile: profile))
             return ToolResult(content: result.output, isError: result.isError)
         } catch let ExecutionRouterError.backendUnavailable(_, message) {
             return ToolResult(content: "Sandbox unavailable: \(message)", isError: true)
         } catch ExecutionRouterError.cloudNotOptedIn {
-            return ToolResult(content: "Sandbox unavailable: cloud execution requires an explicit opt-in.",
-                              isError: true)
+            return ToolResult(
+                content: "Sandbox unavailable: cloud execution requires an explicit opt-in.",
+                isError: true)
         } catch {
             return ToolResult(content: "Scripted batch failed: \(error.localizedDescription)", isError: true)
         }

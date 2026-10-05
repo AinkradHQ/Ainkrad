@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// One parsed chart data point: a label and its non-negative value.
 struct ScryChartBar: Equatable, Sendable {

@@ -148,7 +148,10 @@ final class HoardTab: Identifiable {
 
     func moveCursor(by delta: Int) {
         let count = visibleEntries.count
-        guard count > 0 else { cursorIndex = 0; return }
+        guard count > 0 else {
+            cursorIndex = 0
+            return
+        }
         cursorIndex = min(max(0, cursorIndex + delta), count - 1)
     }
 
@@ -202,9 +205,11 @@ final class HoardTab: Identifiable {
     @discardableResult
     func select(matching url: URL) -> Bool {
         let wanted = url.resolvingSymlinksInPath().path
-        guard let match = visibleEntries.first(where: {
-            $0.url.resolvingSymlinksInPath().path == wanted
-        }) else { return false }
+        guard
+            let match = visibleEntries.first(where: {
+                $0.url.resolvingSymlinksInPath().path == wanted
+            })
+        else { return false }
         placeCursor(at: match)
         return true
     }

@@ -1,8 +1,8 @@
+import AinkradAppKit
+import AinkradHostRuntime
 import SwiftUI
 import UserNotifications
 import os
-import AinkradAppKit
-import AinkradHostRuntime
 
 // Named `AinkradHostApp` (not `AinkradApp`) so the identifier doesn't collide
 // with `AinkradAppKit.AinkradApp` — the SDK protocol plugin bundles conform
@@ -76,8 +76,9 @@ struct AinkradHostApp: App {
         if LaunchHomeResolver.isRunningTests {
             environment.isSetupPresented = false
         } else {
-            let coordinator = SetupCoordinator(persistence: environment.persistence,
-                                               isProvisionalHome: provisional)
+            let coordinator = SetupCoordinator(
+                persistence: environment.persistence,
+                isProvisionalHome: provisional)
             environment.isSetupPresented = SetupGate.raisedAtLaunch(
                 provisionalHome: provisional, setupIsComplete: coordinator.isComplete)
             // Carried into the workspace so a deferred step is visible there
@@ -158,20 +159,26 @@ struct AinkradHostApp: App {
                 // setter is nonmutating, so assigning from this escaping
                 // closure is legal, and it is what re-renders the tree onto the
                 // adopted Home.
-                .environment(\.setupHomeInstaller, SetupHomeInstaller { rebuilt in
-                    environment = rebuilt
-                    Self.install(rebuilt, into: appDelegate)
-                })
+                .environment(
+                    \.setupHomeInstaller,
+                    SetupHomeInstaller { rebuilt in
+                        environment = rebuilt
+                        Self.install(rebuilt, into: appDelegate)
+                    }
+                )
                 // Bridges the host's theme/typography into the SDK's env
                 // keys so `AinkradAppKit` components (Gallery, and any
                 // plugin that opts in) render theme-correctly. Reading
                 // `themeManager.skin`/`uiFontFamily`/`uiFontScale`
                 // here — all `@Observable` — keeps this live on theme change.
                 .ainkradSkin(environment.themeManager.skin)
-                .environment(\.ainkradTypography, AinkradTypography(
-                    fontFamilyName: environment.themeManager.uiFontFamily.fontName,
-                    scale: environment.themeManager.uiFontScale.multiplier
-                ))
+                .environment(
+                    \.ainkradTypography,
+                    AinkradTypography(
+                        fontFamilyName: environment.themeManager.uiFontFamily.fontName,
+                        scale: environment.themeManager.uiFontScale.multiplier
+                    )
+                )
                 // AINKRAD-controlled motion, independent of the macOS Reduce
                 // Motion accessibility toggle — see GlobalSettings.uiReduceMotion.
                 // Default false = motion on.
@@ -189,10 +196,14 @@ struct AinkradHostApp: App {
                 // notification family, and every plugin panel -- was pinned at
                 // 0.94 and always blurred, so the controls looked broken to a
                 // user who had just moved them.
-                .environment(\.ainkradSurfaceOpacity,
-                             environment.generalSettingsStore.overlayBackgroundOpacity)
-                .environment(\.ainkradSurfaceBlur,
-                             environment.generalSettingsStore.overlayBlurEnabled)
+                .environment(
+                    \.ainkradSurfaceOpacity,
+                    environment.generalSettingsStore.overlayBackgroundOpacity
+                )
+                .environment(
+                    \.ainkradSurfaceBlur,
+                    environment.generalSettingsStore.overlayBlurEnabled
+                )
                 .preferredColorScheme(.dark)
         }
         .windowStyle(.hiddenTitleBar)

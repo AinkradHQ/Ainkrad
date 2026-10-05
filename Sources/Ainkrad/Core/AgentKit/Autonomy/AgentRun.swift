@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// What kicked off an `AgentRun`.
 enum AgentRunOrigin: String, Codable, Equatable, Sendable {
@@ -38,10 +38,12 @@ struct AgentRun: Codable, Equatable, Identifiable, Sendable {
     /// from) and for any old persisted run predating this field.
     var posture: SavedExecutionPosture?
 
-    init(id: UUID = UUID(), origin: AgentRunOrigin = .chat, prompt: String,
-         status: AgentRunStatus = .queued, logs: [String] = [], result: String? = nil,
-         createdAt: Date = Date(), startedAt: Date? = nil, finishedAt: Date? = nil,
-         posture: SavedExecutionPosture? = nil) {
+    init(
+        id: UUID = UUID(), origin: AgentRunOrigin = .chat, prompt: String,
+        status: AgentRunStatus = .queued, logs: [String] = [], result: String? = nil,
+        createdAt: Date = Date(), startedAt: Date? = nil, finishedAt: Date? = nil,
+        posture: SavedExecutionPosture? = nil
+    ) {
         self.id = id
         self.origin = origin
         self.prompt = prompt

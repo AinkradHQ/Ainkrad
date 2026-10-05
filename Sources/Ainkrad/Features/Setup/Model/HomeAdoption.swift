@@ -1,5 +1,5 @@
-import Foundation
 import AinkradAppKit
+import Foundation
 
 /// Adopts the user's chosen vault mid-session and rebuilds the environment against it.
 ///

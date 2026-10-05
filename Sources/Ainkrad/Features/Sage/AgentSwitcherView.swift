@@ -1,7 +1,7 @@
-// Sources/Ainkrad/Features/Sage/AgentSwitcherView.swift
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+// Sources/Ainkrad/Features/Sage/AgentSwitcherView.swift
+import SwiftUI
 
 /// The composer's leftmost pill: switches the active `AgentProfile` (Plan /
 /// Build / any custom agent). Uses the Cardinal-HUD `AinkradSelect` — a custom

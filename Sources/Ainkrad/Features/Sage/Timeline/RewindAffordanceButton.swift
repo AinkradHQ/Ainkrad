@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Pure view-model: maps checkpoints to menu rows so the mapping is testable
 /// without SwiftUI. `canRestoreCode` is false only for a checkpoint that captured
@@ -16,7 +16,8 @@ enum RewindMenuModel {
 
     static func rows(from checkpoints: [Checkpoint]) -> [Row] {
         checkpoints.map { cp in
-            Row(id: cp.id, title: cp.label,
+            Row(
+                id: cp.id, title: cp.label,
                 canRestoreCode: !cp.fileSnapshots.isEmpty || cp.gitStashSHA != nil)
         }
     }
@@ -74,8 +75,13 @@ struct RewindAffordanceButton: View {
         .frame(width: 320)
     }
 
-    private func rewindChip(_ label: String, _ mode: CheckpointCoordinator.RestoreMode, enabled: Bool, id: UUID) -> some View {
-        Button { onRestore(id, mode); isOpen = false } label: {
+    private func rewindChip(_ label: String, _ mode: CheckpointCoordinator.RestoreMode, enabled: Bool, id: UUID)
+        -> some View
+    {
+        Button {
+            onRestore(id, mode)
+            isOpen = false
+        } label: {
             Text(label).font(AinkradFont.mono(10))
                 .padding(.horizontal, 6).padding(.vertical, 2)
                 .background(ChamferShape(cut: 3).fill(tokens.accentSecondary.opacity(enabled ? 0.18 : 0.05)))

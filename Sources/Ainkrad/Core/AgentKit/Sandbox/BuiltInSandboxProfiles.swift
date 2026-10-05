@@ -15,7 +15,7 @@ enum BuiltInSandboxProfiles {
         id: mainID, name: "Host (trusted)", backend: .host,
         fsPolicy: FilesystemPolicy(readablePaths: ["/"], writablePaths: ["/"]),
         networkPolicy: .on,
-        resourceLimits: ResourceLimits(timeoutSeconds: 30),   // matches today's RunTerminalTool default
+        resourceLimits: ResourceLimits(timeoutSeconds: 30),  // matches today's RunTerminalTool default
         toolAllowList: [])
 
     static let readOnly = SandboxProfile(

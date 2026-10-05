@@ -1,7 +1,7 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitUI
 import AinkradHostRuntime
+import SwiftUI
 
 /// What a transient message is telling you.
 enum HoardToastKind: Equatable {
@@ -129,8 +129,9 @@ struct HoardToast: View {
         .ainkradPanelGlow()
         .fixedSize()
         .transition(.move(edge: .bottom).combined(with: .opacity))
-        .animation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.8),
-                   value: message.id)
+        .animation(
+            reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.8),
+            value: message.id)
     }
 }
 
@@ -169,8 +170,11 @@ struct HoardFailureSheet: View {
                     ForEach(Array(failures.enumerated()), id: \.offset) { _, failure in
                         VStack(alignment: .leading, spacing: 1) {
                             Text(failure.url.lastPathComponent)
-                                .font(AinkradFontResolver.font(.body, weight: .medium,
-                                                               typography: typo))
+                                .font(
+                                    AinkradFontResolver.font(
+                                        .body, weight: .medium,
+                                        typography: typo)
+                                )
                                 .foregroundStyle(tokens.foreground)
                             Text(failure.reason)
                                 .font(AinkradFontResolver.font(.caption, typography: typo))

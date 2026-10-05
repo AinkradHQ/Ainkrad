@@ -1,5 +1,5 @@
-import SwiftUI
 import AinkradHostRuntime
+import SwiftUI
 
 /// An assistant-scoped typography value: the font family + size multiplier the
 /// assistant transcript body renders with. It combines the per-assistant
@@ -12,10 +12,13 @@ struct SageTypography: Equatable {
 
     /// Resolve the effective typography: each override value falls back to the
     /// global default when nil.
-    static func resolve(family: UIFontFamily?, scale: UIFontScale?,
-                        globalFamily: UIFontFamily, globalScale: UIFontScale) -> SageTypography {
-        SageTypography(scale: (scale ?? globalScale).multiplier,
-                            family: family ?? globalFamily)
+    static func resolve(
+        family: UIFontFamily?, scale: UIFontScale?,
+        globalFamily: UIFontFamily, globalScale: UIFontScale
+    ) -> SageTypography {
+        SageTypography(
+            scale: (scale ?? globalScale).multiplier,
+            family: family ?? globalFamily)
     }
 
     /// A resolved SwiftUI `Font` at the given point size, mirroring

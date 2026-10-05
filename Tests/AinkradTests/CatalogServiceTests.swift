@@ -1,18 +1,23 @@
-import Testing
-import Foundation
-@testable import Ainkrad
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 @MainActor
 struct CatalogServiceTests {
     private func entry(_ id: String) -> CatalogEntry {
-        CatalogEntry(appID: id, displayName: id, icon: "app", description: "", version: "1.0.0",
-                     apiVersion: 1, downloadURL: URL(string: "https://e/\(id).zip")!, sha256: "x", sourceRepo: "o/\(id)")
+        CatalogEntry(
+            appID: id, displayName: id, icon: "app", description: "", version: "1.0.0",
+            apiVersion: 1, downloadURL: URL(string: "https://e/\(id).zip")!, sha256: "x", sourceRepo: "o/\(id)")
     }
     struct StubSource: CatalogSource {
         var result: Result<[CatalogEntry], Error>
         func fetchCatalog() async throws -> [CatalogEntry] {
-            switch result { case .success(let e): return e; case .failure(let e): throw e }
+            switch result {
+            case .success(let e): return e
+            case .failure(let e): throw e
+            }
         }
     }
     struct Boom: Error {}

@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 import Foundation
 import Security
-import AinkradHostRuntime
 
 /// `SecretStore` backed by the macOS Keychain (generic password items).
 /// Each secret is one item keyed by `(service, account=id)`.
@@ -63,8 +63,9 @@ final class KeychainSecretStore: SecretStore {
         var item: CFTypeRef?
         let status = SecItemCopyMatching(query as CFDictionary, &item)
         guard status == errSecSuccess,
-              let data = item as? Data,
-              let value = String(data: data, encoding: .utf8) else {
+            let data = item as? Data,
+            let value = String(data: data, encoding: .utf8)
+        else {
             if status != errSecSuccess && status != errSecItemNotFound {
                 Log.persistence.error("Keychain read failed for \(id, privacy: .public): \(status)")
             }
@@ -174,7 +175,8 @@ final class KeychainSecretStore: SecretStore {
 
         var item: CFTypeRef?
         guard SecItemCopyMatching(query as CFDictionary, &item) == errSecSuccess,
-              let data = item as? Data else { return nil }
+            let data = item as? Data
+        else { return nil }
         return String(data: data, encoding: .utf8)
     }
 }

@@ -1,7 +1,8 @@
-import Testing
-import Foundation
 import AinkradAppKit
 import AinkradSignal
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @MainActor
@@ -83,10 +84,12 @@ final class SignalSubscriptionRegistryTests {
         let registry = SignalSubscriptionRegistry()
         registry.setDeclared(SignalSubscription.parse(["host/run.*"]), for: "gitmage")
         registry.approve(appID: "gitmage")
-        registry.setDeclared(SignalSubscription.parse(["host/run.*", "app:raven/build.*"]),
-                             for: "gitmage")
-        #expect(!registry.isApproved(appID: "gitmage"),
-                "a widened subscription list is a new consent question")
+        registry.setDeclared(
+            SignalSubscription.parse(["host/run.*", "app:raven/build.*"]),
+            for: "gitmage")
+        #expect(
+            !registry.isApproved(appID: "gitmage"),
+            "a widened subscription list is a new consent question")
     }
 
     @Test("reordering the same list does NOT re-prompt")
@@ -96,11 +99,13 @@ final class SignalSubscriptionRegistryTests {
         // permission prompt the user cannot explain is one they learn to click
         // through.
         let registry = SignalSubscriptionRegistry()
-        registry.setDeclared(SignalSubscription.parse(["host/run.*", "app:raven/build.*"]),
-                             for: "gitmage")
+        registry.setDeclared(
+            SignalSubscription.parse(["host/run.*", "app:raven/build.*"]),
+            for: "gitmage")
         registry.approve(appID: "gitmage")
-        registry.setDeclared(SignalSubscription.parse(["app:raven/build.*", "host/run.*"]),
-                             for: "gitmage")
+        registry.setDeclared(
+            SignalSubscription.parse(["app:raven/build.*", "host/run.*"]),
+            for: "gitmage")
         #expect(registry.isApproved(appID: "gitmage"))
     }
 
@@ -109,8 +114,9 @@ final class SignalSubscriptionRegistryTests {
         // Strictly less access than the user already allowed. Re-asking would
         // train them to approve without reading.
         let registry = SignalSubscriptionRegistry()
-        registry.setDeclared(SignalSubscription.parse(["host/run.*", "app:raven/build.*"]),
-                             for: "gitmage")
+        registry.setDeclared(
+            SignalSubscription.parse(["host/run.*", "app:raven/build.*"]),
+            for: "gitmage")
         registry.approve(appID: "gitmage")
         registry.setDeclared(SignalSubscription.parse(["host/run.*"]), for: "gitmage")
         #expect(registry.isApproved(appID: "gitmage"))
@@ -127,8 +133,9 @@ final class SignalSubscriptionRegistryTests {
         registry.approve(appID: "gitmage")
         let observer = SpyObserver()
         registry.register(observer: observer, appID: "gitmage")
-        registry.setDeclared(SignalSubscription.parse(["host/run.*", "app:raven/build.*"]),
-                             for: "gitmage")
+        registry.setDeclared(
+            SignalSubscription.parse(["host/run.*", "app:raven/build.*"]),
+            for: "gitmage")
         registry.fanOut(event(source: .host, kind: "run.finished"))
         #expect(observer.received.isEmpty)
     }
@@ -145,7 +152,8 @@ final class SignalSubscriptionRegistryTests {
 
         let second = SignalSubscriptionRegistry(store: SignalSubscriptionStore(url: url))
         second.setDeclared(SignalSubscription.parse(["host/run.*"]), for: "gitmage")
-        #expect(second.isApproved(appID: "gitmage"),
-                "an approval the user gave must not be asked for again next launch")
+        #expect(
+            second.isApproved(appID: "gitmage"),
+            "an approval the user gave must not be asked for again next launch")
     }
 }

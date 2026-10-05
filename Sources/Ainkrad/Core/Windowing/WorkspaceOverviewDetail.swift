@@ -1,7 +1,7 @@
-import SwiftUI
-import AppKit
 import AinkradAppKit
 import AinkradHostRuntime
+import AppKit
+import SwiftUI
 
 /// The Workspace Overview's right-hand side: what the selected workspace IS,
 /// then what's open in it.
@@ -12,7 +12,6 @@ import AinkradHostRuntime
 /// selection and drag state; threading eight bindings through a new type would
 /// have cost more clarity than the split bought.
 extension WorkspaceOverviewView {
-
 
     @ViewBuilder
     func detailPane(tokens: DesignTokens) -> some View {
@@ -50,14 +49,18 @@ extension WorkspaceOverviewView {
                         // miniature of a screen rather than a stretched panel.
                         .aspectRatio(Self.previewAspectRatio, contentMode: .fit)
                         .frame(maxWidth: .infinity)
-                        .frame(height: Self.previewHeight(
-                            forAppCount: workspace.tileLayout.blocks.count))
+                        .frame(
+                            height: Self.previewHeight(
+                                forAppCount: workspace.tileLayout.blocks.count)
+                        )
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .help(workspace.id == manager.activeWorkspaceID
-                          ? "You're in \(workspace.name)"
-                          : "Switch to \(workspace.name)")
+                    .help(
+                        workspace.id == manager.activeWorkspaceID
+                            ? "You're in \(workspace.name)"
+                            : "Switch to \(workspace.name)"
+                    )
                     .padding(.horizontal, 18)
                     .padding(.bottom, 14)
 
@@ -70,7 +73,8 @@ extension WorkspaceOverviewView {
             VStack(spacing: 10) {
                 Image(systemName: "rectangle.split.3x1").font(.system(size: 30, weight: .light))
                     .foregroundStyle(tokens.accentPrimary.opacity(0.5))
-                Text("Select a workspace").font(AinkradFont.display(13)).foregroundStyle(tokens.foreground.opacity(0.55))
+                Text("Select a workspace").font(AinkradFont.display(13)).foregroundStyle(
+                    tokens.foreground.opacity(0.55))
             }
             .frame(maxWidth: .infinity)
             .frame(height: Self.noSelectionHeight)
@@ -150,7 +154,8 @@ extension WorkspaceOverviewView {
     /// useful to go. Few panes means a larger preview, many panes a smaller one,
     /// and the panel never moves.
     static func previewHeight(forAppCount count: Int) -> CGFloat {
-        let fixed = detailHeaderHeight + previewBottomPadding
+        let fixed =
+            detailHeaderHeight + previewBottomPadding
             + appSectionHeaderHeight + appGridHeight(count: count)
         return min(max(detailHeight - fixed, minimumPreviewHeight), maximumPreviewHeight)
     }
@@ -275,8 +280,10 @@ extension WorkspaceOverviewView {
         }
     }
 
-    private func appRow(_ block: Block, ordinal: Int, workspace: Workspace,
-                        tokens: DesignTokens) -> some View {
+    private func appRow(
+        _ block: Block, ordinal: Int, workspace: Workspace,
+        tokens: DesignTokens
+    ) -> some View {
         let app = environment.registry.allApps.first { $0.id == block.appID }
         let sourceLabel: String = {
             switch app?.source {
@@ -343,7 +350,9 @@ extension WorkspaceOverviewView {
         .buttonStyle(.plain)
     }
 
-    private func rowButton(_ symbol: String, help: String, tokens: DesignTokens, action: @escaping () -> Void) -> some View {
+    private func rowButton(_ symbol: String, help: String, tokens: DesignTokens, action: @escaping () -> Void)
+        -> some View
+    {
         Button(action: action) {
             Image(systemName: symbol)
                 .font(.system(size: 10, weight: .semibold))
@@ -364,7 +373,8 @@ extension WorkspaceOverviewView {
             .foregroundStyle(tokens.accentPrimary.hostContrastingText.opacity(0.95))
             .padding(.horizontal, 12).padding(.vertical, 7)
             .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(tokens.accentPrimary.opacity(0.9)))
-            .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(tokens.accentSecondary.opacity(0.4)))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(tokens.accentSecondary.opacity(0.4)))
         }
         .buttonStyle(.plain)
     }

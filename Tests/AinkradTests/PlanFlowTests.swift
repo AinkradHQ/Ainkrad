@@ -1,22 +1,28 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("PlanFlow")
 @MainActor
 struct PlanFlowTests {
     private var plan: PlanArtifact {
-        PlanArtifact(summary: "Ship the widget",
-                     steps: [PlanStep(title: "Wire the store"), PlanStep(title: "Add the view")])
+        PlanArtifact(
+            summary: "Ship the widget",
+            steps: [PlanStep(title: "Wire the store"), PlanStep(title: "Add the view")])
     }
 
     private func planCall(_ id: String) -> AgentContentBlock {
-        .toolUse(id: id, name: "present_plan", input: .object([
-            "summary": .string("Ship the widget"),
-            "steps": .array([.object(["title": .string("Wire the store")]),
-                             .object(["title": .string("Add the view")])]),
-        ]))
+        .toolUse(
+            id: id, name: "present_plan",
+            input: .object([
+                "summary": .string("Ship the widget"),
+                "steps": .array([
+                    .object(["title": .string("Wire the store")]),
+                    .object(["title": .string("Add the view")]),
+                ]),
+            ]))
     }
 
     @Test func buildDirectiveCarriesSummaryAndSteps() {
@@ -63,7 +69,7 @@ struct PlanFlowTests {
 
         #expect(store.active.id == BuiltInAgents.buildID)
         #expect(session.messages.last?.text.contains("Wire the store") == true)
-        session.interrupt()   // cancel the dangling turn Task; keeps the suite from lingering
+        session.interrupt()  // cancel the dangling turn Task; keeps the suite from lingering
     }
 
     @Test func keepPlanningStaysInPlanAndSendsRevision() {
@@ -75,7 +81,8 @@ struct PlanFlowTests {
         PlanFlow.keepPlanning(plan: plan, session: session)
 
         #expect(store.active.id == BuiltInAgents.planID)
-        #expect(session.messages.last?.text.lowercased().contains("keep planning") == true
+        #expect(
+            session.messages.last?.text.lowercased().contains("keep planning") == true
                 || session.messages.last?.text.lowercased().contains("revise") == true)
         session.interrupt()
     }

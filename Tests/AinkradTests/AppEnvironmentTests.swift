@@ -1,8 +1,9 @@
-import Testing
-import Foundation
-@testable import Ainkrad
 import AinkradAppKit
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 private struct NoOpCatalogSource: CatalogSource {
     func fetchCatalog() async throws -> [CatalogEntry] { [] }
@@ -22,7 +23,8 @@ final class AppEnvironmentTests {
         let themeManager = ThemeManager(persistence: persistence)
         let workspaceManager = WorkspaceManager()
         let appAppearanceStore = AppAppearanceStore(persistence: persistence)
-        let launcherStore = LauncherStore(registry: registry, workspaceManager: workspaceManager, appAppearanceStore: appAppearanceStore)
+        let launcherStore = LauncherStore(
+            registry: registry, workspaceManager: workspaceManager, appAppearanceStore: appAppearanceStore)
         let connectionStore = ConnectionStore(persistence: persistence, secrets: secrets)
         let catalogService = CatalogService(
             source: NoOpCatalogSource(), persistence: persistence)
@@ -35,8 +37,9 @@ final class AppEnvironmentTests {
         let mcpInstaller = MCPServerInstaller(
             configStore: MCPServerConfigStore(persistence: persistence, secrets: secrets),
             persistence: persistence)
-        let appStore = AppStoreService(catalog: catalogService, installer: installer,
-                                        mcpInstaller: mcpInstaller, persistence: persistence)
+        let appStore = AppStoreService(
+            catalog: catalogService, installer: installer,
+            mcpInstaller: mcpInstaller, persistence: persistence)
         let appStoreStore = AppStoreStore(service: appStore, registry: registry)
         let shortcutStore = ShortcutStore(persistence: persistence)
         let quitCoordinator = QuitCoordinator(persistence: persistence, terminator: FakeTerminationReplier())
@@ -61,7 +64,8 @@ final class AppEnvironmentTests {
             providerFor: { (connection: Connection) -> LLMProvider in
                 switch connection.kind {
                 case .claude: return ClaudeProvider(http: URLSessionStreamingHTTPClient())
-                case .openAICompatible: return OpenAICompatibleProvider(http: URLSessionStreamingHTTPClient(), baseURL: connection.baseURL)
+                case .openAICompatible:
+                    return OpenAICompatibleProvider(http: URLSessionStreamingHTTPClient(), baseURL: connection.baseURL)
                 case .gemini: return GeminiProvider(http: URLSessionStreamingHTTPClient(), baseURL: connection.baseURL)
                 }
             },
@@ -109,7 +113,8 @@ final class AppEnvironmentTests {
             discoveredModelsStore: DiscoveredModelsStore(persistence: persistence),
             appStore: appStore,
             appStoreStore: appStoreStore,
-            appIconStore: AppIconStore(persistence: persistence, applier: AppKitAppIconApplier(), themeManager: themeManager),
+            appIconStore: AppIconStore(
+                persistence: persistence, applier: AppKitAppIconApplier(), themeManager: themeManager),
             shortcutStore: shortcutStore,
             quitCoordinator: quitCoordinator,
             generalSettingsStore: generalSettingsStore,
@@ -155,27 +160,34 @@ final class AppEnvironmentTests {
             localModelProbe: LocalModelProbe(catalog: ModelCatalogService(http: URLSessionDataHTTPClient())),
             localModelAvailability: LocalModelAvailability(),
             authProfileStore: AuthProfileStore(persistence: persistence, secrets: secrets),
-            oauthStore: OAuthCredentialStore(persistence: persistence, secrets: secrets,
-                                             flow: ClaudeOAuthFlow(clientVersion: "test")),
+            oauthStore: OAuthCredentialStore(
+                persistence: persistence, secrets: secrets,
+                flow: ClaudeOAuthFlow(clientVersion: "test")),
             commandRegistry: CommandRegistry(builtins: []),
             assistantWorkingDirectory: FileManager.default.homeDirectoryForCurrentUser,
             workspaceFileIndex: WorkspaceFileIndex(root: FileManager.default.homeDirectoryForCurrentUser),
             memoryService: nil,
             userProfileStore: UserProfileStore(
                 persistence: persistence,
-                memory: MemoryStore(paths: MemoryPaths(
-                    root: root.appendingPathComponent("Memory", isDirectory: true)))),
-            skillRegistry: SkillRegistry(paths: SkillPaths(root: root.appendingPathComponent("Skills", isDirectory: true))),
-            skillWatcher: SkillWatcher(paths: SkillPaths(root: root.appendingPathComponent("Skills", isDirectory: true))) { },
+                memory: MemoryStore(
+                    paths: MemoryPaths(
+                        root: root.appendingPathComponent("Memory", isDirectory: true)))),
+            skillRegistry: SkillRegistry(
+                paths: SkillPaths(root: root.appendingPathComponent("Skills", isDirectory: true))),
+            skillWatcher: SkillWatcher(
+                paths: SkillPaths(root: root.appendingPathComponent("Skills", isDirectory: true))
+            ) {},
             skillCommandStore: SkillCommandStore(persistence: persistence),
             menuBarPresence: menuBarPresence,
             scryStore: scryStore,
             toolStreamStore: toolStreamStore,
             toolHooksStore: ToolHooksStore(persistence: persistence),
-            customCommandStore: CustomCommandStore(paths: CustomCommandPaths(
-                userRoot: root.appendingPathComponent("Commands", isDirectory: true), projectRoot: nil)),
+            customCommandStore: CustomCommandStore(
+                paths: CustomCommandPaths(
+                    userRoot: root.appendingPathComponent("Commands", isDirectory: true), projectRoot: nil)),
             customCommandWatcher: CustomCommandWatcher(
-                directory: root.appendingPathComponent("Commands", isDirectory: true)) { },
+                directory: root.appendingPathComponent("Commands", isDirectory: true)
+            ) {},
             voiceService: voiceService,
             remoteChannelSettingsStore: RemoteChannelSettingsStore(persistence: persistence, secrets: secrets),
             remoteChannelService: RemoteChannelService(

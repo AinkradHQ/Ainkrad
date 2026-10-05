@@ -1,7 +1,7 @@
-import SwiftUI
-import AppKit
 import AinkradAppKit
 import AinkradHostRuntime
+import AppKit
+import SwiftUI
 
 private struct PaneResizesImmediatelyKey: EnvironmentKey {
     static let defaultValue = false
@@ -57,7 +57,8 @@ struct TileLayoutView: View {
     private var hasTranslucentPane: Bool {
         tileLayout.blocks.contains { block in
             guard let app = registry.allApps.first(where: { $0.id == block.appID }),
-                  let fill = app.chromeFill() else { return false }
+                let fill = app.chromeFill()
+            else { return false }
             return NSColor(fill).alphaComponent < 1
         }
     }
@@ -164,7 +165,8 @@ struct TileLayoutView: View {
     @ViewBuilder
     private var shortcutBadge: some View {
         if let badgeBlockID,
-           let index = tileLayout.blocks.firstIndex(where: { $0.id == badgeBlockID }) {
+            let index = tileLayout.blocks.firstIndex(where: { $0.id == badgeBlockID })
+        {
             let block = tileLayout.blocks[index]
             let appName = registry.allApps.first { $0.id == block.appID }?.displayName
             PaneShortcutBadge(

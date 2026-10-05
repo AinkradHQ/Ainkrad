@@ -55,8 +55,10 @@ struct LocalFileMutator: FileMutating {
     }
 
     func volumeIdentifier(for url: URL) -> String? {
-        guard let identifier = try? url.resourceValues(forKeys: [.volumeIdentifierKey])
-            .volumeIdentifier else { return nil }
+        guard
+            let identifier = try? url.resourceValues(forKeys: [.volumeIdentifierKey])
+                .volumeIdentifier
+        else { return nil }
         // `NSCopying & NSObjectProtocol`, opaque by design — its description is
         // stable within a process, which is all the queue key needs.
         return String(describing: identifier)

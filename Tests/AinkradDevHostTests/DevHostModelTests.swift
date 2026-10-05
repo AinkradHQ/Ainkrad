@@ -1,9 +1,10 @@
-import Testing
-import Foundation
-import SwiftUI
-@testable import AinkradDevHost
 import AinkradAppKit
 import AinkradHostRuntime
+import Foundation
+import SwiftUI
+import Testing
+
+@testable import AinkradDevHost
 
 /// Writes a `.bundle` directory with a hand-authored Info.plist (no binary,
 /// so `Bundle.load()`/the real `PluginLoader` never reach a successfully
@@ -28,11 +29,12 @@ private var validInfo: [String: Any] {
 }
 
 private func stubApp(id: String = "hello") -> RegisteredApp {
-    RegisteredApp(id: id, displayName: "Hello", icon: "hand.wave", isEnabledByDefault: true,
-                  source: .plugin(url: URL(fileURLWithPath: "/tmp/hello.bundle"), apiVersion: GenerationSupport.current),
-                  makeRootView: { AnyView(EmptyView()) },
-                  makeSettingsView: { AnyView(EmptyView()) },
-                  chromeFill: { nil })
+    RegisteredApp(
+        id: id, displayName: "Hello", icon: "hand.wave", isEnabledByDefault: true,
+        source: .plugin(url: URL(fileURLWithPath: "/tmp/hello.bundle"), apiVersion: GenerationSupport.current),
+        makeRootView: { AnyView(EmptyView()) },
+        makeSettingsView: { AnyView(EmptyView()) },
+        chromeFill: { nil })
 }
 
 @MainActor
@@ -109,12 +111,20 @@ struct DevHostModelTests {
 private final class SurfaceProbe {
     var asked: [String] = []
     func app() -> RegisteredApp {
-        RegisteredApp(id: "hello", displayName: "Hello", icon: "hand.wave", isEnabledByDefault: true,
-                      source: .plugin(url: URL(fileURLWithPath: "/tmp/hello.bundle"),
-                                      apiVersion: GenerationSupport.current),
-                      makeRootView: { self.asked.append("root"); return AnyView(EmptyView()) },
-                      makeSettingsView: { self.asked.append("settings"); return AnyView(EmptyView()) },
-                      chromeFill: { nil })
+        RegisteredApp(
+            id: "hello", displayName: "Hello", icon: "hand.wave", isEnabledByDefault: true,
+            source: .plugin(
+                url: URL(fileURLWithPath: "/tmp/hello.bundle"),
+                apiVersion: GenerationSupport.current),
+            makeRootView: {
+                self.asked.append("root")
+                return AnyView(EmptyView())
+            },
+            makeSettingsView: {
+                self.asked.append("settings")
+                return AnyView(EmptyView())
+            },
+            chromeFill: { nil })
     }
 }
 

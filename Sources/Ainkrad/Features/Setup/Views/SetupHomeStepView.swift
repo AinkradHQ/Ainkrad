@@ -1,7 +1,7 @@
-import SwiftUI
-import AppKit
 import AinkradAppKit
 import AinkradHostRuntime
+import AppKit
+import SwiftUI
 
 /// Pure decision logic for the Home step, independent of SwiftUI and of NSOpenPanel,
 /// so it can be tested without a UI. The view supplies the real chooser and adopter.
@@ -33,9 +33,11 @@ final class SetupHomeStepModel {
         let entryCount: Int
     }
 
-    init(chooseVault: @escaping LaunchHomeResolver.VaultChooser,
-         adopt: @escaping (URL) throws -> Void,
-         inspect: @escaping (URL) -> ExistingVault? = { SetupHomeStepModel.inspectVault(at: $0) }) {
+    init(
+        chooseVault: @escaping LaunchHomeResolver.VaultChooser,
+        adopt: @escaping (URL) throws -> Void,
+        inspect: @escaping (URL) -> ExistingVault? = { SetupHomeStepModel.inspectVault(at: $0) }
+    ) {
         self.chooseVault = chooseVault
         self.adopt = adopt
         self.inspect = inspect
@@ -72,7 +74,8 @@ final class SetupHomeStepModel {
         } catch {
             // Reuse the recovery copy so the wizard and the launch-time alerts
             // explain the same failures the same way.
-            let message = LaunchRecovery.prompt(for: error)?.message
+            let message =
+                LaunchRecovery.prompt(for: error)?.message
                 ?? "That folder can't be used as your Ainkrad Home."
             return .rejected(message)
         }
@@ -114,7 +117,6 @@ struct SetupHomeStepView: View {
     /// this step advances the instant it succeeds, so it has no surface of its
     /// own to say so. The overlay carries it to the closing step.
     let onAdopted: (AppEnvironment, Bool) -> Void
-
 
     /// The environment rebuilt against the adopted vault, and whether adoption
     /// moved a legacy container into it. Held as state rather than as locals
@@ -183,9 +185,11 @@ struct SetupHomeStepView: View {
             if hasAdoptedHome {
                 adoptedFooter
             } else {
-                SetupStepFooter(coordinator: coordinator,
-                                primaryTitle: "Choose Folder…",
-                                primaryIdentifier: "setup.home.choose") { choose() }
+                SetupStepFooter(
+                    coordinator: coordinator,
+                    primaryTitle: "Choose Folder…",
+                    primaryIdentifier: "setup.home.choose"
+                ) { choose() }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
@@ -219,8 +223,10 @@ struct SetupHomeStepView: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: AinkradRadius.md)
-            .fill(tokens.accentSecondary.opacity(0.09)))
+        .background(
+            ChamferShape(cut: AinkradRadius.md)
+                .fill(tokens.accentSecondary.opacity(0.09))
+        )
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Your Ainkrad Home is \(path)")
         .accessibilityIdentifier("setup.home.selected")
@@ -299,17 +305,20 @@ struct SetupHomeStepView: View {
 
         return ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                Text("Pick an empty folder, or make a new one anywhere you like — "
-                     + "your Documents, an external drive, a synced folder. Ainkrad "
-                     + "will never take over a folder that already has files in it.")
-                    .font(AinkradFont.display(14))
-                    .foregroundStyle(tokens.foreground.opacity(0.78))
-                    .lineSpacing(4)
-                    .fixedSize(horizontal: false, vertical: true)
-                    // Prose, so the READING measure — the folder listing below
-                    // is what uses the extra width.
-                    .frame(maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth),
-                           alignment: .leading)
+                Text(
+                    "Pick an empty folder, or make a new one anywhere you like — "
+                        + "your Documents, an external drive, a synced folder. Ainkrad "
+                        + "will never take over a folder that already has files in it."
+                )
+                .font(AinkradFont.display(14))
+                .foregroundStyle(tokens.foreground.opacity(0.78))
+                .lineSpacing(4)
+                .fixedSize(horizontal: false, vertical: true)
+                // Prose, so the READING measure — the folder listing below
+                // is what uses the extra width.
+                .frame(
+                    maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth),
+                    alignment: .leading)
 
                 if let adoptedPath {
                     selectedFolder(adoptedPath, tokens: tokens)
@@ -318,14 +327,15 @@ struct SetupHomeStepView: View {
                 folderPreview(tokens: tokens)
 
                 if let migrationNotice {
-                    notice(title: migrationNotice.title,
-                           message: migrationNotice.message,
-                           icon: "arrow.right.doc.on.clipboard",
-                           tint: tokens.accentSecondary,
-                           tokens: tokens)
-                        .accessibilityIdentifier("setup.home.migrationWarning")
+                    notice(
+                        title: migrationNotice.title,
+                        message: migrationNotice.message,
+                        icon: "arrow.right.doc.on.clipboard",
+                        tint: tokens.accentSecondary,
+                        tokens: tokens
+                    )
+                    .accessibilityIdentifier("setup.home.migrationWarning")
                 }
-
 
             }
             .padding(.bottom, 4)
@@ -356,17 +366,22 @@ struct SetupHomeStepView: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: AinkradRadius.md)
-            .fill(tokens.surfaceElevated.opacity(0.35)))
+        .background(
+            ChamferShape(cut: AinkradRadius.md)
+                .fill(tokens.surfaceElevated.opacity(0.35))
+        )
         .accessibilityElement(children: .contain)
         .accessibilityLabel("What Ainkrad will create in the folder you choose")
     }
 
-    private func entryRow(_ entry: SetupHomePreview.Entry, index: Int,
-                          tokens: DesignTokens) -> some View {
-        let geometry = SetupStageMotion.layerGeometry(.content,
-                                                      reduceMotion: reduceMotion,
-                                                      isForward: true)
+    private func entryRow(
+        _ entry: SetupHomePreview.Entry, index: Int,
+        tokens: DesignTokens
+    ) -> some View {
+        let geometry = SetupStageMotion.layerGeometry(
+            .content,
+            reduceMotion: reduceMotion,
+            isForward: true)
         // The stage's own `.content` travel, scaled down — these are rows
         // settling inside a panel, not the panel arriving. Scaled rather than
         // hardcoded so the rows still track `SetupStageMotion`'s vocabulary if
@@ -405,9 +420,12 @@ struct SetupHomeStepView: View {
         .offset(x: hasSettled ? 0 : travel)
         // Through `SetupStageMotion`, never a bare `.animation` — reduce-motion
         // makes this `nil` and the rows are simply present.
-        .animation(SetupStageMotion.animation(reduceMotion: reduceMotion,
-                                              layer: .content)?.delay(delay),
-                   value: hasSettled)
+        .animation(
+            SetupStageMotion.animation(
+                reduceMotion: reduceMotion,
+                layer: .content)?.delay(delay),
+            value: hasSettled
+        )
         .onAppear {
             guard !hasSettled else { return }
             hasSettled = true
@@ -424,8 +442,10 @@ struct SetupHomeStepView: View {
     /// reading before they choose, so interrupting them with it would be wrong.
     ///
     /// It does not scroll. The step owns the only scroller on this axis.
-    private func notice(title: String, message: String, icon: String,
-                        tint: Color, tokens: DesignTokens) -> some View {
+    private func notice(
+        title: String, message: String, icon: String,
+        tint: Color, tokens: DesignTokens
+    ) -> some View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: icon)
                 .font(.system(size: 12))
@@ -510,9 +530,12 @@ struct SetupHomeStepView: View {
     /// writes the marker, migrates the legacy container and re-points every
     /// holder — exists exactly once regardless of whether a confirmation was
     /// required.
-    private func withModel(_ installer: SetupHomeInstaller,
-                           _ body: (SetupHomeStepModel) -> SetupHomeStepModel.Outcome)
-        -> SetupHomeStepModel.Outcome {
+    private func withModel(
+        _ installer: SetupHomeInstaller,
+        _ body: (SetupHomeStepModel) -> SetupHomeStepModel.Outcome
+    )
+        -> SetupHomeStepModel.Outcome
+    {
         let model = SetupHomeStepModel(
             chooseVault: LaunchHomeResolver.presentFolderChooser,
             adopt: { url in

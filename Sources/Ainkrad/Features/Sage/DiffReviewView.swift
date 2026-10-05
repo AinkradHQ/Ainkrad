@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Pure diff→row helpers (no SwiftUI) so pairing/tint logic is unit-tested.
 enum DiffReviewPresentation {
@@ -15,14 +15,20 @@ enum DiffReviewPresentation {
         func flush() {
             let n = max(pendingDel.count, pendingIns.count)
             for k in 0..<n {
-                rows.append((k < pendingDel.count ? pendingDel[k] : nil,
-                             k < pendingIns.count ? pendingIns[k] : nil))
+                rows.append(
+                    (
+                        k < pendingDel.count ? pendingDel[k] : nil,
+                        k < pendingIns.count ? pendingIns[k] : nil
+                    ))
             }
-            pendingDel.removeAll(); pendingIns.removeAll()
+            pendingDel.removeAll()
+            pendingIns.removeAll()
         }
         for line in hunk.lines {
             switch line.kind {
-            case .context: flush(); rows.append((line, line))
+            case .context:
+                flush()
+                rows.append((line, line))
             case .deletion: pendingDel.append(line)
             case .insertion: pendingIns.append(line)
             }
@@ -69,8 +75,10 @@ struct DiffReviewView: View {
                 Text("@@ -\(hunk.oldStart),\(hunk.oldCount) +\(hunk.newStart),\(hunk.newCount)")
                     .font(AinkradFont.mono(9)).foregroundStyle(tokens.foreground.opacity(0.4))
                 Spacer(minLength: 6)
-                ModeChip(title: rejected ? "Rejected" : "Accepted",
-                         tint: rejected ? tokens.danger : tokens.success, tokens: tokens) {
+                ModeChip(
+                    title: rejected ? "Rejected" : "Accepted",
+                    tint: rejected ? tokens.danger : tokens.success, tokens: tokens
+                ) {
                     if rejected { rejectedHunkIDs.remove(hunk.id) } else { rejectedHunkIDs.insert(hunk.id) }
                 }
             }

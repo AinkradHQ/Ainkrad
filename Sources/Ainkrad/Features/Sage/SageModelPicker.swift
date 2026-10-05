@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Whether the composer's model pill should show the "Auto" badge — i.e. the
 /// router is resolving the model each turn rather than a user pin winning
@@ -24,8 +24,10 @@ func modelPillSelectionIsAuto(pinnedModel: String?, routerEnabled: Bool) -> Bool
 /// shows the model it last actually resolved to, falling back to the
 /// standing default before any turn has settled; a disabled router with no
 /// pin shows the standing default. Pure.
-func modelPillDisplayModel(pinnedModel: String?, routerEnabled: Bool,
-                            lastResolvedModel: String?, standingDefault: String) -> String {
+func modelPillDisplayModel(
+    pinnedModel: String?, routerEnabled: Bool,
+    lastResolvedModel: String?, standingDefault: String
+) -> String {
     if let pinnedModel { return pinnedModel }
     if routerEnabled { return lastResolvedModel ?? standingDefault }
     return standingDefault
@@ -79,9 +81,11 @@ func modelPickerSections(
 ) -> [AinkradGroupedSection<SageConnectionModelPicker.Option>] {
     let autoDetail = connections.first(where: { $0.id == activeConnectionID }).map { "via \($0.displayName)" }
     var sections: [AinkradGroupedSection<SageConnectionModelPicker.Option>] = [
-        AinkradGroupedSection(header: "Auto", rows: [
-            AinkradGroupedRow(value: .auto, title: "Auto", detail: autoDetail, icon: "wand.and.stars")
-        ])
+        AinkradGroupedSection(
+            header: "Auto",
+            rows: [
+                AinkradGroupedRow(value: .auto, title: "Auto", detail: autoDetail, icon: "wand.and.stars")
+            ])
     ]
 
     for connection in connections {
@@ -111,9 +115,12 @@ func modelPickerSections(
         sections.append(AinkradGroupedSection(header: connection.displayName, rows: rows))
     }
 
-    sections.append(AinkradGroupedSection(header: "", rows: [
-        AinkradGroupedRow(value: .manage, title: SageConnectionModelPicker.manageLabel, icon: "gearshape")
-    ]))
+    sections.append(
+        AinkradGroupedSection(
+            header: "",
+            rows: [
+                AinkradGroupedRow(value: .manage, title: SageConnectionModelPicker.manageLabel, icon: "gearshape")
+            ]))
 
     return sections
 }
@@ -121,8 +128,10 @@ func modelPickerSections(
 /// Whether `refreshModels` should hit the network for a connection: skip when a
 /// fetch is already in flight, or when the last fetch attempt (success OR
 /// failure) is younger than `ttl`. Pure — unit tested without I/O.
-func shouldFetchModels(connectionID: UUID, now: Date, lastFetch: [UUID: Date],
-                       inFlight: Set<UUID>, ttl: TimeInterval) -> Bool {
+func shouldFetchModels(
+    connectionID: UUID, now: Date, lastFetch: [UUID: Date],
+    inFlight: Set<UUID>, ttl: TimeInterval
+) -> Bool {
     if inFlight.contains(connectionID) { return false }
     if let last = lastFetch[connectionID], now.timeIntervalSince(last) < ttl { return false }
     return true
@@ -150,7 +159,10 @@ final class SageModelPickerModel {
     func activeConnection(_ environment: AppEnvironment) -> Connection? {
         let store = environment.connectionStore
         if let id = environment.agentConfigStore.activeConnectionID,
-           let match = store.connections.first(where: { $0.id == id }) { return match }
+            let match = store.connections.first(where: { $0.id == id })
+        {
+            return match
+        }
         return store.connections.first
     }
 
@@ -177,7 +189,8 @@ final class SageModelPickerModel {
     func selectConnection(_ connection: Connection, _ environment: AppEnvironment) {
         let configStore = environment.agentConfigStore
         configStore.setActiveConnectionID(connection.id)
-        configStore.setModel(ProviderPreset.preset(id: connection.presetID).curatedModels.first ?? configStore.current.model)
+        configStore.setModel(
+            ProviderPreset.preset(id: connection.presetID).curatedModels.first ?? configStore.current.model)
         refreshModels(for: connection, environment)
     }
 
@@ -199,8 +212,11 @@ final class SageModelPickerModel {
     }
 
     func refreshModels(for connection: Connection, _ environment: AppEnvironment, force: Bool = false) {
-        if !force && !shouldFetchModels(connectionID: connection.id, now: Date(),
-                                        lastFetch: lastFetch, inFlight: inFlight, ttl: Self.discoveryTTL) {
+        if !force
+            && !shouldFetchModels(
+                connectionID: connection.id, now: Date(),
+                lastFetch: lastFetch, inFlight: inFlight, ttl: Self.discoveryTTL)
+        {
             return
         }
         let store = environment.connectionStore
@@ -224,8 +240,9 @@ final class SageModelPickerModel {
             } else {
                 credential = .apiKey(store.token(for: connection) ?? "")
             }
-            let result = await svc.modelsResult(kind: connection.kind, baseURL: connection.baseURL,
-                                                credential: credential, curatedFallback: preset.curatedModels)
+            let result = await svc.modelsResult(
+                kind: connection.kind, baseURL: connection.baseURL,
+                credential: credential, curatedFallback: preset.curatedModels)
             isRefreshing = false
             // Persist ONLY a genuinely live list into the shared store — a curated
             // fallback is already the default, so storing it would be redundant and
@@ -251,7 +268,9 @@ final class SageModelPickerModel {
     /// default on a fresh non-Claude connection), fall back to the first
     /// available model. Never overrides an explicitly chosen valid model. Only
     /// called on a genuinely live fetch — never on a curated fallback.
-    private func reconcileModelIfNeeded(for connection: Connection, availableModels: [String], _ environment: AppEnvironment) {
+    private func reconcileModelIfNeeded(
+        for connection: Connection, availableModels: [String], _ environment: AppEnvironment
+    ) {
         let configStore = environment.agentConfigStore
         guard activeConnection(environment)?.id == connection.id else { return }
         guard !availableModels.isEmpty, !availableModels.contains(configStore.current.model) else { return }
@@ -366,7 +385,8 @@ struct SageConnectionModelPicker: View {
                 case .auto:
                     model.clearPin(environment)
                 case .pair(let connectionID, let modelName):
-                    if let connection = environment.connectionStore.connections.first(where: { $0.id == connectionID }) {
+                    if let connection = environment.connectionStore.connections.first(where: { $0.id == connectionID })
+                    {
                         model.selectConnectionModel(connection, model: modelName, environment)
                     }
                 case .manage:
@@ -387,10 +407,12 @@ struct SageConnectionModelPicker: View {
         case .manage:
             return SageConnectionModelPicker.manageLabel
         case .pair(let connectionID, let modelName):
-            guard let connection = environment.connectionStore.connections.first(where: { $0.id == connectionID }) else {
+            guard let connection = environment.connectionStore.connections.first(where: { $0.id == connectionID })
+            else {
                 return "Connection · \(modelName)"
             }
-            let curated = isCuratedModel(modelName, curatedModels: ProviderPreset.preset(id: connection.presetID).curatedModels)
+            let curated = isCuratedModel(
+                modelName, curatedModels: ProviderPreset.preset(id: connection.presetID).curatedModels)
             return modelOptionRowLabel(connectionName: connection.displayName, model: modelName, isCurated: curated)
         }
     }

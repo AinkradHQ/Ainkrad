@@ -1,15 +1,20 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("PresentPlanTool")
 @MainActor
 struct PresentPlanToolTests {
     private var samplePlan: JSONValue {
-        .object(["summary": .string("Ship the widget"),
-                 "steps": .array([.object(["title": .string("Wire the store")]),
-                                  .object(["title": .string("Add the view")])])])
+        .object([
+            "summary": .string("Ship the widget"),
+            "steps": .array([
+                .object(["title": .string("Wire the store")]),
+                .object(["title": .string("Add the view")]),
+            ]),
+        ])
     }
 
     @Test func echoesPlanAndTellsModelToStop() async throws {
@@ -17,7 +22,7 @@ struct PresentPlanToolTests {
         #expect(!r.isError)
         #expect(r.content.contains("Wire the store"))
         #expect(r.content.contains("Add the view"))
-        #expect(r.content.lowercased().contains("wait"))   // instructs the model to end the turn
+        #expect(r.content.lowercased().contains("wait"))  // instructs the model to end the turn
     }
 
     @Test func permissionIsMemoryClass() {
@@ -28,7 +33,7 @@ struct PresentPlanToolTests {
         let decision = AgentPermissionPolicy.decide(
             toolPermission: PresentPlanTool().permission, toolName: "present_plan",
             mode: .ask, allowlist: [], gateReads: true, isIrreversible: false)
-        #expect(decision == .autoApprove)   // memory-class is exempt even with gateReads on
+        #expect(decision == .autoApprove)  // memory-class is exempt even with gateReads on
     }
 
     @Test func emptyStepsIsError() async throws {

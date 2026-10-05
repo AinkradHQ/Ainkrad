@@ -1,6 +1,6 @@
-import Foundation
-import CryptoKit
 import AinkradAppKit
+import CryptoKit
+import Foundation
 
 /// Where the Keychain service name comes from.
 ///
@@ -79,10 +79,12 @@ extension Home {
     /// hands out a per-user `/var/folders/…` path via `temporaryDirectory` and
     /// `TMPDIR`, while `/tmp` and `/var` are symlinks into `/private`.
     private static var throwawayBases: Set<String> {
-        var urls = [FileManager.default.temporaryDirectory,
-                    URL(fileURLWithPath: NSTemporaryDirectory()),
-                    URL(fileURLWithPath: "/tmp"),
-                    URL(fileURLWithPath: "/var/folders")]
+        var urls = [
+            FileManager.default.temporaryDirectory,
+            URL(fileURLWithPath: NSTemporaryDirectory()),
+            URL(fileURLWithPath: "/tmp"),
+            URL(fileURLWithPath: "/var/folders"),
+        ]
         if let tmpdir = ProcessInfo.processInfo.environment["TMPDIR"], !tmpdir.isEmpty {
             urls.append(URL(fileURLWithPath: tmpdir))
         }

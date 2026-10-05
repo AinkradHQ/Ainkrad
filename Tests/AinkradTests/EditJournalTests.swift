@@ -1,6 +1,7 @@
 // Tests/AinkradTests/EditJournalTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("EditJournal")
@@ -33,16 +34,20 @@ struct EditJournalTests {
     }
 
     @Test func revertEntriesAfterIndexUndoesTurn() {
-        let p1 = tmpFile("a"); let p2 = tmpFile("b")
-        defer { try? FileManager.default.removeItem(atPath: p1); try? FileManager.default.removeItem(atPath: p2) }
+        let p1 = tmpFile("a")
+        let p2 = tmpFile("b")
+        defer {
+            try? FileManager.default.removeItem(atPath: p1)
+            try? FileManager.default.removeItem(atPath: p2)
+        }
         let j = EditJournal()
-        j.record(path: p1, before: "a", after: "a2", existedBefore: true)   // pre-turn (index 0)
+        j.record(path: p1, before: "a", after: "a2", existedBefore: true)  // pre-turn (index 0)
         let mark = j.count
         try? "b2".write(toFile: p2, atomically: true, encoding: .utf8)
-        j.record(path: p2, before: "b", after: "b2", existedBefore: true)   // turn edit (index 1)
+        j.record(path: p2, before: "b", after: "b2", existedBefore: true)  // turn edit (index 1)
         #expect(j.revertEntries(after: mark) == 1)
         #expect((try? String(contentsOfFile: p2, encoding: .utf8)) == "b")
-        #expect(j.count == 1)                                               // pre-turn entry kept
+        #expect(j.count == 1)  // pre-turn entry kept
     }
 
     @Test func revertMultipleEditsToSameFileInReverseOrder() {
@@ -59,12 +64,15 @@ struct EditJournalTests {
     }
 
     @Test func revertGracefullyHandlesMissingFile() {
-        let path = FileManager.default.temporaryDirectory.appendingPathComponent("ej-missing-\(UUID().uuidString).txt").path
+        let path = FileManager.default.temporaryDirectory.appendingPathComponent("ej-missing-\(UUID().uuidString).txt")
+            .path
         let j = EditJournal()
         // File was removed externally after the edit; revert should not crash.
         let id = j.record(path: path, before: "orig", after: "changed", existedBefore: true)
         _ = j.revert(id)
-        #expect(!FileManager.default.fileExists(atPath: path) || (try? String(contentsOfFile: path, encoding: .utf8)) == "orig")
+        #expect(
+            !FileManager.default.fileExists(atPath: path)
+                || (try? String(contentsOfFile: path, encoding: .utf8)) == "orig")
     }
 
     @Test func editFileToolRecordsIntoJournal() async throws {
@@ -72,8 +80,10 @@ struct EditJournalTests {
         defer { try? FileManager.default.removeItem(atPath: path) }
         let j = EditJournal()
         let tool = EditFileTool(journal: j)
-        _ = try await tool.execute(.object([
-            "path": .string(path), "old_string": .string("world"), "new_string": .string("there")]))
+        _ = try await tool.execute(
+            .object([
+                "path": .string(path), "old_string": .string("world"), "new_string": .string("there"),
+            ]))
         #expect(j.entries.count == 1)
         #expect(j.entries.first?.before == "hello world")
         #expect(j.entries.first?.after == "hello there")
@@ -83,19 +93,24 @@ struct EditJournalTests {
         let path = tmpFile("hello world")
         defer { try? FileManager.default.removeItem(atPath: path) }
         let tool = EditFileTool()
-        let r = try await tool.execute(.object([
-            "path": .string(path), "old_string": .string("world"), "new_string": .string("there")]))
+        let r = try await tool.execute(
+            .object([
+                "path": .string(path), "old_string": .string("world"), "new_string": .string("there"),
+            ]))
         #expect(!r.isError)
         #expect(try String(contentsOfFile: path, encoding: .utf8) == "hello there")
     }
 
     @Test func createdFileRecordsExistedBeforeFalse() async throws {
-        let path = FileManager.default.temporaryDirectory.appendingPathComponent("ej-create-\(UUID().uuidString).txt").path
+        let path = FileManager.default.temporaryDirectory.appendingPathComponent("ej-create-\(UUID().uuidString).txt")
+            .path
         defer { try? FileManager.default.removeItem(atPath: path) }
         let j = EditJournal()
         let tool = EditFileTool(journal: j)
-        _ = try await tool.execute(.object([
-            "path": .string(path), "old_string": .string(""), "new_string": .string("brand new")]))
+        _ = try await tool.execute(
+            .object([
+                "path": .string(path), "old_string": .string(""), "new_string": .string("brand new"),
+            ]))
         #expect(j.entries.count == 1)
         #expect(j.entries.first?.existedBefore == false)
         #expect(j.revertEntries(after: 0) == 1)

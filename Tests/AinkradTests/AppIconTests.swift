@@ -1,17 +1,18 @@
-import Testing
-import Foundation
-@testable import Ainkrad
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 struct ThemeIconFamilyTests {
     @Test("every theme maps to its locked icon color family")
     func families() {
-        #expect(Theme.neonBlue.iconColorFamily      == .blue)
-        #expect(Theme.cyberPurple.iconColorFamily   == .purple)
-        #expect(Theme.dracula.iconColorFamily       == .purple)
-        #expect(Theme.nord.iconColorFamily          == .blue)
-        #expect(Theme.tokyoNight.iconColorFamily    == .blue)
-        #expect(Theme.gruvbox.iconColorFamily       == .blue)
+        #expect(Theme.neonBlue.iconColorFamily == .blue)
+        #expect(Theme.cyberPurple.iconColorFamily == .purple)
+        #expect(Theme.dracula.iconColorFamily == .purple)
+        #expect(Theme.nord.iconColorFamily == .blue)
+        #expect(Theme.tokyoNight.iconColorFamily == .blue)
+        #expect(Theme.gruvbox.iconColorFamily == .blue)
         #expect(Theme.solarizedDark.iconColorFamily == .blue)
     }
 }
@@ -20,25 +21,33 @@ struct AppIconResolverTests {
     @Test("color resolves auto→theme family, else the explicit color")
     func color() {
         #expect(AppIconResolver.color(for: .auto, theme: .cyberPurple) == .purple)
-        #expect(AppIconResolver.color(for: .auto, theme: .neonBlue)    == .blue)
+        #expect(AppIconResolver.color(for: .auto, theme: .neonBlue) == .blue)
         #expect(AppIconResolver.color(for: .blue, theme: .cyberPurple) == .blue)
-        #expect(AppIconResolver.color(for: .purple, theme: .neonBlue)  == .purple)
+        #expect(AppIconResolver.color(for: .purple, theme: .neonBlue) == .purple)
     }
 
     @Test("isDark: system passes through, light/dark pin")
     func isDark() {
-        #expect(AppIconResolver.isDark(.system, systemDark: true)  == true)
+        #expect(AppIconResolver.isDark(.system, systemDark: true) == true)
         #expect(AppIconResolver.isDark(.system, systemDark: false) == false)
-        #expect(AppIconResolver.isDark(.light, systemDark: true)   == false)
-        #expect(AppIconResolver.isDark(.dark,  systemDark: false)  == true)
+        #expect(AppIconResolver.isDark(.light, systemDark: true) == false)
+        #expect(AppIconResolver.isDark(.dark, systemDark: false) == true)
     }
 
     @Test("resourceName composes color + appearance into the bundled name")
     func resourceName() {
-        #expect(AppIconResolver.resourceName(for: .auto, theme: .cyberPurple, appearance: .system, systemDark: true) == "purple-dark")
-        #expect(AppIconResolver.resourceName(for: .auto, theme: .neonBlue, appearance: .light, systemDark: true) == "blue-light")
-        #expect(AppIconResolver.resourceName(for: .blue, theme: .dracula, appearance: .dark, systemDark: false) == "blue-dark")
-        #expect(AppIconResolver.resourceName(for: .purple, theme: .neonBlue, appearance: .system, systemDark: false) == "purple-light")
+        #expect(
+            AppIconResolver.resourceName(for: .auto, theme: .cyberPurple, appearance: .system, systemDark: true)
+                == "purple-dark")
+        #expect(
+            AppIconResolver.resourceName(for: .auto, theme: .neonBlue, appearance: .light, systemDark: true)
+                == "blue-light")
+        #expect(
+            AppIconResolver.resourceName(for: .blue, theme: .dracula, appearance: .dark, systemDark: false)
+                == "blue-dark")
+        #expect(
+            AppIconResolver.resourceName(for: .purple, theme: .neonBlue, appearance: .system, systemDark: false)
+                == "purple-light")
     }
 
     @Test("every (choice,appearance) resolves to a bundled .icns")
@@ -46,7 +55,8 @@ struct AppIconResolverTests {
         for choice in AppIconChoice.allCases {
             for appearance in AppIconAppearance.allCases {
                 for dark in [true, false] {
-                    let name = AppIconResolver.resourceName(for: choice, theme: .neonBlue, appearance: appearance, systemDark: dark)
+                    let name = AppIconResolver.resourceName(
+                        for: choice, theme: .neonBlue, appearance: appearance, systemDark: dark)
                     #expect(Bundle.main.url(forResource: name, withExtension: "icns") != nil, "missing \(name).icns")
                 }
             }
@@ -113,8 +123,8 @@ struct AppIconStoreTests {
         #expect(store.choice == .blue)
         let saved = p.load(GlobalSettings.self)
         #expect(saved?.appIconChoice == .blue)
-        #expect(saved?.appIconAppearance == .light)   // preserved
-        #expect(saved?.theme == .dracula)             // preserved
+        #expect(saved?.appIconAppearance == .light)  // preserved
+        #expect(saved?.theme == .dracula)  // preserved
         #expect(applier.calls.last?.choice == .blue)
         #expect(applier.calls.last?.appearance == .light)
         #expect(applier.calls.last?.theme == .dracula)
@@ -130,8 +140,8 @@ struct AppIconStoreTests {
         #expect(store.appearance == .dark)
         let saved = p.load(GlobalSettings.self)
         #expect(saved?.appIconAppearance == .dark)
-        #expect(saved?.appIconChoice == .purple)      // preserved
-        #expect(saved?.theme == .nord)                // preserved
+        #expect(saved?.appIconChoice == .purple)  // preserved
+        #expect(saved?.theme == .nord)  // preserved
         #expect(applier.calls.last?.appearance == .dark)
     }
 
@@ -153,7 +163,7 @@ struct AppIconStoreTests {
         let applier = FakeApplier()
         let tm = makeThemeManager(p)
         let store = AppIconStore(persistence: p, applier: applier, themeManager: tm)
-        tm.onThemeChange = { [weak store] in store?.applyCurrent() }   // wired as bootstrap does
+        tm.onThemeChange = { [weak store] in store?.applyCurrent() }  // wired as bootstrap does
         tm.setTheme(.cyberPurple)
         #expect(applier.calls.last?.theme == .cyberPurple)
     }
@@ -163,45 +173,61 @@ struct AppIconStoreTests {
 struct BundleAppIconTests {
     @Test("stamps when the resolved icon differs from what is on the bundle")
     func stampsOnChange() {
-        #expect(BundleAppIcon.decide(resolved: "purple-dark", lastWritten: nil,
-                                     matchesShippedIcon: false) == .write("purple-dark"))
-        #expect(BundleAppIcon.decide(resolved: "purple-dark", lastWritten: "blue-light",
-                                     matchesShippedIcon: false) == .write("purple-dark"))
+        #expect(
+            BundleAppIcon.decide(
+                resolved: "purple-dark", lastWritten: nil,
+                matchesShippedIcon: false) == .write("purple-dark"))
+        #expect(
+            BundleAppIcon.decide(
+                resolved: "purple-dark", lastWritten: "blue-light",
+                matchesShippedIcon: false) == .write("purple-dark"))
     }
 
     @Test("does nothing when the bundle already carries the resolved icon, from the same bundle version")
     func noopWhenUnchanged() {
-        #expect(BundleAppIcon.decide(resolved: "purple-dark", lastWritten: "purple-dark",
-                                     lastWrittenBundleVersion: "42", currentBundleVersion: "42",
-                                     matchesShippedIcon: false) == .none)
+        #expect(
+            BundleAppIcon.decide(
+                resolved: "purple-dark", lastWritten: "purple-dark",
+                lastWrittenBundleVersion: "42", currentBundleVersion: "42",
+                matchesShippedIcon: false) == .none)
     }
 
     @Test("re-stamps after an app update even though the recorded name matches — the bookkeeping is stale")
     func restampsAfterBundleUpdate() {
-        #expect(BundleAppIcon.decide(resolved: "purple-dark", lastWritten: "purple-dark",
-                                     lastWrittenBundleVersion: "42", currentBundleVersion: "43",
-                                     matchesShippedIcon: false) == .write("purple-dark"))
+        #expect(
+            BundleAppIcon.decide(
+                resolved: "purple-dark", lastWritten: "purple-dark",
+                lastWrittenBundleVersion: "42", currentBundleVersion: "43",
+                matchesShippedIcon: false) == .write("purple-dark"))
     }
 
     @Test("no stale stamp to clear on a new bundle version even if the shipped icon now matches")
     func noClearForStaleStampAfterUpdate() {
-        #expect(BundleAppIcon.decide(resolved: "blue-dark", lastWritten: "purple-dark",
-                                     lastWrittenBundleVersion: "42", currentBundleVersion: "43",
-                                     matchesShippedIcon: true) == .none)
+        #expect(
+            BundleAppIcon.decide(
+                resolved: "blue-dark", lastWritten: "purple-dark",
+                lastWrittenBundleVersion: "42", currentBundleVersion: "43",
+                matchesShippedIcon: true) == .none)
     }
 
     @Test("never stamps when the shipped icon is already the right one")
     func noStampWhenShippedIconMatches() {
-        #expect(BundleAppIcon.decide(resolved: "blue-dark", lastWritten: nil,
-                                     matchesShippedIcon: true) == .none)
+        #expect(
+            BundleAppIcon.decide(
+                resolved: "blue-dark", lastWritten: nil,
+                matchesShippedIcon: true) == .none)
     }
 
     @Test("clears an existing stamp once the shipped icon becomes correct")
     func clearsStampWhenShippedIconMatches() {
-        #expect(BundleAppIcon.decide(resolved: "blue-dark", lastWritten: "purple-dark",
-                                     matchesShippedIcon: true) == .clear)
+        #expect(
+            BundleAppIcon.decide(
+                resolved: "blue-dark", lastWritten: "purple-dark",
+                matchesShippedIcon: true) == .clear)
         // Already clean — clearing again would be a pointless bundle write.
-        #expect(BundleAppIcon.decide(resolved: "blue-dark", lastWritten: nil,
-                                     matchesShippedIcon: true) == .none)
+        #expect(
+            BundleAppIcon.decide(
+                resolved: "blue-dark", lastWritten: nil,
+                matchesShippedIcon: true) == .none)
     }
 }

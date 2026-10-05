@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Fetches a URL and returns readable text/markdown, byte-capped like
 /// `ReadFileTool`. Read-class: auto-approves unless `gateReads`. SSRF is

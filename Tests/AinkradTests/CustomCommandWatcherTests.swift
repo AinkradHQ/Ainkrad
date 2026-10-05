@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("CustomCommandWatcher")
@@ -11,15 +12,17 @@ struct CustomCommandWatcherTests {
 
     @Test(.timeLimit(.minutes(1)))
     func reloadReRegistersAfterFileAppears() async throws {
-        let user = temp(); defer { try? FileManager.default.removeItem(at: user) }
+        let user = temp()
+        defer { try? FileManager.default.removeItem(at: user) }
         try FileManager.default.createDirectory(at: user, withIntermediateDirectories: true)
         let store = CustomCommandStore(paths: CustomCommandPaths(userRoot: user, projectRoot: nil))
         let reg = CommandRegistry(builtins: [])
         var known = resyncCustomCommands(store: store, registry: reg, previous: [])
         #expect(reg.all().isEmpty)
 
-        try "Fix $ARGUMENTS".write(to: user.appendingPathComponent("fix.md"),
-                                   atomically: true, encoding: .utf8)
+        try "Fix $ARGUMENTS".write(
+            to: user.appendingPathComponent("fix.md"),
+            atomically: true, encoding: .utf8)
         let watcher = CustomCommandWatcher(directory: user) {
             store.reload()
             known = resyncCustomCommands(store: store, registry: reg, previous: known)
@@ -31,7 +34,8 @@ struct CustomCommandWatcherTests {
     }
 
     @Test func resyncDropsStaleNames() throws {
-        let user = temp(); defer { try? FileManager.default.removeItem(at: user) }
+        let user = temp()
+        defer { try? FileManager.default.removeItem(at: user) }
         try FileManager.default.createDirectory(at: user, withIntermediateDirectories: true)
         try "x".write(to: user.appendingPathComponent("gone.md"), atomically: true, encoding: .utf8)
         let store = CustomCommandStore(paths: CustomCommandPaths(userRoot: user, projectRoot: nil))
@@ -49,7 +53,8 @@ struct CustomCommandWatcherTests {
     }
 
     @Test func customDoesNotShadowAnExistingRegisteredCommand() throws {
-        let user = temp(); defer { try? FileManager.default.removeItem(at: user) }
+        let user = temp()
+        defer { try? FileManager.default.removeItem(at: user) }
         try FileManager.default.createDirectory(at: user, withIntermediateDirectories: true)
         try "Do a review".write(to: user.appendingPathComponent("review.md"), atomically: true, encoding: .utf8)
         let store = CustomCommandStore(paths: CustomCommandPaths(userRoot: user, projectRoot: nil))
@@ -64,7 +69,8 @@ struct CustomCommandWatcherTests {
     }
 
     @Test func resyncDoesNotUnregisterANameItDidNotRegister() throws {
-        let user = temp(); defer { try? FileManager.default.removeItem(at: user) }
+        let user = temp()
+        defer { try? FileManager.default.removeItem(at: user) }
         try FileManager.default.createDirectory(at: user, withIntermediateDirectories: true)
         try "Do a review".write(to: user.appendingPathComponent("review.md"), atomically: true, encoding: .utf8)
         let store = CustomCommandStore(paths: CustomCommandPaths(userRoot: user, projectRoot: nil))

@@ -1,5 +1,5 @@
-import Foundation
 import AVFoundation
+import Foundation
 
 enum MicAuthorization: Equatable { case authorized, denied, notDetermined }
 

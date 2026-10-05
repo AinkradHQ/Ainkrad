@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import CoreGraphics
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("Flat pane layer placement")
@@ -120,7 +121,8 @@ struct WorkspacePaneLayerTests {
     func splitPanesDoNotOverlap() {
         let ws = workspace(panes: 3)
         let frames = PaneGeometryResolver.placements(
-            for: ws, in: size, carouselOffsetX: 0, isActiveWorkspace: true).map(\.frame)
+            for: ws, in: size, carouselOffsetX: 0, isActiveWorkspace: true
+        ).map(\.frame)
 
         for i in frames.indices {
             for j in frames.indices where j > i {

@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitUI
+import SwiftUI
 
 /// Breadcrumb that becomes a path editor on ⌘L. Two modes rather than an
 /// always-editable field: the breadcrumb is the common case and clicking a
@@ -47,8 +47,10 @@ struct HoardBreadcrumbBar: View {
         }
     }
 
-    private func historyButton(_ symbol: String, enabled: Bool,
-                               action: @escaping () -> Void) -> some View {
+    private func historyButton(
+        _ symbol: String, enabled: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
                 .font(.system(size: 10, weight: .semibold))
@@ -99,8 +101,10 @@ struct HoardBreadcrumbBar: View {
                 .onSubmit(commit)
                 .onExitCommand { isEditing = false }
                 .onKeyPress(.tab) {
-                    if let completed = completePath(draft, using: fileSystem,
-                                                    home: fileSystem.homeDirectory) {
+                    if let completed = completePath(
+                        draft, using: fileSystem,
+                        home: fileSystem.homeDirectory)
+                    {
                         draft = completed
                     }
                     return .handled
@@ -137,8 +141,11 @@ private struct BreadcrumbSegment: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(AinkradFontResolver.font(.caption, weight: isLast ? .medium : .regular,
-                                               typography: typo))
+                .font(
+                    AinkradFontResolver.font(
+                        .caption, weight: isLast ? .medium : .regular,
+                        typography: typo)
+                )
                 .foregroundStyle(theme.foreground.opacity(isLast ? 0.95 : 0.55))
                 .lineLimit(1)
                 .padding(.horizontal, AinkradSpacing.xs)

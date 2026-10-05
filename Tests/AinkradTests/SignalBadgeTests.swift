@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-import AinkradSignal
 import AinkradHostRuntime
+import AinkradSignal
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @MainActor
@@ -11,15 +12,19 @@ final class SignalBadgeTests {
         func deliver(_ event: SignalEvent, to channels: Set<DeliveryChannel>) {}
     }
     private struct Ctx: SignalContextProviding {
-        var deliveryContext = DeliveryContext(hostIsFrontmost: true, visibleAppIDs: [],
-                                              systemDoNotDisturb: false, hostFocusMode: false)
+        var deliveryContext = DeliveryContext(
+            hostIsFrontmost: true, visibleAppIDs: [],
+            systemDoNotDisturb: false, hostFocusMode: false)
     }
 
     private func makeCenter() throws -> (SignalCenter, URL) {
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("signal-\(UUID().uuidString).sqlite")
-        return (SignalCenter(store: try SignalStore(url: url),
-                            deliverer: NullDeliverer(), contextProvider: Ctx()), url)
+        return (
+            SignalCenter(
+                store: try SignalStore(url: url),
+                deliverer: NullDeliverer(), contextProvider: Ctx()), url
+        )
     }
 
     @Test("per-app unread counts are independent, and reading one does not clear another")
@@ -28,12 +33,15 @@ final class SignalBadgeTests {
         defer { try? FileManager.default.removeItem(at: url) }
         let model = SignalBadgeModel(center: center)
 
-        center.emit(SignalDraft(kind: "build.failed", severity: .failure, title: "a"),
-                    from: .app(appID: "raven"))
-        center.emit(SignalDraft(kind: "build.failed", severity: .failure, title: "b"),
-                    from: .app(appID: "raven"))
-        center.emit(SignalDraft(kind: "session.done", severity: .success, title: "c"),
-                    from: .app(appID: "quest"))
+        center.emit(
+            SignalDraft(kind: "build.failed", severity: .failure, title: "a"),
+            from: .app(appID: "raven"))
+        center.emit(
+            SignalDraft(kind: "build.failed", severity: .failure, title: "b"),
+            from: .app(appID: "raven"))
+        center.emit(
+            SignalDraft(kind: "session.done", severity: .success, title: "c"),
+            from: .app(appID: "quest"))
 
         #expect(model.count(for: "raven") == 2)
         #expect(model.count(for: "quest") == 1)
@@ -43,8 +51,9 @@ final class SignalBadgeTests {
         ravenOnly.sources = [.app(appID: "raven")]
         center.markAllRead(filter: ravenOnly)
         #expect(model.count(for: "raven") == 0)
-        #expect(model.count(for: "quest") == 1,
-                "reading one app's events must not clear another's")
+        #expect(
+            model.count(for: "quest") == 1,
+            "reading one app's events must not clear another's")
     }
 
     @Test("host events do not land on any app's badge")
@@ -81,8 +90,9 @@ struct SignalActionRouterTests {
         _ = emitter.handleAction("rerun") { fired = true }
 
         let router = SignalActionRouter(hub: hub)
-        let needsConfirmation = router.invoke(event(source: .app(appID: "raven")),
-                                              SignalAction(id: "rerun", label: "Re-run"))
+        let needsConfirmation = router.invoke(
+            event(source: .app(appID: "raven")),
+            SignalAction(id: "rerun", label: "Re-run"))
         #expect(needsConfirmation == nil, "a safe action needs no dialog")
         try? await Task.sleep(for: .milliseconds(60))
         #expect(fired)
@@ -111,8 +121,9 @@ struct SignalActionRouterTests {
         let hub = SignalEmitterHub()
         var fired = false
         _ = HostSignalEmitter(appID: "raven", hub: hub).handleAction("rerun") { fired = true }
-        SignalActionRouter(hub: hub).dispatch(event(source: .host),
-                                              SignalAction(id: "rerun", label: "Re-run"))
+        SignalActionRouter(hub: hub).dispatch(
+            event(source: .host),
+            SignalAction(id: "rerun", label: "Re-run"))
         try? await Task.sleep(for: .milliseconds(60))
         #expect(!fired, "a host event must not invoke an app's handler that shares an id")
     }

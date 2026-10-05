@@ -1,8 +1,9 @@
-import Testing
-import Foundation
-@testable import Ainkrad
 import AinkradAppKit
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 private final class FakeDocs: PluginDocumentStore {
     var storage: [String: Data] = [:]
@@ -29,8 +30,9 @@ struct TerminalSettingsMigrationTests {
         let scoped = FakeDocs()
         let d = defaults()
 
-        TerminalSettingsMigration.runIfNeeded(legacyRawPayload: { legacy.rawPayloadData(forID: $0) },
-                                              scoped: scoped, defaults: d)
+        TerminalSettingsMigration.runIfNeeded(
+            legacyRawPayload: { legacy.rawPayloadData(forID: $0) },
+            scoped: scoped, defaults: d)
 
         let bytes = try #require(scoped.data(forKey: "terminal-settings"))
         #expect((try? JSONDecoder().decode(LegacyDoc.self, from: bytes)) == LegacyDoc())
@@ -46,8 +48,9 @@ struct TerminalSettingsMigrationTests {
         let d = defaults()
         d.set(true, forKey: TerminalSettingsMigration.flagKey)
 
-        TerminalSettingsMigration.runIfNeeded(legacyRawPayload: { legacy.rawPayloadData(forID: $0) },
-                                              scoped: scoped, defaults: d)
+        TerminalSettingsMigration.runIfNeeded(
+            legacyRawPayload: { legacy.rawPayloadData(forID: $0) },
+            scoped: scoped, defaults: d)
         #expect(scoped.data(forKey: "terminal-settings") == nil)
     }
 
@@ -67,8 +70,9 @@ struct TerminalSettingsMigrationTests {
         legacy.save(LegacyDoc())
         let scoped = FakeDocs()
         scoped.setData(Data("existing".utf8), forKey: "terminal-settings")
-        TerminalSettingsMigration.runIfNeeded(legacyRawPayload: { legacy.rawPayloadData(forID: $0) },
-                                              scoped: scoped, defaults: defaults())
+        TerminalSettingsMigration.runIfNeeded(
+            legacyRawPayload: { legacy.rawPayloadData(forID: $0) },
+            scoped: scoped, defaults: defaults())
         #expect(scoped.data(forKey: "terminal-settings") == Data("existing".utf8))
     }
 }

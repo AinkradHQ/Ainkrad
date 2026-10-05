@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradHostRuntime
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 /// The engine side of batch rename: many renames recorded as ONE undo entry.
@@ -13,8 +14,10 @@ import AinkradHostRuntime
 struct BatchRenameOperationTests {
     private func makeEngine(_ mutator: InMemoryFileMutator) -> (FileOperationEngine, UndoStack) {
         let stack = UndoStack(persistence: InMemoryPersistenceStore())
-        return (FileOperationEngine(mutator: mutator, trash: InMemoryTrash(), undoStack: stack),
-                stack)
+        return (
+            FileOperationEngine(mutator: mutator, trash: InMemoryTrash(), undoStack: stack),
+            stack
+        )
     }
 
     private func url(_ path: String) -> URL { URL(fileURLWithPath: path) }
@@ -31,10 +34,11 @@ struct BatchRenameOperationTests {
         let mutator = makeTree(["one.txt", "two.txt", "three.txt"])
         let (engine, stack) = makeEngine(mutator)
 
-        let result = await engine.submit(FileOperation(
-            kind: .batchRename(newNames: ["1.txt", "2.txt", "3.txt"]),
-            sources: [url("/a/one.txt"), url("/a/two.txt"), url("/a/three.txt")],
-            destinationDirectory: nil))
+        let result = await engine.submit(
+            FileOperation(
+                kind: .batchRename(newNames: ["1.txt", "2.txt", "3.txt"]),
+                sources: [url("/a/one.txt"), url("/a/two.txt"), url("/a/three.txt")],
+                destinationDirectory: nil))
 
         #expect(result.succeeded == 3)
         #expect(mutator.fileExists(url("/a/1.txt")))
@@ -47,9 +51,10 @@ struct BatchRenameOperationTests {
     func oneUndoRestoresTheWholeBatch() async {
         let mutator = makeTree(["one.txt", "two.txt"])
         let (engine, _) = makeEngine(mutator)
-        _ = await engine.submit(FileOperation(
-            kind: .batchRename(newNames: ["1.txt", "2.txt"]),
-            sources: [url("/a/one.txt"), url("/a/two.txt")], destinationDirectory: nil))
+        _ = await engine.submit(
+            FileOperation(
+                kind: .batchRename(newNames: ["1.txt", "2.txt"]),
+                sources: [url("/a/one.txt"), url("/a/two.txt")], destinationDirectory: nil))
 
         #expect(engine.undo() == nil)
 
@@ -62,9 +67,10 @@ struct BatchRenameOperationTests {
     func redoReappliesTheBatch() async {
         let mutator = makeTree(["one.txt", "two.txt"])
         let (engine, _) = makeEngine(mutator)
-        _ = await engine.submit(FileOperation(
-            kind: .batchRename(newNames: ["1.txt", "2.txt"]),
-            sources: [url("/a/one.txt"), url("/a/two.txt")], destinationDirectory: nil))
+        _ = await engine.submit(
+            FileOperation(
+                kind: .batchRename(newNames: ["1.txt", "2.txt"]),
+                sources: [url("/a/one.txt"), url("/a/two.txt")], destinationDirectory: nil))
         _ = engine.undo()
 
         _ = await engine.redo()
@@ -80,9 +86,10 @@ struct BatchRenameOperationTests {
         let mutator = makeTree(["one.txt", "two.txt"])
         let (engine, stack) = makeEngine(mutator)
 
-        let result = await engine.submit(FileOperation(
-            kind: .batchRename(newNames: ["only-one.txt"]),
-            sources: [url("/a/one.txt"), url("/a/two.txt")], destinationDirectory: nil))
+        let result = await engine.submit(
+            FileOperation(
+                kind: .batchRename(newNames: ["only-one.txt"]),
+                sources: [url("/a/one.txt"), url("/a/two.txt")], destinationDirectory: nil))
 
         #expect(result.succeeded == 0)
         #expect(result.failures.count == 1)
@@ -95,13 +102,14 @@ struct BatchRenameOperationTests {
         let mutator = makeTree(["one.txt", "two.txt", "taken.txt"])
         let (engine, stack) = makeEngine(mutator)
 
-        let result = await engine.submit(FileOperation(
-            kind: .batchRename(newNames: ["taken.txt", "2.txt"]),
-            sources: [url("/a/one.txt"), url("/a/two.txt")], destinationDirectory: nil))
+        let result = await engine.submit(
+            FileOperation(
+                kind: .batchRename(newNames: ["taken.txt", "2.txt"]),
+                sources: [url("/a/one.txt"), url("/a/two.txt")], destinationDirectory: nil))
 
         #expect(result.succeeded == 1)
         #expect(result.failures.count == 1)
-        #expect(mutator.fileExists(url("/a/one.txt")))   // untouched
+        #expect(mutator.fileExists(url("/a/one.txt")))  // untouched
         #expect(mutator.fileExists(url("/a/2.txt")))
         #expect(stack.entries.count == 1)
     }
@@ -112,9 +120,10 @@ struct BatchRenameOperationTests {
     func partialBatchUndoesCleanly() async {
         let mutator = makeTree(["one.txt", "two.txt", "taken.txt"])
         let (engine, _) = makeEngine(mutator)
-        _ = await engine.submit(FileOperation(
-            kind: .batchRename(newNames: ["taken.txt", "2.txt"]),
-            sources: [url("/a/one.txt"), url("/a/two.txt")], destinationDirectory: nil))
+        _ = await engine.submit(
+            FileOperation(
+                kind: .batchRename(newNames: ["taken.txt", "2.txt"]),
+                sources: [url("/a/one.txt"), url("/a/two.txt")], destinationDirectory: nil))
 
         _ = engine.undo()
 

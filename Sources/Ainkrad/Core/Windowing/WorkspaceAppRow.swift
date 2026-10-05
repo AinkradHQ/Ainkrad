@@ -1,7 +1,7 @@
-import SwiftUI
-import AppKit
 import AinkradAppKit
 import AinkradHostRuntime
+import AppKit
+import SwiftUI
 
 /// One open pane, listed in the Workspace Overview's detail pane: its icon, the
 /// name the user knows it by, and the actions that act on it.
@@ -55,8 +55,8 @@ struct WorkspaceAppRow: View {
             VStack(alignment: .leading, spacing: 1) {
                 HStack(spacing: 6) {
                     Text(title)
-                    .font(AinkradFont.display(12, weight: .medium))
-                    .foregroundStyle(tokens.foreground.opacity(0.92))
+                        .font(AinkradFont.display(12, weight: .medium))
+                        .foregroundStyle(tokens.foreground.opacity(0.92))
                         .lineLimit(1)
                         .truncationMode(.middle)
 
@@ -93,14 +93,18 @@ struct WorkspaceAppRow: View {
             HStack(spacing: 4) {
                 rowButton("arrow.up.forward.app", help: "Open in \(workspace.name)", action: onOpen)
 
-                AinkradIconButton(systemName: "plus.square.on.square", size: 24,
-                                  tooltip: "Duplicate \(title) to another workspace",
-                                  action: onToggleDuplicateMenu)
-                    .ainkradPopover(isPresented: Binding(
+                AinkradIconButton(
+                    systemName: "plus.square.on.square", size: 24,
+                    tooltip: "Duplicate \(title) to another workspace",
+                    action: onToggleDuplicateMenu
+                )
+                .ainkradPopover(
+                    isPresented: Binding(
                         get: { isDuplicateMenuOpen },
-                        set: { if !$0 { onToggleDuplicateMenu() } })) {
-                        duplicateDestinations()
-                    }
+                        set: { if !$0 { onToggleDuplicateMenu() } })
+                ) {
+                    duplicateDestinations()
+                }
 
                 rowButton("xmark", help: "Close \(title)", action: onClose)
             }

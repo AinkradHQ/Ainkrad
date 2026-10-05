@@ -1,7 +1,7 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
 import AinkradSignal
+import SwiftUI
 
 /// The bell's dropdown: what just happened, grouped by the app that said it,
 /// in the shared HUD panel finish (`AinkradPanel`).
@@ -42,7 +42,8 @@ struct SignalBellDropdown: View {
     @State private var listHeight: CGFloat = 0
 
     enum ReadFilter: String, CaseIterable, Hashable {
-        case all = "All", unread = "Unread"
+        case all = "All"
+        case unread = "Unread"
     }
 
     /// Tallest the list grows before it scrolls.
@@ -86,9 +87,10 @@ struct SignalBellDropdown: View {
                     // Sized to the list, up to the cap, then it scrolls. A
                     // flexible frame took the whole cap and centred one row in it.
                     ScrollView {
-                        list.background(GeometryReader { geo in
-                            Color.clear.preference(key: ListHeightKey.self, value: geo.size.height)
-                        })
+                        list.background(
+                            GeometryReader { geo in
+                                Color.clear.preference(key: ListHeightKey.self, value: geo.size.height)
+                            })
                     }
                     .scrollIndicators(.never)
                     .scrollDisabled(listHeight <= Self.maxListHeight)
@@ -130,14 +132,15 @@ struct SignalBellDropdown: View {
     }
 
     private func glanceRow(_ event: SignalEvent) -> some View {
-        SignalGlanceRow(event: event,
-                        repeatCount: repeatCounts[event.id] ?? 1,
-                        isUnread: !readIDs.contains(event.id),
-                        now: now,
-                        onActivate: onActivate,
-                        onAction: onAction,
-                        onMarkRead: onMarkRead,
-                        onDismiss: onDismissEvent)
+        SignalGlanceRow(
+            event: event,
+            repeatCount: repeatCounts[event.id] ?? 1,
+            isUnread: !readIDs.contains(event.id),
+            now: now,
+            onActivate: onActivate,
+            onAction: onAction,
+            onMarkRead: onMarkRead,
+            onDismiss: onDismissEvent)
     }
 
     /// A collapsed group: the newest event on top of a stack whose edges peek
@@ -211,9 +214,11 @@ struct SignalBellDropdown: View {
             } else {
                 // The kit's own menu, not SwiftUI's `Menu`, which renders a
                 // stock AppKit menu in the middle of the HUD.
-                AinkradMenuButton(items: SignalSnooze.allCases.map { snooze in
-                    AinkradMenuItem(title: snooze.label, systemName: "bell.slash") { onSnooze(snooze) }
-                }) {
+                AinkradMenuButton(
+                    items: SignalSnooze.allCases.map { snooze in
+                        AinkradMenuItem(title: snooze.label, systemName: "bell.slash") { onSnooze(snooze) }
+                    }
+                ) {
                     headerGlyph("bell.slash")
                 }
                 .help("Go quiet")
@@ -234,8 +239,10 @@ struct SignalBellDropdown: View {
             .contentShape(Rectangle())
     }
 
-    private func headerButton(_ symbol: String, help: String, tint: Color? = nil,
-                              action: @escaping () -> Void) -> some View {
+    private func headerButton(
+        _ symbol: String, help: String, tint: Color? = nil,
+        action: @escaping () -> Void
+    ) -> some View {
         Button(action: action) { headerGlyph(symbol, tint: tint) }
             .buttonStyle(.plain)
             .help(help)
@@ -283,14 +290,17 @@ struct SignalBellDropdown: View {
             .padding(.vertical, 11)
             // A gradient that starts at nothing: no edge to read as a rule.
             .background {
-                LinearGradient(colors: [.clear, theme.surfaceElevated.opacity(hoveringFooter ? 0.85 : 0.55)],
-                               startPoint: .top, endPoint: .bottom)
+                LinearGradient(
+                    colors: [.clear, theme.surfaceElevated.opacity(hoveringFooter ? 0.85 : 0.55)],
+                    startPoint: .top, endPoint: .bottom)
             }
             .background(alignment: .bottom) {
-                LinearGradient(colors: [.clear, theme.accentPrimary.opacity(0.22)],
-                               startPoint: .top, endPoint: .bottom)
-                    .frame(height: 14)
-                    .opacity(hoveringFooter ? 1 : 0)
+                LinearGradient(
+                    colors: [.clear, theme.accentPrimary.opacity(0.22)],
+                    startPoint: .top, endPoint: .bottom
+                )
+                .frame(height: 14)
+                .opacity(hoveringFooter ? 1 : 0)
             }
             .contentShape(Rectangle())
         }

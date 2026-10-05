@@ -1,5 +1,5 @@
-import Foundation
 import AinkradAppKit
+import Foundation
 
 /// The per-app `PluginContextRegistry` handed to one plugin's HostServices.
 /// Forwards to the shared host hub, tagging registrations with this app's id.

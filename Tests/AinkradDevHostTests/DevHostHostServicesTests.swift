@@ -1,6 +1,7 @@
-import Testing
 import AinkradAppKit
 import AinkradHostRuntime
+import Testing
+
 @testable import AinkradDevHost
 
 /// Regression cover for the Dev Host crashing on any plugin that publishes

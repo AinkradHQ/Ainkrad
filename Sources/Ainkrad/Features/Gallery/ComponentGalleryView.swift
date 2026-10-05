@@ -138,7 +138,10 @@ struct ComponentGalleryView: View {
         }
         .ainkradPanel()
         .ainkradToastHost()
-        .onKeyPress(.escape) { onDismiss(); return .handled }
+        .onKeyPress(.escape) {
+            onDismiss()
+            return .handled
+        }
         // Attached at the gallery ROOT (the whole app surface), not a small
         // inner box — demonstrates `.ainkradConfirmDialog`'s documented
         // "attach at your app/surface root" usage: it dims and centers the
@@ -254,7 +257,8 @@ struct ComponentGalleryView: View {
 
     private var foundationSection: some View {
         VStack(alignment: .leading, spacing: AinkradSpacing.md) {
-            AinkradSectionHeader(title: "Foundation", subtitle: "Chamfer, brackets, accent rule, effects, status colors")
+            AinkradSectionHeader(
+                title: "Foundation", subtitle: "Chamfer, brackets, accent rule, effects, status colors")
 
             HStack(spacing: AinkradSpacing.md) {
                 ChamferShape()
@@ -423,9 +427,11 @@ struct ComponentGalleryView: View {
         VStack(alignment: .leading, spacing: AinkradSpacing.md) {
             AinkradSectionHeader(title: "State Views")
             HStack(spacing: AinkradSpacing.md) {
-                AinkradEmptyState(icon: "tray", title: "Nothing here", message: "No items yet.",
-                                  actionTitle: "Add Item", action: {})
-                    .frame(height: 180)
+                AinkradEmptyState(
+                    icon: "tray", title: "Nothing here", message: "No items yet.",
+                    actionTitle: "Add Item", action: {}
+                )
+                .frame(height: 180)
                 AinkradLoadingState(label: "Loading…")
                     .frame(height: 180)
                 AinkradErrorState(message: "Something went wrong.", retryTitle: "Retry", retry: {})
@@ -515,9 +521,11 @@ struct ComponentGalleryView: View {
             AinkradCaption("Chips, badges (all statuses), keyboard shortcuts")
             HStack(spacing: AinkradSpacing.md) {
                 ForEach(wave2Chips, id: \.self) { chip in
-                    AinkradChip(label: chip, systemName: "tag", onRemove: {
-                        wave2Chips.removeAll { $0 == chip }
-                    })
+                    AinkradChip(
+                        label: chip, systemName: "tag",
+                        onRemove: {
+                            wave2Chips.removeAll { $0 == chip }
+                        })
                 }
                 AinkradChip(label: "Static")
             }
@@ -562,13 +570,15 @@ struct ComponentGalleryView: View {
     private var wave3SearchableSelectItems: [String] {
         [
             "Alabama", "Alaska", "Arizona", "Arkansas", "California",
-            "Colorado", "Connecticut", "Delaware", "Florida", "Georgia"
+            "Colorado", "Connecticut", "Delaware", "Florida", "Georgia",
         ]
     }
 
     private var wave3SelectionRow: some View {
         VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
-            AinkradCaption("Select, MultiSelect, Combobox, SearchableSelect — dropdowns now ALWAYS search; panel width ≥ field width")
+            AinkradCaption(
+                "Select, MultiSelect, Combobox, SearchableSelect — dropdowns now ALWAYS search; panel width ≥ field width"
+            )
             HStack(alignment: .top, spacing: AinkradSpacing.md) {
                 // Wide field + long list: opening it shows the search field and
                 // a panel floored to this 260pt field width.
@@ -671,7 +681,7 @@ struct ComponentGalleryView: View {
             ("terminal", "Terminal"),
             ("gearshape", "Settings"),
             ("square.stack.3d.up", "Workspaces"),
-            ("bolt.fill", "Actions")
+            ("bolt.fill", "Actions"),
         ]
     }
     private var wave4NavListItems: [String] { ["Dashboard", "Repositories", "Pull Requests", "Settings"] }
@@ -770,9 +780,11 @@ struct ComponentGalleryView: View {
         VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
             AinkradCaption("Restyled: Empty State (with & without action), Error State, Loading State")
             HStack(spacing: AinkradSpacing.md) {
-                AinkradEmptyState(icon: "tray", title: "Nothing here", message: "No items yet.",
-                                  actionTitle: "Add Item", action: {})
-                    .frame(height: 180)
+                AinkradEmptyState(
+                    icon: "tray", title: "Nothing here", message: "No items yet.",
+                    actionTitle: "Add Item", action: {}
+                )
+                .frame(height: 180)
                 AinkradEmptyState(icon: "tray", title: "Nothing here", message: "No items yet.")
                     .frame(height: 180)
                 AinkradErrorState(message: "Something went wrong.", retryTitle: "Retry", retry: {})
@@ -818,7 +830,7 @@ struct ComponentGalleryView: View {
                 .ainkradContextMenu([
                     AinkradMenuItem(title: "Inspect", systemName: "magnifyingglass", action: {}),
                     AinkradMenuItem(title: "Restart", systemName: "arrow.clockwise", action: {}),
-                    AinkradMenuItem(title: "Terminate", systemName: "xmark.octagon", isDestructive: true, action: {})
+                    AinkradMenuItem(title: "Terminate", systemName: "xmark.octagon", isDestructive: true, action: {}),
                 ])
 
                 AinkradListRow(
@@ -870,7 +882,7 @@ struct ComponentGalleryView: View {
             GalleryProcessRow(id: "2", name: "terminal-host", cpu: "3.1", status: "Running"),
             GalleryProcessRow(id: "3", name: "indexer", cpu: "44.8", status: "Busy"),
             GalleryProcessRow(id: "4", name: "sync-worker", cpu: "0.2", status: "Idle"),
-            GalleryProcessRow(id: "5", name: "watcher", cpu: "1.6", status: "Idle")
+            GalleryProcessRow(id: "5", name: "watcher", cpu: "1.6", status: "Idle"),
         ]
     }
 
@@ -879,20 +891,22 @@ struct ComponentGalleryView: View {
             AinkradTableColumn(id: "name", title: "Process", cell: { $0.name }),
             AinkradTableColumn(id: "cpu", title: "CPU %", alignment: .trailing, cell: { $0.cpu }),
             .accessory(id: "status", title: "Status", alignment: .leading) { row in
-                AinkradBadge(text: row.status,
-                             status: row.status == "Running" ? .success : row.status == "Busy" ? .warning : .neutral)
+                AinkradBadge(
+                    text: row.status,
+                    status: row.status == "Running" ? .success : row.status == "Busy" ? .warning : .neutral)
             },
             .accessory(id: "actions") { _ in
                 AinkradIconButton(systemName: "stop.fill", size: 22, tooltip: "Stop") {}
-            }
+            },
         ]
     }
 
     private var wave5DataTableSample: some View {
         VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
             AinkradCaption("Data Table (sort by header; click, ⌘-click or ⇧-click rows to select)")
-            AinkradDataTable(rows: wave5TableRows, columns: wave5TableColumns, sort: $wave5TableSort,
-                             selection: $wave5TableSelection)
+            AinkradDataTable(
+                rows: wave5TableRows, columns: wave5TableColumns, sort: $wave5TableSort,
+                selection: $wave5TableSelection)
         }
     }
 
@@ -910,13 +924,25 @@ struct ComponentGalleryView: View {
     /// in a large one (2 pt minimum, and it must not be clipped), and empty.
     private var wave5StackedStatusBarSamples: [(String, [AinkradStatusRun])] {
         [
-            ("19 running · 28 exited · 1 created",
-             [.init(count: 19, status: .success), .init(count: 28, status: .warning), .init(count: 1, status: .neutral)]),
-            ("1,000 running · 1 dead",
-             [.init(count: 1_000, status: .success), .init(count: 1, status: .danger)]),
-            ("90 running · 2 exited · 3 restarting",
-             [.init(count: 3, status: .danger), .init(count: 2, status: .warning), .init(count: 90, status: .success)]),
-            ("empty — the track still draws", [])
+            (
+                "19 running · 28 exited · 1 created",
+                [
+                    .init(count: 19, status: .success), .init(count: 28, status: .warning),
+                    .init(count: 1, status: .neutral),
+                ]
+            ),
+            (
+                "1,000 running · 1 dead",
+                [.init(count: 1_000, status: .success), .init(count: 1, status: .danger)]
+            ),
+            (
+                "90 running · 2 exited · 3 restarting",
+                [
+                    .init(count: 3, status: .danger), .init(count: 2, status: .warning),
+                    .init(count: 90, status: .success),
+                ]
+            ),
+            ("empty — the track still draws", []),
         ]
     }
 
@@ -946,9 +972,11 @@ struct ComponentGalleryView: View {
         VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
             AinkradCaption("Basic Shell (the shared basic-mode surface; the switch is live)")
             HStack(alignment: .top, spacing: AinkradSpacing.md) {
-                AinkradBasicShell(icon: "wand.and.stars",
-                                  title: "Ainkrad",
-                                  subtitle: "development · 3 behind") {
+                AinkradBasicShell(
+                    icon: "wand.and.stars",
+                    title: "Ainkrad",
+                    subtitle: "development · 3 behind"
+                ) {
                     AinkradButton(title: "Fetch", style: .secondary) {}
                     AinkradButton(title: "Pull", style: .primary) {}
                 } content: {
@@ -957,8 +985,10 @@ struct ComponentGalleryView: View {
                 .frame(width: 320, height: 120)
                 .ainkradPanel()
 
-                AinkradBasicShell(icon: "doc.text", title: "roadmap.md",
-                                  subtitle: "Docs/Plans") {
+                AinkradBasicShell(
+                    icon: "doc.text", title: "roadmap.md",
+                    subtitle: "Docs/Plans"
+                ) {
                     AinkradCaption("a document, actions in the content")
                 }
                 .frame(width: 280, height: 120)
@@ -1022,22 +1052,24 @@ struct ComponentGalleryView: View {
                     AinkradCaption("Source column")
                 }
             }
-            AinkradLogView(lines: wave5Log.all,
-                           palette: AinkradANSIPalette(theme: galleryTokens, statusColors: galleryStatusColors),
-                           foreground: galleryTokens.foreground,
-                           showsSourcePrefix: wave5LogShowsSource,
-                           isFollowing: wave5LogFollowing)
-                .frame(height: 180)
-                .background(ChamferShape(cut: AinkradRadius.sm).fill(galleryTokens.surface.opacity(0.9)))
-                .task {
-                    // A live tail, so follow mode has something to follow.
-                    var tick = 0
-                    while !Task.isCancelled {
-                        try? await Task.sleep(for: .seconds(2))
-                        tick += 1
-                        wave5Log.append("worker tick \(tick) ok\n", source: "sync-worker")
-                    }
+            AinkradLogView(
+                lines: wave5Log.all,
+                palette: AinkradANSIPalette(theme: galleryTokens, statusColors: galleryStatusColors),
+                foreground: galleryTokens.foreground,
+                showsSourcePrefix: wave5LogShowsSource,
+                isFollowing: wave5LogFollowing
+            )
+            .frame(height: 180)
+            .background(ChamferShape(cut: AinkradRadius.sm).fill(galleryTokens.surface.opacity(0.9)))
+            .task {
+                // A live tail, so follow mode has something to follow.
+                var tick = 0
+                while !Task.isCancelled {
+                    try? await Task.sleep(for: .seconds(2))
+                    tick += 1
+                    wave5Log.append("worker tick \(tick) ok\n", source: "sync-worker")
                 }
+            }
         }
     }
 
@@ -1065,8 +1097,10 @@ struct ComponentGalleryView: View {
     }
 
     private var spacingSamples: [(label: String, value: CGFloat)] {
-        [("xs", AinkradSpacing.xs), ("sm", AinkradSpacing.sm), ("md", AinkradSpacing.md),
-         ("lg", AinkradSpacing.lg), ("xl", AinkradSpacing.xl), ("xxl", AinkradSpacing.xxl)]
+        [
+            ("xs", AinkradSpacing.xs), ("sm", AinkradSpacing.sm), ("md", AinkradSpacing.md),
+            ("lg", AinkradSpacing.lg), ("xl", AinkradSpacing.xl), ("xxl", AinkradSpacing.xxl),
+        ]
     }
 
     private var radiusSamples: [(label: String, value: CGFloat)] {

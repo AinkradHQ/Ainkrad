@@ -1,21 +1,22 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite struct ClaudeCodeCredentialImporterTests {
     private func payload(scopes: [String], expiresAt: Int) -> Data {
         let scopeJSON = scopes.map { "\"\($0)\"" }.joined(separator: ",")
         return """
-        {"claudeAiOauth":{"accessToken":"AT","refreshToken":"RT",
-         "expiresAt":\(expiresAt),"scopes":[\(scopeJSON)]}}
-        """.data(using: .utf8)!
+            {"claudeAiOauth":{"accessToken":"AT","refreshToken":"RT",
+             "expiresAt":\(expiresAt),"scopes":[\(scopeJSON)]}}
+            """.data(using: .utf8)!
     }
 
     @Test func decodesValidCredentials() throws {
         let token = try ClaudeCodeCredentialImporter.decode(payload(scopes: ["user:inference"], expiresAt: 5000))
         #expect(token.accessToken == "AT")
         #expect(token.refreshToken == "RT")
-        #expect(token.expiresAt == Date(timeIntervalSince1970: 5))   // ms → s
+        #expect(token.expiresAt == Date(timeIntervalSince1970: 5))  // ms → s
     }
 
     @Test func rejectsWhenInferenceScopeMissing() {
@@ -38,8 +39,8 @@ import Foundation
         let kc = payload(scopes: ["user:inference"], expiresAt: 7000)
         let importer = ClaudeCodeCredentialImporter(
             path: missingURL,
-            readFile: { _ in nil },              // no file
-            readKeychainData: { _ in kc },       // keychain has it
+            readFile: { _ in nil },  // no file
+            readKeychainData: { _ in kc },  // keychain has it
             keychainItemExists: { _ in true })
         let token = try importer.load()
         #expect(token.accessToken == "AT")
@@ -51,10 +52,13 @@ import Foundation
         let importer = ClaudeCodeCredentialImporter(
             path: missingURL,
             readFile: { _ in fileData },
-            readKeychainData: { _ in Issue.record("keychain must not be read when file present"); return nil },
+            readKeychainData: { _ in
+                Issue.record("keychain must not be read when file present")
+                return nil
+            },
             keychainItemExists: { _ in true })
         let token = try importer.load()
-        #expect(token.expiresAt == Date(timeIntervalSince1970: 1))   // came from the file
+        #expect(token.expiresAt == Date(timeIntervalSince1970: 1))  // came from the file
     }
 
     @Test func loadThrowsFileAbsentWhenNeitherSourceHasCredentials() {

@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Luma Dream Machine text-to-video backend. Key in the Keychain via SecretStore.
 /// Async job model: submit a generation, poll until `completed`, then download
@@ -65,7 +65,10 @@ struct LumaVideoBackend: VideoBackend {
         let state = (root["state"] as? String) ?? ""
         if state == "failed" { throw ToolError.message("Luma generation failed.") }
         if state == "completed", let assets = root["assets"] as? [String: Any],
-           let video = assets["video"] as? String { return .done(video) }
+            let video = assets["video"] as? String
+        {
+            return .done(video)
+        }
         return .pending
     }
 }

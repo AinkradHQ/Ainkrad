@@ -75,7 +75,8 @@ public enum PluginLoadDiagnostics {
         let looksLikeSDKSkew = symbol.contains(sdkName) || expectedInLibrary(in: detail)?.contains(sdkName) == true
         guard looksLikeSDKSkew else {
             return Diagnosis(
-                banner: "missing symbol \(symbol) at load time — this plugin was built against a different version of a library than the host provides",
+                banner:
+                    "missing symbol \(symbol) at load time — this plugin was built against a different version of a library than the host provides",
                 log: log)
         }
         // The sentence that would have saved the session. The raw symbol stays
@@ -95,8 +96,8 @@ public enum PluginLoadDiagnostics {
         // is correct in BOTH directions, so that is the one named.
         return Diagnosis(
             banner: "was built against a different \(sdkName) revision than this host embeds — "
-                  + "repin the plugin to the host's SDK revision and rebuild it "
-                  + "(missing symbol \(symbol))",
+                + "repin the plugin to the host's SDK revision and rebuild it "
+                + "(missing symbol \(symbol))",
             log: log)
     }
 

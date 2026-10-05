@@ -1,6 +1,6 @@
-import Foundation
 import AinkradAppKit
 import AinkradSignal
+import Foundation
 
 /// What the assistant can learn from the notification feed.
 ///
@@ -41,8 +41,10 @@ struct SageSignalContext {
     func healthLine(now: Date = Date()) -> String {
         let health = center.health(since: now.addingTimeInterval(-7 * 86_400))
         guard health.total >= Self.minimumHealthSample else { return "" }
-        var parts = ["Last 7 days: \(health.total) notifications",
-                     "\(Int((health.readRate * 100).rounded()))% read"]
+        var parts = [
+            "Last 7 days: \(health.total) notifications",
+            "\(Int((health.readRate * 100).rounded()))% read",
+        ]
         if let loudest = health.noisiest.first {
             parts.append("loudest \(loudest.kind) (\(loudest.count))")
         }
@@ -167,10 +169,12 @@ struct SageSignalContext {
     /// useful about it. Uses the same `sourceLabel` the feed's own rows use, so
     /// the assistant and the UI never disagree about what an app is called.
     private static func line(for event: SignalEvent, repeats: Int = 1) -> String {
-        let stamp = ISO8601DateFormatter.string(from: event.timestamp,
-                                                timeZone: .current,
-                                                formatOptions: [.withInternetDateTime])
-        var line = "[\(stamp)] \(event.severity.rawValue.uppercased()) "
+        let stamp = ISO8601DateFormatter.string(
+            from: event.timestamp,
+            timeZone: .current,
+            formatOptions: [.withInternetDateTime])
+        var line =
+            "[\(stamp)] \(event.severity.rawValue.uppercased()) "
             + "\(SignalPresentation.sourceLabel(event.source)) — \(event.title)"
         if repeats > 1 {
             line += " (\(repeats)x)"

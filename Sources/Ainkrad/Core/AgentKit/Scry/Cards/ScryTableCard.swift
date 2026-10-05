@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Pure table-body → rows parser (markdown pipe table or CSV). Unit-tested.
 /// Detects the separator from the body (`|` wins over `,`), then drops a

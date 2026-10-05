@@ -1,6 +1,7 @@
-import Testing
-@testable import Ainkrad
 import AinkradAppKitContract
+import Testing
+
+@testable import Ainkrad
 
 @Suite("Settings path migration")
 @MainActor
@@ -8,28 +9,28 @@ struct SettingsPathMigrationTests {
     @Test("retired paths resolve forward to their new homes")
     func retiredPathsResolve() {
         let cases: [(String, String)] = [
-            ("workspace.livingSky",            "workspace.appearance"),
-            ("workspace.appIcon",              "workspace.appearance"),
-            ("workspace.sound",                "workspace.soundAndVoice"),
-            ("workspace.shortcuts",            "workspace.keyboard"),
-            ("assistant.models",               "intelligence.model"),
-            ("assistant.access",               "intelligence.permissions"),
-            ("assistant.data",                 "intelligence.privacy"),
-            ("assistant.web",                  "intelligence.tools"),
-            ("assistant.voice",                "workspace.soundAndVoice"),
-            ("workspace.mcp",                  "intelligence.tools"),
-            ("workspace.lsp",                  "intelligence.tools"),
-            ("workspace.skills",               "intelligence.skills"),
-            ("workspace.memory",               "intelligence.memory"),
+            ("workspace.livingSky", "workspace.appearance"),
+            ("workspace.appIcon", "workspace.appearance"),
+            ("workspace.sound", "workspace.soundAndVoice"),
+            ("workspace.shortcuts", "workspace.keyboard"),
+            ("assistant.models", "intelligence.model"),
+            ("assistant.access", "intelligence.permissions"),
+            ("assistant.data", "intelligence.privacy"),
+            ("assistant.web", "intelligence.tools"),
+            ("assistant.voice", "workspace.soundAndVoice"),
+            ("workspace.mcp", "intelligence.tools"),
+            ("workspace.lsp", "intelligence.tools"),
+            ("workspace.skills", "intelligence.skills"),
+            ("workspace.memory", "intelligence.memory"),
             // NOT workspace.appearance: the Sage's appearance settings
             // (surface opacity, blur, message font/size) never moved there —
             // they are still `SageSettingsView.appearanceSection`, on the
             // Sage's own app page.
-            ("assistant.appearance",           "app.sage"),
+            ("assistant.appearance", "app.sage"),
             // The v0.16.0 app rename: an app page id derives from the app id.
-            ("app.assistant",                  "app.sage"),
-            ("app.files",                      "app.hoard"),
-            ("app.canvas",                     "app.scry")
+            ("app.assistant", "app.sage"),
+            ("app.files", "app.hoard"),
+            ("app.canvas", "app.scry"),
         ]
         for (old, new) in cases {
             let resolved = SettingsPathAliases.resolve(SettingsPath(rawValue: old)!)
@@ -76,7 +77,9 @@ struct SettingsPathMigrationTests {
         // walk to paper over it.
         let keys = Set(SettingsPathAliases.allKeys)
         for target in SettingsPathAliases.allTargets {
-            #expect(!keys.contains(target.rawValue), "\(target.rawValue) is both an alias target and an alias key — chained")
+            #expect(
+                !keys.contains(target.rawValue), "\(target.rawValue) is both an alias target and an alias key — chained"
+            )
         }
     }
 }

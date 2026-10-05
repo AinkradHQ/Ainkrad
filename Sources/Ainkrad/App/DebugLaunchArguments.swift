@@ -1,7 +1,7 @@
-import Foundation
-import os
 import AinkradAppKit
 import AinkradHostRuntime
+import Foundation
+import os
 
 /// Key-value argument lookup closure type.
 typealias ArgumentLookup = @Sendable (String) -> String?
@@ -15,7 +15,9 @@ struct DebugFixtureRoots {
 }
 
 /// Parses `-AinkradOpenApp <appID>` and optional `-AinkradOpenAppPayload <payload>` using a key-value lookup.
-func parseDebugOpenAppArguments(_ value: ArgumentLookup = { UserDefaults.standard.string(forKey: $0) }) -> (appID: String, payload: String?)? {
+func parseDebugOpenAppArguments(_ value: ArgumentLookup = { UserDefaults.standard.string(forKey: $0) }) -> (
+    appID: String, payload: String?
+)? {
     guard let rawAppID = value("AinkradOpenApp") else { return nil }
     let appID = rawAppID.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !appID.isEmpty else { return nil }
@@ -48,7 +50,8 @@ func parseDebugGalleryThemeArgument(_ value: ArgumentLookup = { UserDefaults.sta
 
 /// Parses `-AinkradGallerySection <id>` using a key-value lookup.
 /// Returns the section id string, or nil if absent or empty.
-func parseDebugGallerySectionArgument(_ value: ArgumentLookup = { UserDefaults.standard.string(forKey: $0) }) -> String? {
+func parseDebugGallerySectionArgument(_ value: ArgumentLookup = { UserDefaults.standard.string(forKey: $0) }) -> String?
+{
     guard let rawSection = value("AinkradGallerySection") else { return nil }
     let section = rawSection.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !section.isEmpty else { return nil }
@@ -76,7 +79,7 @@ func seedDebugFixtureIfNeeded(home: Home?, lookup: ArgumentLookup = { UserDefaul
 
     let vaultConfigURL = home.vaultRoot.appendingPathComponent("Config", isDirectory: true)
     let persistence = FileDocumentStore(rootURL: vaultConfigURL)
-    
+
     if persistence.load(SetupDocument.self) == nil {
         let setupDoc = SetupDocument(
             completedAt: Date(timeIntervalSince1970: 0),

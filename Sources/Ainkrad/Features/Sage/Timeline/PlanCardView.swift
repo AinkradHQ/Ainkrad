@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Pure presentation helpers for the plan node (no SwiftUI), unit-tested like
 /// `TodoStepPresentation`.

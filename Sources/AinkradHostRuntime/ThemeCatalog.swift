@@ -1,5 +1,5 @@
-import Foundation
 import AinkradAppKitUI
+import Foundation
 
 /// Loads theme files from the main bundle via `ainkradLoadThemes` and provides theme file resolution.
 public final class ThemeCatalog: Sendable {
@@ -14,7 +14,8 @@ public final class ThemeCatalog: Sendable {
     public let issues: [AinkradThemeIssue]
 
     public init(bundle: Bundle = .main) {
-        let themeURLs = (bundle.urls(forResourcesWithExtension: "theme", subdirectory: "Themes") ?? [])
+        let themeURLs =
+            (bundle.urls(forResourcesWithExtension: "theme", subdirectory: "Themes") ?? [])
             + (bundle.urls(forResourcesWithExtension: "theme", subdirectory: nil) ?? [])
 
         // Unique by path
@@ -35,7 +36,9 @@ public final class ThemeCatalog: Sendable {
                 do {
                     section = try JSONDecoder().decode(HostSkinSection.self, from: hostData)
                 } catch {
-                    Log.settings.error("Failed to decode host section for theme '\(id, privacy: .public)': \(error.localizedDescription, privacy: .public)")
+                    Log.settings.error(
+                        "Failed to decode host section for theme '\(id, privacy: .public)': \(error.localizedDescription, privacy: .public)"
+                    )
                 }
             }
             themesDict[id] = LoadedTheme(themeFile: file, hostSection: section)
@@ -57,7 +60,9 @@ public final class ThemeCatalog: Sendable {
         if let loaded = loadedThemes[themeID], let section = loaded.hostSection {
             return section
         }
-        if let baseId = fallbackBaseId(for: themeID), let baseLoaded = loadedThemes[baseId], let section = baseLoaded.hostSection {
+        if let baseId = fallbackBaseId(for: themeID), let baseLoaded = loadedThemes[baseId],
+            let section = baseLoaded.hostSection
+        {
             return section
         }
         return nil

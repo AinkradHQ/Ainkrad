@@ -1,7 +1,8 @@
-import Testing
-import SwiftUI
-@testable import Ainkrad
 import AinkradHostRuntime
+import SwiftUI
+import Testing
+
+@testable import Ainkrad
 
 @Suite("UIFontScale")
 struct UIFontScaleTests {

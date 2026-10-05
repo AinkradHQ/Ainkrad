@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("AgentRun")
@@ -42,8 +43,9 @@ struct AgentRunTests {
 
     /// M7 Wave B (B1c) — `AgentRun.posture` round-trips through encode/decode.
     @Test func postureRoundTrips() throws {
-        var r = AgentRun(origin: .schedule, prompt: "nightly",
-                          posture: SavedExecutionPosture(permissionMode: "ask", sandboxProfileID: "workspace-write"))
+        var r = AgentRun(
+            origin: .schedule, prompt: "nightly",
+            posture: SavedExecutionPosture(permissionMode: "ask", sandboxProfileID: "workspace-write"))
         r.status = .done
         let data = try JSONEncoder().encode(r)
         let decoded = try JSONDecoder().decode(AgentRun.self, from: data)

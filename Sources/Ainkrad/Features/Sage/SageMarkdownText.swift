@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Renders assistant transcript text as markdown blocks. Prose/heading/list
 /// items resolve inline markdown via `AttributedString`; fenced code reuses
@@ -83,6 +83,10 @@ struct SageMarkdownText: View {
     }
 
     private func headingSize(_ level: Int) -> CGFloat {
-        switch level { case 1: return 18; case 2: return 16; default: return 14 }
+        switch level {
+        case 1: return 18
+        case 2: return 16
+        default: return 14
+        }
     }
 }

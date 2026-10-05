@@ -1,8 +1,9 @@
+import AinkradHostRuntime
 // Tests/AinkradTests/SandboxWiringTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 /// M7 Slice 6 Task 12: proves the wiring in `AppEnvironment.bootstrap()` —
 /// all backends registered by their own kind, and `RunTerminalTool` still
@@ -13,16 +14,18 @@ import AinkradHostRuntime
 struct SandboxWiringTests {
     @Test func routerRoutesMainToHost() async throws {
         let store = SandboxProfileStore(persistence: InMemoryPersistenceStore())
-        let router = ExecutionRouter(profiles: store, backends: [
-            .host: HostBackend(), .seatbelt: SeatbeltBackend(),
-            .docker: DockerBackend(), .ssh: SSHBackend(resolveConnection: nil),
-        ])
+        let router = ExecutionRouter(
+            profiles: store,
+            backends: [
+                .host: HostBackend(), .seatbelt: SeatbeltBackend(),
+                .docker: DockerBackend(), .ssh: SSHBackend(resolveConnection: nil),
+            ])
         let (backend, _) = try await router.route(tier: .mainInteractive, policy: nil)
         #expect(backend.kind == .host)
     }
 
     @Test func runTerminalConstructsWithRouter() {
-        let hub = AgentActionRegistryHub()   // bound locally: the tool holds it unowned
+        let hub = AgentActionRegistryHub()  // bound locally: the tool holds it unowned
         let router = ExecutionRouter(
             profiles: SandboxProfileStore(persistence: InMemoryPersistenceStore()),
             backends: [.host: HostBackend()])

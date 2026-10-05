@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 enum OAuthSource: String, Codable, Sendable { case freshLogin, claudeCodeImport }
 
@@ -25,8 +25,10 @@ struct OAuthAccountsDocument: PersistableDocument {
     private enum CodingKeys: String, CodingKey { case accountsByConnection }
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        accountsByConnection = try c.decodeIfPresent([String: OAuthAccount].self,
-                                                     forKey: .accountsByConnection) ?? [:]
+        accountsByConnection =
+            try c.decodeIfPresent(
+                [String: OAuthAccount].self,
+                forKey: .accountsByConnection) ?? [:]
     }
 }
 

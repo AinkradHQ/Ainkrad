@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-@testable import Ainkrad
 import AinkradAppKit
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 @MainActor @Suite struct RepoInstructionsLoaderTests {
     private func makeRepo(_ body: String) throws -> URL {
@@ -41,8 +42,9 @@ import AinkradAppKit
         _ = loader.snapshot()
         try Data("v2 rules".utf8).write(to: root.appendingPathComponent("CLAUDE.md"))
         // bump mtime explicitly so the cache invalidates deterministically
-        try FileManager.default.setAttributes([.modificationDate: Date().addingTimeInterval(5)],
-                                              ofItemAtPath: root.appendingPathComponent("CLAUDE.md").path)
+        try FileManager.default.setAttributes(
+            [.modificationDate: Date().addingTimeInterval(5)],
+            ofItemAtPath: root.appendingPathComponent("CLAUDE.md").path)
         let snap = try #require(loader.snapshot())
         #expect(snap.text.contains("v2 rules"))
     }

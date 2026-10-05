@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 private struct CountingService: TranscriptionService {
     func transcribe(audio: Data, fileName: String, localeIdentifier: String?) async throws -> TranscriptionResult {
@@ -31,10 +32,11 @@ struct FileTranscriptionCoordinatorTests {
     }
 
     @Test func joinsChunksAndReportsProgress() async throws {
-        let c = coordinator(total: 300)   // → 3 chunks
+        let c = coordinator(total: 300)  // → 3 chunks
         var last = 0.0
         let text = try await c.transcribe(
-            fileURL: URL(fileURLWithPath: "/tmp/x.m4a"), byteCount: 1000) { last = $0 }
+            fileURL: URL(fileURLWithPath: "/tmp/x.m4a"), byteCount: 1000
+        ) { last = $0 }
         #expect(text == "c0 c1 c2")
         #expect(last == 1.0)
     }

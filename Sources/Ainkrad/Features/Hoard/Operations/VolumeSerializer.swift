@@ -14,8 +14,10 @@ actor VolumeSerializer {
     /// Returns the work's value rather than taking an `inout` or letting the
     /// caller mutate a captured var — the latter is a data race under Swift 6
     /// strict concurrency, since the closure is `@Sendable`.
-    func serialize<T: Sendable>(volume: String,
-                                work: @escaping @Sendable () async -> T) async -> T {
+    func serialize<T: Sendable>(
+        volume: String,
+        work: @escaping @Sendable () async -> T
+    ) async -> T {
         let previous = chains[volume]
         let task = Task<T, Never> {
             await previous?.value

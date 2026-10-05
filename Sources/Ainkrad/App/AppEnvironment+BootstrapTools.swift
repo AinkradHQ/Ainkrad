@@ -1,6 +1,6 @@
-import Foundation
 import AinkradAppKit
 import AinkradHostRuntime
+import Foundation
 
 /// `AppEnvironment.bootstrap(home:defaults:)` split into cohesive helpers
 /// (M7 finalize Wave D, D2) — this file holds the next two sequential
@@ -85,8 +85,9 @@ extension AppEnvironment {
                 // `leyline.resolve_connection` action. No ambient "active
                 // remote" exists, and with Leyline absent the resolver fails
                 // and `SSHBackend` refuses to run — never locally.
-                .ssh: SSHBackend(resolveConnection:
-                    LeylineConnectionResolver.make(hub: agentActionHub)),
+                .ssh: SSHBackend(
+                    resolveConnection:
+                        LeylineConnectionResolver.make(hub: agentActionHub)),
                 .cloud: ModalCloudBackend(credentials: cloudCredentialsStore),
             ])
 
@@ -97,9 +98,13 @@ extension AppEnvironment {
             // force an app open, this is the assistant's ONLY way to honour
             // "open Lore".
             WorkspaceControlTool(workspaces: workspaceManager, launchHub: pluginLaunchHub),
-            { var t = RunTerminalTool(actionHub: agentActionHub, router: executionRouter)
-              t.toolStream = toolStreamStore; t.processController = terminalController
-              t.permissionMode = permissionMode; return t }(),
+            {
+                var t = RunTerminalTool(actionHub: agentActionHub, router: executionRouter)
+                t.toolStream = toolStreamStore
+                t.processController = terminalController
+                t.permissionMode = permissionMode
+                return t
+            }(),
             // Git and Pull-Request operations are no longer host tools: Git Mage
             // publishes them as `mcp/gitmage/*` over its in-process MCP server
             // (see `AppMCPDiscovery`), so they arrive through `dynamicTools`
@@ -118,11 +123,13 @@ extension AppEnvironment {
         // redirect-validating client so a 302 to a private host is never
         // dispatched; web_search hits a fixed Brave endpoint (key in SecretStore).
         agentTools.append(WebFetchTool(http: RedirectValidatingHTTPClient()))
-        agentTools.append(WebSearchTool(backend: RoutingWebSearchBackend(
-            persistence: persistence,
-            brave: BraveSearchBackend(secrets: secrets, http: URLSessionDataHTTPClient()),
-            duckduckgo: DuckDuckGoSearchBackend(http: URLSessionDataHTTPClient()),
-            searxngHTTP: URLSessionDataHTTPClient())))
+        agentTools.append(
+            WebSearchTool(
+                backend: RoutingWebSearchBackend(
+                    persistence: persistence,
+                    brave: BraveSearchBackend(secrets: secrets, http: URLSessionDataHTTPClient()),
+                    duckduckgo: DuckDuckGoSearchBackend(http: URLSessionDataHTTPClient()),
+                    searxngHTTP: URLSessionDataHTTPClient())))
         if let memoryService {
             _ = agentContextHub.register(appID: "host.memory") {
                 MemoryContextSource.snapshot(from: memoryService)
@@ -181,8 +188,9 @@ extension AppEnvironment {
         appRegistry.onAppTornDown = { [weak appServerActivator] appID in
             appServerActivator?.evict(appID: appID)
         }
-        let mcpServerRegistry = MCPServerRegistry(configStore: mcpConfigStore,
-                                                  activator: appServerActivator)
+        let mcpServerRegistry = MCPServerRegistry(
+            configStore: mcpConfigStore,
+            activator: appServerActivator)
         // Closes the loop opened above. Weak so the activator's closure cannot
         // keep the registry alive past teardown.
         mcpRegistryForLiveAppFlag = { [weak mcpServerRegistry] in mcpServerRegistry }
@@ -214,39 +222,42 @@ extension AppEnvironment {
         agentTools.append(ScryRenderTool(store: scryStore))
 
         // Media tools (read-class, render to the Live Scry). Key in SecretStore.
-        agentTools.append(ImageGenerateTool(
-            backend: RoutingMediaBackend(
-                persistence: persistence,
-                secrets: secrets,
-                openai: OpenAIImageBackend(secrets: secrets, http: URLSessionDataHTTPClient()),
-                pollinations: PollinationsImageBackend(http: URLSessionDataHTTPClient()),
-                stability: StabilityImageBackend(secrets: secrets, http: URLSessionDataHTTPClient()),
-                replicate: ReplicateImageBackend(secrets: secrets, http: URLSessionDataHTTPClient()),
-                google: GoogleImagenBackend(secrets: secrets, http: URLSessionDataHTTPClient()),
-                huggingface: HuggingFaceImageBackend(secrets: secrets, http: URLSessionDataHTTPClient()),
-                auxHTTP: URLSessionDataHTTPClient()),
-            store: scryStore))
+        agentTools.append(
+            ImageGenerateTool(
+                backend: RoutingMediaBackend(
+                    persistence: persistence,
+                    secrets: secrets,
+                    openai: OpenAIImageBackend(secrets: secrets, http: URLSessionDataHTTPClient()),
+                    pollinations: PollinationsImageBackend(http: URLSessionDataHTTPClient()),
+                    stability: StabilityImageBackend(secrets: secrets, http: URLSessionDataHTTPClient()),
+                    replicate: ReplicateImageBackend(secrets: secrets, http: URLSessionDataHTTPClient()),
+                    google: GoogleImagenBackend(secrets: secrets, http: URLSessionDataHTTPClient()),
+                    huggingface: HuggingFaceImageBackend(secrets: secrets, http: URLSessionDataHTTPClient()),
+                    auxHTTP: URLSessionDataHTTPClient()),
+                store: scryStore))
         // Generated media (image/video/speech output) is irreplaceable —
         // re-running a prompt yields different output — so it lives in the
         // vault, not the cache. Shared across the video and speech tools.
         let generatedMediaStore = GeneratedMediaStore(baseDirectory: home.shared(.media))
-        agentTools.append(VideoGenerateTool(
-            backend: RoutingVideoBackend(
-                persistence: persistence,
-                secrets: secrets,
-                replicate: ReplicateVideoBackend(secrets: secrets, http: URLSessionDataHTTPClient()),
-                luma: LumaVideoBackend(secrets: secrets, http: URLSessionDataHTTPClient()),
-                fal: FalVideoBackend(secrets: secrets, http: URLSessionDataHTTPClient()),
-                auxHTTP: URLSessionDataHTTPClient()),
-            store: scryStore, mediaStore: generatedMediaStore))
-        agentTools.append(SpeakTool(
-            synth: RoutingSpeechSynthesizer(
-                persistence: persistence, secrets: secrets, onDevice: SystemSpeechSynthesizer(),
-                http: URLSessionDataHTTPClient(), player: SystemAudioPlayer()),
-            producer: RoutingSpeechAudioProducer(
-                persistence: persistence, secrets: secrets, http: URLSessionDataHTTPClient(),
-                onDevice: OnDeviceSpeechAudioProducer()),
-            store: scryStore, mediaStore: generatedMediaStore))
+        agentTools.append(
+            VideoGenerateTool(
+                backend: RoutingVideoBackend(
+                    persistence: persistence,
+                    secrets: secrets,
+                    replicate: ReplicateVideoBackend(secrets: secrets, http: URLSessionDataHTTPClient()),
+                    luma: LumaVideoBackend(secrets: secrets, http: URLSessionDataHTTPClient()),
+                    fal: FalVideoBackend(secrets: secrets, http: URLSessionDataHTTPClient()),
+                    auxHTTP: URLSessionDataHTTPClient()),
+                store: scryStore, mediaStore: generatedMediaStore))
+        agentTools.append(
+            SpeakTool(
+                synth: RoutingSpeechSynthesizer(
+                    persistence: persistence, secrets: secrets, onDevice: SystemSpeechSynthesizer(),
+                    http: URLSessionDataHTTPClient(), player: SystemAudioPlayer()),
+                producer: RoutingSpeechAudioProducer(
+                    persistence: persistence, secrets: secrets, http: URLSessionDataHTTPClient(),
+                    onDevice: OnDeviceSpeechAudioProducer()),
+                store: scryStore, mediaStore: generatedMediaStore))
 
         // M8 code-search tools (read-class). Share the assistant workspace root,
         // resolved live so a folder change is reflected without re-registering —
@@ -259,8 +270,10 @@ extension AppEnvironment {
         agentTools.append(GrepTool(rootProvider: searchRootProvider))
         agentTools.append(GlobTool(rootProvider: searchRootProvider))
 
-        return (sandboxProfileStore, cloudCredentialsStore, executionRouter, agentTools, mcpServerRegistry, scryStore,
-                signalReadAccess, toolStreamStore, terminalController)
+        return (
+            sandboxProfileStore, cloudCredentialsStore, executionRouter, agentTools, mcpServerRegistry, scryStore,
+            signalReadAccess, toolStreamStore, terminalController
+        )
     }
 
     /// Fourth block of `bootstrap()`: Model Router / Usage / Failover
@@ -320,19 +333,22 @@ extension AppEnvironment {
         // out-of-band) IS consulted synchronously here to drop LOCAL candidates whose
         // server isn't currently reachable — otherwise a down Ollama/LM Studio gets
         // picked free-first and every turn fails with "Could not connect to the server."
-        let candidatesProvider: @MainActor () -> [RouterCandidate] = { [connectionStore, modelCatalog, localModelProbe, localModelAvailability, discoveredModelsStore] in
+        let candidatesProvider: @MainActor () -> [RouterCandidate] = {
+            [connectionStore, modelCatalog, localModelProbe, localModelAvailability, discoveredModelsStore] in
             let all = connectionStore.connections.flatMap { connection -> [RouterCandidate] in
                 // Prefer the connection's LIVE-discovered models; fall back to the
                 // preset's curated list only when nothing was ever discovered. This
                 // is what lets the Auto router pick a real provider model rather than
                 // a hardcoded curated one.
-                let models = discoveredModelsStore.models(for: connection.id)
+                let models =
+                    discoveredModelsStore.models(for: connection.id)
                     ?? ProviderPreset.preset(id: connection.presetID).curatedModels
                 return models.map { modelID in
                     RouterCandidate(
                         connectionID: connection.id, model: modelID,
                         descriptor: modelCatalog.descriptor(for: modelID)
-                            ?? ModelDescriptor(id: modelID, tier: .cheapPaid, contextWindow: 128_000, capabilities: [.toolUse]))
+                            ?? ModelDescriptor(
+                                id: modelID, tier: .cheapPaid, contextWindow: 128_000, capabilities: [.toolUse]))
                 }
             }
             return RouterOrdering.filterReachableCandidates(
@@ -344,15 +360,18 @@ extension AppEnvironment {
             )
         }
 
-        let commandRegistry = CommandRegistry(builtins: BuiltinCommands.make(
-            runtime: runtimeOptionsStore, usage: usageTracker, router: modelRouter, catalog: modelCatalog))
+        let commandRegistry = CommandRegistry(
+            builtins: BuiltinCommands.make(
+                runtime: runtimeOptionsStore, usage: usageTracker, router: modelRouter, catalog: modelCatalog))
         // M7 Slice 3 (Autonomy) Task 11: `/stop` interrupts the in-flight turn.
         // `/undo` and `/retry` are already registered as builtins (Task 10).
-        commandRegistry.register(SlashCommand(
-            name: "stop", summary: "Interrupt the current turn", usage: "/stop", category: .session) { _, session in
-            session.interrupt()
-            return .handled(note: "Interrupted.")
-        })
+        commandRegistry.register(
+            SlashCommand(
+                name: "stop", summary: "Interrupt the current turn", usage: "/stop", category: .session
+            ) { _, session in
+                session.interrupt()
+                return .handled(note: "Interrupted.")
+            })
 
         return (
             modelCatalogService, agentStore, modelCatalog, modelPriceTable, routerOutcomeStore, modelRouter,

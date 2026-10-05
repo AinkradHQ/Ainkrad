@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Filename/path glob over the workspace root, honoring WorkspaceFileIndex's
 /// ignore rules. Sorted, capped. Read-class.
@@ -16,10 +16,14 @@ struct GlobTool: AgentTool {
         .object([
             "type": .string("object"),
             "properties": .object([
-                "pattern": .object(["type": .string("string"),
-                                    "description": .string("Glob, e.g. **/*.swift or src/*.ts.")]),
-                "path": .object(["type": .string("string"),
-                                 "description": .string("Optional subdirectory (absolute or relative to root).")]),
+                "pattern": .object([
+                    "type": .string("string"),
+                    "description": .string("Glob, e.g. **/*.swift or src/*.ts."),
+                ]),
+                "path": .object([
+                    "type": .string("string"),
+                    "description": .string("Optional subdirectory (absolute or relative to root)."),
+                ]),
             ]),
             "required": .array([.string("pattern")]),
         ])

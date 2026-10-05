@@ -1,7 +1,7 @@
-// Sources/Ainkrad/Core/AgentKit/Autonomy/RunsPanelView.swift
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+// Sources/Ainkrad/Core/AgentKit/Autonomy/RunsPanelView.swift
+import SwiftUI
 
 /// The live Runs monitor (M7 Slice 3 Task 11): queue/active/history across
 /// every origin (chat, schedule, event), per-run status + streaming last log
@@ -42,8 +42,9 @@ struct RunsPanelView: View {
             }
             Spacer(minLength: 0)
             // Concurrency gauge: running slots filled vs. the active queue depth.
-            AinkradMeter(value: Double(runningCount), total: Double(max(manager.active.count, 1)),
-                        label: "Running", size: 52)
+            AinkradMeter(
+                value: Double(runningCount), total: Double(max(manager.active.count, 1)),
+                label: "Running", size: 52)
         }
     }
 

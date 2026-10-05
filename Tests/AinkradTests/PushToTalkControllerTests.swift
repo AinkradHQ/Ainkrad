@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("PushToTalkController")
 @MainActor
@@ -12,11 +13,15 @@ struct PushToTalkControllerTests {
         }
     }
 
-    private func make(mode: PushToTalkMode = .hold, autoSend: Bool = false,
-                      mic: MicAuthorization = .authorized, grant: Bool = true)
-    -> (PushToTalkController, FakeCaptureSession) {
+    private func make(
+        mode: PushToTalkMode = .hold, autoSend: Bool = false,
+        mic: MicAuthorization = .authorized, grant: Bool = true
+    )
+        -> (PushToTalkController, FakeCaptureSession)
+    {
         let settings = VoiceSettingsStore(persistence: InMemoryPersistenceStore())
-        settings.setMode(mode); settings.setAutoSend(autoSend)
+        settings.setMode(mode)
+        settings.setAutoSend(autoSend)
         let capture = FakeCaptureSession()
         let selector = TranscriptionBackendSelector(
             settings: settings, onDevice: EchoService(),
@@ -82,11 +87,11 @@ struct PushToTalkControllerTests {
 
     @Test func toggleStartsThenStops() async {
         let (c, capture) = make(mode: .toggle)
-        c.pressStarted()                 // start
+        c.pressStarted()  // start
         #expect(capture.isRecording)
-        c.pressEnded()                   // ignored in toggle
+        c.pressEnded()  // ignored in toggle
         #expect(capture.isRecording)
-        c.pressStarted()                 // stop + transcribe
+        c.pressStarted()  // stop + transcribe
         await c.awaitPendingForTesting()
         #expect(!capture.isRecording)
     }
@@ -95,7 +100,8 @@ struct PushToTalkControllerTests {
         let (c, _) = make(mode: .hold, autoSend: true)
         var sent: String?
         c.onAutoSend = { sent = $0 }
-        c.pressStarted(); c.pressEnded()
+        c.pressStarted()
+        c.pressEnded()
         await c.awaitPendingForTesting()
         #expect(sent == "transcribed")
     }
@@ -136,10 +142,10 @@ struct PushToTalkControllerTests {
         var transcript: String?
         c.onTranscript = { transcript = $0 }
 
-        c.pressStarted()                 // notDetermined -> spawns permission-request Task
-        await mic.waitUntilRequested()    // deterministic: grant continuation is now live
-        c.pressEnded()                    // released BEFORE the grant resolves
-        mic.resolveRequest(granted: true) // grant arrives after release
+        c.pressStarted()  // notDetermined -> spawns permission-request Task
+        await mic.waitUntilRequested()  // deterministic: grant continuation is now live
+        c.pressEnded()  // released BEFORE the grant resolves
+        mic.resolveRequest(granted: true)  // grant arrives after release
         await c.awaitPendingForTesting()
 
         #expect(!capture.isRecording)
@@ -223,7 +229,8 @@ struct PushToTalkControllerTests {
 
         func transcribe(audio: Data, fileName: String, localeIdentifier: String?) async throws -> TranscriptionResult {
             hasStarted = true
-            startedContinuation?.resume(); startedContinuation = nil
+            startedContinuation?.resume()
+            startedContinuation = nil
             let text = await withCheckedContinuation { (cont: CheckedContinuation<String, Never>) in
                 self.resultContinuation = cont
             }
@@ -291,9 +298,9 @@ struct PushToTalkControllerTests {
             settings: settings, capture: capture, permission: mic,
             selector: selector, readAudio: { _ in Data("A".utf8) })
 
-        c.pressStarted()                 // notDetermined -> spawns permission-request Task
-        await mic.waitUntilRequested()    // deterministic: grant continuation is now live
-        mic.resolveRequest(granted: true) // grant arrives while the key is still held
+        c.pressStarted()  // notDetermined -> spawns permission-request Task
+        await mic.waitUntilRequested()  // deterministic: grant continuation is now live
+        mic.resolveRequest(granted: true)  // grant arrives while the key is still held
         await c.awaitPendingForTesting()
 
         #expect(capture.isRecording)

@@ -1,4 +1,5 @@
 import Foundation
+
 @testable import Ainkrad
 
 /// Disk-free `Trashing` for unit tests. Records what was trashed and what was
@@ -7,7 +8,7 @@ import Foundation
 final class InMemoryTrash: Trashing, @unchecked Sendable {
     struct NotInTrash: Error { let url: URL }
 
-    private var items: [URL: URL] = [:]   // trash location → original
+    private var items: [URL: URL] = [:]  // trash location → original
     private(set) var restored: [URL] = []
 
     func trash(_ url: URL) throws -> URL {

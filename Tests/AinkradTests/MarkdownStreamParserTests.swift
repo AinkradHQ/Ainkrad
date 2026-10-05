@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("MarkdownStreamParser")
@@ -9,8 +10,10 @@ struct MarkdownStreamParserTests {
     /// result matches the batch parser at EVERY prefix — not just at the end.
     /// A parser that is only right once the stream finishes is useless: the
     /// whole point is what the user sees mid-reply.
-    private func assertMatchesBatch(_ source: String, chunkSize: Int,
-                                    sourceLocation: SourceLocation = #_sourceLocation) {
+    private func assertMatchesBatch(
+        _ source: String, chunkSize: Int,
+        sourceLocation: SourceLocation = #_sourceLocation
+    ) {
         var parser = MarkdownStreamParser()
         var fed = ""
         let characters = Array(source)
@@ -20,9 +23,10 @@ struct MarkdownStreamParserTests {
             let delta = String(characters[index..<end])
             parser.append(delta)
             fed += delta
-            #expect(parser.blocks == MarkdownBlocks.parse(fed),
-                    "diverged after \(fed.count) chars of \(source.count)",
-                    sourceLocation: sourceLocation)
+            #expect(
+                parser.blocks == MarkdownBlocks.parse(fed),
+                "diverged after \(fed.count) chars of \(source.count)",
+                sourceLocation: sourceLocation)
             #expect(parser.text == fed, sourceLocation: sourceLocation)
             index = end
         }
@@ -98,9 +102,11 @@ struct MarkdownStreamParserTests {
     /// hand-written cases above only pin the shapes we thought of.
     @Test func fuzzMatchesBatchParserForRandomDocuments() {
         var rng = SystemRandomNumberGenerator()
-        let fragments = ["para text ", "**bold** ", "`code` ", "\n", "\n\n",
-                         "# Head\n", "## Sub\n", "- item\n", "1. item\n",
-                         "```\n", "```swift\n", "---\n", "   ", "\t"]
+        let fragments = [
+            "para text ", "**bold** ", "`code` ", "\n", "\n\n",
+            "# Head\n", "## Sub\n", "- item\n", "1. item\n",
+            "```\n", "```swift\n", "---\n", "   ", "\t",
+        ]
         for _ in 0..<300 {
             var source = ""
             for _ in 0..<Int.random(in: 1...40, using: &rng) {

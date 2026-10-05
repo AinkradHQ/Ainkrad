@@ -11,11 +11,14 @@ extension CustomCommandStore {
     func slashCommands() -> [SlashCommand] {
         all().map { command in
             let summary = command.description.isEmpty ? "Custom command" : command.description
-            let usage = command.argumentHint.isEmpty
+            let usage =
+                command.argumentHint.isEmpty
                 ? "/\(command.name)"
                 : "/\(command.name) \(command.argumentHint)"
-            return SlashCommand(name: command.name, summary: summary,
-                                usage: usage, category: .custom) { args, session in
+            return SlashCommand(
+                name: command.name, summary: summary,
+                usage: usage, category: .custom
+            ) { args, session in
                 session.send(CustomCommandTemplate.expand(command.body, arguments: args))
                 return .handled(note: nil)
             }

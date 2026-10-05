@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Pure status→glyph mapping for the checklist node (no SwiftUI), unit-tested
 /// like `ToolPresentation`.
@@ -52,8 +52,10 @@ struct TodoChecklistView: View {
         let done = TodoStepPresentation.isDone(item.status)
         let icon = Image(systemName: TodoStepPresentation.glyph(item.status))
             .font(.system(size: 11))
-            .foregroundStyle(done ? tokens.success
-                             : (item.status == .inProgress ? tokens.accentSecondary : tokens.foreground.opacity(0.4)))
+            .foregroundStyle(
+                done
+                    ? tokens.success
+                    : (item.status == .inProgress ? tokens.accentSecondary : tokens.foreground.opacity(0.4)))
         HStack(alignment: .firstTextBaseline, spacing: 7) {
             if item.status == .inProgress && !reduceMotion {
                 BudgetedTimelineView { date in

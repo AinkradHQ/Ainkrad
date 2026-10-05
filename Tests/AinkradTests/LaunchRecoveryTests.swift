@@ -1,7 +1,8 @@
+import AinkradAppKit
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradAppKit
 
 /// Launch recovery: every non-`.unset` outcome used to reach `fatalError`, which
 /// meant an unmounted external drive, a vault copied between Macs, or the far
@@ -38,13 +39,15 @@ struct LaunchRecoveryTests {
                 Issue.record("\(error) must produce a prompt, not a crash")
                 continue
             }
-            #expect(prompt.actions.contains(.chooseFolder),
-                    "\(error) must let the user choose a folder")
+            #expect(
+                prompt.actions.contains(.chooseFolder),
+                "\(error) must let the user choose a folder")
             #expect(prompt.actions.contains(.quit), "\(error) must let the user quit")
             #expect(prompt.buttons.count == prompt.actions.count)
             #expect(!prompt.title.isEmpty)
-            #expect(prompt.message.contains(url.path),
-                    "the user has to be told WHICH folder: \(error)")
+            #expect(
+                prompt.message.contains(url.path),
+                "the user has to be told WHICH folder: \(error)")
         }
     }
 
@@ -88,14 +91,18 @@ struct LaunchRecoveryTests {
 
         let home = try LaunchHomeResolver.resolveWithRecovery(
             chooseVault: { choices.isEmpty ? nil : choices.removeFirst() },
-            present: { prompts.append($0); return .chooseFolder },
+            present: {
+                prompts.append($0)
+                return .chooseFolder
+            },
             pointerDirectory: s.pointer, cacheRoot: s.cache, legacyContainer: nil)
 
         #expect(prompts.count == 1)
         #expect(home.vaultRoot.standardizedFileURL == empty.standardizedFileURL)
         // The folder they mistakenly picked is untouched.
-        #expect(Set(try FileManager.default.contentsOfDirectory(atPath: populated.path))
-            == ["Note.md"])
+        #expect(
+            Set(try FileManager.default.contentsOfDirectory(atPath: populated.path))
+                == ["Note.md"])
     }
 
     /// An unreachable vault — an external volume not mounted at login. The user
@@ -112,7 +119,10 @@ struct LaunchRecoveryTests {
         var prompts: [LaunchRecovery.Prompt] = []
         let home = try LaunchHomeResolver.resolveWithRecovery(
             chooseVault: { moved },
-            present: { prompts.append($0); return .chooseFolder },
+            present: {
+                prompts.append($0)
+                return .chooseFolder
+            },
             pointerDirectory: s.pointer, cacheRoot: s.cache, legacyContainer: nil)
 
         #expect(prompts.count == 1)
@@ -135,14 +145,20 @@ struct LaunchRecoveryTests {
         var prompts: [LaunchRecovery.Prompt] = []
         let home = try LaunchHomeResolver.resolveWithRecovery(
             chooseVault: { vault },
-            present: { prompts.append($0); return .chooseFolder },
+            present: {
+                prompts.append($0)
+                return .chooseFolder
+            },
             pointerDirectory: s.pointer, cacheRoot: s.cache, legacyContainer: nil)
 
         #expect(prompts.count == 1)
         #expect(home.vaultRoot.standardizedFileURL == vault.standardizedFileURL)
         // The pointer now agrees with the marker: a second launch is clean.
         guard case .ready = AinkradHome.resolve(pointerDirectory: s.pointer, cacheRoot: s.cache)
-        else { Issue.record("recovery must leave a resolvable Home"); return }
+        else {
+            Issue.record("recovery must leave a resolvable Home")
+            return
+        }
     }
 
     /// Quit is a clean exit, not a crash — and it must change nothing on disk.
@@ -160,9 +176,13 @@ struct LaunchRecoveryTests {
         }
 
         guard case .unset = AinkradHome.resolve(pointerDirectory: s.pointer, cacheRoot: s.cache)
-        else { Issue.record("quitting must leave no pointer"); return }
-        #expect(!FileManager.default.fileExists(
-            atPath: populated.appendingPathComponent(".ainkrad-home").path))
+        else {
+            Issue.record("quitting must leave no pointer")
+            return
+        }
+        #expect(
+            !FileManager.default.fileExists(
+                atPath: populated.appendingPathComponent(".ainkrad-home").path))
     }
 
     /// Dismissing the folder chooser during recovery is still a cancel, and still
@@ -182,7 +202,10 @@ struct LaunchRecoveryTests {
                 pointerDirectory: s.pointer, cacheRoot: s.cache, legacyContainer: nil)
         }
         guard case .unset = AinkradHome.resolve(pointerDirectory: s.pointer, cacheRoot: s.cache)
-        else { Issue.record("a cancelled recovery must leave no pointer"); return }
+        else {
+            Issue.record("a cancelled recovery must leave no pointer")
+            return
+        }
     }
 
     /// Recovery must never quietly pick a location. A successful launch is only
@@ -220,8 +243,14 @@ struct LaunchRecoveryTests {
         var prompted = 0
         var chose = 0
         let home = try LaunchHomeResolver.resolveWithRecovery(
-            chooseVault: { chose += 1; return nil },
-            present: { _ in prompted += 1; return .quit },
+            chooseVault: {
+                chose += 1
+                return nil
+            },
+            present: { _ in
+                prompted += 1
+                return .quit
+            },
             pointerDirectory: s.pointer, cacheRoot: s.cache, legacyContainer: nil)
 
         #expect(prompted == 0)

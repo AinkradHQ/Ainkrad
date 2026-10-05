@@ -1,6 +1,6 @@
+import AppKit
 // design-lint: allow-file hex-color,raw-color hex parser
 import SwiftUI
-import AppKit
 
 extension Color {
     /// Creates a `Color` from a 6-digit RRGGBB hex string (no `#` prefix).

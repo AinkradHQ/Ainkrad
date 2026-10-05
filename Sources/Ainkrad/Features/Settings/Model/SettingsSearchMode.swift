@@ -10,9 +10,13 @@ enum SettingsSearchMode: Equatable {
 
     init(query: String, hasNavigated: Bool) {
         let trimmed = query.trimmingCharacters(in: .whitespaces)
-        if trimmed.isEmpty { self = .browsing }
-        else if hasNavigated { self = .filtering(trimmed) }
-        else { self = .palette(trimmed) }
+        if trimmed.isEmpty {
+            self = .browsing
+        } else if hasNavigated {
+            self = .filtering(trimmed)
+        } else {
+            self = .palette(trimmed)
+        }
     }
 
     var query: String? {

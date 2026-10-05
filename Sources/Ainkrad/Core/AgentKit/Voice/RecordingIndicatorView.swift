@@ -1,12 +1,13 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Pure mapping from `PushToTalkController.Status` to the indicator's visual
 /// state — kept separate from `RecordingIndicatorView` so it's unit-testable
 /// without SwiftUI (M7 Slice 8 Task 14).
 enum RecordingIndicatorState: Equatable {
-    case hidden, recording, transcribing, error(String)
+    case hidden, recording, transcribing
+    case error(String)
 
     static func from(_ status: PushToTalkController.Status) -> RecordingIndicatorState {
         switch status {

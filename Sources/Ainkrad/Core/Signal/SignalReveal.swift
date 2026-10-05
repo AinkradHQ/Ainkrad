@@ -84,11 +84,13 @@ enum SignalReveal {
     /// app-level behaviour that shipped in generation 9, which is right rather
     /// than merely tolerable — being taken to the app is a good outcome, being
     /// taken nowhere is not.
-    static func action(appID: String,
-                       presentsAsOverlay: Bool,
-                       workspaces: [SignalRevealWorkspace],
-                       activeWorkspaceID: UUID,
-                       locator: String? = nil) -> SignalRevealAction {
+    static func action(
+        appID: String,
+        presentsAsOverlay: Bool,
+        workspaces: [SignalRevealWorkspace],
+        activeWorkspaceID: UUID,
+        locator: String? = nil
+    ) -> SignalRevealAction {
         if presentsAsOverlay { return .presentOverlay }
 
         // Ordered active-first at BOTH precedence levels, because a locator
@@ -96,7 +98,8 @@ enum SignalReveal {
         // — the point of a locator is that one specific pane is the right
         // answer — while an unnecessary workspace switch stays the thing we
         // avoid when nothing distinguishes the candidates.
-        let ordered = [workspaces.first { $0.id == activeWorkspaceID }].compactMap { $0 }
+        let ordered =
+            [workspaces.first { $0.id == activeWorkspaceID }].compactMap { $0 }
             + workspaces.filter { $0.id != activeWorkspaceID }
 
         if let locator, !locator.isEmpty {

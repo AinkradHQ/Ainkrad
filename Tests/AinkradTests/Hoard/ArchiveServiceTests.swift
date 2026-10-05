@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 /// Against the real `ditto` and `tar`: the whole reason to shell out is their
@@ -30,10 +31,13 @@ struct ArchiveServiceTests {
         let created = try service.extract(archive, into: destination)
 
         #expect(!created.isEmpty)
-        #expect(FileManager.default.fileExists(
-            atPath: destination.appendingPathComponent("payload.txt").path))
-        #expect(try String(contentsOf: destination.appendingPathComponent("payload.txt"),
-                           encoding: .utf8) == "contents")
+        #expect(
+            FileManager.default.fileExists(
+                atPath: destination.appendingPathComponent("payload.txt").path))
+        #expect(
+            try String(
+                contentsOf: destination.appendingPathComponent("payload.txt"),
+                encoding: .utf8) == "contents")
     }
 
     @Test("archives a directory, preserving its structure")
@@ -42,10 +46,12 @@ struct ArchiveServiceTests {
         defer { try? FileManager.default.removeItem(at: root) }
 
         let folder = root.appendingPathComponent("project")
-        try FileManager.default.createDirectory(at: folder.appendingPathComponent("src"),
-                                                withIntermediateDirectories: true)
-        try "code".write(to: folder.appendingPathComponent("src/main.swift"),
-                         atomically: true, encoding: .utf8)
+        try FileManager.default.createDirectory(
+            at: folder.appendingPathComponent("src"),
+            withIntermediateDirectories: true)
+        try "code".write(
+            to: folder.appendingPathComponent("src/main.swift"),
+            atomically: true, encoding: .utf8)
 
         let service = SystemArchiveService()
         let archive = try service.archive([folder], to: root.appendingPathComponent("proj.zip"))
@@ -54,8 +60,9 @@ struct ArchiveServiceTests {
         try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: true)
         _ = try service.extract(archive, into: destination)
 
-        #expect(FileManager.default.fileExists(
-            atPath: destination.appendingPathComponent("project/src/main.swift").path))
+        #expect(
+            FileManager.default.fileExists(
+                atPath: destination.appendingPathComponent("project/src/main.swift").path))
     }
 
     @Test("reports which top-level items an extraction created")
@@ -71,8 +78,9 @@ struct ArchiveServiceTests {
         let destination = root.appendingPathComponent("dest")
         try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: true)
         // Pre-existing content must NOT be reported as created.
-        try "old".write(to: destination.appendingPathComponent("pre-existing.txt"),
-                        atomically: true, encoding: .utf8)
+        try "old".write(
+            to: destination.appendingPathComponent("pre-existing.txt"),
+            atomically: true, encoding: .utf8)
 
         let created = try service.extract(archive, into: destination)
         #expect(!created.contains { $0.lastPathComponent == "pre-existing.txt" })
@@ -112,10 +120,16 @@ struct ArchiveServiceTests {
     @Test("default names follow the selection, not a generic Archive.zip")
     func defaultNames() {
         let directory = URL(fileURLWithPath: "/Users/test/project")
-        #expect(defaultArchiveName(for: [directory.appendingPathComponent("notes.md")],
-                                   in: directory) == "notes.zip")
-        #expect(defaultArchiveName(for: [directory.appendingPathComponent("a"),
-                                          directory.appendingPathComponent("b")],
-                                   in: directory) == "project.zip")
+        #expect(
+            defaultArchiveName(
+                for: [directory.appendingPathComponent("notes.md")],
+                in: directory) == "notes.zip")
+        #expect(
+            defaultArchiveName(
+                for: [
+                    directory.appendingPathComponent("a"),
+                    directory.appendingPathComponent("b"),
+                ],
+                in: directory) == "project.zip")
     }
 }

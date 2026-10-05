@@ -1,6 +1,6 @@
-import Foundation
 import AinkradAppKit
 import AinkradHostRuntime
+import Foundation
 
 /// Assembles the host's workspace-context block for the agent from
 /// `AgentContextRegistryHub` snapshots, honoring per-kind privacy toggles

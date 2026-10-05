@@ -1,6 +1,6 @@
-import Foundation
 import AVFoundation
 import AinkradHostRuntime
+import Foundation
 
 /// Plays audio bytes (mp3) on the user's machine. Seam so the routing synth is
 /// testable without real playback.
@@ -35,7 +35,7 @@ struct RoutingSpeechSynthesizer: SpeechSynthesizing {
     func speak(_ text: String) {
         let doc = persistence.load(SpeechSynthesisSettingsDocument.self) ?? SpeechSynthesisSettingsDocument()
         guard let backend = cloudBackend(for: doc), backend.isConfigured else {
-            onDevice.speak(text) // default / not configured → offline
+            onDevice.speak(text)  // default / not configured → offline
             return
         }
         let player = self.player
@@ -45,7 +45,7 @@ struct RoutingSpeechSynthesizer: SpeechSynthesizing {
                 let audio = try await backend.synthesize(text)
                 player.play(audio)
             } catch {
-                fallback.speak(text) // network/provider failure → offline
+                fallback.speak(text)  // network/provider failure → offline
             }
         }
     }

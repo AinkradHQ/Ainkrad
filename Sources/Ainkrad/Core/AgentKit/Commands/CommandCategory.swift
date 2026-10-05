@@ -16,12 +16,12 @@ enum CommandCategory: String, CaseIterable, Sendable {
     var title: String {
         switch self {
         case .session: return "Session"
-        case .model:   return "Model"
-        case .info:    return "Info"
-        case .memory:  return "Memory"
-        case .skill:   return "Skills"
-        case .custom:  return "Commands"
-        case .other:   return "Other"
+        case .model: return "Model"
+        case .info: return "Info"
+        case .memory: return "Memory"
+        case .skill: return "Skills"
+        case .custom: return "Commands"
+        case .other: return "Other"
         }
     }
 
@@ -29,12 +29,12 @@ enum CommandCategory: String, CaseIterable, Sendable {
     var order: Int {
         switch self {
         case .session: return 0
-        case .model:   return 1
-        case .info:    return 2
-        case .memory:  return 3
-        case .skill:   return 4
-        case .custom:  return 5
-        case .other:   return 6
+        case .model: return 1
+        case .info: return 2
+        case .memory: return 3
+        case .skill: return 4
+        case .custom: return 5
+        case .other: return 6
         }
     }
 }

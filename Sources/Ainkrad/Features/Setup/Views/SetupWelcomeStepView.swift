@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// The opening step, and the first screen anyone ever sees in Ainkrad.
 ///
@@ -54,10 +54,12 @@ struct SetupWelcomeStepView: View {
             // No Back appears here: `SetupStepFooter` omits it on the first step
             // shown, which for a fresh install is this one — which is also what
             // lets `centersPrimary` genuinely centre.
-            SetupStepFooter(coordinator: coordinator,
-                            primaryTitle: "Get Started",
-                            primaryIdentifier: "setup.welcome.continue",
-                            centersPrimary: true) {
+            SetupStepFooter(
+                coordinator: coordinator,
+                primaryTitle: "Get Started",
+                primaryIdentifier: "setup.welcome.continue",
+                centersPrimary: true
+            ) {
                 coordinator.advance()
             }
         }
@@ -67,9 +69,10 @@ struct SetupWelcomeStepView: View {
 
     private func paragraph(tokens: DesignTokens) -> some View {
         let size: CGFloat = 16
-        let geometry = SetupStageMotion.layerGeometry(.content,
-                                                      reduceMotion: reduceMotion,
-                                                      isForward: true)
+        let geometry = SetupStageMotion.layerGeometry(
+            .content,
+            reduceMotion: reduceMotion,
+            isForward: true)
         // `nil` geometry is reduce-motion: no lift, no stagger, nothing to fade
         // from. The text is simply there.
         let lift = geometry.map(\.lift) ?? 0
@@ -89,17 +92,22 @@ struct SetupWelcomeStepView: View {
         .fixedSize(horizontal: false, vertical: true)
         .opacity(hasSettled ? 1 : 0)
         .offset(y: hasSettled ? 0 : lift)
-        .animation(SetupStageMotion.animation(reduceMotion: reduceMotion,
-                                              layer: .content)?.delay(delay),
-                   value: hasSettled)
+        .animation(
+            SetupStageMotion.animation(
+                reduceMotion: reduceMotion,
+                layer: .content)?.delay(delay),
+            value: hasSettled)
     }
 
     /// Routed through `SetupStageMotion` rather than a bare `.animation(...)`,
     /// so the wizard has exactly one place where reduce-motion is honoured.
     private func settle() {
         guard !hasSettled else { return }
-        withAnimation(SetupStageMotion.animation(reduceMotion: reduceMotion,
-                                                 layer: .content)) {
+        withAnimation(
+            SetupStageMotion.animation(
+                reduceMotion: reduceMotion,
+                layer: .content)
+        ) {
             hasSettled = true
         }
     }

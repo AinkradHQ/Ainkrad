@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// The Live Scry: agent-rendered cards, auto-arranged. Cards flow newest-first
 /// into columns; dragging or resizing one records an override in the store and
@@ -28,29 +28,34 @@ struct ScryView: View {
         GeometryReader { proxy in
             let elements = store.model.elements
             let overrides = store.overrides
-            let frames = ScryLayout.frames(for: elements, in: proxy.size,
-                                           overrides: overrides)
+            let frames = ScryLayout.frames(
+                for: elements, in: proxy.size,
+                overrides: overrides)
             ScrollView {
                 ZStack(alignment: .topLeading) {
                     // Flow cards.
                     ForEach(elements) { element in
                         if let rect = frames[element.id],
-                           isVisible(rect, id: element.id, viewportHeight: proxy.size.height) {
-                            ScryCard(element: element, store: store, tokens: tokens,
-                                     rect: rect, isFloating: false,
-                                     containerSize: proxy.size,
-                                     reduceMotion: reduceMotion)
+                            isVisible(rect, id: element.id, viewportHeight: proxy.size.height)
+                        {
+                            ScryCard(
+                                element: element, store: store, tokens: tokens,
+                                rect: rect, isFloating: false,
+                                containerSize: proxy.size,
+                                reduceMotion: reduceMotion)
                         }
                     }
                     // Floating (user-placed) cards, above the flow, most-
                     // recently-dragged last so it renders on top of the rest.
                     ForEach(floatingElements(elements)) { element in
                         if let rect = overrides[element.id],
-                           isVisible(rect, id: element.id, viewportHeight: proxy.size.height) {
-                            ScryCard(element: element, store: store, tokens: tokens,
-                                     rect: rect, isFloating: true,
-                                     containerSize: proxy.size,
-                                     reduceMotion: reduceMotion)
+                            isVisible(rect, id: element.id, viewportHeight: proxy.size.height)
+                        {
+                            ScryCard(
+                                element: element, store: store, tokens: tokens,
+                                rect: rect, isFloating: true,
+                                containerSize: proxy.size,
+                                reduceMotion: reduceMotion)
                         }
                     }
                 }
@@ -59,11 +64,16 @@ struct ScryView: View {
                         Color.clear.preference(
                             key: ScryScrollOffsetKey.self,
                             value: -g.frame(in: .named("scry-scroll")).minY)
-                    })
-                .frame(height: max(proxy.size.height,
-                                   ScryLayout.contentHeight(for: elements, in: proxy.size,
-                                                            overrides: overrides)),
-                       alignment: .topLeading)
+                    }
+                )
+                .frame(
+                    height: max(
+                        proxy.size.height,
+                        ScryLayout.contentHeight(
+                            for: elements, in: proxy.size,
+                            overrides: overrides)),
+                    alignment: .topLeading
+                )
                 .frame(maxWidth: .infinity, alignment: .topLeading)
             }
             .coordinateSpace(name: "scry-scroll")
@@ -185,8 +195,10 @@ private struct ScryCard: View {
             .overlay(alignment: .topTrailing) { if isHovering { controls } }
             .overlay(alignment: .bottomTrailing) { if isHovering { resizeHandle } }
             .scaleEffect(isHovering ? 1.01 : 1.0)
-            .shadow(color: tokens.accentSecondary.opacity(isHovering ? 0.18 : 0.08),
-                    radius: isHovering ? 12 : 6)
+            .shadow(
+                color: tokens.accentSecondary.opacity(isHovering ? 0.18 : 0.08),
+                radius: isHovering ? 12 : 6
+            )
             .onHover { isHovering = $0 }
             .animation(reduceMotion ? nil : .easeOut(duration: 0.14), value: isHovering)
             .gesture(
@@ -215,8 +227,10 @@ private struct ScryCard: View {
 
     private var controls: some View {
         HStack(spacing: 6) {
-            AinkradIconButton(systemName: element.pinned ? "pin.fill" : "pin", size: 20,
-                               tooltip: element.pinned ? "Unpin" : "Pin") {
+            AinkradIconButton(
+                systemName: element.pinned ? "pin.fill" : "pin", size: 20,
+                tooltip: element.pinned ? "Unpin" : "Pin"
+            ) {
                 store.setPinned(id: element.id, !element.pinned)
             }
             AinkradIconButton(systemName: "xmark", size: 20, tooltip: "Dismiss") {
@@ -236,8 +250,9 @@ private struct ScryCard: View {
                     }
                     .onChanged { v in
                         let base = resizeStart ?? rect
-                        resizePreviewSize = CGSize(width: max(160, base.width + v.translation.width),
-                                                    height: max(100, base.height + v.translation.height))
+                        resizePreviewSize = CGSize(
+                            width: max(160, base.width + v.translation.width),
+                            height: max(100, base.height + v.translation.height))
                     }
                     .onEnded { v in
                         let base = resizeStart ?? rect

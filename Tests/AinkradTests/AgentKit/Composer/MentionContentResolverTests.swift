@@ -1,4 +1,5 @@
 import Testing
+
 @testable import Ainkrad
 
 @Suite struct MentionContentResolverTests {
@@ -28,7 +29,7 @@ import Testing
         let out = MentionContentResolver.augment(
             text: "see @/proj/bin.o",
             mentions: [ComposerMention(path: "/proj/bin.o", mode: .embed)],
-            read: { _ in nil } // binary / oversize / missing
+            read: { _ in nil }  // binary / oversize / missing
         )
         #expect(out == "see @/proj/bin.o")
     }
@@ -36,8 +37,10 @@ import Testing
     @Test func multipleEmbedsEachGetOwnSection() {
         let out = MentionContentResolver.augment(
             text: "diff @/a @/b",
-            mentions: [ComposerMention(path: "/a", mode: .embed),
-                       ComposerMention(path: "/b", mode: .embed)],
+            mentions: [
+                ComposerMention(path: "/a", mode: .embed),
+                ComposerMention(path: "/b", mode: .embed),
+            ],
             read: { $0 == "/a" ? "AA" : "BB" }
         )
         #expect(out.contains("### /a\nAA"))

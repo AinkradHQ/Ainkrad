@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("Setup validation")
@@ -23,19 +24,29 @@ struct SetupValidationTests {
     /// Timezone is prefilled from `TimeZone.current`, but a user may clear it —
     /// it must never be what stands between them and Continue.
     @Test func timezoneIsNotRequired() {
-        #expect(SetupValidation.canAdvance(from: .you,
-                                           values: ["name": "Ahmed", "role": "Engineer",
-                                                    "timezone": ""]))
+        #expect(
+            SetupValidation.canAdvance(
+                from: .you,
+                values: [
+                    "name": "Ahmed", "role": "Engineer",
+                    "timezone": "",
+                ]))
     }
 
     // A custom persona is only required to be complete if the user chose one.
     @Test func theAssistantStepOnlyRequiresACustomPersonaWhenCustom() {
         #expect(SetupValidation.canAdvance(from: .assistant, values: [:]))
-        #expect(!SetupValidation.canAdvance(from: .assistant,
-                                            values: ["isCustom": "true", "personaName": "Scribe"]))
-        #expect(SetupValidation.canAdvance(from: .assistant,
-                                           values: ["isCustom": "true", "personaName": "Scribe",
-                                                    "personaInstructions": "Be terse."]))
+        #expect(
+            !SetupValidation.canAdvance(
+                from: .assistant,
+                values: ["isCustom": "true", "personaName": "Scribe"]))
+        #expect(
+            SetupValidation.canAdvance(
+                from: .assistant,
+                values: [
+                    "isCustom": "true", "personaName": "Scribe",
+                    "personaInstructions": "Be terse.",
+                ]))
     }
 
     @Test func theAssistantStepNamesBothMissingCustomFields() {
@@ -73,8 +84,9 @@ struct SetupValidationTests {
         for step in SetupStep.allCases {
             for requirement in SetupValidation.unmet(for: step, values: ["isCustom": "true"]) {
                 #expect(!requirement.field.isEmpty)
-                #expect(!requirement.message.isEmpty,
-                        "\(step.rawValue).\(requirement.field) blocks with no explanation")
+                #expect(
+                    !requirement.message.isEmpty,
+                    "\(step.rawValue).\(requirement.field) blocks with no explanation")
             }
         }
     }
@@ -82,13 +94,16 @@ struct SetupValidationTests {
     /// The one step whose requirement is not expressible as a value would be a
     /// hole in `canAdvance`. There is none: every blocking step is covered.
     @Test func canAdvanceIsTrueForEveryStepOnceItsValuesAreSatisfied() {
-        let satisfied = ["name": "Ahmed", "role": "Engineer",
-                         "hasHome": "true", "isConnected": "true",
-                         "isCustom": "true", "personaName": "Scribe",
-                         "personaInstructions": "Be terse."]
+        let satisfied = [
+            "name": "Ahmed", "role": "Engineer",
+            "hasHome": "true", "isConnected": "true",
+            "isCustom": "true", "personaName": "Scribe",
+            "personaInstructions": "Be terse.",
+        ]
         for step in SetupStep.allCases {
-            #expect(SetupValidation.canAdvance(from: step, values: satisfied),
-                    "\(step.rawValue) blocks even when every value is supplied")
+            #expect(
+                SetupValidation.canAdvance(from: step, values: satisfied),
+                "\(step.rawValue) blocks even when every value is supplied")
         }
     }
 
@@ -98,8 +113,9 @@ struct SetupValidationTests {
     /// explicit deferral — satisfies it.
     @Test func theProvidersStepBlocksWithNeitherAConnectionNorADeferral() {
         #expect(!SetupValidation.canAdvance(from: .providers, values: [:]))
-        #expect(!SetupValidation.canAdvance(
-            from: .providers, values: ["isConnected": "false", "isDeferred": "false"]))
+        #expect(
+            !SetupValidation.canAdvance(
+                from: .providers, values: ["isConnected": "false", "isDeferred": "false"]))
     }
 
     /// "Set this up later" is what lets the user past — and it is the ONLY thing

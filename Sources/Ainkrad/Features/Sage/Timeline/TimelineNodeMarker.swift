@@ -1,5 +1,5 @@
-import SwiftUI
 import AinkradAppKit
+import SwiftUI
 
 /// A single rail node: a small chamfered marker whose fill encodes step status.
 /// Running nodes breathe via `TimelineView` (static under Reduce Motion).

@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("PluginLaunchHub")
 @MainActor
@@ -11,7 +12,7 @@ struct PluginLaunchHubTests {
         let hub = PluginLaunchHub()
         hub.enqueue(target: "gitmage", payload: "{\"kind\":\"ssh\"}")
         #expect(hub.takePending(for: "gitmage") == "{\"kind\":\"ssh\"}")
-        #expect(hub.takePending(for: "gitmage") == nil)          // consumed
+        #expect(hub.takePending(for: "gitmage") == nil)  // consumed
     }
 
     @Test("payloads are isolated per target app")

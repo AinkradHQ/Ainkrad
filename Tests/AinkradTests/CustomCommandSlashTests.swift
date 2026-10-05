@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("CustomCommand slash commands")
@@ -10,10 +11,12 @@ struct CustomCommandSlashTests {
     }
 
     @Test func buildsOneSlashCommandPerCommandInCustomCategory() throws {
-        let user = temp(); defer { try? FileManager.default.removeItem(at: user) }
+        let user = temp()
+        defer { try? FileManager.default.removeItem(at: user) }
         try FileManager.default.createDirectory(at: user, withIntermediateDirectories: true)
-        try "Fix $ARGUMENTS".write(to: user.appendingPathComponent("fix.md"),
-                                   atomically: true, encoding: .utf8)
+        try "Fix $ARGUMENTS".write(
+            to: user.appendingPathComponent("fix.md"),
+            atomically: true, encoding: .utf8)
         let store = CustomCommandStore(paths: CustomCommandPaths(userRoot: user, projectRoot: nil))
         let slash = store.slashCommands()
         #expect(slash.map(\.name) == ["fix"])
@@ -27,10 +30,12 @@ struct CustomCommandSlashTests {
     }
 
     @Test func runningCommandIsHandled() throws {
-        let user = temp(); defer { try? FileManager.default.removeItem(at: user) }
+        let user = temp()
+        defer { try? FileManager.default.removeItem(at: user) }
         try FileManager.default.createDirectory(at: user, withIntermediateDirectories: true)
-        try "Deploy $1".write(to: user.appendingPathComponent("ship.md"),
-                              atomically: true, encoding: .utf8)
+        try "Deploy $1".write(
+            to: user.appendingPathComponent("ship.md"),
+            atomically: true, encoding: .utf8)
         let store = CustomCommandStore(paths: CustomCommandPaths(userRoot: user, projectRoot: nil))
         let reg = CommandRegistry(builtins: [])
         for c in store.slashCommands() { reg.register(c) }

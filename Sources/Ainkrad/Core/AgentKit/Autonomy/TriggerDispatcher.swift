@@ -33,9 +33,11 @@ final class TriggerDispatcher {
     @discardableResult
     func fire(_ event: TriggerEvent, now: Date = Date()) -> UUID? {
         guard let schedule = store.schedules.first(where: { $0.id == event.scheduleID }),
-              schedule.enabled else { return nil }
+            schedule.enabled
+        else { return nil }
         guard limiter.allow(event.scheduleID, now: now) else { return nil }
-        let prompt = event.payload.isEmpty
+        let prompt =
+            event.payload.isEmpty
             ? schedule.prompt
             : "\(schedule.prompt)\n\n[trigger payload]\n\(event.payload)"
         let run = runs.enqueue(prompt: prompt, origin: .event, posture: schedule.posture)

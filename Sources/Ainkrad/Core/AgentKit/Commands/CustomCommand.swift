@@ -24,14 +24,16 @@ enum CustomCommandParser {
     static func parse(_ text: String, name: String, scope: CustomCommand.Scope) -> CustomCommand {
         let normalized = text.replacingOccurrences(of: "\r\n", with: "\n")
         guard normalized.hasPrefix("---\n") else {
-            return CustomCommand(name: name, description: "", argumentHint: "",
-                                 body: normalized, scope: scope)
+            return CustomCommand(
+                name: name, description: "", argumentHint: "",
+                body: normalized, scope: scope)
         }
         let afterOpen = normalized.dropFirst("---\n".count)
         guard let close = afterOpen.range(of: "\n---") else {
             // Unclosed fence → treat the whole original text as the body.
-            return CustomCommand(name: name, description: "", argumentHint: "",
-                                 body: normalized, scope: scope)
+            return CustomCommand(
+                name: name, description: "", argumentHint: "",
+                body: normalized, scope: scope)
         }
         let yaml = String(afterOpen[afterOpen.startIndex..<close.lowerBound])
         var body = String(afterOpen[close.upperBound...])

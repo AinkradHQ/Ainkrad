@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 // MARK: - Rail model
 
@@ -33,10 +33,11 @@ struct SetupRailModel {
         let steps = coordinator.steps
         let currentIndex = steps.firstIndex(of: coordinator.step) ?? 0
         items = steps.enumerated().map { index, step in
-            Item(step: step,
-                 title: step.title,
-                 isCurrent: index == currentIndex,
-                 isComplete: index < currentIndex)
+            Item(
+                step: step,
+                title: step.title,
+                isCurrent: index == currentIndex,
+                isComplete: index < currentIndex)
         }
     }
 }
@@ -88,9 +89,11 @@ enum SetupStageMotion {
 
     /// `nil` under reduce-motion — the seam that makes `layerTransition` fall
     /// back to `.identity`.
-    static func layerGeometry(_ layer: Layer,
-                              reduceMotion: Bool,
-                              isForward: Bool) -> LayerGeometry? {
+    static func layerGeometry(
+        _ layer: Layer,
+        reduceMotion: Bool,
+        isForward: Bool
+    ) -> LayerGeometry? {
         guard case .layered = transition(reduceMotion: reduceMotion, isForward: isForward) else {
             return nil
         }
@@ -99,13 +102,20 @@ enum SetupStageMotion {
         let distance: CGFloat
         let lift: CGFloat
         switch layer {
-        case .rail:    distance = 26; lift = 0
-        case .heading: distance = 34; lift = 6
-        case .content: distance = 46; lift = 10
+        case .rail:
+            distance = 26
+            lift = 0
+        case .heading:
+            distance = 34
+            lift = 6
+        case .content:
+            distance = 46
+            lift = 10
         }
-        return LayerGeometry(travel: isForward ? distance : -distance,
-                             lift: lift,
-                             delay: Double(layer.rawValue) * 0.055)
+        return LayerGeometry(
+            travel: isForward ? distance : -distance,
+            lift: lift,
+            delay: Double(layer.rawValue) * 0.055)
     }
 
     /// `nil` under reduce-motion, which makes every `withAnimation` /
@@ -120,23 +130,31 @@ enum SetupStageMotion {
     /// (content arrives from the side it is travelling from), and each layer
     /// carries a slightly different distance and delay so they do not read as
     /// one plane sliding.
-    static func layerTransition(_ layer: Layer,
-                                reduceMotion: Bool,
-                                isForward: Bool) -> AnyTransition {
-        guard let geometry = layerGeometry(layer,
-                                           reduceMotion: reduceMotion,
-                                           isForward: isForward) else {
+    static func layerTransition(
+        _ layer: Layer,
+        reduceMotion: Bool,
+        isForward: Bool
+    ) -> AnyTransition {
+        guard
+            let geometry = layerGeometry(
+                layer,
+                reduceMotion: reduceMotion,
+                isForward: isForward)
+        else {
             return .identity
         }
 
-        let insertion = AnyTransition
+        let insertion =
+            AnyTransition
             .offset(x: geometry.travel, y: geometry.lift)
             .combined(with: .opacity)
-        let removal = AnyTransition
+        let removal =
+            AnyTransition
             .offset(x: -geometry.travel * 0.6, y: 0)
             .combined(with: .opacity)
 
-        return AnyTransition
+        return
+            AnyTransition
             .asymmetric(insertion: insertion, removal: removal)
             .animation(animation(reduceMotion: reduceMotion, layer: layer))
     }
@@ -199,10 +217,13 @@ enum SetupStageLayout {
     /// clamped by constants — which is what stops the size from inverting at
     /// some window dimension nobody tried.
     static func group(fitting stage: CGSize) -> CGSize {
-        CGSize(width: clamp(stage.width * widthSlope + widthBase,
-                            low: minimumColumnWidth, high: maximumColumnWidth),
-               height: clamp(stage.height * heightSlope + heightBase,
-                             low: minimumGroupHeight, high: maximumGroupHeight))
+        CGSize(
+            width: clamp(
+                stage.width * widthSlope + widthBase,
+                low: minimumColumnWidth, high: maximumColumnWidth),
+            height: clamp(
+                stage.height * heightSlope + heightBase,
+                low: minimumGroupHeight, high: maximumGroupHeight))
     }
 
     private static func clamp(_ value: CGFloat, low: CGFloat, high: CGFloat) -> CGFloat {
@@ -276,14 +297,17 @@ struct SetupRail: View {
                     // labels below never reach VoiceOver despite the
                     // `children: .contain` group.
                     .accessibilityElement()
-                    .accessibilityLabel(item.isCurrent
-                                        ? "Current step: \(item.title)"
-                                        : item.title)
+                    .accessibilityLabel(
+                        item.isCurrent
+                            ? "Current step: \(item.title)"
+                            : item.title)
             }
         }
         .frame(height: 4)
-        .animation(SetupStageMotion.animation(reduceMotion: reduceMotion),
-                   value: model.items)
+        .animation(
+            SetupStageMotion.animation(reduceMotion: reduceMotion),
+            value: model.items
+        )
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Setup progress")
     }
@@ -365,11 +389,13 @@ struct SetupStage<Content: View>: View {
             let group = SetupStageLayout.group(fitting: proxy.size)
 
             VStack(spacing: 0) {
-                SetupRail(model: SetupRailModel(coordinator: coordinator),
-                          tokens: tokens,
-                          reduceMotion: reduceMotion)
-                    .padding(.horizontal, 34)
-                    .padding(.top, 22)
+                SetupRail(
+                    model: SetupRailModel(coordinator: coordinator),
+                    tokens: tokens,
+                    reduceMotion: reduceMotion
+                )
+                .padding(.horizontal, 34)
+                .padding(.top, 22)
 
                 // Symmetric spacers, not one greedy one: the group sits in the
                 // optical centre of what is left below the rail. A single
@@ -385,10 +411,14 @@ struct SetupStage<Content: View>: View {
                 VStack(alignment: .leading, spacing: 22) {
                     header
                     content(coordinator.step)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity,
-                               alignment: coordinator.step.usesHeroMark ? .top : .topLeading)
-                        .transition(SetupStageMotion.layerTransition(
-                            .content, reduceMotion: reduceMotion, isForward: isForward))
+                        .frame(
+                            maxWidth: .infinity, maxHeight: .infinity,
+                            alignment: coordinator.step.usesHeroMark ? .top : .topLeading
+                        )
+                        .transition(
+                            SetupStageMotion.layerTransition(
+                                .content, reduceMotion: reduceMotion, isForward: isForward)
+                        )
                         .id(coordinator.step)
                 }
                 .frame(width: group.width, height: group.height, alignment: .topLeading)
@@ -396,8 +426,9 @@ struct SetupStage<Content: View>: View {
                 // Makes the step change an animated transaction at all; each
                 // layer's own `.animation` (with its stagger delay) then wins for
                 // that layer. `nil` under reduce-motion, so the whole thing snaps.
-                .animation(SetupStageMotion.animation(reduceMotion: reduceMotion),
-                           value: coordinator.step)
+                .animation(
+                    SetupStageMotion.animation(reduceMotion: reduceMotion),
+                    value: coordinator.step)
 
                 Spacer(minLength: 24)
             }
@@ -428,24 +459,28 @@ struct SetupStage<Content: View>: View {
     private var header: some View {
         if coordinator.step.usesHeroMark {
             VStack(spacing: 26) {
-                SetupBrandMark(tokens: tokens,
-                               reduceMotion: reduceMotion,
-                               style: .hero(diameter: SetupHeader.heroDiameter))
-                    .matchedGeometryEffect(id: SetupHeader.markID, in: markSpace)
+                SetupBrandMark(
+                    tokens: tokens,
+                    reduceMotion: reduceMotion,
+                    style: .hero(diameter: SetupHeader.heroDiameter)
+                )
+                .matchedGeometryEffect(id: SetupHeader.markID, in: markSpace)
                 headlineText
                     .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
         } else {
             HStack(alignment: .firstTextBaseline, spacing: 13) {
-                SetupBrandMark(tokens: tokens,
-                               reduceMotion: reduceMotion,
-                               style: .inline(height: SetupHeader.inlineMarkHeight))
-                    .matchedGeometryEffect(id: SetupHeader.markID, in: markSpace)
-                    // The glyph's optical centre sits above its box's centre —
-                    // the crystal hangs below the chevron — so baseline-aligning
-                    // the BOX would ride high against the text.
-                    .alignmentGuide(.firstTextBaseline) { $0.height * 0.62 }
+                SetupBrandMark(
+                    tokens: tokens,
+                    reduceMotion: reduceMotion,
+                    style: .inline(height: SetupHeader.inlineMarkHeight)
+                )
+                .matchedGeometryEffect(id: SetupHeader.markID, in: markSpace)
+                // The glyph's optical centre sits above its box's centre —
+                // the crystal hangs below the chevron — so baseline-aligning
+                // the BOX would ride high against the text.
+                .alignmentGuide(.firstTextBaseline) { $0.height * 0.62 }
                 headlineText
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -459,10 +494,14 @@ struct SetupStage<Content: View>: View {
             .font(AinkradFont.display(SetupHeader.headlineSize, weight: .semibold))
             .foregroundStyle(tokens.foreground)
             .fixedSize(horizontal: false, vertical: true)
-            .frame(maxWidth: .infinity,
-                   alignment: coordinator.step.usesHeroMark ? .center : .leading)
-            .transition(SetupStageMotion.layerTransition(
-                .heading, reduceMotion: reduceMotion, isForward: isForward))
+            .frame(
+                maxWidth: .infinity,
+                alignment: coordinator.step.usesHeroMark ? .center : .leading
+            )
+            .transition(
+                SetupStageMotion.layerTransition(
+                    .heading, reduceMotion: reduceMotion, isForward: isForward)
+            )
             .id(coordinator.step)
     }
 

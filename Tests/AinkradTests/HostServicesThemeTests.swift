@@ -1,9 +1,10 @@
-import Testing
-import Foundation
-import SwiftUI
-@testable import Ainkrad
 import AinkradAppKit
 import AinkradHostRuntime
+import Foundation
+import SwiftUI
+import Testing
+
+@testable import Ainkrad
 
 @Suite("HostServices theme")
 @MainActor
@@ -12,12 +13,13 @@ struct HostServicesThemeTests {
         let persistence = InMemoryPersistenceStore()
         let tm = ThemeManager(persistence: persistence)
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        let host = HostServicesImpl(appID: "t", dataRootURL: root,
-                                    secretStore: InMemorySecretStore(), themeManager: tm,
-                                    hub: AgentContextRegistryHub(), actionHub: AgentActionRegistryHub(),
-                                    launchHub: PluginLaunchHub(), signalHub: SignalEmitterHub(),
-                                    declaredPresentation: .pane,
-                                    appAppearanceStore: AppAppearanceStore(persistence: InMemoryPersistenceStore()))
+        let host = HostServicesImpl(
+            appID: "t", dataRootURL: root,
+            secretStore: InMemorySecretStore(), themeManager: tm,
+            hub: AgentContextRegistryHub(), actionHub: AgentActionRegistryHub(),
+            launchHub: PluginLaunchHub(), signalHub: SignalEmitterHub(),
+            declaredPresentation: .pane,
+            appAppearanceStore: AppAppearanceStore(persistence: InMemoryPersistenceStore()))
         return (host, tm)
     }
 

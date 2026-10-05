@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-@testable import Ainkrad
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 @MainActor
 @Suite("SessionShareStore")
@@ -15,7 +16,8 @@ struct SessionShareStoreTests {
     @Test func writesSelfContainedHtmlAndRecordsMetadata() throws {
         let dir = tempDir()
         let persistence = InMemoryPersistenceStore()
-        let store = SessionShareStore(persistence: persistence, baseDirectory: dir, now: { Date(timeIntervalSince1970: 0) })
+        let store = SessionShareStore(
+            persistence: persistence, baseDirectory: dir, now: { Date(timeIntervalSince1970: 0) })
         let messages = [AgentMessage(role: .user, text: "hi with sk-live-XYZ")]
         let record = try store.share(messages: messages, title: "Chat", redactions: ["sk-live-XYZ"])
 

@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitUI
+import SwiftUI
 
 /// The roots list. Selection follows the active tab's directory rather than
 /// holding its own state — otherwise navigating by any other means would
@@ -23,8 +23,11 @@ struct HoardSidebar: View {
                 ForEach(sections) { section in
                     if let title = section.title {
                         Text(title.uppercased())
-                            .font(AinkradFontResolver.font(.caption, weight: .medium,
-                                                           typography: typo))
+                            .font(
+                                AinkradFontResolver.font(
+                                    .caption, weight: .medium,
+                                    typography: typo)
+                            )
                             .foregroundStyle(theme.foreground.opacity(0.4))
                             .padding(.horizontal, AinkradSpacing.sm)
                             .padding(.top, AinkradSpacing.md)

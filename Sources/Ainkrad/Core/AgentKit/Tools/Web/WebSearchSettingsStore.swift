@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 import Foundation
 import Observation
-import AinkradHostRuntime
 
 /// Persisted choice of `web_search` provider. The API key itself never lives
 /// here — it's Keychain-only via `SecretStore` (`BraveSearchBackend.secretID`).

@@ -64,7 +64,8 @@ public final class FileDocumentStore: PersistenceStore, @unchecked Sendable {
         do {
             data = try Data(contentsOf: url)
         } catch {
-            Log.persistence.error("Failed to read \(T.documentID, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            Log.persistence.error(
+                "Failed to read \(T.documentID, privacy: .public): \(error.localizedDescription, privacy: .public)")
             return nil
         }
 
@@ -88,7 +89,8 @@ public final class FileDocumentStore: PersistenceStore, @unchecked Sendable {
             return nil
         }
         guard let payloadData = try? PersistenceCoding.encoder.encode(payload),
-              let value = try? PersistenceCoding.decoder.decode(T.self, from: payloadData) else {
+            let value = try? PersistenceCoding.decoder.decode(T.self, from: payloadData)
+        else {
             quarantine(url)
             return nil
         }
@@ -113,7 +115,8 @@ public final class FileDocumentStore: PersistenceStore, @unchecked Sendable {
             cache[T.documentID] = document
             _syncEngine?.documentDidChange(id: T.documentID, data: data)
         } catch {
-            Log.persistence.error("Failed to write \(T.documentID, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            Log.persistence.error(
+                "Failed to write \(T.documentID, privacy: .public): \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -124,9 +127,10 @@ public final class FileDocumentStore: PersistenceStore, @unchecked Sendable {
     public func rawPayloadData(forID id: String) -> Data? {
         let url = fileURL(for: id)
         guard fileManager.fileExists(atPath: url.path),
-              let data = try? Data(contentsOf: url),
-              let raw = try? PersistenceCoding.decoder.decode(RawEnvelope.self, from: data),
-              let payload = try? PersistenceCoding.encoder.encode(raw.payload) else { return nil }
+            let data = try? Data(contentsOf: url),
+            let raw = try? PersistenceCoding.decoder.decode(RawEnvelope.self, from: data),
+            let payload = try? PersistenceCoding.encoder.encode(raw.payload)
+        else { return nil }
         return payload
     }
 
@@ -148,7 +152,8 @@ public final class FileDocumentStore: PersistenceStore, @unchecked Sendable {
             cache[id] = nil  // no concrete type to cache under; drop any stale entry
             _syncEngine?.documentDidChange(id: id, data: data)
         } catch {
-            Log.persistence.error("Failed to write \(id, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            Log.persistence.error(
+                "Failed to write \(id, privacy: .public): \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -166,7 +171,9 @@ public final class FileDocumentStore: PersistenceStore, @unchecked Sendable {
             try fileManager.moveItem(at: url, to: destination)
             Log.persistence.error("Quarantined corrupt document \(url.lastPathComponent, privacy: .public)")
         } catch {
-            Log.persistence.error("Failed to quarantine corrupt document \(url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            Log.persistence.error(
+                "Failed to quarantine corrupt document \(url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
+            )
         }
     }
 }

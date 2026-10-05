@@ -1,12 +1,14 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("Preview kind")
 struct PreviewKindTests {
     private func entry(_ name: String, dir: Bool = false) -> FileEntry {
-        FileEntry(url: URL(fileURLWithPath: "/x/\(name)"), name: name, isDirectory: dir,
-                  isSymlink: false, isHidden: name.hasPrefix("."), size: 0, modified: Date())
+        FileEntry(
+            url: URL(fileURLWithPath: "/x/\(name)"), name: name, isDirectory: dir,
+            isSymlink: false, isHidden: name.hasPrefix("."), size: 0, modified: Date())
     }
 
     @Test("source files map to the code renderer with a language")

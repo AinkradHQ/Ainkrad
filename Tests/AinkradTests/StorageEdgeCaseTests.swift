@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-@testable import Ainkrad
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 private struct EdgeDoc: PersistableDocument {
     static let documentID = "edge"
@@ -75,7 +76,7 @@ final class StorageEdgeCaseTests {
     @Test("rawPayloadData returns the stored payload bytes without the document type")
     func rawPayloadRoundTrips() throws {
         let store = FileDocumentStore(rootURL: root)
-        store.save(GlobalSettings())   // any existing PersistableDocument with a known documentID
+        store.save(GlobalSettings())  // any existing PersistableDocument with a known documentID
         let raw = try #require(store.rawPayloadData(forID: GlobalSettings.documentID))
         // The payload decodes as the document's Codable payload (not the envelope).
         #expect((try? JSONDecoder().decode(GlobalSettings.self, from: raw)) != nil)

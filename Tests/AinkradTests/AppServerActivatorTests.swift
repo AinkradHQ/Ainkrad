@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradAppKit
+import Foundation
+import Testing
+
 @testable import Ainkrad
 @testable import AinkradHostRuntime
 
@@ -12,11 +13,14 @@ struct AppServerActivatorTests {
 
     func makeServer(_ counter: Counter) -> MCPAppServer {
         let server = MCPAppServer(appID: "demo")
-        server.addTool(.init(name: "ping", description: "Ping.",
-                             schemaJSON: #"{"type":"object"}"#, readOnly: true) { _ in
-            counter.calls += 1
-            return AgentActionResult(text: "pong", isError: false)
-        })
+        server.addTool(
+            .init(
+                name: "ping", description: "Ping.",
+                schemaJSON: #"{"type":"object"}"#, readOnly: true
+            ) { _ in
+                counter.calls += 1
+                return AgentActionResult(text: "pong", isError: false)
+            })
         return server
     }
 
@@ -40,7 +44,7 @@ struct AppServerActivatorTests {
         let reply = try await activator.dispatch(appID: "demo", message: callPing)
         #expect(reply.contains("pong"))
         #expect(counter.calls == 1)
-        #expect(openRequests.isEmpty)   // no launch needed
+        #expect(openRequests.isEmpty)  // no launch needed
     }
 
     @Test("opens a closed app, then dispatches", .timeLimit(.minutes(1)))
@@ -51,14 +55,14 @@ struct AppServerActivatorTests {
         let activator = AppServerActivator(
             servers: ["demo": makeServer(counter)],
             isAppOpen: { _ in opened },
-            requestOpen: { _ in opened = true },   // the host opens it synchronously here
+            requestOpen: { _ in opened = true },  // the host opens it synchronously here
             availability: { _ in .available },
             requiresLiveApp: needsWindow,
             launchTimeout: .seconds(2),
             onLaunch: { launched.append($0) })
         let reply = try await activator.dispatch(appID: "demo", message: callPing)
         #expect(reply.contains("pong"))
-        #expect(launched == ["demo"])   // timeline event fired exactly once
+        #expect(launched == ["demo"])  // timeline event fired exactly once
     }
 
     /// Finding 1: launch-time `connectEnabled()` sends `initialize` to every
@@ -70,7 +74,7 @@ struct AppServerActivatorTests {
         var openRequests: [String] = []
         let activator = AppServerActivator(
             servers: ["demo": makeServer(counter)],
-            isAppOpen: { _ in false },          // closed, and stays closed
+            isAppOpen: { _ in false },  // closed, and stays closed
             requestOpen: { openRequests.append($0) },
             availability: { _ in .available },
             launchTimeout: .milliseconds(200))
@@ -83,8 +87,9 @@ struct AppServerActivatorTests {
         #expect(openRequests.isEmpty)
     }
 
-    @Test("an unparseable message dispatches without opening the app",
-          .timeLimit(.minutes(1)))
+    @Test(
+        "an unparseable message dispatches without opening the app",
+        .timeLimit(.minutes(1)))
     func garbageDoesNotOpenTheApp() async throws {
         let counter = Counter()
         var openRequests: [String] = []
@@ -95,7 +100,7 @@ struct AppServerActivatorTests {
             availability: { _ in .available },
             launchTimeout: .milliseconds(200))
         let reply = try await activator.dispatch(appID: "demo", message: "not json")
-        #expect(reply.contains("-32700"))       // the server's own parse error
+        #expect(reply.contains("-32700"))  // the server's own parse error
         #expect(openRequests.isEmpty)
     }
 
@@ -104,25 +109,26 @@ struct AppServerActivatorTests {
     /// Lore's window open. A tool that never claimed it needs a window must be
     /// dispatched against a CLOSED app, in the background, with no open request
     /// and no launch wait.
-    @Test("a background tool call against a closed app never opens it",
-          .timeLimit(.minutes(1)))
+    @Test(
+        "a background tool call against a closed app never opens it",
+        .timeLimit(.minutes(1)))
     func backgroundToolCallDoesNotOpenTheApp() async throws {
         let counter = Counter()
         var openRequests: [String] = []
         var launched: [String] = []
         let activator = AppServerActivator(
             servers: ["demo": makeServer(counter)],
-            isAppOpen: { _ in false },          // closed, and stays closed
+            isAppOpen: { _ in false },  // closed, and stays closed
             requestOpen: { openRequests.append($0) },
             availability: { _ in .available },
             // The default the host now ships with: nothing declares it.
             launchTimeout: .milliseconds(200),
             onLaunch: { launched.append($0) })
         let reply = try await activator.dispatch(appID: "demo", message: callPing)
-        #expect(reply.contains("pong"))         // the handler actually ran
+        #expect(reply.contains("pong"))  // the handler actually ran
         #expect(counter.calls == 1)
-        #expect(openRequests.isEmpty)           // …with no window popped open
-        #expect(launched.isEmpty)               // …and no launch event
+        #expect(openRequests.isEmpty)  // …with no window popped open
+        #expect(launched.isEmpty)  // …and no launch event
     }
 
     /// The other half: an app that DOES declare a tool needs its window still
@@ -135,7 +141,10 @@ struct AppServerActivatorTests {
         let activator = AppServerActivator(
             servers: ["demo": makeServer(counter)],
             isAppOpen: { _ in opened },
-            requestOpen: { openRequests.append($0); opened = true },
+            requestOpen: {
+                openRequests.append($0)
+                opened = true
+            },
             availability: { _ in .available },
             requiresLiveApp: { _, _, name in name == "ping" },
             launchTimeout: .seconds(2))
@@ -171,7 +180,10 @@ struct AppServerActivatorTests {
         let activator = AppServerActivator(
             servers: ["demo": makeServer(counter)],
             isAppOpen: { _ in opened },
-            requestOpen: { openRequests.append($0); opened = true },
+            requestOpen: {
+                openRequests.append($0)
+                opened = true
+            },
             availability: { _ in .available },
             requiresLiveApp: needsWindow,
             launchTimeout: .seconds(2))
@@ -183,17 +195,18 @@ struct AppServerActivatorTests {
     /// Finding 4: `Task.sleep` returns immediately once cancelled, so without an
     /// explicit `checkCancellation` the poll loop busy-spins the MAIN ACTOR for
     /// the whole timeout. Asserts it gives up in well under that timeout.
-    @Test("a cancelled dispatch returns promptly instead of spinning out the timeout",
-          .timeLimit(.minutes(1)))
+    @Test(
+        "a cancelled dispatch returns promptly instead of spinning out the timeout",
+        .timeLimit(.minutes(1)))
     func cancelledDispatchReturnsPromptly() async {
         let counter = Counter()
         let activator = AppServerActivator(
             servers: ["demo": makeServer(counter)],
-            isAppOpen: { _ in false },          // never opens
+            isAppOpen: { _ in false },  // never opens
             requestOpen: { _ in },
             availability: { _ in .available },
             requiresLiveApp: needsWindow,
-            launchTimeout: .seconds(30))        // far longer than we will wait
+            launchTimeout: .seconds(30))  // far longer than we will wait
         let start = ContinuousClock.now
         let task = Task { try await activator.dispatch(appID: "demo", message: callPing) }
         task.cancel()
@@ -228,13 +241,17 @@ struct AppServerActivatorTests {
     /// The cache is memoized for the process lifetime, so a torn-down app must
     /// evict it — otherwise the next dispatch runs against a server built over
     /// the CLOSED instance's state, and that instance is pinned forever.
-    @Test("evicting drops the cached server and the next use builds a fresh one",
-          .timeLimit(.minutes(1)))
+    @Test(
+        "evicting drops the cached server and the next use builds a fresh one",
+        .timeLimit(.minutes(1)))
     func evictionRebuildsTheServer() async throws {
         let counter = Counter()
         var built = 0
         let activator = AppServerActivator(
-            serverFor: { _ in built += 1; return self.makeServer(counter) },
+            serverFor: { _ in
+                built += 1
+                return self.makeServer(counter)
+            },
             isAppOpen: { _ in true }, requestOpen: { _ in },
             availability: { _ in .available })
 
@@ -267,7 +284,7 @@ struct AppServerActivatorTests {
         let counter = Counter()
         let activator = AppServerActivator(
             servers: ["demo": makeServer(counter)],
-            isAppOpen: { _ in false },          // never becomes open
+            isAppOpen: { _ in false },  // never becomes open
             requestOpen: { _ in },
             availability: { _ in .available },
             requiresLiveApp: needsWindow,

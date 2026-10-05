@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Overflow panel for `SageComposerBar` (Wave 3 Task 7).
 ///
@@ -19,13 +19,16 @@ extension SageComposerBar {
         .ainkradFloatingPanel(isPresented: $isOverflowVisible, maxHeight: 170) {
             VStack(alignment: .leading, spacing: 0) {
                 OverflowRow(icon: "gauge.with.dots.needle.67percent", title: "Usage & cost", tokens: tokens) {
-                    isOverflowVisible = false; isUsageDashboardPresented = true
+                    isOverflowVisible = false
+                    isUsageDashboardPresented = true
                 }
                 OverflowRow(icon: "square.and.arrow.up", title: "Export…", tokens: tokens) {
-                    isOverflowVisible = false; isExportModalPresented = true
+                    isOverflowVisible = false
+                    isExportModalPresented = true
                 }
                 OverflowRow(icon: "link", title: "Share…", tokens: tokens) {
-                    isOverflowVisible = false; isShareModalPresented = true
+                    isOverflowVisible = false
+                    isShareModalPresented = true
                 }
             }
             .padding(AinkradSpacing.xs)
@@ -41,7 +44,7 @@ extension SageComposerBar {
 /// Pulled out as a real `View` (rather than a helper method on the
 /// extension) because the extension carries no stored state of its own —
 /// hover needs a `@State` home.
-fileprivate struct OverflowRow: View {
+private struct OverflowRow: View {
     let icon: String
     let title: String
     let tokens: DesignTokens

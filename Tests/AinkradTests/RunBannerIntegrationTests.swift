@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-import AinkradSignal
 import AinkradHostRuntime
+import AinkradSignal
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 /// Exactly one banner per completed run, exercised through the REAL
@@ -15,14 +16,18 @@ import AinkradHostRuntime
 @Suite("Exactly one banner per completed run")
 final class RunBannerIntegrationTests {
     private final class InstantRunner: AgentRunRunner {
-        func execute(prompt: String, posture: SavedExecutionPosture?,
-                     appendLog: @escaping (String) -> Void) async -> AgentRunOutcome {
+        func execute(
+            prompt: String, posture: SavedExecutionPosture?,
+            appendLog: @escaping (String) -> Void
+        ) async -> AgentRunOutcome {
             .success("done")
         }
     }
     private final class FailingRunner: AgentRunRunner {
-        func execute(prompt: String, posture: SavedExecutionPosture?,
-                     appendLog: @escaping (String) -> Void) async -> AgentRunOutcome {
+        func execute(
+            prompt: String, posture: SavedExecutionPosture?,
+            appendLog: @escaping (String) -> Void
+        ) async -> AgentRunOutcome {
             .failure("exploded")
         }
     }
@@ -35,14 +40,16 @@ final class RunBannerIntegrationTests {
     /// The user has looked away — the situation in which a run banner matters,
     /// and the one where a duplicate would be most obvious.
     private struct AwayContext: SignalContextProviding {
-        var deliveryContext = DeliveryContext(hostIsFrontmost: false, visibleAppIDs: [],
-                                              systemDoNotDisturb: false, hostFocusMode: false)
+        var deliveryContext = DeliveryContext(
+            hostIsFrontmost: false, visibleAppIDs: [],
+            systemDoNotDisturb: false, hostFocusMode: false)
     }
 
     private func waitForCompletion(_ manager: RunManager, id: UUID) async {
         for _ in 0..<200 {
             if let run = manager.runs.first(where: { $0.id == id }),
-               run.status == .done || run.status == .failed || run.status == .interrupted {
+                run.status == .done || run.status == .failed || run.status == .interrupted
+            {
                 return
             }
             try? await Task.sleep(for: .milliseconds(20))
@@ -53,8 +60,11 @@ final class RunBannerIntegrationTests {
     private func makeCenter(_ deliverer: SpyDeliverer) throws -> (SignalCenter, URL) {
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("signal-\(UUID().uuidString).sqlite")
-        return (SignalCenter(store: try SignalStore(url: url),
-                             deliverer: deliverer, contextProvider: AwayContext()), url)
+        return (
+            SignalCenter(
+                store: try SignalStore(url: url),
+                deliverer: deliverer, contextProvider: AwayContext()), url
+        )
     }
 
     @Test("a successful run posts one legacy banner and zero Signal banners")
@@ -62,9 +72,10 @@ final class RunBannerIntegrationTests {
         let deliverer = SpyDeliverer()
         let (center, url) = try makeCenter(deliverer)
         defer { try? FileManager.default.removeItem(at: url) }
-        let manager = RunManager(persistence: InMemoryPersistenceStore(),
-                                 runner: InstantRunner(),
-                                 signalCenter: center)
+        let manager = RunManager(
+            persistence: InMemoryPersistenceStore(),
+            runner: InstantRunner(),
+            signalCenter: center)
 
         let run = manager.enqueue(prompt: "do the thing", origin: .chat)
         await waitForCompletion(manager, id: run.id)
@@ -73,8 +84,9 @@ final class RunBannerIntegrationTests {
         #expect(center.recent.first?.kind == "run.finished")
         #expect(deliverer.delivered.count == 1)
         let channels = deliverer.delivered[0].1
-        #expect(channels.contains(.banner),
-                "RunNotifier is gone; if Signal does not post it, the user gets nothing")
+        #expect(
+            channels.contains(.banner),
+            "RunNotifier is gone; if Signal does not post it, the user gets nothing")
         #expect(channels.contains(.feed))
     }
 
@@ -83,9 +95,10 @@ final class RunBannerIntegrationTests {
         let deliverer = SpyDeliverer()
         let (center, url) = try makeCenter(deliverer)
         defer { try? FileManager.default.removeItem(at: url) }
-        let manager = RunManager(persistence: InMemoryPersistenceStore(),
-                                 runner: FailingRunner(),
-                                 signalCenter: center)
+        let manager = RunManager(
+            persistence: InMemoryPersistenceStore(),
+            runner: FailingRunner(),
+            signalCenter: center)
 
         let run = manager.enqueue(prompt: "break the thing", origin: .chat)
         await waitForCompletion(manager, id: run.id)
@@ -101,9 +114,10 @@ final class RunBannerIntegrationTests {
         let deliverer = SpyDeliverer()
         let (center, url) = try makeCenter(deliverer)
         defer { try? FileManager.default.removeItem(at: url) }
-        let manager = RunManager(persistence: InMemoryPersistenceStore(),
-                                 runner: InstantRunner(),
-                                 signalCenter: center)
+        let manager = RunManager(
+            persistence: InMemoryPersistenceStore(),
+            runner: InstantRunner(),
+            signalCenter: center)
 
         let first = manager.enqueue(prompt: "one", origin: .chat)
         let second = manager.enqueue(prompt: "two", origin: .chat)
@@ -112,7 +126,8 @@ final class RunBannerIntegrationTests {
 
         #expect(center.recent.count == 2, "distinct runs must not coalesce into one row")
         #expect(deliverer.delivered.count == 2)
-        #expect(deliverer.delivered.allSatisfy { $0.1.contains(.banner) },
-                "one banner per run, from Signal")
+        #expect(
+            deliverer.delivered.allSatisfy { $0.1.contains(.banner) },
+            "one banner per run, from Signal")
     }
 }

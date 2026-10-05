@@ -26,10 +26,12 @@ public enum RetiredPluginBundleCleanup {
                 do {
                     try fileManager.removeItem(at: retired)
                     Log.persistence.info(
-                        "Removed retired plugin bundle \(old, privacy: .public).bundle — reinstall as \(new, privacy: .public)")
+                        "Removed retired plugin bundle \(old, privacy: .public).bundle — reinstall as \(new, privacy: .public)"
+                    )
                 } catch {
                     Log.persistence.error(
-                        "Could not remove retired plugin bundle \(old, privacy: .public).bundle: \(error.localizedDescription, privacy: .public)")
+                        "Could not remove retired plugin bundle \(old, privacy: .public).bundle: \(error.localizedDescription, privacy: .public)"
+                    )
                 }
             }
         }

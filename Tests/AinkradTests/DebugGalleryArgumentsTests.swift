@@ -1,7 +1,8 @@
-import Testing
-import Foundation
 import AinkradAppKit
 import AinkradHostRuntime
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("DebugGalleryArguments")

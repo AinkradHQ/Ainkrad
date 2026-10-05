@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/LSP/LSPWireTypes.swift
 import Foundation
-import AinkradHostRuntime
 
 /// A single LSP diagnostic, flattened from the wire's `Range` shape (which
 /// nests `start`/`end` positions) down to the single `start` position plus
@@ -65,8 +65,10 @@ struct LSPTextEdit: Equatable {
 /// `request`/`notification` helpers rather than reinventing framing.
 enum LSPRPC {
     static func request(id: String, method: String, params: JSONValue) -> JSONValue {
-        .object(["jsonrpc": .string("2.0"), "id": .string(id),
-                 "method": .string(method), "params": params])
+        .object([
+            "jsonrpc": .string("2.0"), "id": .string(id),
+            "method": .string(method), "params": params,
+        ])
     }
 
     static func notification(method: String, params: JSONValue) -> JSONValue {
@@ -88,33 +90,39 @@ enum LSPRPC {
     }
 
     static func didOpenNotification(uri: String, languageId: String, version: Int, text: String) -> JSONValue {
-        notification(method: "textDocument/didOpen", params: .object([
-            "textDocument": .object([
-                "uri": .string(uri),
-                "languageId": .string(languageId),
-                "version": .number(Double(version)),
-                "text": .string(text),
-            ]),
-        ]))
+        notification(
+            method: "textDocument/didOpen",
+            params: .object([
+                "textDocument": .object([
+                    "uri": .string(uri),
+                    "languageId": .string(languageId),
+                    "version": .number(Double(version)),
+                    "text": .string(text),
+                ])
+            ]))
     }
 
     /// Full-document sync (`contentChanges: [{ text }]`) — incremental sync is
     /// out of scope for this slice.
     static func didChangeNotification(uri: String, version: Int, text: String) -> JSONValue {
-        notification(method: "textDocument/didChange", params: .object([
-            "textDocument": .object(["uri": .string(uri), "version": .number(Double(version))]),
-            "contentChanges": .array([.object(["text": .string(text)])]),
-        ]))
+        notification(
+            method: "textDocument/didChange",
+            params: .object([
+                "textDocument": .object(["uri": .string(uri), "version": .number(Double(version))]),
+                "contentChanges": .array([.object(["text": .string(text)])]),
+            ]))
     }
 
     static func formattingRequest(id: String, uri: String, tabSize: Int = 4, insertSpaces: Bool = true) -> JSONValue {
-        request(id: id, method: "textDocument/formatting", params: .object([
-            "textDocument": .object(["uri": .string(uri)]),
-            "options": .object([
-                "tabSize": .number(Double(tabSize)),
-                "insertSpaces": .bool(insertSpaces),
-            ]),
-        ]))
+        request(
+            id: id, method: "textDocument/formatting",
+            params: .object([
+                "textDocument": .object(["uri": .string(uri)]),
+                "options": .object([
+                    "tabSize": .number(Double(tabSize)),
+                    "insertSpaces": .bool(insertSpaces),
+                ]),
+            ]))
     }
 
     /// Decodes a `textDocument/publishDiagnostics` notification's params into

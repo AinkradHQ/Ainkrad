@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitUI
+import SwiftUI
 
 /// The compiled-in Hoard app — a keyboard-driven, git-aware file browser.
 /// Host-embedded rather than a real plugin (same as `SageApp` and
@@ -66,7 +66,7 @@ enum HoardApp: AinkradApp {
 extension HoardApp: AinkradAppModes {
     static func makeRootView(host: HostServices, mode: PluginMode) -> AnyView {
         switch mode {
-        case .basic:    return AnyView(HoardRootView(mode: .basic))
+        case .basic: return AnyView(HoardRootView(mode: .basic))
         case .advanced: return AnyView(HoardRootView(mode: .advanced))
         // Resilient enum: fall back to advanced, never to a stripped view for a
         // mode this build does not understand.

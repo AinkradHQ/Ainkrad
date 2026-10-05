@@ -1,9 +1,9 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 struct AgentModelConfig: Equatable, Sendable {
-    var model: String          // e.g. "claude-opus-4-8" / "gpt-5" / "gemini-2.5-pro"
-    var effort: String         // Claude only; ignored by other kinds
+    var model: String  // e.g. "claude-opus-4-8" / "gpt-5" / "gemini-2.5-pro"
+    var effort: String  // Claude only; ignored by other kinds
 }
 
 enum AgentEvent: Equatable, Sendable {

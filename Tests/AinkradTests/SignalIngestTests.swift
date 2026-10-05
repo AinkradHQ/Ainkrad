@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradSignal
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("SignalIngest")
@@ -21,7 +22,8 @@ struct SignalIngestTests {
         let (ingest, store, url) = try makeIngest()
         defer { try? FileManager.default.removeItem(at: url) }
         guard case .accepted(let event) = ingest.accept(draft(), from: .app(appID: "raven")) else {
-            Issue.record("expected acceptance"); return
+            Issue.record("expected acceptance")
+            return
         }
         #expect(event.source == .app(appID: "raven"))
         #expect(store.page(filter: .all, before: nil, limit: 10) == [event])
@@ -35,7 +37,8 @@ struct SignalIngestTests {
         // source is the `from:` argument, which the host supplies. This test
         // pins that property so a future "convenience" field is caught.
         guard case .accepted(let event) = ingest.accept(draft(), from: .app(appID: "raven")) else {
-            Issue.record("expected acceptance"); return
+            Issue.record("expected acceptance")
+            return
         }
         #expect(event.source == .app(appID: "raven"))
     }
@@ -45,7 +48,8 @@ struct SignalIngestTests {
         let (ingest, store, url) = try makeIngest()
         defer { try? FileManager.default.removeItem(at: url) }
         guard case .rejected(let rejection) = ingest.accept(draft(kind: "Run Finished"), from: .host) else {
-            Issue.record("expected rejection"); return
+            Issue.record("expected rejection")
+            return
         }
         #expect(rejection == .invalidKind("Run Finished"))
         #expect(store.page(filter: .all, before: nil, limit: 10).isEmpty)
@@ -56,7 +60,8 @@ struct SignalIngestTests {
         let (ingest, _, url) = try makeIngest()
         defer { try? FileManager.default.removeItem(at: url) }
         guard case .rejected(let rejection) = ingest.accept(draft(title: "   "), from: .host) else {
-            Issue.record("expected rejection"); return
+            Issue.record("expected rejection")
+            return
         }
         #expect(rejection == .emptyTitle)
     }
@@ -66,9 +71,12 @@ struct SignalIngestTests {
         let (ingest, _, url) = try makeIngest()
         defer { try? FileManager.default.removeItem(at: url) }
         let long = String(repeating: "x", count: 500)
-        guard case .accepted(let event) = ingest.accept(
-            SignalDraft(kind: "test.event", severity: .info, title: long), from: .host) else {
-            Issue.record("expected acceptance"); return
+        guard
+            case .accepted(let event) = ingest.accept(
+                SignalDraft(kind: "test.event", severity: .info, title: long), from: .host)
+        else {
+            Issue.record("expected acceptance")
+            return
         }
         #expect(event.title.count == SignalLimits.maxTitle)
     }
@@ -77,11 +85,13 @@ struct SignalIngestTests {
     func reportsCoalescence() throws {
         let (ingest, store, url) = try makeIngest()
         defer { try? FileManager.default.removeItem(at: url) }
-        let d = SignalDraft(kind: "build.failed", severity: .failure, title: "Build failed",
-                            dedupeKey: "b:main")
+        let d = SignalDraft(
+            kind: "build.failed", severity: .failure, title: "Build failed",
+            dedupeKey: "b:main")
         _ = ingest.accept(d, from: .host)
         guard case .coalesced = ingest.accept(d, from: .host) else {
-            Issue.record("expected coalescence"); return
+            Issue.record("expected coalescence")
+            return
         }
         #expect(store.page(filter: .all, before: nil, limit: 10).count == 1)
     }

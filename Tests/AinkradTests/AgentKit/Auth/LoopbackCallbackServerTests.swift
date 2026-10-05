@@ -1,7 +1,8 @@
-import Testing
+import Darwin
 import Foundation
 import Network
-import Darwin
+import Testing
+
 @testable import Ainkrad
 
 @Suite struct LoopbackCallbackServerTests {
@@ -65,7 +66,7 @@ import Darwin
 
         var address = sockaddr_in()
         address.sin_family = sa_family_t(AF_INET)
-        address.sin_port = 0                                  // let the kernel choose
+        address.sin_port = 0  // let the kernel choose
         address.sin_addr.s_addr = inet_addr("127.0.0.1")
         address.sin_len = UInt8(MemoryLayout<sockaddr_in>.size)
 
@@ -101,10 +102,12 @@ import Darwin
             connection.stateUpdateHandler = { state in
                 switch state {
                 case .ready:
-                    connection.send(content: Data(requestLine.utf8), completion: .contentProcessed { error in
-                        guard resumeGuard.claim() else { return }
-                        if let error { cont.resume(throwing: error) } else { cont.resume(returning: ()) }
-                    })
+                    connection.send(
+                        content: Data(requestLine.utf8),
+                        completion: .contentProcessed { error in
+                            guard resumeGuard.claim() else { return }
+                            if let error { cont.resume(throwing: error) } else { cont.resume(returning: ()) }
+                        })
                 case .failed(let error):
                     guard resumeGuard.claim() else { return }
                     cont.resume(throwing: error)

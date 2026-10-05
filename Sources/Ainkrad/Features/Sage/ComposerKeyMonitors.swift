@@ -46,7 +46,7 @@ struct ComposerTabCycleMonitor: NSViewRepresentable {
                     let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
                     let isPlainTab = event.keyCode == 48 && flags.isEmpty
                     let isShiftTab = event.keyCode == 48 && flags == .shift
-                    if (isPlainTab || isShiftTab), self.isDraftEmpty?() == true {
+                    if isPlainTab || isShiftTab, self.isDraftEmpty?() == true {
                         self.onCycle?()
                         return nil
                     }
@@ -74,12 +74,18 @@ struct ComposerOverlayKeyMonitor: NSViewRepresentable {
 
     func makeNSView(context: Context) -> MonitoringView {
         let view = MonitoringView()
-        view.isActive = isActive; view.onUp = onUp; view.onDown = onDown; view.onConfirm = onConfirm
+        view.isActive = isActive
+        view.onUp = onUp
+        view.onDown = onDown
+        view.onConfirm = onConfirm
         return view
     }
 
     func updateNSView(_ nsView: MonitoringView, context: Context) {
-        nsView.isActive = isActive; nsView.onUp = onUp; nsView.onDown = onDown; nsView.onConfirm = onConfirm
+        nsView.isActive = isActive
+        nsView.onUp = onUp
+        nsView.onDown = onDown
+        nsView.onConfirm = onConfirm
     }
 
     final class MonitoringView: NSView {
@@ -96,9 +102,15 @@ struct ComposerOverlayKeyMonitor: NSViewRepresentable {
                 monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
                     guard let self, self.isActive?() == true else { return event }
                     switch event.keyCode {
-                    case 126: self.onUp?(); return nil // Up arrow
-                    case 125: self.onDown?(); return nil // Down arrow
-                    case 36, 76: self.onConfirm?(); return nil // Return / keypad Enter
+                    case 126:
+                        self.onUp?()
+                        return nil  // Up arrow
+                    case 125:
+                        self.onDown?()
+                        return nil  // Down arrow
+                    case 36, 76:
+                        self.onConfirm?()
+                        return nil  // Return / keypad Enter
                     default: return event
                     }
                 }

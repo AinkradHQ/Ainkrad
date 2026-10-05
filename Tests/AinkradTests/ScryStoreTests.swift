@@ -1,6 +1,7 @@
-import Foundation
 import CoreGraphics
+import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("ScryStore")
@@ -132,7 +133,7 @@ struct ScryStoreTests {
         let id = s.add(ScryElement(id: "a", kind: .card, body: "x"))
         let before = s.model.elements.first!
         s.setOverride(id: id, ScryRect(x: 200, y: 300, width: 400, height: 250))
-        #expect(s.model.elements.first! == before)   // element untouched
+        #expect(s.model.elements.first! == before)  // element untouched
         #expect(s.overrides[id]?.x == 200)
     }
 

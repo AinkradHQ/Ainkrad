@@ -1,7 +1,8 @@
-import Testing
-import SwiftUI
-@testable import Ainkrad
 import AinkradHostRuntime
+import SwiftUI
+import Testing
+
+@testable import Ainkrad
 
 @MainActor
 struct RegisteredAppRegistryTests {
@@ -58,8 +59,9 @@ struct RegisteredAppRegistryTests {
     @Test("load failures are exposed for the App Store UI")
     func exposesFailures() {
         let registry = BuiltInAppRegistry(persistence: InMemoryPersistenceStore())
-        registry.install(builtIn: [app("terminal")], loaded: [],
-                         failures: [PluginLoadFailure(url: URL(fileURLWithPath: "/bad.bundle"), reason: "boom")])
+        registry.install(
+            builtIn: [app("terminal")], loaded: [],
+            failures: [PluginLoadFailure(url: URL(fileURLWithPath: "/bad.bundle"), reason: "boom")])
         #expect(registry.loadFailures.map(\.reason) == ["boom"])
     }
 }

@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// The single facade over the host-internal memory subsystem: composes
 /// `MemoryStore` (file I/O), `MemoryIndex` (FTS search), and `MemoryLogStore`
@@ -22,7 +22,7 @@ final class MemoryService {
 
     func write(_ text: String, to file: MemoryFile, provenance: MemoryProvenance) {
         let prior = store.read(file)
-        store.append(text, to: file)          // triggers onChange → reindex
+        store.append(text, to: file)  // triggers onChange → reindex
         log.record(file: file, provenance: provenance, addedText: text, priorSnapshot: prior)
     }
 

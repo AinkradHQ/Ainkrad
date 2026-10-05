@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradAppKit
+import Foundation
+import Testing
+
 @testable import Ainkrad
 @testable import AinkradHostRuntime
 
@@ -13,11 +14,13 @@ struct MCPResourceToolTests {
         let activator = AppServerActivator(
             servers: ["demo": server], isAppOpen: { _ in true },
             requestOpen: { _ in }, availability: { _ in .available })
-        let configStore = MCPServerConfigStore(persistence: InMemoryPersistenceStore(),
-                                               secrets: InMemorySecretStore())
-        configStore.upsert(MCPServerConfig(
-            id: "demo", displayName: "Demo", transport: .inProcess,
-            enabled: true, trusted: false, appID: "demo"))
+        let configStore = MCPServerConfigStore(
+            persistence: InMemoryPersistenceStore(),
+            secrets: InMemorySecretStore())
+        configStore.upsert(
+            MCPServerConfig(
+                id: "demo", displayName: "Demo", transport: .inProcess,
+                enabled: true, trusted: false, appID: "demo"))
         return MCPServerRegistry(configStore: configStore, activator: activator)
     }
 
@@ -26,9 +29,10 @@ struct MCPResourceToolTests {
         let registry = registry()
         await registry.connectEnabled()
         let tool = MCPReadResourceTool(registry: registry)
-        let result = try await tool.execute(.object([
-            "server": .string("demo"), "uri": .string("demo://buffer"),
-        ]))
+        let result = try await tool.execute(
+            .object([
+                "server": .string("demo"), "uri": .string("demo://buffer"),
+            ]))
         #expect(!result.isError)
         #expect(result.content == "live value")
     }
@@ -38,28 +42,35 @@ struct MCPResourceToolTests {
     func failingRegistry() -> MCPServerRegistry {
         let server = MCPAppServer(appID: "demo")
         var spec = MCPResourceSpec(uri: "demo://buffer", title: "Buffer") { "unused" }
-        spec.resultProvider = { MCPResourceContent(text: "no terminal is currently open",
-                                                   isError: true) }
+        spec.resultProvider = {
+            MCPResourceContent(
+                text: "no terminal is currently open",
+                isError: true)
+        }
         server.addResource(spec)
         let activator = AppServerActivator(
             servers: ["demo": server], isAppOpen: { _ in true },
             requestOpen: { _ in }, availability: { _ in .available })
-        let configStore = MCPServerConfigStore(persistence: InMemoryPersistenceStore(),
-                                               secrets: InMemorySecretStore())
-        configStore.upsert(MCPServerConfig(
-            id: "demo", displayName: "Demo", transport: .inProcess,
-            enabled: true, trusted: false, appID: "demo"))
+        let configStore = MCPServerConfigStore(
+            persistence: InMemoryPersistenceStore(),
+            secrets: InMemorySecretStore())
+        configStore.upsert(
+            MCPServerConfig(
+                id: "demo", displayName: "Demo", transport: .inProcess,
+                enabled: true, trusted: false, appID: "demo"))
         return MCPServerRegistry(configStore: configStore, activator: activator)
     }
 
-    @Test("a resource reporting failure yields isError, not plausible content",
-          .timeLimit(.minutes(1)))
+    @Test(
+        "a resource reporting failure yields isError, not plausible content",
+        .timeLimit(.minutes(1)))
     func resourceFailureIsAnErrorResult() async throws {
         let registry = failingRegistry()
         await registry.connectEnabled()
-        let result = try await MCPReadResourceTool(registry: registry).execute(.object([
-            "server": .string("demo"), "uri": .string("demo://buffer"),
-        ]))
+        let result = try await MCPReadResourceTool(registry: registry).execute(
+            .object([
+                "server": .string("demo"), "uri": .string("demo://buffer"),
+            ]))
         // The whole point: without the flag this text arrives as if it were the
         // terminal buffer, and the model reasons over it as content.
         #expect(result.isError)
@@ -71,13 +82,15 @@ struct MCPResourceToolTests {
         #expect(MCPReadResourceTool(registry: registry()).permission == .read)
     }
 
-    @Test("an unknown server returns an error result, never a throw",
-          .timeLimit(.minutes(1)))
+    @Test(
+        "an unknown server returns an error result, never a throw",
+        .timeLimit(.minutes(1)))
     func unknownServerErrors() async throws {
-        let tool = MCPReadResourceTool(registry: registry())   // never connected
-        let result = try await tool.execute(.object([
-            "server": .string("ghost"), "uri": .string("demo://buffer"),
-        ]))
+        let tool = MCPReadResourceTool(registry: registry())  // never connected
+        let result = try await tool.execute(
+            .object([
+                "server": .string("ghost"), "uri": .string("demo://buffer"),
+            ]))
         #expect(result.isError)
         #expect(result.content.contains("ghost"))
     }
@@ -91,22 +104,28 @@ struct MCPResourceToolTests {
         for i in 0..<count {
             // Zero-padded so lexical order matches numeric order, letting the
             // overflow assertions name an exact resource.
-            server.addResource(.init(uri: String(format: "demo://r%03d", i),
-                                     title: "Resource \(i)") { "v" })
+            server.addResource(
+                .init(
+                    uri: String(format: "demo://r%03d", i),
+                    title: "Resource \(i)"
+                ) { "v" })
         }
         let activator = AppServerActivator(
             servers: ["demo": server], isAppOpen: { _ in true },
             requestOpen: { _ in }, availability: { _ in .available })
-        let configStore = MCPServerConfigStore(persistence: InMemoryPersistenceStore(),
-                                               secrets: InMemorySecretStore())
-        configStore.upsert(MCPServerConfig(
-            id: "demo", displayName: "Demo", transport: .inProcess,
-            enabled: true, trusted: false, appID: "demo"))
+        let configStore = MCPServerConfigStore(
+            persistence: InMemoryPersistenceStore(),
+            secrets: InMemorySecretStore())
+        configStore.upsert(
+            MCPServerConfig(
+                id: "demo", displayName: "Demo", transport: .inProcess,
+                enabled: true, trusted: false, appID: "demo"))
         return MCPServerRegistry(configStore: configStore, activator: activator)
     }
 
-    @Test("the description enumerates a connected resource's server, uri and title",
-          .timeLimit(.minutes(1)))
+    @Test(
+        "the description enumerates a connected resource's server, uri and title",
+        .timeLimit(.minutes(1)))
     func descriptionListsResources() async {
         let registry = registry()
         await registry.connectEnabled()
@@ -116,8 +135,9 @@ struct MCPResourceToolTests {
         #expect(description.contains("Buffer"))
     }
 
-    @Test("the listing carries each resource's description so the model knows WHEN to read it",
-          .timeLimit(.minutes(1)))
+    @Test(
+        "the listing carries each resource's description so the model knows WHEN to read it",
+        .timeLimit(.minutes(1)))
     func descriptionListsResourcePurpose() async {
         let server = MCPAppServer(appID: "demo")
         var described = MCPResourceSpec(uri: "demo://buffer", title: "Buffer") { "v" }
@@ -129,23 +149,28 @@ struct MCPResourceToolTests {
         let activator = AppServerActivator(
             servers: ["demo": server], isAppOpen: { _ in true },
             requestOpen: { _ in }, availability: { _ in .available })
-        let configStore = MCPServerConfigStore(persistence: InMemoryPersistenceStore(),
-                                               secrets: InMemorySecretStore())
-        configStore.upsert(MCPServerConfig(
-            id: "demo", displayName: "Demo", transport: .inProcess,
-            enabled: true, trusted: false, appID: "demo"))
+        let configStore = MCPServerConfigStore(
+            persistence: InMemoryPersistenceStore(),
+            secrets: InMemorySecretStore())
+        configStore.upsert(
+            MCPServerConfig(
+                id: "demo", displayName: "Demo", transport: .inProcess,
+                enabled: true, trusted: false, appID: "demo"))
         let registry = MCPServerRegistry(configStore: configStore, activator: activator)
         await registry.connectEnabled()
 
         let description = MCPReadResourceTool(registry: registry).description
-        #expect(description.contains(
-            "uri \"demo://buffer\": Buffer — Read when the workspace context shows a truncated terminal."))
-        #expect(description.contains("uri \"demo://plain\": Plain\n")
+        #expect(
+            description.contains(
+                "uri \"demo://buffer\": Buffer — Read when the workspace context shows a truncated terminal."))
+        #expect(
+            description.contains("uri \"demo://plain\": Plain\n")
                 || description.hasSuffix("uri \"demo://plain\": Plain"))
     }
 
-    @Test("the listing never displaces the truncated-context guidance",
-          .timeLimit(.minutes(1)))
+    @Test(
+        "the listing never displaces the truncated-context guidance",
+        .timeLimit(.minutes(1)))
     func descriptionKeepsGuidance() async {
         let registry = registry()
         await registry.connectEnabled()
@@ -163,8 +188,9 @@ struct MCPResourceToolTests {
         #expect(!description.contains("Currently available resources"))
     }
 
-    @Test("the listing is capped and states how many it omitted",
-          .timeLimit(.minutes(1)))
+    @Test(
+        "the listing is capped and states how many it omitted",
+        .timeLimit(.minutes(1)))
     func descriptionRespectsCap() async {
         let cap = MCPReadResourceTool.maxListedResources
         let registry = registry(resourceCount: cap + 5)
@@ -179,8 +205,9 @@ struct MCPResourceToolTests {
         #expect(!description.contains("demo://r\(String(format: "%03d", cap + 4))"))
     }
 
-    @Test("the description is live: it changes when a resource appears",
-          .timeLimit(.minutes(1)))
+    @Test(
+        "the description is live: it changes when a resource appears",
+        .timeLimit(.minutes(1)))
     func descriptionIsLiveNotCaptured() async {
         let registry = registry()
         // Constructed BEFORE any connection — the bug this pins is a stored

@@ -1,5 +1,5 @@
-import SwiftUI
 import AinkradAppKit
+import SwiftUI
 
 /// Command palette / `@`-mention overlay logic for `SageComposerBar`
 /// (M7 finalize Wave D, D2 — extracted verbatim, no behavior change).

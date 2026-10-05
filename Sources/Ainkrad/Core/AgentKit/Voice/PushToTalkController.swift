@@ -4,7 +4,10 @@ import Observation
 @MainActor
 @Observable
 final class PushToTalkController {
-    enum Status: Equatable { case idle, recording, transcribing, failed(String) }
+    enum Status: Equatable {
+        case idle, recording, transcribing
+        case failed(String)
+    }
     private(set) var status: Status = .idle
 
     var onTranscript: ((String) -> Void)?
@@ -23,9 +26,11 @@ final class PushToTalkController {
     /// Guards against spawning a second concurrent mic-permission request.
     private var isRequestingPermission = false
 
-    init(settings: VoiceSettingsStore, capture: AudioCaptureSession,
-         permission: MicPermissionProviding, selector: TranscriptionBackendSelector,
-         readAudio: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) }) {
+    init(
+        settings: VoiceSettingsStore, capture: AudioCaptureSession,
+        permission: MicPermissionProviding, selector: TranscriptionBackendSelector,
+        readAudio: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) }
+    ) {
         self.settings = settings
         self.capture = capture
         self.permission = permission
@@ -106,7 +111,10 @@ final class PushToTalkController {
     }
 
     private func stopAndTranscribe() {
-        guard let url = capture.stop() else { status = .idle; return }
+        guard let url = capture.stop() else {
+            status = .idle
+            return
+        }
         status = .transcribing
         pending = Task { [weak self] in
             guard let self else { return }
@@ -126,8 +134,11 @@ final class PushToTalkController {
                 // let a late result resurrect a transcript/auto-send/status after
                 // the user cancelled. Mirrors RunManager.stop's `!Task.isCancelled` guard.
                 guard !Task.isCancelled else { return }
-                if self.settings.document.autoSend { self.onAutoSend?(result.text) }
-                else { self.onTranscript?(result.text) }
+                if self.settings.document.autoSend {
+                    self.onAutoSend?(result.text)
+                } else {
+                    self.onTranscript?(result.text)
+                }
                 self.status = .idle
             } catch {
                 guard !Task.isCancelled else { return }

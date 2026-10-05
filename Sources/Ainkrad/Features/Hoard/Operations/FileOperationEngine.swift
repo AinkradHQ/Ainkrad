@@ -36,8 +36,10 @@ final class FileOperationEngine {
     /// deliberately outlive the pane that started them.
     private(set) var activeJobs: [OperationProgress] = []
 
-    init(mutator: any FileMutating, trash: any Trashing, undoStack: UndoStack,
-         archiver: any Archiving = SystemArchiveService()) {
+    init(
+        mutator: any FileMutating, trash: any Trashing, undoStack: UndoStack,
+        archiver: any Archiving = SystemArchiveService()
+    ) {
         self.mutator = mutator
         self.trash = trash
         self.undoStack = undoStack
@@ -74,10 +76,13 @@ final class FileOperationEngine {
     // MARK: - Submission
 
     @discardableResult
-    func submit(_ operation: FileOperation,
-                conflictResolver: ConflictResolving? = nil) async -> OperationResult {
-        let progress = OperationProgress(label: label(for: operation),
-                                         totalItems: max(operation.sources.count, 1))
+    func submit(
+        _ operation: FileOperation,
+        conflictResolver: ConflictResolving? = nil
+    ) async -> OperationResult {
+        let progress = OperationProgress(
+            label: label(for: operation),
+            totalItems: max(operation.sources.count, 1))
         activeJobs.append(progress)
         defer {
             progress.finish()
@@ -89,8 +94,9 @@ final class FileOperationEngine {
             guard let self else {
                 return OperationResult(succeeded: 0, skipped: 0, failures: [], wasCancelled: true)
             }
-            return await self.execute(operation, progress: progress,
-                                      conflictResolver: conflictResolver)
+            return await self.execute(
+                operation, progress: progress,
+                conflictResolver: conflictResolver)
         }
     }
 
@@ -117,8 +123,10 @@ final class FileOperationEngine {
 
     // MARK: - Execution
 
-    private func execute(_ operation: FileOperation, progress: OperationProgress,
-                         conflictResolver: ConflictResolving?) async -> OperationResult {
+    private func execute(
+        _ operation: FileOperation, progress: OperationProgress,
+        conflictResolver: ConflictResolving?
+    ) async -> OperationResult {
         switch operation.kind {
         case .copy, .move:
             return await transfer(operation, progress: progress, conflictResolver: conflictResolver)
@@ -139,8 +147,10 @@ final class FileOperationEngine {
 
     /// Copy and move share everything except what happens to the source, so
     /// they share one path rather than two near-identical ones that drift.
-    private func transfer(_ operation: FileOperation, progress: OperationProgress,
-                          conflictResolver: ConflictResolving?) async -> OperationResult {
+    private func transfer(
+        _ operation: FileOperation, progress: OperationProgress,
+        conflictResolver: ConflictResolving?
+    ) async -> OperationResult {
         guard let destinationDirectory = operation.destinationDirectory else {
             return OperationResult(succeeded: 0, skipped: 0, failures: [], wasCancelled: false)
         }
@@ -166,9 +176,10 @@ final class FileOperationEngine {
                 if let blanketPolicy {
                     policy = blanketPolicy
                 } else if let conflictResolver {
-                    let answer = await conflictResolver(ConflictQuestion(
-                        name: source.lastPathComponent, source: source,
-                        destination: destination, isDirectory: mutator.isDirectory(source)))
+                    let answer = await conflictResolver(
+                        ConflictQuestion(
+                            name: source.lastPathComponent, source: source,
+                            destination: destination, isDirectory: mutator.isDirectory(source)))
                     if answer.applyToAll { blanketPolicy = answer.policy }
                     policy = answer.policy
                 } else {
@@ -195,8 +206,9 @@ final class FileOperationEngine {
                         let inTrash = try trash.trash(destination)
                         overwritten.append(TrashedItem(original: destination, inTrash: inTrash))
                     } catch {
-                        failures.append(OperationFailure(
-                            url: destination, reason: error.localizedDescription))
+                        failures.append(
+                            OperationFailure(
+                                url: destination, reason: error.localizedDescription))
                         progress.advance()
                         continue
                     }
@@ -207,7 +219,8 @@ final class FileOperationEngine {
             let destinationVolume = mutator.volumeIdentifier(for: destinationDirectory)
             // Unknown volumes are treated as different: the cross-volume path
             // is the invertible one, so it is the safe assumption.
-            let isCrossVolume = sourceVolume == nil || destinationVolume == nil
+            let isCrossVolume =
+                sourceVolume == nil || destinationVolume == nil
                 || sourceVolume != destinationVolume
 
             do {
@@ -248,23 +261,29 @@ final class FileOperationEngine {
         // Record an inverse covering ONLY what actually completed — a
         // cancelled job that under-records would leave undo unable to restore
         // the work it did do.
-        recordInverse(isMove: isMove, sawCrossVolume: sawCrossVolume,
-                      created: created, moved: moved,
-                      overwritten: overwritten, trashedSources: trashedSources,
-                      sources: operation.sources)
+        recordInverse(
+            isMove: isMove, sawCrossVolume: sawCrossVolume,
+            created: created, moved: moved,
+            overwritten: overwritten, trashedSources: trashedSources,
+            sources: operation.sources)
 
-        return OperationResult(succeeded: created.count + moved.count, skipped: skipped,
-                               failures: failures, wasCancelled: progress.isCancelled)
+        return OperationResult(
+            succeeded: created.count + moved.count, skipped: skipped,
+            failures: failures, wasCancelled: progress.isCancelled)
     }
 
-    private func recordInverse(isMove: Bool, sawCrossVolume: Bool, created: [URL],
-                               moved: [MovedItem], overwritten: [TrashedItem],
-                               trashedSources: [TrashedItem], sources: [URL]) {
+    private func recordInverse(
+        isMove: Bool, sawCrossVolume: Bool, created: [URL],
+        moved: [MovedItem], overwritten: [TrashedItem],
+        trashedSources: [TrashedItem], sources: [URL]
+    ) {
         guard !created.isEmpty || !moved.isEmpty else { return }
 
         if !overwritten.isEmpty {
-            undoStack.push(.forOverwrite(created: created + moved.map(\.to),
-                                         overwritten: overwritten, sources: sources))
+            undoStack.push(
+                .forOverwrite(
+                    created: created + moved.map(\.to),
+                    overwritten: overwritten, sources: sources))
         } else if isMove && sawCrossVolume {
             undoStack.push(.forCrossVolumeMove(created: created, trashedSources: trashedSources))
         } else if isMove {
@@ -280,8 +299,12 @@ final class FileOperationEngine {
         }
         let destination = source.deletingLastPathComponent().appendingPathComponent(newName)
         guard !mutator.fileExists(destination) else {
-            return OperationResult(succeeded: 0, skipped: 0, failures: [OperationFailure(
-                url: destination, reason: "A file named “\(newName)” already exists.")],
+            return OperationResult(
+                succeeded: 0, skipped: 0,
+                failures: [
+                    OperationFailure(
+                        url: destination, reason: "A file named “\(newName)” already exists.")
+                ],
                 wasCancelled: false)
         }
         do {
@@ -289,8 +312,12 @@ final class FileOperationEngine {
             undoStack.push(.forRename(from: source, to: destination))
             return OperationResult(succeeded: 1, skipped: 0, failures: [], wasCancelled: false)
         } catch {
-            return OperationResult(succeeded: 0, skipped: 0, failures: [OperationFailure(
-                url: source, reason: error.localizedDescription)], wasCancelled: false)
+            return OperationResult(
+                succeeded: 0, skipped: 0,
+                failures: [
+                    OperationFailure(
+                        url: source, reason: error.localizedDescription)
+                ], wasCancelled: false)
         }
     }
 
@@ -304,14 +331,20 @@ final class FileOperationEngine {
     /// A row that fails does NOT abort the rest, matching `transfer`: the
     /// inverse covers exactly what completed, so a partial batch is still
     /// wholly undoable.
-    private func batchRename(_ operation: FileOperation, to newNames: [String],
-                             progress: OperationProgress) -> OperationResult {
+    private func batchRename(
+        _ operation: FileOperation, to newNames: [String],
+        progress: OperationProgress
+    ) -> OperationResult {
         guard newNames.count == operation.sources.count else {
             // Positional arrays out of step would rename files under each
             // other's names — refuse the whole thing rather than guess.
-            return OperationResult(succeeded: 0, skipped: 0, failures: [OperationFailure(
-                url: operation.sources.first ?? URL(fileURLWithPath: "/"),
-                reason: "Batch rename received \(newNames.count) names for \(operation.sources.count) files.")],
+            return OperationResult(
+                succeeded: 0, skipped: 0,
+                failures: [
+                    OperationFailure(
+                        url: operation.sources.first ?? URL(fileURLWithPath: "/"),
+                        reason: "Batch rename received \(newNames.count) names for \(operation.sources.count) files.")
+                ],
                 wasCancelled: false)
         }
 
@@ -325,8 +358,9 @@ final class FileOperationEngine {
             guard !mutator.fileExists(destination) else {
                 // The planner already filtered collisions, but the disk can
                 // change between preview and apply.
-                failures.append(OperationFailure(
-                    url: destination, reason: "A file named “\(newName)” already exists."))
+                failures.append(
+                    OperationFailure(
+                        url: destination, reason: "A file named “\(newName)” already exists."))
                 progress.advance()
                 continue
             }
@@ -340,8 +374,9 @@ final class FileOperationEngine {
         }
 
         if !moved.isEmpty { undoStack.push(.forBatchRename(items: moved)) }
-        return OperationResult(succeeded: moved.count, skipped: 0,
-                               failures: failures, wasCancelled: progress.isCancelled)
+        return OperationResult(
+            succeeded: moved.count, skipped: 0,
+            failures: failures, wasCancelled: progress.isCancelled)
     }
 
     private func createFolder(_ operation: FileOperation, named name: String) -> OperationResult {
@@ -350,8 +385,12 @@ final class FileOperationEngine {
         }
         let url = parent.appendingPathComponent(name)
         guard !mutator.fileExists(url) else {
-            return OperationResult(succeeded: 0, skipped: 0, failures: [OperationFailure(
-                url: url, reason: "A folder named “\(name)” already exists.")],
+            return OperationResult(
+                succeeded: 0, skipped: 0,
+                failures: [
+                    OperationFailure(
+                        url: url, reason: "A folder named “\(name)” already exists.")
+                ],
                 wasCancelled: false)
         }
         do {
@@ -359,22 +398,32 @@ final class FileOperationEngine {
             undoStack.push(.forCreateFolder(at: url))
             return OperationResult(succeeded: 1, skipped: 0, failures: [], wasCancelled: false)
         } catch {
-            return OperationResult(succeeded: 0, skipped: 0, failures: [OperationFailure(
-                url: url, reason: error.localizedDescription)], wasCancelled: false)
+            return OperationResult(
+                succeeded: 0, skipped: 0,
+                failures: [
+                    OperationFailure(
+                        url: url, reason: error.localizedDescription)
+                ], wasCancelled: false)
         }
     }
 
     /// Compress into the destination directory. One archive from N inputs, so
     /// there is no per-item progress to report — the job is atomic.
-    private func createArchive(_ operation: FileOperation,
-                               named name: String) async -> OperationResult {
+    private func createArchive(
+        _ operation: FileOperation,
+        named name: String
+    ) async -> OperationResult {
         guard let directory = operation.destinationDirectory, !operation.sources.isEmpty else {
             return OperationResult(succeeded: 0, skipped: 0, failures: [], wasCancelled: false)
         }
         let destination = directory.appendingPathComponent(name)
         guard !mutator.fileExists(destination) else {
-            return OperationResult(succeeded: 0, skipped: 0, failures: [OperationFailure(
-                url: destination, reason: "A file named “\(name)” already exists.")],
+            return OperationResult(
+                succeeded: 0, skipped: 0,
+                failures: [
+                    OperationFailure(
+                        url: destination, reason: "A file named “\(name)” already exists.")
+                ],
                 wasCancelled: false)
         }
 
@@ -389,13 +438,19 @@ final class FileOperationEngine {
             undoStack.push(.forArchive(created: [created], sources: sources, name: name))
             return OperationResult(succeeded: 1, skipped: 0, failures: [], wasCancelled: false)
         case .failure(let error):
-            return OperationResult(succeeded: 0, skipped: 0, failures: [OperationFailure(
-                url: destination, reason: error.localizedDescription)], wasCancelled: false)
+            return OperationResult(
+                succeeded: 0, skipped: 0,
+                failures: [
+                    OperationFailure(
+                        url: destination, reason: error.localizedDescription)
+                ], wasCancelled: false)
         }
     }
 
-    private func extractArchives(_ operation: FileOperation,
-                                 progress: OperationProgress) async -> OperationResult {
+    private func extractArchives(
+        _ operation: FileOperation,
+        progress: OperationProgress
+    ) async -> OperationResult {
         guard let directory = operation.destinationDirectory else {
             return OperationResult(succeeded: 0, skipped: 0, failures: [], wasCancelled: false)
         }
@@ -420,15 +475,20 @@ final class FileOperationEngine {
         // Only what actually landed — an extract that half-failed is still
         // wholly undoable for the half that worked.
         if !created.isEmpty {
-            undoStack.push(.forExtract(created: created, archives: operation.sources,
-                                       into: directory))
+            undoStack.push(
+                .forExtract(
+                    created: created, archives: operation.sources,
+                    into: directory))
         }
-        return OperationResult(succeeded: created.count, skipped: 0,
-                               failures: failures, wasCancelled: progress.isCancelled)
+        return OperationResult(
+            succeeded: created.count, skipped: 0,
+            failures: failures, wasCancelled: progress.isCancelled)
     }
 
-    private func trashItems(_ operation: FileOperation,
-                            progress: OperationProgress) async -> OperationResult {
+    private func trashItems(
+        _ operation: FileOperation,
+        progress: OperationProgress
+    ) async -> OperationResult {
         var items: [TrashedItem] = []
         var failures: [OperationFailure] = []
 
@@ -445,7 +505,8 @@ final class FileOperationEngine {
         }
 
         if !items.isEmpty { undoStack.push(.forTrash(items: items)) }
-        return OperationResult(succeeded: items.count, skipped: 0,
-                               failures: failures, wasCancelled: progress.isCancelled)
+        return OperationResult(
+            succeeded: items.count, skipped: 0,
+            failures: failures, wasCancelled: progress.isCancelled)
     }
 }

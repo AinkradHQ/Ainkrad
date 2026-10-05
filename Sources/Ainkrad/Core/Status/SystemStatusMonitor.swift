@@ -1,6 +1,6 @@
 import Foundation
-import Network
 import IOKit.ps
+import Network
 import Observation
 
 /// System-side effects backing the full-screen status bar (AIN-109): the
@@ -70,20 +70,23 @@ final class SystemStatusMonitor {
     /// description is missing the fields needed to compute a percent.
     private static func readBattery() -> BatteryInfo? {
         guard let snapshot = IOPSCopyPowerSourcesInfo()?.takeRetainedValue(),
-              let sourcesRef = IOPSCopyPowerSourcesList(snapshot)?.takeRetainedValue() else {
+            let sourcesRef = IOPSCopyPowerSourcesList(snapshot)?.takeRetainedValue()
+        else {
             return nil
         }
         let sources = sourcesRef as [CFTypeRef]
 
         for source in sources {
             guard let descriptionRef = IOPSGetPowerSourceDescription(snapshot, source),
-                  let description = descriptionRef.takeUnretainedValue() as? [String: AnyObject] else {
+                let description = descriptionRef.takeUnretainedValue() as? [String: AnyObject]
+            else {
                 continue
             }
             guard description[kIOPSTypeKey] as? String == kIOPSInternalBatteryType else { continue }
             guard let currentCapacity = description[kIOPSCurrentCapacityKey] as? Int,
-                  let maxCapacity = description[kIOPSMaxCapacityKey] as? Int,
-                  maxCapacity > 0 else { continue }
+                let maxCapacity = description[kIOPSMaxCapacityKey] as? Int,
+                maxCapacity > 0
+            else { continue }
 
             let percent = Int((Double(currentCapacity) / Double(maxCapacity) * 100).rounded())
             let isCharging = description[kIOPSIsChargingKey] as? Bool ?? false
@@ -93,8 +96,8 @@ final class SystemStatusMonitor {
     }
 }
 
-private extension NetworkStatus {
-    static func resolve(from path: NWPath) -> NetworkStatus {
+extension NetworkStatus {
+    fileprivate static func resolve(from path: NWPath) -> NetworkStatus {
         guard path.status == .satisfied else { return .offline }
         if path.usesInterfaceType(.wifi) { return .wifi }
         if path.usesInterfaceType(.wiredEthernet) { return .ethernet }

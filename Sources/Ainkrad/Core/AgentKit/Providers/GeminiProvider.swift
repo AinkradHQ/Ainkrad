@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/Providers/GeminiProvider.swift
 import Foundation
-import AinkradHostRuntime
 
 /// `LLMProvider` conformer for Google's native Gemini API
 /// (`POST {baseURL}/models/{model}:streamGenerateContent?alt=sse`). Gemini has
@@ -22,19 +22,22 @@ struct GeminiProvider: LLMProvider {
         model: AgentModelConfig,
         credential: ProviderCredential
     ) -> AsyncThrowingStream<AgentEvent, Error> {
-        let apiKey: String = { if case let .apiKey(k) = credential { return k } else { return "" } }()
+        let apiKey: String = { if case .apiKey(let k) = credential { return k } else { return "" } }()
         return AsyncThrowingStream { continuation in
             let task = Task {
                 do {
-                    let request = try Self.makeRequest(baseURL: baseURL, messages: messages, system: system,
-                                                   tools: tools, model: model, apiKey: apiKey)
+                    let request = try Self.makeRequest(
+                        baseURL: baseURL, messages: messages, system: system,
+                        tools: tools, model: model, apiKey: apiKey)
                     let bytes = try await http.post(request)
                     var finishReason: String?
                     var latestUsage: TokenUsage?
 
                     for try await payload in SSEParser.events(from: bytes) {
                         guard let data = payload.data(using: .utf8) else { continue }
-                        guard let chunk = try? JSONDecoder().decode(GenerateContentChunk.self, from: data) else { continue }
+                        guard let chunk = try? JSONDecoder().decode(GenerateContentChunk.self, from: data) else {
+                            continue
+                        }
 
                         if let message = chunk.error?.message {
                             continuation.yield(.failed(message))
@@ -84,9 +87,13 @@ struct GeminiProvider: LLMProvider {
     /// The `GenerateContentChunk` Decodable has no usage field, so this reads the raw JSON.
     nonisolated static func usage(from json: JSONValue) -> TokenUsage? {
         guard let meta = json["usageMetadata"] else { return nil }
-        func int(_ k: String) -> Int { if case .number(let n)? = meta[k] { return Int(n) }; return 0 }
-        return TokenUsage(input: int("promptTokenCount"), output: int("candidatesTokenCount"),
-                          cacheRead: int("cachedContentTokenCount"), cacheWrite: 0)
+        func int(_ k: String) -> Int {
+            if case .number(let n)? = meta[k] { return Int(n) }
+            return 0
+        }
+        return TokenUsage(
+            input: int("promptTokenCount"), output: int("candidatesTokenCount"),
+            cacheRead: int("cachedContentTokenCount"), cacheWrite: 0)
     }
 
     // MARK: - Request building
@@ -109,9 +116,16 @@ struct GeminiProvider: LLMProvider {
             "contents": messages.map(wireContent),
         ]
         if !tools.isEmpty {
-            body["tools"] = [["function_declarations": tools.map {
-                ["name": $0.name, "description": $0.description, "parameters": $0.parameters.toFoundationObject()]
-            }]]
+            body["tools"] = [
+                [
+                    "function_declarations": tools.map {
+                        [
+                            "name": $0.name, "description": $0.description,
+                            "parameters": $0.parameters.toFoundationObject(),
+                        ]
+                    }
+                ]
+            ]
         }
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
         return request
@@ -158,8 +172,9 @@ struct GeminiProvider: LLMProvider {
 
     private static func errorMessage(fromResponseBody body: String) -> String {
         if let data = body.data(using: .utf8),
-           let chunk = try? JSONDecoder().decode(GenerateContentChunk.self, from: data),
-           let message = chunk.error?.message {
+            let chunk = try? JSONDecoder().decode(GenerateContentChunk.self, from: data),
+            let message = chunk.error?.message
+        {
             return message
         }
         return "Gemini API request failed"
@@ -171,7 +186,10 @@ struct GeminiProvider: LLMProvider {
         struct Candidate: Decodable {
             struct Content: Decodable {
                 struct Part: Decodable {
-                    struct FunctionCall: Decodable { let name: String; let args: AnyJSON? }
+                    struct FunctionCall: Decodable {
+                        let name: String
+                        let args: AnyJSON?
+                    }
                     let text: String?
                     let functionCall: FunctionCall?
                 }

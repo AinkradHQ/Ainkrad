@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradSignal
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("SignalPreferences")
@@ -54,10 +55,10 @@ struct SignalPreferencesTests {
         // were not, every user who changed a notification setting in M1 would
         // silently lose all of them on upgrade.
         let legacy = """
-        {"rules":{"mutedSources":[],"sourceOverrides":[],"sourceKindOverrides":[],
-        "suppressBannerForHostRuns":true},
-        "retention":{"maxAgeDays":7,"maxEvents":500}}
-        """
+            {"rules":{"mutedSources":[],"sourceOverrides":[],"sourceKindOverrides":[],
+            "suppressBannerForHostRuns":true},
+            "retention":{"maxAgeDays":7,"maxEvents":500}}
+            """
         try Data(legacy.utf8).write(to: url)
 
         let loaded = SignalPreferencesStore(url: url).load()
@@ -80,22 +81,26 @@ struct SignalPreferencesMigrationTests {
     /// than hand-written, because `sourceOverrides` is keyed by a non-String
     /// enum and encodes as a flat ARRAY: a hand-written fixture guessed that
     /// wrong once already and tested nothing.
-    private func legacyFile(without keys: [String],
-                            fromRules: Bool = false) throws -> URL {
+    private func legacyFile(
+        without keys: [String],
+        fromRules: Bool = false
+    ) throws -> URL {
         let encoded = try JSONEncoder().encode(SignalPreferences())
         var object = try #require(
             try JSONSerialization.jsonObject(with: encoded) as? [String: Any])
         if fromRules {
             var rules = try #require(object["rules"] as? [String: Any])
             for key in keys {
-                #expect(rules.removeValue(forKey: key) != nil,
-                        "\(key) must exist today, or this test proves nothing")
+                #expect(
+                    rules.removeValue(forKey: key) != nil,
+                    "\(key) must exist today, or this test proves nothing")
             }
             object["rules"] = rules
         } else {
             for key in keys {
-                #expect(object.removeValue(forKey: key) != nil,
-                        "\(key) must exist today, or this test proves nothing")
+                #expect(
+                    object.removeValue(forKey: key) != nil,
+                    "\(key) must exist today, or this test proves nothing")
             }
         }
         let target = url()

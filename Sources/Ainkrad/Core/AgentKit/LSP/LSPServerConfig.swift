@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/LSP/LSPServerConfig.swift
 import Foundation
-import AinkradHostRuntime
 
 /// One configured language server: the language it serves, the command/args to launch it
 /// (found either via PATH autodetection or hand-entered by the user), and the file globs
@@ -13,8 +13,10 @@ struct LSPServerConfig: Codable, Equatable, Identifiable {
     var fileGlobs: [String]
     var enabled: Bool
 
-    init(id: String, command: String, args: [String] = [], fileGlobs: [String] = [],
-         enabled: Bool = true) {
+    init(
+        id: String, command: String, args: [String] = [], fileGlobs: [String] = [],
+        enabled: Bool = true
+    ) {
         self.id = id
         self.command = command
         self.args = args

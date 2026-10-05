@@ -29,8 +29,10 @@ final class BackgroundRunRunner: AgentRunRunner {
         self.makeSession = makeSession
     }
 
-    func execute(prompt: String, posture: SavedExecutionPosture?,
-                 appendLog: @escaping (String) -> Void) async -> AgentRunOutcome {
+    func execute(
+        prompt: String, posture: SavedExecutionPosture?,
+        appendLog: @escaping (String) -> Void
+    ) async -> AgentRunOutcome {
         let session = makeSession(posture)
         session.send(prompt)
         await session.currentTask?.value

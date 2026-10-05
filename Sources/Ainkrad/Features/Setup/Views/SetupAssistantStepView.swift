@@ -1,13 +1,15 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Applies the Sage step. `AgentStore.setActive` is a no-op unless the id is
 /// already in `agents`, so a custom profile must be added before it is activated.
 @MainActor
 enum SetupAssistant {
-    static func apply(profile: AgentProfile, model: String, effort: String,
-                      agents: AgentStore, config: AgentConfigStore) {
+    static func apply(
+        profile: AgentProfile, model: String, effort: String,
+        agents: AgentStore, config: AgentConfigStore
+    ) {
         let resolved: AgentProfile
         if profile.builtin {
             resolved = profile
@@ -35,7 +37,8 @@ enum SetupAssistant {
     /// to key off (a fresh install with nothing configured yet). Static
     /// `curatedModels` data — no live network call.
     static func defaultModel(connections: [Connection], activeConnectionID: UUID?) -> String {
-        let connection = activeConnectionID.flatMap { id in connections.first { $0.id == id } }
+        let connection =
+            activeConnectionID.flatMap { id in connections.first { $0.id == id } }
             ?? connections.first
         guard let connection else { return AgentConfigDocument().model }
         return ProviderPreset.preset(id: connection.presetID).curatedModels.first
@@ -74,11 +77,13 @@ struct SetupAssistantStepView: View {
     /// view state, so the view is what turns it into the dictionary's
     /// `"isCustom"` entry — the validator stays pure.
     private var unmet: [SetupValidation.Requirement] {
-        SetupValidation.unmet(for: .assistant, values: [
-            "isCustom": isCustom ? "true" : "false",
-            "personaName": customName,
-            "personaInstructions": customInstructions,
-        ])
+        SetupValidation.unmet(
+            for: .assistant,
+            values: [
+                "isCustom": isCustom ? "true" : "false",
+                "personaName": customName,
+                "personaInstructions": customInstructions,
+            ])
     }
 
     /// Same rule as the You step's: the warning appears once the user has typed
@@ -128,8 +133,10 @@ struct SetupAssistantStepView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            SetupStepFooter(coordinator: coordinator,
-                            isPrimaryDisabled: !unmet.isEmpty) {
+            SetupStepFooter(
+                coordinator: coordinator,
+                isPrimaryDisabled: !unmet.isEmpty
+            ) {
                 commit()
                 coordinator.advance()
             }
@@ -152,23 +159,27 @@ struct SetupAssistantStepView: View {
     /// that silently does nothing for OpenAI/Ollama/Groq/etc.
     private var activeConnectionIsClaude: Bool {
         let connections = environment.connectionStore.connections
-        let active = environment.agentConfigStore.activeConnectionID.flatMap { id in
-            connections.first { $0.id == id }
-        } ?? connections.first
+        let active =
+            environment.agentConfigStore.activeConnectionID.flatMap { id in
+                connections.first { $0.id == id }
+            } ?? connections.first
         return active?.kind == .claude
     }
 
     private func intro(tokens: DesignTokens) -> some View {
-        Text("Ainkrad ships with two agents, Plan and Build. Confirm which one starts "
-             + "active — or write your own persona instead. You can add and edit more "
-             + "agents later.")
-            .font(AinkradFont.display(12))
-            .foregroundStyle(tokens.foreground.opacity(0.6))
-            .fixedSize(horizontal: false, vertical: true)
-            // Prose is capped even though the column fills, so the agent rows
-            // below can use the room without the intro running with them.
-            .frame(maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth),
-                   alignment: .leading)
+        Text(
+            "Ainkrad ships with two agents, Plan and Build. Confirm which one starts "
+                + "active — or write your own persona instead. You can add and edit more "
+                + "agents later."
+        )
+        .font(AinkradFont.display(12))
+        .foregroundStyle(tokens.foreground.opacity(0.6))
+        .fixedSize(horizontal: false, vertical: true)
+        // Prose is capped even though the column fills, so the agent rows
+        // below can use the room without the intro running with them.
+        .frame(
+            maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth),
+            alignment: .leading)
     }
 
     private func builtins(tokens: DesignTokens) -> some View {
@@ -210,8 +221,9 @@ struct SetupAssistantStepView: View {
             }
             .padding(12)
             .background(ChamferShape(cut: AinkradRadius.md).fill(tokens.surfaceElevated.opacity(0.5)))
-            .overlay(ChamferShape(cut: AinkradRadius.md)
-                .strokeBorder(isSelected ? tokens.accentSecondary.opacity(0.5) : Color.clear, lineWidth: 1))
+            .overlay(
+                ChamferShape(cut: AinkradRadius.md)
+                    .strokeBorder(isSelected ? tokens.accentSecondary.opacity(0.5) : Color.clear, lineWidth: 1))
         }
         .buttonStyle(.plain)
     }
@@ -283,7 +295,8 @@ struct SetupAssistantStepView: View {
                         AinkradSegmentedPicker(
                             items: Self.efforts,
                             selection: $effort,
-                            label: { $0.capitalized })
+                            label: { $0.capitalized }
+                        )
                         .fixedSize()
                     }
                 }
@@ -307,7 +320,8 @@ struct SetupAssistantStepView: View {
         } else {
             profile = selection
         }
-        SetupAssistant.apply(profile: profile, model: model, effort: effort,
-                             agents: environment.agentStore, config: environment.agentConfigStore)
+        SetupAssistant.apply(
+            profile: profile, model: model, effort: effort,
+            agents: environment.agentStore, config: environment.agentConfigStore)
     }
 }

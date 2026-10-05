@@ -8,14 +8,17 @@
 // connectivity-shaped (e.g. auth errors), must pass through unchanged.
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("AgentSession.actionableFailureMessage")
 struct AgentSessionActionableFailureMessageTests {
-    private let connection = Connection(id: UUID(), presetID: "ollama", kind: .openAICompatible,
-                                        displayName: "Ollama", baseURL: "http://localhost:11434", createdAt: Date())
-    private let remote = Connection(id: UUID(), presetID: "claude", kind: .claude,
-                                    displayName: "Claude", baseURL: "https://api.anthropic.com/v1", createdAt: Date())
+    private let connection = Connection(
+        id: UUID(), presetID: "ollama", kind: .openAICompatible,
+        displayName: "Ollama", baseURL: "http://localhost:11434", createdAt: Date())
+    private let remote = Connection(
+        id: UUID(), presetID: "claude", kind: .claude,
+        displayName: "Claude", baseURL: "https://api.anthropic.com/v1", createdAt: Date())
 
     @Test func localConnectionFailureYieldsActionableMessage() {
         let message = AgentSession.actionableFailureMessage(

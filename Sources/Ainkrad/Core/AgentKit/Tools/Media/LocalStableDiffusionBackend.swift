@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Keyless image-generation backend for a locally-run, Automatic1111-compatible
 /// Stable Diffusion server (also ComfyUI via the A1111 API shim). No key, no

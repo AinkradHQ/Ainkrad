@@ -1,15 +1,17 @@
+import AinkradHostRuntime
 // Tests/AinkradTests/CommandRegistryTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("CommandRegistry")
 @MainActor
 struct CommandRegistryTests {
     @Test func parsesKnownCommand() {
         let reg = CommandRegistry(builtins: [
-            SlashCommand(name: "model", summary: "", usage: "/model <id>") { _, _ in .handled(note: nil) }])
+            SlashCommand(name: "model", summary: "", usage: "/model <id>") { _, _ in .handled(note: nil) }
+        ])
         let parsed = reg.parse("/model gpt-5")
         #expect(parsed?.command.name == "model")
         #expect(parsed?.args == "gpt-5")
@@ -17,7 +19,10 @@ struct CommandRegistryTests {
 
     @Test func plainTextIsNotACommand() {
         let reg = CommandRegistry(builtins: [])
-        if case .notACommand = reg.run("hello there", on: TestSessionFactory.make()) {} else { Issue.record("expected notACommand") }
+        if case .notACommand = reg.run("hello there", on: TestSessionFactory.make()) {
+        } else {
+            Issue.record("expected notACommand")
+        }
     }
 
     @Test func skillCommandsCanBeRegistered() {
@@ -33,7 +38,8 @@ struct CommandRegistryTests {
 
     @Test func argsAreEmptyWhenNoneGiven() {
         let reg = CommandRegistry(builtins: [
-            SlashCommand(name: "usage", summary: "", usage: "/usage") { args, _ in .handled(note: args) }])
+            SlashCommand(name: "usage", summary: "", usage: "/usage") { args, _ in .handled(note: args) }
+        ])
         #expect(reg.run("/usage", on: TestSessionFactory.make()) == .handled(note: ""))
     }
 
@@ -53,40 +59,56 @@ struct CommandRegistryTests {
     @Test func modelBuiltinPinsViaRuntime() {
         let persistence = InMemoryPersistenceStore()
         let runtime = RuntimeOptionsStore(persistence: persistence)
-        let reg = CommandRegistry(builtins: BuiltinCommands.make(runtime: runtime, usage: nil, router: nil, catalog: nil))
+        let reg = CommandRegistry(
+            builtins: BuiltinCommands.make(runtime: runtime, usage: nil, router: nil, catalog: nil))
         let result = reg.run("/model gpt-5", on: TestSessionFactory.make())
         #expect(runtime.options.pinnedModel == "gpt-5")
-        if case .handled(let note) = result { #expect(note?.contains("gpt-5") == true) } else { Issue.record("expected handled") }
+        if case .handled(let note) = result {
+            #expect(note?.contains("gpt-5") == true)
+        } else {
+            Issue.record("expected handled")
+        }
     }
 
     @Test func usageModelAutoClearsPin() {
         let persistence = InMemoryPersistenceStore()
         let runtime = RuntimeOptionsStore(persistence: persistence)
-        let reg = CommandRegistry(builtins: BuiltinCommands.make(runtime: runtime, usage: nil, router: nil, catalog: nil))
+        let reg = CommandRegistry(
+            builtins: BuiltinCommands.make(runtime: runtime, usage: nil, router: nil, catalog: nil))
 
         let pinResult = reg.run("/model gpt-5", on: TestSessionFactory.make())
         #expect(runtime.options.pinnedModel == "gpt-5")
-        if case .handled(let note) = pinResult { #expect(note?.contains("gpt-5") == true) } else { Issue.record("expected handled") }
+        if case .handled(let note) = pinResult {
+            #expect(note?.contains("gpt-5") == true)
+        } else {
+            Issue.record("expected handled")
+        }
 
         let autoResult = reg.run("/model auto", on: TestSessionFactory.make())
         #expect(runtime.options.pinnedModel == nil)
-        if case .handled(let note) = autoResult { #expect(note?.contains("Auto") == true) } else { Issue.record("expected handled") }
+        if case .handled(let note) = autoResult {
+            #expect(note?.contains("Auto") == true)
+        } else {
+            Issue.record("expected handled")
+        }
     }
 
     @Test func thinkBuiltinRejectsUnknownLevels() {
         let persistence = InMemoryPersistenceStore()
         let runtime = RuntimeOptionsStore(persistence: persistence)
-        let reg = CommandRegistry(builtins: BuiltinCommands.make(runtime: runtime, usage: nil, router: nil, catalog: nil))
+        let reg = CommandRegistry(
+            builtins: BuiltinCommands.make(runtime: runtime, usage: nil, router: nil, catalog: nil))
         let result = reg.run("/think ludicrous", on: TestSessionFactory.make())
         #expect(result == .handled(note: "Usage: /think <low|medium|high|max>"))
-        #expect(runtime.options.thinkLevel == "medium")   // unchanged
+        #expect(runtime.options.thinkLevel == "medium")  // unchanged
     }
 
     @Test func thinkBuiltinNoticesWhenModelLacksReasoningEffort() {
         let persistence = InMemoryPersistenceStore()
         let runtime = RuntimeOptionsStore(persistence: persistence)
         let catalog = ModelCatalog()
-        let reg = CommandRegistry(builtins: BuiltinCommands.make(runtime: runtime, usage: nil, router: nil, catalog: catalog))
+        let reg = CommandRegistry(
+            builtins: BuiltinCommands.make(runtime: runtime, usage: nil, router: nil, catalog: catalog))
         // TestSessionFactory.make() defaults to the "claude" preset/config default
         // model, "claude-opus-4-8", which DOES support reasoningEffort — use a
         // session whose config model is one the catalog marks as NOT supporting it
@@ -96,13 +118,16 @@ struct CommandRegistryTests {
         #expect(runtime.options.thinkLevel == "max")
         if case .handled(let note) = result {
             #expect(note?.contains("no effect") == true)
-        } else { Issue.record("expected handled") }
+        } else {
+            Issue.record("expected handled")
+        }
     }
 
     @Test func verboseAndTraceBuiltinsToggleRuntime() {
         let persistence = InMemoryPersistenceStore()
         let runtime = RuntimeOptionsStore(persistence: persistence)
-        let reg = CommandRegistry(builtins: BuiltinCommands.make(runtime: runtime, usage: nil, router: nil, catalog: nil))
+        let reg = CommandRegistry(
+            builtins: BuiltinCommands.make(runtime: runtime, usage: nil, router: nil, catalog: nil))
         _ = reg.run("/verbose on", on: TestSessionFactory.make())
         #expect(runtime.options.verbose)
         _ = reg.run("/trace on", on: TestSessionFactory.make())
@@ -115,7 +140,8 @@ struct CommandRegistryTests {
         let persistence = InMemoryPersistenceStore()
         let runtime = RuntimeOptionsStore(persistence: persistence)
         runtime.pinModel("gpt-5")
-        let reg = CommandRegistry(builtins: BuiltinCommands.make(runtime: runtime, usage: nil, router: nil, catalog: nil))
+        let reg = CommandRegistry(
+            builtins: BuiltinCommands.make(runtime: runtime, usage: nil, router: nil, catalog: nil))
         let session = TestSessionFactory.make()
         _ = reg.run("/new", on: session)
         #expect(session.messages.isEmpty)
@@ -132,7 +158,10 @@ struct CommandRegistryTests {
         usage.record(model: "unknown-xyz", usage: TokenUsage(input: 500, output: 500), baselineModel: nil)
         let reg = CommandRegistry(builtins: BuiltinCommands.make(runtime: nil, usage: usage, router: nil, catalog: nil))
         let result = reg.run("/usage", on: TestSessionFactory.make())
-        guard case .handled(let note) = result, let note else { Issue.record("expected handled note"); return }
+        guard case .handled(let note) = result, let note else {
+            Issue.record("expected handled note")
+            return
+        }
         #expect(note.contains("cost unknown"))
         #expect(!note.contains("$0.0000"))
         #expect(!note.contains("$0.00 "))
@@ -143,7 +172,10 @@ struct CommandRegistryTests {
         usage.record(model: "gpt-5-mini", usage: TokenUsage(input: 1_000_000, output: 1_000_000), baselineModel: nil)
         let reg = CommandRegistry(builtins: BuiltinCommands.make(runtime: nil, usage: usage, router: nil, catalog: nil))
         let result = reg.run("/usage", on: TestSessionFactory.make())
-        guard case .handled(let note) = result, let note else { Issue.record("expected handled note"); return }
+        guard case .handled(let note) = result, let note else {
+            Issue.record("expected handled note")
+            return
+        }
         #expect(note.contains("$"))
         #expect(!note.contains("cost unknown"))
     }

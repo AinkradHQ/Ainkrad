@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradSignal
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @MainActor
@@ -51,7 +52,8 @@ struct SourceStatusLineTests {
         rules.interruptFloor[raven] = .failure
         rules.soundOverride[raven] = .silent
         rules.urgentBypass.insert(raven)
-        #expect(SourceStatusLine.text(rules: rules, source: raven)
+        #expect(
+            SourceStatusLine.text(rules: rules, source: raven)
                 == "1 kind quiet · failures only · silent · urgent bypasses Focus")
     }
 
@@ -71,7 +73,8 @@ struct SourceStatusLineTests {
         #expect(SourceStatusLine.text(rules: .default, source: raven, loudest: quiet) == nil)
 
         let loud = activity("build.failed", 19)
-        #expect(SourceStatusLine.text(rules: .default, source: raven, loudest: loud)
+        #expect(
+            SourceStatusLine.text(rules: .default, source: raven, loudest: loud)
                 == "loudest build.failed ×19")
     }
 
@@ -138,15 +141,18 @@ struct SignalVocabularyTests {
 
     @Test("the row menu speaks the same three words")
     func rowMenuVocabulary() {
-        let event = SignalEvent(timestamp: Date(timeIntervalSince1970: 0), source: raven,
-                                kind: "build.failed", severity: .failure,
-                                title: "Build failed", body: nil)
+        let event = SignalEvent(
+            timestamp: Date(timeIntervalSince1970: 0), source: raven,
+            kind: "build.failed", severity: .failure,
+            title: "Build failed", body: nil)
         func titles(_ rules: RoutingRules) -> [String] {
-            SignalRowMenu.items(for: event, rules: rules, sourceName: "Raven",
-                                isRead: false, isPinned: false,
-                                onMuteKind: {}, onUnmuteKind: {}, onMuteSource: {},
-                                onToggleRead: {}, onCopy: {}, onDismiss: {},
-                                onTogglePin: {}).map(\.title)
+            SignalRowMenu.items(
+                for: event, rules: rules, sourceName: "Raven",
+                isRead: false, isPinned: false,
+                onMuteKind: {}, onUnmuteKind: {}, onMuteSource: {},
+                onToggleRead: {}, onCopy: {}, onDismiss: {},
+                onTogglePin: {}
+            ).map(\.title)
         }
         #expect(titles(.default).contains("Quiet Raven › build.failed"))
         #expect(titles(.default).contains("Turn off everything from Raven"))
@@ -161,14 +167,16 @@ struct SignalVocabularyTests {
         // The feature used to carry seven: mute, unmute, muted, silence, off,
         // feed only, turn back on. A regression here is a user reading two
         // words for one state and assuming they are two states.
-        let event = SignalEvent(timestamp: Date(timeIntervalSince1970: 0), source: raven,
-                                kind: "build.failed", severity: .failure,
-                                title: "Build failed", body: nil)
+        let event = SignalEvent(
+            timestamp: Date(timeIntervalSince1970: 0), source: raven,
+            kind: "build.failed", severity: .failure,
+            title: "Build failed", body: nil)
         let titles = SignalRowMenu.items(
             for: event, rules: .default, sourceName: "Raven",
             isRead: false, isPinned: false,
             onMuteKind: {}, onUnmuteKind: {}, onMuteSource: {},
-            onToggleRead: {}, onCopy: {}, onDismiss: {}, onTogglePin: {}).map(\.title)
+            onToggleRead: {}, onCopy: {}, onDismiss: {}, onTogglePin: {}
+        ).map(\.title)
         #expect(!titles.contains { $0.lowercased().contains("mute") })
         #expect(!titles.contains { $0.lowercased().contains("silence") })
     }
@@ -182,7 +190,8 @@ struct SignalSnoozeTests {
         // The dropdown offered one hour, Settings offered two choices and the
         // overlay offered none. Same action, three surfaces, three answers.
         #expect(SignalSnooze.allCases.count == 2)
-        #expect(SignalSnooze.allCases.map(\.label)
+        #expect(
+            SignalSnooze.allCases.map(\.label)
                 == ["Quiet for an hour", "Quiet until tomorrow"])
     }
 
@@ -196,8 +205,9 @@ struct SignalSnoozeTests {
     func tomorrowMorning() {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "UTC")!
-        let now = calendar.date(from: DateComponents(
-            timeZone: TimeZone(identifier: "UTC"), year: 2026, month: 9, day: 3, hour: 23))!
+        let now = calendar.date(
+            from: DateComponents(
+                timeZone: TimeZone(identifier: "UTC"), year: 2026, month: 9, day: 3, hour: 23))!
 
         let resume = SignalSnooze.tomorrow.until(after: now, calendar: calendar)
 
@@ -220,8 +230,9 @@ struct SignalSnoozeTests {
     @Test("lifting a snooze leaves the schedule alone")
     func liftKeepsSchedule() {
         // A user ending an ad-hoc quiet spell has not asked to be woken at 3am.
-        var suppression = SuppressionWindow(quietStartMinute: 22 * 60,
-                                            quietEndMinute: 7 * 60)
+        var suppression = SuppressionWindow(
+            quietStartMinute: 22 * 60,
+            quietEndMinute: 7 * 60)
         SignalSnooze.tomorrow.apply(to: &suppression, at: Date())
         SignalSnooze.lift(&suppression)
         #expect(suppression.snoozedUntil == nil)
@@ -283,9 +294,11 @@ struct SignalFeedOverlaySizingTests {
         // than revealed, however much screen was going spare.
         let small = CGSize(width: 1280, height: 800)
         let large = CGSize(width: 2560, height: 1440)
-        #expect(SignalFeedOverlayView.height(in: large)
+        #expect(
+            SignalFeedOverlayView.height(in: large)
                 > SignalFeedOverlayView.height(in: small))
-        #expect(SignalFeedOverlayView.width(in: large)
+        #expect(
+            SignalFeedOverlayView.width(in: large)
                 > SignalFeedOverlayView.width(in: small))
     }
 

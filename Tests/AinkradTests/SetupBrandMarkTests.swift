@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import Testing
+
 @testable import Ainkrad
 
 /// The mark's silhouette, pinned against the measurements taken from the source
@@ -36,10 +37,12 @@ struct SetupBrandMarkTests {
         for v in stride(from: 0.2, through: 0.9, by: 0.1) {
             // The straight edge is at u = 0.5 - 0.5v on the left.
             let edge = (0.5 - 0.5 * v) * 100
-            #expect(chevron().contains(CGPoint(x: edge + 2.5, y: v * 100)),
-                    "the left edge should be solid just inside u=\(edge) at v=\(v)")
-            #expect(!chevron().contains(CGPoint(x: edge - 2.5, y: v * 100)),
-                    "…and empty just outside it")
+            #expect(
+                chevron().contains(CGPoint(x: edge + 2.5, y: v * 100)),
+                "the left edge should be solid just inside u=\(edge) at v=\(v)")
+            #expect(
+                !chevron().contains(CGPoint(x: edge - 2.5, y: v * 100)),
+                "…and empty just outside it")
         }
     }
 
@@ -143,7 +146,8 @@ struct SetupBrandMarkTests {
     // far, without anything ever crossing the logo.
     @Test func depthVariesAcrossEachSparksOwnOrbit() {
         for (index, spark) in SetupOrbitField.sparks.enumerated() {
-            var lowest = 1.0, highest = 0.0
+            var lowest = 1.0
+            var highest = 0.0
             for step in 0..<400 {
                 let (_, depth) = SetupOrbitField.position(spark, at: Double(step) * 0.4, in: 236)
                 lowest = min(lowest, depth)
@@ -168,8 +172,9 @@ struct SetupBrandMarkTests {
         // closer makes a link fainter.
         var previous = 1.0
         for step in 1...40 {
-            let strength = SetupOrbitField.linkStrength(distance: limit * CGFloat(step) / 40,
-                                                        width: width)
+            let strength = SetupOrbitField.linkStrength(
+                distance: limit * CGFloat(step) / 40,
+                width: width)
             #expect(strength <= previous)
             previous = strength
         }
@@ -200,8 +205,9 @@ struct SetupBrandMarkTests {
             var gap = CGFloat.greatestFiniteMagnitude
             for i in placed.indices {
                 for j in (i + 1)..<placed.count {
-                    let distance = hypot(placed[i].0.x - placed[j].0.x,
-                                         placed[i].0.y - placed[j].0.y)
+                    let distance = hypot(
+                        placed[i].0.x - placed[j].0.x,
+                        placed[i].0.y - placed[j].0.y)
                     gap = min(gap, distance - (placed[i].1 + placed[j].1))
                 }
             }
@@ -218,8 +224,9 @@ struct SetupBrandMarkTests {
         // collapse the composition, or the value is fragile against any later
         // tuning of the orbits.
         for offset in [-0.6, -0.3, 0.3, 0.6] {
-            #expect(tightestGap(at: SetupOrbitField.stillInstant + offset) > 0,
-                    "sparks overlap \(offset)s from the chosen instant")
+            #expect(
+                tightestGap(at: SetupOrbitField.stillInstant + offset) > 0,
+                "sparks overlap \(offset)s from the chosen instant")
         }
     }
 

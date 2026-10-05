@@ -1,6 +1,6 @@
-import Foundation
 import AinkradAppKit
 import AinkradHostRuntime
+import Foundation
 
 /// `AppEnvironment.bootstrap(home:defaults:)` split into cohesive helpers
 /// (M7 finalize Wave D, D2) — this file holds the first two sequential
@@ -130,11 +130,14 @@ extension AppEnvironment {
         // Trust policy is chosen by build configuration in ONE place
         // (`PluginTrust`), so the permissive dev policy is compiled out of
         // Release entirely and no wiring mistake can ship it.
-        let loader = PluginLoader(signaturePolicy: PluginTrust.policyForCurrentBuild(), minSupportedAPIVersion: GenerationSupport.minSupported) { appID, declaredPresentation in
-            HostServicesImpl(appID: appID, dataRootURL: pluginDataRoot,
-                             secretStore: secrets, themeManager: themeManager,
-                             hub: agentContextHub, actionHub: agentActionHub, launchHub: pluginLaunchHub, signalHub: signalHub,
-                             declaredPresentation: declaredPresentation, appAppearanceStore: appAppearanceStore)
+        let loader = PluginLoader(
+            signaturePolicy: PluginTrust.policyForCurrentBuild(), minSupportedAPIVersion: GenerationSupport.minSupported
+        ) { appID, declaredPresentation in
+            HostServicesImpl(
+                appID: appID, dataRootURL: pluginDataRoot,
+                secretStore: secrets, themeManager: themeManager,
+                hub: agentContextHub, actionHub: agentActionHub, launchHub: pluginLaunchHub, signalHub: signalHub,
+                declaredPresentation: declaredPresentation, appAppearanceStore: appAppearanceStore)
         }
 
         // The app catalog is a single hosted document (the central
@@ -168,14 +171,16 @@ extension AppEnvironment {
         let skillInstaller = SkillInstaller(
             http: URLSessionHTTPClient(), paths: SkillPaths(root: skillsRoot),
             persistence: persistence)
-        let appStore = AppStoreService(catalog: catalogService, installer: installer,
-                                       mcpInstaller: mcpInstaller, persistence: persistence,
-                                       skillInstaller: skillInstaller)
+        let appStore = AppStoreService(
+            catalog: catalogService, installer: installer,
+            mcpInstaller: mcpInstaller, persistence: persistence,
+            skillInstaller: skillInstaller)
         let appStoreStore = AppStoreStore(service: appStore, registry: registry)
 
-        let appIconStore = AppIconStore(persistence: persistence,
-                                        applier: AppKitAppIconApplier(),
-                                        themeManager: themeManager)
+        let appIconStore = AppIconStore(
+            persistence: persistence,
+            applier: AppKitAppIconApplier(),
+            themeManager: themeManager)
         AinkradSignposts.end(AinkradSignposts.launch, "core-b-plugins-appstore", csp1)
         let csp2 = AinkradSignposts.begin(AinkradSignposts.launch, "core-c-settings-and-connections")
         let dsp0 = AinkradSignposts.begin(AinkradSignposts.launch, "c1-appicon-apply")
@@ -220,7 +225,8 @@ extension AppEnvironment {
             persistence, secrets, registry, themeManager, workspaceManager, pluginDirs,
             pluginDataRoot, retainedDataRoot, agentContextHub, agentActionHub, pluginLaunchHub,
             signalHub,
-            appAppearanceStore, webSearchSettingsStore, mediaSettingsStore, sessionShareStore, loader, mcpConfigStore, skillsRoot, appStore, appStoreStore, appIconStore,
+            appAppearanceStore, webSearchSettingsStore, mediaSettingsStore, sessionShareStore, loader, mcpConfigStore,
+            skillsRoot, appStore, appStoreStore, appIconStore,
             generalSettingsStore, skySettingsStore, sounds, connectionStore, discoveredModelsStore,
             assistantDocuments
         )

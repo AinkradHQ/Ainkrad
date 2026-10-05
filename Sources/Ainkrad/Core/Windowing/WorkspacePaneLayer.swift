@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// EVERY open pane in EVERY workspace, rendered exactly once, in one flat
 /// `ForEach` keyed by stable `Block` id.
@@ -162,7 +162,8 @@ enum PaneGeometryResolver {
             // swap: no resize, so no reflow lag or flash on switch. Panes resize
             // once on entering or leaving Focus, never on switch.
             let localFrame = inFocus ? fullRect : normalFrame
-            let visibleInWorkspace = inFocus
+            let visibleInWorkspace =
+                inFocus
                 ? isFocusedPane
                 : (normalFrame.width >= 1 && normalFrame.height >= 1)
 

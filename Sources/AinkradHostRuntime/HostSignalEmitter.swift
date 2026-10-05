@@ -1,6 +1,6 @@
-import Foundation
-import AinkradSignal
 import AinkradAppKit
+import AinkradSignal
+import Foundation
 
 /// A per-app emitter's view onto the host's feed.
 ///
@@ -9,9 +9,10 @@ import AinkradAppKit
 /// with the dev host, and `SignalCenter` lives in the app target.
 @MainActor
 public protocol SignalEmitting: AnyObject {
-    func record(_ appID: String, kind: String, severity: SignalSeverity, title: String,
-                body: String?, importance: SignalImportance,
-                deepLink: SignalDeepLink?, actions: [SignalAction], dedupeKey: String?)
+    func record(
+        _ appID: String, kind: String, severity: SignalSeverity, title: String,
+        body: String?, importance: SignalImportance,
+        deepLink: SignalDeepLink?, actions: [SignalAction], dedupeKey: String?)
     func events(forAppID appID: String, limit: Int) -> [SignalEvent]
 }
 
@@ -44,20 +45,25 @@ public final class SignalEmitterHub {
     /// the hub, which the plugin host services need early.
     public func attach(sink: any SignalEmitting) { self.sink = sink }
 
-    func record(_ appID: String, kind: String, severity: SignalSeverity, title: String,
-                body: String?, importance: SignalImportance,
-                deepLink: SignalDeepLink?, actions: [SignalAction], dedupeKey: String?) {
-        sink?.record(appID, kind: kind, severity: severity, title: title, body: body,
-                     importance: importance, deepLink: deepLink,
-                     actions: actions, dedupeKey: dedupeKey)
+    func record(
+        _ appID: String, kind: String, severity: SignalSeverity, title: String,
+        body: String?, importance: SignalImportance,
+        deepLink: SignalDeepLink?, actions: [SignalAction], dedupeKey: String?
+    ) {
+        sink?.record(
+            appID, kind: kind, severity: severity, title: title, body: body,
+            importance: importance, deepLink: deepLink,
+            actions: actions, dedupeKey: dedupeKey)
     }
 
     func events(forAppID appID: String, limit: Int) -> [SignalEvent] {
         sink?.events(forAppID: appID, limit: limit) ?? []
     }
 
-    func register(actionID: String, appID: String,
-                  run: @escaping @MainActor () async -> Void) -> AgentActionToken {
+    func register(
+        actionID: String, appID: String,
+        run: @escaping @MainActor () async -> Void
+    ) -> AgentActionToken {
         let token = AgentActionToken()
         handlers[HandlerKey(appID: appID, actionID: actionID)] = Handler(token: token, run: run)
         return token
@@ -88,18 +94,23 @@ public final class HostSignalEmitter: PluginSignalEmitter {
         self.hub = hub
     }
 
-    public func emit(kind: String, severity: SignalSeverity, title: String, body: String?,
-                     importance: SignalImportance, deepLink: SignalDeepLink?,
-                     actions: [SignalAction], dedupeKey: String?) {
-        hub.record(appID, kind: kind, severity: severity, title: title, body: body,
-                   importance: importance, deepLink: deepLink,
-                   actions: actions, dedupeKey: dedupeKey)
+    public func emit(
+        kind: String, severity: SignalSeverity, title: String, body: String?,
+        importance: SignalImportance, deepLink: SignalDeepLink?,
+        actions: [SignalAction], dedupeKey: String?
+    ) {
+        hub.record(
+            appID, kind: kind, severity: severity, title: title, body: body,
+            importance: importance, deepLink: deepLink,
+            actions: actions, dedupeKey: dedupeKey)
     }
 
     public func own(limit: Int) -> [SignalEvent] { hub.events(forAppID: appID, limit: limit) }
 
-    public func handleAction(_ actionID: String,
-                             _ handler: @escaping @MainActor () async -> Void) -> AgentActionToken {
+    public func handleAction(
+        _ actionID: String,
+        _ handler: @escaping @MainActor () async -> Void
+    ) -> AgentActionToken {
         hub.register(actionID: actionID, appID: appID, run: handler)
     }
 

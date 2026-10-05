@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Persisted map of a connection's LIVE-discovered model ids (from the provider's
 /// `/models` endpoint via `ModelCatalogService`), keyed by connection id. This is

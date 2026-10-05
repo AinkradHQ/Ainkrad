@@ -7,7 +7,10 @@ struct MemorySearchHit: Equatable {
     let snippet: String
 }
 
-enum MemoryIndexError: Error { case open(String), exec(String) }
+enum MemoryIndexError: Error {
+    case open(String)
+    case exec(String)
+}
 
 /// FTS5 full-text index over memory files + session summaries. Derived + rebuildable.
 final class MemoryIndex {
@@ -22,10 +25,11 @@ final class MemoryIndex {
             if db != nil { sqlite3_close(db) }
             throw MemoryIndexError.open(message)
         }
-        try exec("""
-        CREATE VIRTUAL TABLE IF NOT EXISTS memory_fts
-        USING fts5(source UNINDEXED, title, body);
-        """)
+        try exec(
+            """
+            CREATE VIRTUAL TABLE IF NOT EXISTS memory_fts
+            USING fts5(source UNINDEXED, title, body);
+            """)
     }
 
     deinit { if db != nil { sqlite3_close(db) } }
@@ -36,7 +40,9 @@ final class MemoryIndex {
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return }
         defer { sqlite3_finalize(stmt) }
-        bind(stmt, 1, source); bind(stmt, 2, title); bind(stmt, 3, body)
+        bind(stmt, 1, source)
+        bind(stmt, 2, title)
+        bind(stmt, 3, body)
         sqlite3_step(stmt)
     }
 
@@ -44,9 +50,9 @@ final class MemoryIndex {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return [] }
         let sql = """
-        SELECT source, title, snippet(memory_fts, 2, '', '', '…', 12)
-        FROM memory_fts WHERE memory_fts MATCH ? ORDER BY rank LIMIT ?;
-        """
+            SELECT source, title, snippet(memory_fts, 2, '', '', '…', 12)
+            FROM memory_fts WHERE memory_fts MATCH ? ORDER BY rank LIMIT ?;
+            """
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
         defer { sqlite3_finalize(stmt) }
@@ -55,8 +61,9 @@ final class MemoryIndex {
         sqlite3_bind_int(stmt, 2, clampedLimit)
         var hits: [MemorySearchHit] = []
         while sqlite3_step(stmt) == SQLITE_ROW {
-            hits.append(MemorySearchHit(
-                source: column(stmt, 0), title: column(stmt, 1), snippet: column(stmt, 2)))
+            hits.append(
+                MemorySearchHit(
+                    source: column(stmt, 0), title: column(stmt, 1), snippet: column(stmt, 2)))
         }
         return hits
     }
@@ -69,7 +76,8 @@ final class MemoryIndex {
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return }
         defer { sqlite3_finalize(stmt) }
-        bind(stmt, 1, source); sqlite3_step(stmt)
+        bind(stmt, 1, source)
+        sqlite3_step(stmt)
     }
 
     /// Wrap each token as a prefix query, quoting to neutralize FTS5 syntax.

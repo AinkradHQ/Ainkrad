@@ -1,8 +1,8 @@
-import SwiftUI
-import AppKit
 import AinkradAppKit
 import AinkradHostRuntime
 import AinkradSignal
+import AppKit
+import SwiftUI
 
 /// Hosts `SignalFeedIsland` as a dismissible overlay, matching the other HUD
 /// overlays (scrim tap to dismiss, fade transition, no separator chrome).
@@ -56,52 +56,54 @@ struct SignalFeedOverlayView: View {
 
     var body: some View {
         GeometryReader { proxy in
-        ZStack {
-            // The shared backdrop value, not a private 0.32: the feed sat
-            // visibly lighter than the Launcher and Settings scrims for no
-            // reason anyone recorded.
-            Color.black.opacity(OverlayChrome.backdropOpacity)
-                .ignoresSafeArea()
-                .onTapGesture(perform: onDismiss)
+            ZStack {
+                // The shared backdrop value, not a private 0.32: the feed sat
+                // visibly lighter than the Launcher and Settings scrims for no
+                // reason anyone recorded.
+                Color.black.opacity(OverlayChrome.backdropOpacity)
+                    .ignoresSafeArea()
+                    .onTapGesture(perform: onDismiss)
 
-            // The shared HUD panel finish, same as every other overlay in the
-            // app: blur backing, chamfered clip, luminous accent stroke and
-            // corner brackets. A plain rounded rectangle read as a web modal.
-            AinkradPanel(showsBrackets: true) {
-                SignalFeedIsland(
-                    events: events,
-                    unread: center.totalUnread,
-                    repeatCounts: center.repeatCounts,
-                    readIDs: center.readIDs,
-                    isDegraded: center.isDegraded,
-                    viewState: $viewState,
-                    searchText: $query,
-                    searchResultCount: searchResults?.count,
-                    onActivate: { event in center.activate(event) },
-                    onAction: { event, action in
-                        guard let hub else { return }
-                        if let needsConfirmation = SignalActionRouter(hub: hub).invoke(event, action) {
-                            pendingDestructive = (event, needsConfirmation)
-                        }
-                    },
-                    onMarkAllRead: {
-                        // Scoped to what is on screen. "Mark all read" while a
-                        // filter is up used to clear rows the user could not
-                        // see, which is unrecoverable without markUnread.
-                        center.markAllRead(filter: viewState.filter)
-                    },
-                    onConfigureSource: onConfigureSource,
-                    menuItems: { menuItems(for: $0) },
-                    pinnedIDs: center.pinnedIDs,
-                    expandedIDs: $expanded,
-                    isMuted: center.rules.suppression.isSuppressing(at: Date()),
-                    onSnooze: { $0.apply(to: &center.rules.suppression, at: Date()) },
-                    onResume: { SignalSnooze.lift(&center.rules.suppression) })
-                    .frame(width: Self.width(in: proxy.size),
-                           height: Self.height(in: proxy.size))
+                // The shared HUD panel finish, same as every other overlay in the
+                // app: blur backing, chamfered clip, luminous accent stroke and
+                // corner brackets. A plain rounded rectangle read as a web modal.
+                AinkradPanel(showsBrackets: true) {
+                    SignalFeedIsland(
+                        events: events,
+                        unread: center.totalUnread,
+                        repeatCounts: center.repeatCounts,
+                        readIDs: center.readIDs,
+                        isDegraded: center.isDegraded,
+                        viewState: $viewState,
+                        searchText: $query,
+                        searchResultCount: searchResults?.count,
+                        onActivate: { event in center.activate(event) },
+                        onAction: { event, action in
+                            guard let hub else { return }
+                            if let needsConfirmation = SignalActionRouter(hub: hub).invoke(event, action) {
+                                pendingDestructive = (event, needsConfirmation)
+                            }
+                        },
+                        onMarkAllRead: {
+                            // Scoped to what is on screen. "Mark all read" while a
+                            // filter is up used to clear rows the user could not
+                            // see, which is unrecoverable without markUnread.
+                            center.markAllRead(filter: viewState.filter)
+                        },
+                        onConfigureSource: onConfigureSource,
+                        menuItems: { menuItems(for: $0) },
+                        pinnedIDs: center.pinnedIDs,
+                        expandedIDs: $expanded,
+                        isMuted: center.rules.suppression.isSuppressing(at: Date()),
+                        onSnooze: { $0.apply(to: &center.rules.suppression, at: Date()) },
+                        onResume: { SignalSnooze.lift(&center.rules.suppression) }
+                    )
+                    .frame(
+                        width: Self.width(in: proxy.size),
+                        height: Self.height(in: proxy.size))
+                }
             }
-        }
-        .frame(width: proxy.size.width, height: proxy.size.height)
+            .frame(width: proxy.size.width, height: proxy.size.height)
         }
         .onAppear { if let stored = viewStateStore?.load() { viewState = stored } }
         .onChange(of: viewState) { _, new in viewStateStore?.save(new) }
@@ -113,8 +115,9 @@ struct SignalFeedOverlayView: View {
         }
         .confirmationDialog(
             pendingDestructive.map { "\($0.1.label)?" } ?? "",
-            isPresented: Binding(get: { pendingDestructive != nil },
-                                 set: { if !$0 { pendingDestructive = nil } }),
+            isPresented: Binding(
+                get: { pendingDestructive != nil },
+                set: { if !$0 { pendingDestructive = nil } }),
             titleVisibility: .visible
         ) {
             if let (event, action) = pendingDestructive {
@@ -139,19 +142,24 @@ struct SignalFeedOverlayView: View {
             isRead: center.readIDs.contains(event.id),
             isPinned: center.pinnedIDs.contains(event.id),
             onMuteKind: {
-                SignalDeliveryMode.feedOnly.apply(to: &center.rules,
-                                                  source: event.source, kind: event.kind)
+                SignalDeliveryMode.feedOnly.apply(
+                    to: &center.rules,
+                    source: event.source, kind: event.kind)
             },
             onUnmuteKind: {
-                SignalDeliveryMode.everything.apply(to: &center.rules,
-                                                    source: event.source, kind: event.kind)
+                SignalDeliveryMode.everything.apply(
+                    to: &center.rules,
+                    source: event.source, kind: event.kind)
             },
             onMuteSource: {
                 SignalDeliveryMode.off.apply(to: &center.rules, source: event.source)
             },
             onToggleRead: {
-                if center.readIDs.contains(event.id) { center.markUnread(ids: [event.id]) }
-                else { center.markRead(ids: [event.id]) }
+                if center.readIDs.contains(event.id) {
+                    center.markUnread(ids: [event.id])
+                } else {
+                    center.markRead(ids: [event.id])
+                }
             },
             onCopy: {
                 let text = SignalRowMenu.clipboardText(

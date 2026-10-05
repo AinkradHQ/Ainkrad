@@ -1,5 +1,5 @@
-import SwiftUI
 import CoreText
+import SwiftUI
 
 /// Registers the bundled brand fonts (Exo 2, JetBrains Mono — variable
 /// TTFs) for this process. Called once from `AinkradHostApp.init`, before any

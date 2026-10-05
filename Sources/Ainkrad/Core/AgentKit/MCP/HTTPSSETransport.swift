@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/MCP/HTTPSSETransport.swift
 import Foundation
-import AinkradHostRuntime
 
 /// Streamable-HTTP/SSE MCP transport for remote servers. HTTPS is enforced at
 /// `start()`. Auth header *values* come from config/SecretStore and are only
@@ -22,8 +22,10 @@ actor HTTPSSETransport: MCPTransport {
     // stored outside actor isolation in a lock-protected box.
     private let box = MCPContinuationBox()
 
-    init(endpoint: URL, authHeaders: [String: String],
-         http: any StreamingHTTPClient = URLSessionStreamingHTTPClient()) {
+    init(
+        endpoint: URL, authHeaders: [String: String],
+        http: any StreamingHTTPClient = URLSessionStreamingHTTPClient()
+    ) {
         self.endpoint = endpoint
         self.authHeaders = authHeaders
         self.http = http

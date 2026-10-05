@@ -1,5 +1,5 @@
-import SwiftUI
 import AinkradAppKitUI
+import SwiftUI
 
 /// The ONE declaration of the list's column geometry. The header and the rows
 /// are separate views, so without a shared source they drift — the first cut

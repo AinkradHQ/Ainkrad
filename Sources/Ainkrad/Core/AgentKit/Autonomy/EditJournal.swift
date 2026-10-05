@@ -21,8 +21,9 @@ final class EditJournal {
 
     @discardableResult
     func record(path: String, before: String, after: String, existedBefore: Bool) -> UUID {
-        let entry = EditJournalEntry(id: UUID(), path: path, before: before,
-                                     after: after, existedBefore: existedBefore, date: Date())
+        let entry = EditJournalEntry(
+            id: UUID(), path: path, before: before,
+            after: after, existedBefore: existedBefore, date: Date())
         entries.append(entry)
         return entry.id
     }

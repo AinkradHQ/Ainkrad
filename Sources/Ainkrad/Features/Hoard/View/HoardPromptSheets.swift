@@ -1,7 +1,7 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitUI
 import AinkradHostRuntime
+import SwiftUI
 
 /// Name entry for rename and new folder, plus the "only one pane open"
 /// explanation. One file because they are the same shape — a short modal with
@@ -38,14 +38,16 @@ struct HoardPromptSheet: View {
                     .onSubmit(commit)
 
             case .noDestination(let isMove):
-                Text("""
-                     Open a second Hoard pane to \(isMove ? "move" : "copy") into. \
-                     Hoard uses the workspace's own tiling for its second pane rather \
-                     than splitting inside one.
-                     """)
-                    .font(AinkradFontResolver.font(.body, typography: typo))
-                    .foregroundStyle(theme.foreground.opacity(0.7))
-                    .fixedSize(horizontal: false, vertical: true)
+                Text(
+                    """
+                    Open a second Hoard pane to \(isMove ? "move" : "copy") into. \
+                    Hoard uses the workspace's own tiling for its second pane rather \
+                    than splitting inside one.
+                    """
+                )
+                .font(AinkradFontResolver.font(.body, typography: typo))
+                .foregroundStyle(theme.foreground.opacity(0.7))
+                .fixedSize(horizontal: false, vertical: true)
             }
 
             HStack(spacing: AinkradSpacing.sm) {

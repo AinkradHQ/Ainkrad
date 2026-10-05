@@ -8,6 +8,7 @@
 // was (or wasn't) dispatched.
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 /// A single turn that emits BOTH a real `edit_file` call and an irreversible
@@ -27,17 +28,31 @@ final class EditAndTerminalStubProvider: LLMProvider {
         self.newString = newString
     }
 
-    func send(messages: [AgentMessage], system: String, tools: [AgentToolSchema],
-              model: AgentModelConfig, credential: ProviderCredential) -> AsyncThrowingStream<AgentEvent, Error> {
-        let isFollowUp = messages.last?.content.contains { if case .toolResult = $0 { return true }; return false } ?? false
-        let path = path, oldString = oldString, newString = newString
+    func send(
+        messages: [AgentMessage], system: String, tools: [AgentToolSchema],
+        model: AgentModelConfig, credential: ProviderCredential
+    ) -> AsyncThrowingStream<AgentEvent, Error> {
+        let isFollowUp =
+            messages.last?.content.contains {
+                if case .toolResult = $0 { return true }
+                return false
+            } ?? false
+        let path = path
+        let oldString = oldString
+        let newString = newString
         return AsyncThrowingStream { cont in
             if !isFollowUp {
-                cont.yield(.toolUseComplete(id: "1", name: "edit_file",
-                    input: .object(["path": .string(path), "old_string": .string(oldString),
-                                    "new_string": .string(newString)])))
-                cont.yield(.toolUseComplete(id: "2", name: "run_terminal",
-                    input: .object(["command": .string("echo hi")])))
+                cont.yield(
+                    .toolUseComplete(
+                        id: "1", name: "edit_file",
+                        input: .object([
+                            "path": .string(path), "old_string": .string(oldString),
+                            "new_string": .string(newString),
+                        ])))
+                cont.yield(
+                    .toolUseComplete(
+                        id: "2", name: "run_terminal",
+                        input: .object(["command": .string("echo hi")])))
                 cont.yield(.done(stopReason: "tool_use"))
             } else {
                 cont.yield(.textDelta("ok"))
@@ -72,7 +87,7 @@ struct AgentSessionUndoTests {
         #expect(summary.revertedEdits == 1)
         #expect(summary.irreversible.isEmpty)
         #expect((try? String(contentsOfFile: path, encoding: .utf8)) == "v1")
-        #expect(session.messages.isEmpty)                   // transcript rewound to before the turn
+        #expect(session.messages.isEmpty)  // transcript rewound to before the turn
     }
 
     @Test func undoOfIrreversibleTurnRefusesAndRevertsNothing() async {
@@ -124,7 +139,7 @@ struct AgentSessionUndoTests {
         let first = session.undoLastTurn()
         #expect(first.revertedEdits == 1)
         #expect((try? String(contentsOfFile: path, encoding: .utf8)) == "v2")
-        #expect(!session.messages.isEmpty)                  // first turn's history remains
+        #expect(!session.messages.isEmpty)  // first turn's history remains
 
         let second = session.undoLastTurn()
         #expect(second.revertedEdits == 1)
@@ -148,14 +163,14 @@ struct AgentSessionUndoTests {
 
         session.send("hello")
         await session.currentTask?.value
-        #expect(session.messages.count == 2)                // user + assistant reply
+        #expect(session.messages.count == 2)  // user + assistant reply
         #expect(provider.callCount == 1)
 
         session.retryLastTurn()
         await session.currentTask?.value
 
-        #expect(provider.callCount == 2)                    // undone + resent, one fresh provider call
-        #expect(session.messages.count == 2)                // rewound then re-settled to the same shape
+        #expect(provider.callCount == 2)  // undone + resent, one fresh provider call
+        #expect(session.messages.count == 2)  // rewound then re-settled to the same shape
         #expect(session.messages.first?.text == "hello")
     }
 

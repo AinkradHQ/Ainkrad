@@ -34,7 +34,8 @@ struct SystemArchiveService: Archiving {
         // file would zip as `enclosing-folder/file.txt` (not wanted, and not
         // what the Finder does).
         var arguments = ["-c", "-k", "--sequesterRsrc"]
-        let isSingleDirectory = sources.count == 1
+        let isSingleDirectory =
+            sources.count == 1
             && (try? sources[0].resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
         if isSingleDirectory { arguments.append("--keepParent") }
         arguments += sources.map(\.path)
@@ -76,8 +77,9 @@ struct SystemArchiveService: Archiving {
         process.waitUntilExit()
 
         guard process.terminationStatus == 0 else {
-            throw ArchiveFailure(reason: String(decoding: errorData, as: UTF8.self)
-                .trimmingCharacters(in: .whitespacesAndNewlines))
+            throw ArchiveFailure(
+                reason: String(decoding: errorData, as: UTF8.self)
+                    .trimmingCharacters(in: .whitespacesAndNewlines))
         }
     }
 }

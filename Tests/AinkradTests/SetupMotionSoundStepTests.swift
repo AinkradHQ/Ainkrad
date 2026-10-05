@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("Setup motion and sound step")
@@ -10,9 +11,10 @@ struct SetupMotionSoundStepTests {
         defer { t.cleanup() }
         let env = AppEnvironment.bootstrap(home: t.home, defaults: t.defaults)
 
-        SetupMotionSound.apply(reduceMotion: true, skyMotion: false, skySpeed: 0.8,
-                               soundEnabled: false, volume: 0.4,
-                               general: env.generalSettingsStore, sky: env.skySettingsStore)
+        SetupMotionSound.apply(
+            reduceMotion: true, skyMotion: false, skySpeed: 0.8,
+            soundEnabled: false, volume: 0.4,
+            general: env.generalSettingsStore, sky: env.skySettingsStore)
 
         #expect(env.generalSettingsStore.uiReduceMotion)
         #expect(!env.skySettingsStore.motionEnabled)
@@ -27,9 +29,10 @@ struct SetupMotionSoundStepTests {
         defer { t.cleanup() }
         let env = AppEnvironment.bootstrap(home: t.home, defaults: t.defaults)
 
-        SetupMotionSound.apply(reduceMotion: false, skyMotion: true, skySpeed: 9.0,
-                               soundEnabled: true, volume: 0.5,
-                               general: env.generalSettingsStore, sky: env.skySettingsStore)
+        SetupMotionSound.apply(
+            reduceMotion: false, skyMotion: true, skySpeed: 9.0,
+            soundEnabled: true, volume: 0.5,
+            general: env.generalSettingsStore, sky: env.skySettingsStore)
 
         #expect(env.skySettingsStore.motionSpeed == 1.5)
     }
@@ -55,7 +58,8 @@ struct SetupMotionSoundStepTests {
         // the next time the default moves — which it has, twice.
         store.setUiReduceMotion(false)
         #expect(!store.uiReduceMotion)
-        #expect(SetupStageMotion.transition(reduceMotion: store.uiReduceMotion)
+        #expect(
+            SetupStageMotion.transition(reduceMotion: store.uiReduceMotion)
                 == .layered(isForward: true))
 
         store.setUiReduceMotion(true)
@@ -65,12 +69,16 @@ struct SetupMotionSoundStepTests {
         #expect(SetupStageMotion.transition(reduceMotion: store.uiReduceMotion) == .none)
         #expect(SetupStageMotion.animation(reduceMotion: store.uiReduceMotion) == nil)
         for layer in SetupStageMotion.Layer.allCases {
-            #expect(SetupStageMotion.layerGeometry(layer,
-                                                   reduceMotion: store.uiReduceMotion,
-                                                   isForward: true) == nil)
-            #expect(SetupStageMotion.layerGeometry(layer,
-                                                   reduceMotion: store.uiReduceMotion,
-                                                   isForward: false) == nil)
+            #expect(
+                SetupStageMotion.layerGeometry(
+                    layer,
+                    reduceMotion: store.uiReduceMotion,
+                    isForward: true) == nil)
+            #expect(
+                SetupStageMotion.layerGeometry(
+                    layer,
+                    reduceMotion: store.uiReduceMotion,
+                    isForward: false) == nil)
         }
 
         // And it goes back, so Back to this step and switching it off is not a

@@ -1,8 +1,8 @@
-import SwiftUI
-import AppKit
-import UniformTypeIdentifiers
 import AinkradAppKit
 import AinkradHostRuntime
+import AppKit
+import SwiftUI
+import UniformTypeIdentifiers
 
 /// The ⌥Tab Workspace Overview — a master–detail workspace manager in the HUD
 /// language. Left: the workspace list (mini layout previews, rename, reorder,
@@ -153,20 +153,37 @@ struct WorkspaceOverviewView: View {
         .focused($focus, equals: .panel)
         .focusEffectDisabled()
         .onKeyPress(.escape) {
-            if pendingDeletion != nil { pendingDeletion = nil; return .handled }
+            if pendingDeletion != nil {
+                pendingDeletion = nil
+                return .handled
+            }
             guard renamingWorkspaceID == nil else { return .ignored }
-            onDismiss(); return .handled
+            onDismiss()
+            return .handled
         }
-        .onKeyPress(.downArrow) { guard canNavigate else { return .ignored }; moveSelection(by: 1); return .handled }
-        .onKeyPress(.upArrow) { guard canNavigate else { return .ignored }; moveSelection(by: -1); return .handled }
+        .onKeyPress(.downArrow) {
+            guard canNavigate else { return .ignored }
+            moveSelection(by: 1)
+            return .handled
+        }
+        .onKeyPress(.upArrow) {
+            guard canNavigate else { return .ignored }
+            moveSelection(by: -1)
+            return .handled
+        }
         .onKeyPress(.return) {
-            if let pendingDeletion { confirmDeletion(pendingDeletion); return .handled }
+            if let pendingDeletion {
+                confirmDeletion(pendingDeletion)
+                return .handled
+            }
             guard renamingWorkspaceID == nil else { return .ignored }
-            activateSelection(); return .handled
+            activateSelection()
+            return .handled
         }
         .onKeyPress(.deleteForward) {
             guard canNavigate, let ws = selectedWorkspace, !ws.isMain else { return .ignored }
-            requestDeletion(ws); return .handled
+            requestDeletion(ws)
+            return .handled
         }
     }
 
@@ -192,15 +209,19 @@ struct WorkspaceOverviewView: View {
     }
 
     private func horizontalRule(tokens: DesignTokens) -> some View {
-        LinearGradient(colors: [.clear, tokens.accentPrimary.opacity(0.5), .clear],
-                       startPoint: .leading, endPoint: .trailing)
-            .frame(height: 1)
+        LinearGradient(
+            colors: [.clear, tokens.accentPrimary.opacity(0.5), .clear],
+            startPoint: .leading, endPoint: .trailing
+        )
+        .frame(height: 1)
     }
 
     private func verticalRule(tokens: DesignTokens) -> some View {
-        LinearGradient(colors: [.clear, tokens.accentPrimary.opacity(0.35), .clear],
-                       startPoint: .top, endPoint: .bottom)
-            .frame(width: 1)
+        LinearGradient(
+            colors: [.clear, tokens.accentPrimary.opacity(0.35), .clear],
+            startPoint: .top, endPoint: .bottom
+        )
+        .frame(width: 1)
     }
 
     // MARK: - Workspace list (master)
@@ -216,8 +237,9 @@ struct WorkspaceOverviewView: View {
     private var workspaceListHeight: CGFloat {
         let count = CGFloat(manager.workspaces.count)
         let rows = count * Self.rowHeight + max(count - 1, 0) * Self.rowSpacing
-        return min(rows + Self.newWorkspaceButtonHeight + Self.rowSpacing + Self.listPadding * 2,
-                   Self.maximumListHeight)
+        return min(
+            rows + Self.newWorkspaceButtonHeight + Self.rowSpacing + Self.listPadding * 2,
+            Self.maximumListHeight)
     }
 
     private static let rowHeight: CGFloat = 50
@@ -251,7 +273,8 @@ struct WorkspaceOverviewView: View {
         // and except the home workspace, which by design stays empty (opening an
         // app from it spawns a new workspace instead). Offering it as a target
         // let a pane be moved somewhere the rest of the app says panes don't go.
-        let isDropTarget = draggedApp != nil
+        let isDropTarget =
+            draggedApp != nil
             && draggedApp?.sourceWorkspaceID != workspace.id
             && !workspace.isMain
 
@@ -291,8 +314,10 @@ struct WorkspaceOverviewView: View {
             selectedWorkspaceID = workspace.id
         } label: {
             HStack(spacing: 8) {
-                Image(systemName: "plus").font(.system(size: 12, weight: .medium)).foregroundStyle(tokens.accentSecondary)
-                Text("New Workspace").font(AinkradFont.display(11, weight: .medium)).foregroundStyle(tokens.foreground.opacity(0.6))
+                Image(systemName: "plus").font(.system(size: 12, weight: .medium)).foregroundStyle(
+                    tokens.accentSecondary)
+                Text("New Workspace").font(AinkradFont.display(11, weight: .medium)).foregroundStyle(
+                    tokens.foreground.opacity(0.6))
                 Spacer()
                 Text("⌘⇧N").font(AinkradFont.mono(9)).foregroundStyle(tokens.foreground.opacity(0.3))
             }

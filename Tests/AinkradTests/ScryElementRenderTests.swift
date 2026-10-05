@@ -1,18 +1,19 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("ScryTableParse")
 struct ScryElementRenderTests {
     @Test func parsesMarkdownTableSkippingSeparator() {
         let body = """
-        Name | Role
-        --- | ---
-        Ada | Eng
-        Bo | PM
-        """
+            Name | Role
+            --- | ---
+            Ada | Eng
+            Bo | PM
+            """
         let rows = ScryTableParse.rows(from: body)
-        #expect(rows.count == 3)                 // header + 2 data rows (separator dropped)
+        #expect(rows.count == 3)  // header + 2 data rows (separator dropped)
         #expect(rows.first == ["Name", "Role"])
         #expect(rows.last == ["Bo", "PM"])
     }

@@ -1,6 +1,6 @@
-import Observation
 import AinkradAppKit
 import AinkradHostRuntime
+import Observation
 
 /// Backs the ⌘K Launcher overlay: fuzzy-filtered enabled apps and the
 /// open-app action. Workspace management deliberately does NOT live here —

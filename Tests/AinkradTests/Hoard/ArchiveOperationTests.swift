@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradHostRuntime
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 /// Archives as engine operations.
@@ -28,20 +29,24 @@ struct ArchiveOperationTests {
 
         func extract(_ archive: URL, into directory: URL) throws -> [URL] {
             if shouldFail { throw ArchiveFailure(reason: "nope") }
-            return [directory.appendingPathComponent(
-                archive.deletingPathExtension().lastPathComponent)]
+            return [
+                directory.appendingPathComponent(
+                    archive.deletingPathExtension().lastPathComponent)
+            ]
         }
     }
 
     private func makeEngine(_ archiver: FakeArchiver)
-        -> (FileOperationEngine, UndoStack, InMemoryFileMutator) {
+        -> (FileOperationEngine, UndoStack, InMemoryFileMutator)
+    {
         let mutator = InMemoryFileMutator()
         mutator.addDirectory("/a")
         mutator.addFile("/a/one.txt")
         mutator.addFile("/a/bundle.zip")
         let stack = UndoStack(persistence: InMemoryPersistenceStore())
-        let engine = FileOperationEngine(mutator: mutator, trash: InMemoryTrash(),
-                                         undoStack: stack, archiver: archiver)
+        let engine = FileOperationEngine(
+            mutator: mutator, trash: InMemoryTrash(),
+            undoStack: stack, archiver: archiver)
         return (engine, stack, mutator)
     }
 
@@ -52,9 +57,10 @@ struct ArchiveOperationTests {
         let archiver = FakeArchiver()
         let (engine, stack, _) = makeEngine(archiver)
 
-        let result = await engine.submit(FileOperation(
-            kind: .archive(name: "stuff.zip"), sources: [url("/a/one.txt")],
-            destinationDirectory: url("/a")))
+        let result = await engine.submit(
+            FileOperation(
+                kind: .archive(name: "stuff.zip"), sources: [url("/a/one.txt")],
+                destinationDirectory: url("/a")))
 
         #expect(result.succeeded == 1)
         #expect(archiver.archiveCalls.count == 1)
@@ -68,9 +74,10 @@ struct ArchiveOperationTests {
         let (engine, _, mutator) = makeEngine(archiver)
         // The fake reports success without writing, so put the product where
         // the engine believes it is.
-        _ = await engine.submit(FileOperation(
-            kind: .archive(name: "stuff.zip"), sources: [url("/a/one.txt")],
-            destinationDirectory: url("/a")))
+        _ = await engine.submit(
+            FileOperation(
+                kind: .archive(name: "stuff.zip"), sources: [url("/a/one.txt")],
+                destinationDirectory: url("/a")))
         mutator.addFile("/a/stuff.zip")
 
         _ = engine.undo()
@@ -85,9 +92,10 @@ struct ArchiveOperationTests {
         let archiver = FakeArchiver()
         let (engine, stack, _) = makeEngine(archiver)
 
-        let result = await engine.submit(FileOperation(
-            kind: .archive(name: "bundle.zip"), sources: [url("/a/one.txt")],
-            destinationDirectory: url("/a")))
+        let result = await engine.submit(
+            FileOperation(
+                kind: .archive(name: "bundle.zip"), sources: [url("/a/one.txt")],
+                destinationDirectory: url("/a")))
 
         #expect(result.succeeded == 0)
         #expect(result.failures.count == 1)
@@ -101,9 +109,10 @@ struct ArchiveOperationTests {
         archiver.shouldFail = true
         let (engine, stack, _) = makeEngine(archiver)
 
-        let result = await engine.submit(FileOperation(
-            kind: .archive(name: "stuff.zip"), sources: [url("/a/one.txt")],
-            destinationDirectory: url("/a")))
+        let result = await engine.submit(
+            FileOperation(
+                kind: .archive(name: "stuff.zip"), sources: [url("/a/one.txt")],
+                destinationDirectory: url("/a")))
 
         #expect(result.succeeded == 0)
         #expect(!stack.canUndo)
@@ -114,9 +123,10 @@ struct ArchiveOperationTests {
         let archiver = FakeArchiver()
         let (engine, stack, _) = makeEngine(archiver)
 
-        let result = await engine.submit(FileOperation(
-            kind: .extract, sources: [url("/a/bundle.zip")],
-            destinationDirectory: url("/a")))
+        let result = await engine.submit(
+            FileOperation(
+                kind: .extract, sources: [url("/a/bundle.zip")],
+                destinationDirectory: url("/a")))
 
         #expect(result.succeeded == 1)
         #expect(stack.entries.last?.action == .delete([url("/a/bundle")]))
@@ -126,9 +136,10 @@ struct ArchiveOperationTests {
     func redoReRuns() async {
         let archiver = FakeArchiver()
         let (engine, _, _) = makeEngine(archiver)
-        _ = await engine.submit(FileOperation(
-            kind: .archive(name: "stuff.zip"), sources: [url("/a/one.txt")],
-            destinationDirectory: url("/a")))
+        _ = await engine.submit(
+            FileOperation(
+                kind: .archive(name: "stuff.zip"), sources: [url("/a/one.txt")],
+                destinationDirectory: url("/a")))
         _ = engine.undo()
 
         _ = await engine.redo()

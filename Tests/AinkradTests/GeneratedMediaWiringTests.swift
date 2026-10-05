@@ -1,7 +1,8 @@
+import AinkradAppKit
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradAppKit
 
 @Suite("Generated media wiring")
 @MainActor

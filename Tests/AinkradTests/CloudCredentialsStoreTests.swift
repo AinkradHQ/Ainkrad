@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("CloudCredentialsStore")
 @MainActor
@@ -21,7 +22,7 @@ struct CloudCredentialsStoreTests {
         s.setCredential("tok_123", for: .modal)
         #expect(s.isConfigured(.modal))
         #expect(s.credential(for: .modal) == "tok_123")
-        #expect(s.isConfigured(.daytona) == false)   // isolated per provider
+        #expect(s.isConfigured(.daytona) == false)  // isolated per provider
     }
 
     @Test func nilCredentialDeletes() {

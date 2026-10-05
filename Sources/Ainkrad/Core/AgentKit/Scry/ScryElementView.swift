@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// A render failure isolated to one element — surfaced as an inline error
 /// card rather than propagating and taking down the rest of the canvas.
@@ -49,7 +49,8 @@ struct ScryElementView: View {
         do {
             return try buildContent()
         } catch {
-            let message = (error as? ScryElementRenderError)?.message
+            let message =
+                (error as? ScryElementRenderError)?.message
                 ?? String(describing: error)
             return AnyView(ScryErrorCard(tokens: tokens, message: message))
         }

@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// `LLMProvider` conformer that streams from `POST https://api.anthropic.com/v1/messages`.
 struct ClaudeProvider: LLMProvider {
@@ -40,7 +40,8 @@ struct ClaudeProvider: LLMProvider {
         return AsyncThrowingStream { continuation in
             let task = Task {
                 do {
-                    let request = Self.makeRequest(messages: messages, system: system, tools: tools, model: model, credential: credential)
+                    let request = Self.makeRequest(
+                        messages: messages, system: system, tools: tools, model: model, credential: credential)
                     let bytes = try await http.post(request)
 
                     var stopReason: String?
@@ -58,9 +59,10 @@ struct ClaudeProvider: LLMProvider {
                             }
                         case "content_block_start":
                             if envelope.contentBlock?.type == "tool_use",
-                               let index = envelope.index,
-                               let id = envelope.contentBlock?.id,
-                               let wireName = envelope.contentBlock?.name {
+                                let index = envelope.index,
+                                let id = envelope.contentBlock?.id,
+                                let wireName = envelope.contentBlock?.name
+                            {
                                 // Map the wire name (`mcp__…` on OAuth) back to Ainkrad's
                                 // original `mcp/…` so the registry lookup + transcript match.
                                 let name = isOAuth ? Self.oauthOriginalToolName(wireName) : wireName
@@ -80,7 +82,8 @@ struct ClaudeProvider: LLMProvider {
                                     }
                                 case "input_json_delta":
                                     if let index = envelope.index, let partial = delta.partialJSON,
-                                       var entry = toolBlocks[index] {
+                                        var entry = toolBlocks[index]
+                                    {
                                         entry.buffer += partial
                                         toolBlocks[index] = entry
                                         continuation.yield(.toolInputDelta(id: entry.id, partialJSON: partial))
@@ -102,8 +105,9 @@ struct ClaudeProvider: LLMProvider {
                             if let json = JSONValue.parse(payload) {
                                 let output = Self.usageOutput(from: json)
                                 if output > 0 {
-                                    turnUsage = TokenUsage(input: turnUsage.input, output: output,
-                                                           cacheRead: turnUsage.cacheRead, cacheWrite: turnUsage.cacheWrite)
+                                    turnUsage = TokenUsage(
+                                        input: turnUsage.input, output: output,
+                                        cacheRead: turnUsage.cacheRead, cacheWrite: turnUsage.cacheWrite)
                                 }
                             }
                         case "message_stop":
@@ -142,9 +146,13 @@ struct ClaudeProvider: LLMProvider {
     /// a top-level `"usage"` key for direct/test payloads.
     nonisolated static func usageInput(from json: JSONValue) -> TokenUsage {
         let usage = json["message"]?["usage"] ?? json["usage"]
-        func int(_ k: String) -> Int { if case .number(let n)? = usage?[k] { return Int(n) }; return 0 }
-        return TokenUsage(input: int("input_tokens"), output: 0,
-                          cacheRead: int("cache_read_input_tokens"), cacheWrite: int("cache_creation_input_tokens"))
+        func int(_ k: String) -> Int {
+            if case .number(let n)? = usage?[k] { return Int(n) }
+            return 0
+        }
+        return TokenUsage(
+            input: int("input_tokens"), output: 0,
+            cacheRead: int("cache_read_input_tokens"), cacheWrite: int("cache_creation_input_tokens"))
     }
 
     // MARK: - Request building
@@ -195,9 +203,11 @@ struct ClaudeProvider: LLMProvider {
             body["tools"] = wireTools.map {
                 // OAuth-only: rewrite `mcp/…` schema names to the `mcp__…` wire form the
                 // subscription billing classifier expects (see `oauthWireToolName`).
-                ["name": isOAuth ? Self.oauthWireToolName($0.name) : $0.name,
-                 "description": $0.description,
-                 "input_schema": $0.parameters.toFoundationObject()]
+                [
+                    "name": isOAuth ? Self.oauthWireToolName($0.name) : $0.name,
+                    "description": $0.description,
+                    "input_schema": $0.parameters.toFoundationObject(),
+                ]
             }
         }
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
@@ -240,8 +250,9 @@ struct ClaudeProvider: LLMProvider {
     /// (the body is the server's response, not the request — the key never appears in it).
     private static func errorMessage(status: Int, fromResponseBody body: String) -> String {
         if let data = body.data(using: .utf8),
-           let envelope = try? JSONDecoder().decode(SSEEnvelope.self, from: data),
-           let message = envelope.error?.message {
+            let envelope = try? JSONDecoder().decode(SSEEnvelope.self, from: data),
+            let message = envelope.error?.message
+        {
             return "Claude API \(status): \(message)"
         }
         let snippet = body.isEmpty ? "" : ": \(body.prefix(300))"

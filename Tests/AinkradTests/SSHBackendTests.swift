@@ -1,15 +1,17 @@
+import AinkradAppKit
+import AinkradHostRuntime
 // Tests/AinkradTests/SSHBackendTests.swift
 import Foundation
 import Testing
-import AinkradHostRuntime
-import AinkradAppKit
+
 @testable import Ainkrad
 
 /// A connection that could be spawned against, if anything ever got that far.
 /// No test here makes a real SSH connection: the one test that reaches a spawn
 /// points `sshPath` at `/usr/bin/false`.
-private let fakeConnection = SSHConnectionInfo(host: "h", user: "u", port: nil,
-                                               identityPath: nil, remoteWorkingDir: nil)
+private let fakeConnection = SSHConnectionInfo(
+    host: "h", user: "u", port: nil,
+    identityPath: nil, remoteWorkingDir: nil)
 
 /// A resolver that always fails with `reason` — stands in for Leyline saying
 /// "unknown id" / "password-only" / "passphrase-protected" without any plugin,
@@ -33,9 +35,10 @@ private func expectBlockedWithNoLocalExecution(
 
     var message: String?
     do {
-        _ = try await backend.run(ExecutionRequest(
-            command: "touch \(marker.path)", workingDir: nil,
-            profile: BuiltInSandboxProfiles.networkedBuild, remote: remote))
+        _ = try await backend.run(
+            ExecutionRequest(
+                command: "touch \(marker.path)", workingDir: nil,
+                profile: BuiltInSandboxProfiles.networkedBuild, remote: remote))
         Issue.record("expected BackendError.unavailable to be thrown", sourceLocation: sourceLocation)
     } catch let BackendError.unavailable(text) {
         message = text
@@ -81,15 +84,16 @@ struct SSHBackendTests {
     /// The four resolver failures the user can actually hit, each surfacing its
     /// own reason rather than a generic "couldn't". The reason text originates
     /// in Leyline (`LeylineConnectionBridge`) and is passed through verbatim.
-    @Test("Leyline absent, unknown id, password-only and passphrase-protected each fail closed",
-          arguments: [
+    @Test(
+        "Leyline absent, unknown id, password-only and passphrase-protected each fail closed",
+        arguments: [
             "No SSH connection provider is available — the Leyline app is not installed.",
             "leyline.resolve_connection: no saved connection has that id.",
             "Connection \"Legacy box\" authenticates with a password, and background execution "
                 + "runs ssh with BatchMode=yes.",
             "Connection \"Staging box\" uses key \"Locked key\", which is passphrase-protected, "
                 + "and background execution runs ssh with BatchMode=yes.",
-          ])
+        ])
     func resolverFailuresFailClosed(reason: String) async {
         let b = SSHBackend(resolveConnection: failing(reason))
         let message = await expectBlockedWithNoLocalExecution(b, remote: "some-id")
@@ -107,10 +111,12 @@ struct SSHBackendTests {
         // host does (BatchMode=yes + ConnectTimeout=10 exit 255).
         var b = SSHBackend(resolveConnection: succeeding())
         b.sshPath = "/usr/bin/false"
-        let r = try await b.run(ExecutionRequest(command: "echo hi", workingDir: nil,
-                                                 profile: BuiltInSandboxProfiles.networkedBuild,
-                                                 remote: "prod-web"))
-        #expect(r.isError)   // failure surfaced, never a silent success
+        let r = try await b.run(
+            ExecutionRequest(
+                command: "echo hi", workingDir: nil,
+                profile: BuiltInSandboxProfiles.networkedBuild,
+                remote: "prod-web"))
+        #expect(r.isError)  // failure surfaced, never a silent success
     }
 
     @Test("the resolver is called with the id the request named, per call")
@@ -122,9 +128,11 @@ struct SSHBackendTests {
         })
         b.sshPath = "/usr/bin/false"
         for id in ["prod-web", "staging"] {
-            _ = try await b.run(ExecutionRequest(command: "echo hi", workingDir: nil,
-                                                 profile: BuiltInSandboxProfiles.networkedBuild,
-                                                 remote: id))
+            _ = try await b.run(
+                ExecutionRequest(
+                    command: "echo hi", workingDir: nil,
+                    profile: BuiltInSandboxProfiles.networkedBuild,
+                    remote: id))
         }
         #expect(await seen.all == ["prod-web", "staging"])
     }
@@ -147,7 +155,8 @@ struct LeylineConnectionResolverTests {
     func leylineAbsent() async {
         let resolve = LeylineConnectionResolver.make(hub: AgentActionRegistryHub())
         guard case .failure(let f) = await resolve("prod-web") else {
-            Issue.record("expected a failure with no handler registered"); return
+            Issue.record("expected a failure with no handler registered")
+            return
         }
         #expect(f.reason.contains("Leyline"))
         #expect(f.reason.contains("Install Leyline"))
@@ -162,7 +171,8 @@ struct LeylineConnectionResolverTests {
         }
         let resolve = LeylineConnectionResolver.make(hub: hub)
         guard case .failure(let f) = await resolve("legacy") else {
-            Issue.record("expected a failure"); return
+            Issue.record("expected a failure")
+            return
         }
         #expect(f.reason == reason)
     }
@@ -179,7 +189,8 @@ struct LeylineConnectionResolverTests {
         }
         let resolve = LeylineConnectionResolver.make(hub: hub)
         guard case .success(let info) = await resolve("prod-web") else {
-            Issue.record("expected a resolved connection"); return
+            Issue.record("expected a resolved connection")
+            return
         }
         #expect(info.host == "web.example.com")
         #expect(info.user == "deploy")
@@ -196,7 +207,8 @@ struct LeylineConnectionResolverTests {
             AgentActionResult(text: "not json", isError: false)
         }
         guard case .failure = await LeylineConnectionResolver.make(hub: hub)("prod-web") else {
-            Issue.record("expected a failure"); return
+            Issue.record("expected a failure")
+            return
         }
     }
 }

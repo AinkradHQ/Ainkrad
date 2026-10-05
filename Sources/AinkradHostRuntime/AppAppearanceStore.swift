@@ -1,6 +1,6 @@
+import AinkradAppKit
 import Foundation
 import Observation
-import AinkradAppKit
 
 /// One app's surface appearance. `surfaceOpacity` is honored only for
 /// host-background apps (the Sage); every app honors `blurEnabled`.
@@ -23,10 +23,12 @@ public struct AppAppearanceEntry: Codable, Equatable {
     public var fontFamily: String? = nil
     public var fontScale: String? = nil
 
-    public init(surfaceOpacity: Double = 1.0, blurEnabled: Bool = false,
-                presentationOverride: String? = nil, fontFamily: String? = nil, fontScale: String? = nil,
-                modeOverride: String? = nil,
-                overlaySizeOverride: String? = nil) {
+    public init(
+        surfaceOpacity: Double = 1.0, blurEnabled: Bool = false,
+        presentationOverride: String? = nil, fontFamily: String? = nil, fontScale: String? = nil,
+        modeOverride: String? = nil,
+        overlaySizeOverride: String? = nil
+    ) {
         self.surfaceOpacity = surfaceOpacity
         self.blurEnabled = blurEnabled
         self.presentationOverride = presentationOverride
@@ -49,7 +51,8 @@ public struct AppAppearanceDocument: PersistableDocument {
     public static let migrators: [DocumentMigrator] = [
         DocumentMigrator(from: 1) { payload in
             guard case .object(var root) = payload,
-                  case .object(let entries)? = root["entries"] else { return payload }
+                case .object(let entries)? = root["entries"]
+            else { return payload }
             root["entries"] = .object(AppIDRenames.rekeyed(entries))
             return .object(root)
         },
@@ -113,7 +116,8 @@ public final class AppAppearanceStore {
         // NOT "assistant": the schema-v2 migrator above has already rekeyed the
         // map, so folding into the retired id would write an entry nothing reads.
         if doc.entries["sage"] == nil,
-           let legacy = persistence.load(LegacyAssistantAppearanceDocument.self) {
+            let legacy = persistence.load(LegacyAssistantAppearanceDocument.self)
+        {
             doc.entries["sage"] = AppAppearanceEntry(
                 surfaceOpacity: legacy.surfaceOpacity, blurEnabled: legacy.blurEnabled)
             persistence.save(doc)

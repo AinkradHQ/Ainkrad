@@ -55,9 +55,11 @@ final class ModelRouter {
     private let confidenceThreshold = 0.5
     private let maxEscalationAttempts = 3
 
-    init(catalog: ModelCatalog, policy: RouterPolicy = .saveMoney,
-         outcomes: RouterOutcomeStore,
-         classify: (@Sendable (String) async -> ClassifierResult?)? = nil) {
+    init(
+        catalog: ModelCatalog, policy: RouterPolicy = .saveMoney,
+        outcomes: RouterOutcomeStore,
+        classify: (@Sendable (String) async -> ClassifierResult?)? = nil
+    ) {
         self.catalog = catalog
         self.policy = policy
         self.outcomes = outcomes
@@ -71,29 +73,33 @@ final class ModelRouter {
     func route(_ request: RouterRequest) async -> RouterDecision {
         // 1. User pin wins over everything, including a disabled router.
         if let pinned = request.userPinnedModel,
-           let match = request.candidates.first(where: { $0.model == pinned }) {
+            let match = request.candidates.first(where: { $0.model == pinned })
+        {
             // Reuse the SAME hard capability check the auto path enforces (Task 10's
             // `RouterOrdering.capable`) — the pin still wins even if it fails, but we
             // surface that failure instead of hiding it.
             let incapable = RouterOrdering.capable([match], for: request.signal).isEmpty
-            return RouterDecision(candidate: match, tier: match.descriptor.tier,
-                                  reason: "User pinned \(pinned).", escalated: false, baselineModel: nil,
-                                  pinnedButIncapable: incapable)
+            return RouterDecision(
+                candidate: match, tier: match.descriptor.tier,
+                reason: "User pinned \(pinned).", escalated: false, baselineModel: nil,
+                pinnedButIncapable: incapable)
         }
 
         // 2. Router disabled (and no pin matched above): use the caller-supplied default —
         //    the first candidate — never the auto-picker's choice.
         if !request.routing.routerEnabled {
             let fallback = request.candidates.first ?? Self.synthetic()
-            return RouterDecision(candidate: fallback, tier: fallback.descriptor.tier,
-                                  reason: "Router disabled; using default model \(fallback.model).",
-                                  escalated: false, baselineModel: nil)
+            return RouterDecision(
+                candidate: fallback, tier: fallback.descriptor.tier,
+                reason: "Router disabled; using default model \(fallback.model).",
+                escalated: false, baselineModel: nil)
         }
 
         guard !request.candidates.isEmpty else {
             let fallback = Self.synthetic()
-            return RouterDecision(candidate: fallback, tier: fallback.descriptor.tier,
-                                  reason: "no capable model", escalated: false, baselineModel: nil)
+            return RouterDecision(
+                candidate: fallback, tier: fallback.descriptor.tier,
+                reason: "no capable model", escalated: false, baselineModel: nil)
         }
 
         // 3. Capability + bounds (both hard filters — never bypassed).
@@ -101,8 +107,9 @@ final class ModelRouter {
         let bounded = RouterOrdering.bounded(capable, by: request.routing)
         guard !bounded.isEmpty else {
             let fallback = request.candidates.first ?? Self.synthetic()
-            return RouterDecision(candidate: fallback, tier: fallback.descriptor.tier,
-                                  reason: "No capable model within bounds.", escalated: false, baselineModel: nil)
+            return RouterDecision(
+                candidate: fallback, tier: fallback.descriptor.tier,
+                reason: "No capable model within bounds.", escalated: false, baselineModel: nil)
         }
 
         // 4. Difficulty (rules, optionally refined by the cheap classifier — never blocks).
@@ -113,10 +120,11 @@ final class ModelRouter {
         //    (which already excludes anything past the Agent's `maxTier`/`allowedModels`)
         //    so escalation can never break out of the Agent's allowed envelope.
         var floor = DifficultyClassifier.minimumTier(for: result.difficulty)
-        let escalated = DifficultyClassifier.shouldEscalate(
-            confidence: result.confidence, threshold: confidenceThreshold,
-            toolFailed: false, selfCritiqueFailed: false,
-            attempt: request.attempt, maxAttempts: maxEscalationAttempts) || request.attempt > 0
+        let escalated =
+            DifficultyClassifier.shouldEscalate(
+                confidence: result.confidence, threshold: confidenceThreshold,
+                toolFailed: false, selfCritiqueFailed: false,
+                attempt: request.attempt, maxAttempts: maxEscalationAttempts) || request.attempt > 0
         if escalated {
             floor = ModelTier(rawValue: min(ModelTier.premium.rawValue, floor.rawValue + request.attempt)) ?? .premium
         }
@@ -139,29 +147,35 @@ final class ModelRouter {
 
         return RouterDecision(
             candidate: pick, tier: pick.descriptor.tier,
-            reason: escalated ? "Escalated to \(pick.model) (attempt \(request.attempt + 1))."
-                              : "Routed to \(pick.model) for a \(result.difficulty) task.",
+            reason: escalated
+                ? "Escalated to \(pick.model) (attempt \(request.attempt + 1))."
+                : "Routed to \(pick.model) for a \(result.difficulty) task.",
             escalated: escalated, baselineModel: baselineModel)
     }
 
     /// Synchronous, rule-only resolution for a subagent spawn: `budgetTier` is a hard
     /// ceiling, never a floor to escalate past.
     func route(forSubagent req: SubagentModelRequest) -> RouterDecision {
-        let signal = TaskSignal(estimatedInputTokens: req.estimatedInputTokens,
-                                needsVision: req.needsVision, needsTools: req.needsTools, reasoningHeavy: false)
+        let signal = TaskSignal(
+            estimatedInputTokens: req.estimatedInputTokens,
+            needsVision: req.needsVision, needsTools: req.needsTools, reasoningHeavy: false)
         let capable = RouterOrdering.capable(req.candidates, for: signal)
         let bounded = capable.filter { $0.descriptor.tier <= req.budgetTier }
         let ordered = RouterOrdering.ordered(bounded, policy: .saveMoney, preferred: [])
         let pick = ordered.first ?? capable.first ?? req.candidates.first ?? Self.synthetic()
-        return RouterDecision(candidate: pick, tier: pick.descriptor.tier,
-                              reason: "Subagent routed to \(pick.model) (budget \(req.budgetTier)).",
-                              escalated: false, baselineModel: nil)
+        return RouterDecision(
+            candidate: pick, tier: pick.descriptor.tier,
+            reason: "Subagent routed to \(pick.model) (budget \(req.budgetTier)).",
+            escalated: false, baselineModel: nil)
     }
 
     func recordOutcome(_ decision: RouterDecision, success: Bool) {
         let d = Self.difficulty(for: decision.tier)
-        if success { outcomes.recordSuccess(difficulty: d, model: decision.candidate.model) }
-        else { outcomes.recordFailure(difficulty: d, model: decision.candidate.model) }
+        if success {
+            outcomes.recordSuccess(difficulty: d, model: decision.candidate.model)
+        } else {
+            outcomes.recordFailure(difficulty: d, model: decision.candidate.model)
+        }
     }
 
     func recordOverride(_ decision: RouterDecision) {
@@ -177,7 +191,8 @@ final class ModelRouter {
     }
 
     private static func synthetic() -> RouterCandidate {
-        RouterCandidate(connectionID: UUID(), model: "none",
+        RouterCandidate(
+            connectionID: UUID(), model: "none",
             descriptor: ModelDescriptor(id: "none", tier: .local, contextWindow: 0, capabilities: []))
     }
 }

@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("TrashService")
@@ -50,8 +51,9 @@ struct TrashServiceTests {
     func fakeRefusesUnknownRestore() {
         let trash = InMemoryTrash()
         #expect(throws: (any Error).self) {
-            try trash.restore(from: URL(fileURLWithPath: "/trash/ghost"),
-                              to: URL(fileURLWithPath: "/vol/ghost"))
+            try trash.restore(
+                from: URL(fileURLWithPath: "/trash/ghost"),
+                to: URL(fileURLWithPath: "/vol/ghost"))
         }
     }
 }

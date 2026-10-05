@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradHostRuntime
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("RoutingMediaBackend")
@@ -10,7 +11,10 @@ struct RoutingMediaBackendTests {
     private struct StubHTTP: DataHTTPClient {
         let payload: String
         func data(for request: URLRequest) async throws -> (Data, HTTPURLResponse) {
-            (Data(payload.utf8), HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
+            (
+                Data(payload.utf8),
+                HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
+            )
         }
     }
     private struct BytesHTTP: DataHTTPClient {
@@ -27,7 +31,8 @@ struct RoutingMediaBackendTests {
         return RoutingMediaBackend(
             persistence: persistence,
             secrets: secrets,
-            openai: OpenAIImageBackend(secrets: secrets, http: StubHTTP(payload: #"{"data":[{"b64_json":"T1BFTkFJ"}]}"#)),
+            openai: OpenAIImageBackend(
+                secrets: secrets, http: StubHTTP(payload: #"{"data":[{"b64_json":"T1BFTkFJ"}]}"#)),
             pollinations: PollinationsImageBackend(http: BytesHTTP(bytes: [0xFF, 0xD8, 0xFF, 0xE0])),
             stability: StabilityImageBackend(secrets: secrets, http: StubHTTP(payload: "{}")),
             replicate: ReplicateImageBackend(secrets: secrets, http: StubHTTP(payload: "{}")),
@@ -47,7 +52,7 @@ struct RoutingMediaBackendTests {
         let p = InMemoryPersistenceStore()
         p.save(MediaSettingsDocument(provider: "pollinations"))
         let router = makeRouter(p)
-        #expect(router.isConfigured) // Pollinations always configured
+        #expect(router.isConfigured)  // Pollinations always configured
         #expect(try await router.generateImage(prompt: "x").mediaType == "image/jpeg")
     }
 
@@ -55,7 +60,7 @@ struct RoutingMediaBackendTests {
         let p = InMemoryPersistenceStore()
         p.save(MediaSettingsDocument(provider: "localsd", localSDURL: ""))
         var router = makeRouter(p)
-        #expect(router.isConfigured == false) // no URL yet
+        #expect(router.isConfigured == false)  // no URL yet
         p.save(MediaSettingsDocument(provider: "localsd", localSDURL: "http://127.0.0.1:7860"))
         router = makeRouter(p)
         #expect(router.isConfigured)

@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/Sandbox/SSHConnectionInfo.swift
 import Foundation
-import AinkradHostRuntime
 
 /// Minimal remote-host descriptor `SSHBackend` consumes. This IS the
 /// host-side Leyline seam: the AinkradSSH plugin (Leyline) is out-of-process

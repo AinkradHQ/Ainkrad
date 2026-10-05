@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Lets the assistant search the notification feed.
 ///
@@ -35,8 +35,8 @@ struct SignalSearchTool: AgentTool {
                     "type": .string("string"),
                     "description": .string(
                         "Words to search for in notification titles and bodies, "
-                        + "e.g. \"build failed\" or the name of an app."),
-                ]),
+                            + "e.g. \"build failed\" or the name of an app."),
+                ])
             ]),
             "required": .array([.string("query")]),
         ])
@@ -50,8 +50,9 @@ struct SignalSearchTool: AgentTool {
             // Not an error either. The feed being unavailable is a fact about
             // this machine right now, and a tool that throws teaches the model
             // to stop calling it — including later, when it would have worked.
-            return ToolResult(content: "The notification feed is unavailable on this machine.",
-                              isError: false)
+            return ToolResult(
+                content: "The notification feed is unavailable on this machine.",
+                isError: false)
         }
         // No-match is a RESULT, not an error, for the same reason: `search`
         // returns a sentence saying nothing matched rather than an empty

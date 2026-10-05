@@ -31,9 +31,13 @@ enum MentionFileReader {
         let url = URL(fileURLWithPath: path)
         var isDirectory: ObjCBool = false
         guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory),
-              !isDirectory.boolValue else { return nil }
+            !isDirectory.boolValue
+        else { return nil }
         if let size = try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int,
-           size > ReadFileTool.maxBytes { return nil }
+            size > ReadFileTool.maxBytes
+        {
+            return nil
+        }
         guard let data = try? Data(contentsOf: url), data.count <= ReadFileTool.maxBytes else { return nil }
         return String(data: data, encoding: .utf8)
     }

@@ -1,15 +1,16 @@
-// design-lint: allow-file font-size frame-literal spacing-literal radius-literal hex-color opacity-literal parity golden record tests
-import Testing
-import AppKit
-import SwiftUI
-@testable import Ainkrad
 import AinkradAppKit
 import AinkradHostRuntime
+import AppKit
+import SwiftUI
+// design-lint: allow-file font-size frame-literal spacing-literal radius-literal hex-color opacity-literal parity golden record tests
+import Testing
+
+@testable import Ainkrad
 
 private let gallerySections = [
     "foundation", "scales", "panel", "card", "pickers", "formControls",
     "stateViews", "sectionHeader", "wave2", "wave3", "wave4", "wave5",
-    "themeFoundation"
+    "themeFoundation",
 ]
 private let galleryThemeNames = ["neonBlue", "cyberPurple", "gruvbox"]
 
@@ -18,7 +19,8 @@ private let galleryThemeNames = ["neonBlue", "cyberPurple", "gruvbox"]
 public enum GalleryParityRenderer {
     /// Renders a SwiftUI view offscreen into an NSBitmapImageRep at 2x scale.
     public static func render<V: View>(_ view: V, width: CGFloat) -> NSBitmapImageRep? {
-        let envView = view
+        let envView =
+            view
             .environment(\.ainkradMotionBudget, .frozen)
             .environment(\.colorScheme, .dark)
             .frame(width: width)
@@ -27,7 +29,7 @@ public enum GalleryParityRenderer {
 
         let hostingView = NSHostingView(rootView: envView)
         hostingView.translatesAutoresizingMaskIntoConstraints = false
-        
+
         let targetSize = hostingView.fittingSize
         let height = targetSize.height > 0 ? targetSize.height : 600
 
@@ -48,18 +50,20 @@ public enum GalleryParityRenderer {
         let bitmapWidth = Int(width * targetScale)
         let bitmapHeight = Int(height * targetScale)
 
-        guard let rep = NSBitmapImageRep(
-            bitmapDataPlanes: nil,
-            pixelsWide: bitmapWidth,
-            pixelsHigh: bitmapHeight,
-            bitsPerSample: 8,
-            samplesPerPixel: 4,
-            hasAlpha: true,
-            isPlanar: false,
-            colorSpaceName: .deviceRGB,
-            bytesPerRow: bitmapWidth * 4,
-            bitsPerPixel: 32
-        ) else {
+        guard
+            let rep = NSBitmapImageRep(
+                bitmapDataPlanes: nil,
+                pixelsWide: bitmapWidth,
+                pixelsHigh: bitmapHeight,
+                bitsPerSample: 8,
+                samplesPerPixel: 4,
+                hasAlpha: true,
+                isPlanar: false,
+                colorSpaceName: .deviceRGB,
+                bytesPerRow: bitmapWidth * 4,
+                bitsPerPixel: 32
+            )
+        else {
             return nil
         }
 

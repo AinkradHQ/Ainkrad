@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Shared captions for the app-icon control, used by both the Settings pane
 /// (this file) and the wizard's Appearance step (`SetupAppearanceStepView`).
@@ -23,8 +23,10 @@ struct AppIconSettingsView: View {
     var body: some View {
         let tokens = environment.themeManager.tokens
         let store = environment.appIconStore
-        return AinkradSettingsPanel(title: "App icon",
-                                    hint: "The icon Ainkrad shows in the Dock.") {
+        return AinkradSettingsPanel(
+            title: "App icon",
+            hint: "The icon Ainkrad shows in the Dock."
+        ) {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Choose the Dock icon. Auto follows your theme; System follows the Dock's light/dark.")
                     .font(AinkradFont.display(11))
@@ -54,13 +56,15 @@ struct AppIconSettingsView: View {
     // system appearance for `.system`).
     private func preview(store: AppIconStore, tokens: DesignTokens) -> some View {
         let systemDark = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        let name = AppIconResolver.resourceName(for: store.choice, theme: environment.themeManager.currentTheme,
-                                                appearance: store.appearance, systemDark: systemDark)
+        let name = AppIconResolver.resourceName(
+            for: store.choice, theme: environment.themeManager.currentTheme,
+            appearance: store.appearance, systemDark: systemDark)
         return HStack {
             Spacer()
             Group {
                 if let url = Bundle.main.url(forResource: name, withExtension: "icns"),
-                   let img = NSImage(contentsOf: url) {
+                    let img = NSImage(contentsOf: url)
+                {
                     Image(nsImage: img).resizable().scaledToFit()
                 } else {
                     ChamferShape(cut: 20).fill(tokens.surfaceElevated)
@@ -73,9 +77,17 @@ struct AppIconSettingsView: View {
     }
 
     private func colorTitle(_ c: AppIconChoice) -> String {
-        switch c { case .auto: return "Auto"; case .blue: return "Blue"; case .purple: return "Purple" }
+        switch c {
+        case .auto: return "Auto"
+        case .blue: return "Blue"
+        case .purple: return "Purple"
+        }
     }
     private func appearanceTitle(_ a: AppIconAppearance) -> String {
-        switch a { case .system: return "System"; case .light: return "Light"; case .dark: return "Dark" }
+        switch a {
+        case .system: return "System"
+        case .light: return "Light"
+        case .dark: return "Dark"
+        }
     }
 }

@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 /// Canned `git` output, counting invocations so cache behaviour is testable.
@@ -50,8 +51,9 @@ struct GitStatusProviderTests {
     @Test("discovery returns nil outside any repo")
     func discoveryOutsideRepo() {
         let fs = makeFS(withRepoAt: nil)
-        #expect(discoverRepositoryRoot(
-            for: URL(fileURLWithPath: "/Users/test/plain"), fileSystem: fs) == nil)
+        #expect(
+            discoverRepositoryRoot(
+                for: URL(fileURLWithPath: "/Users/test/plain"), fileSystem: fs) == nil)
     }
 
     @Test("discovery terminates at the filesystem root instead of looping")

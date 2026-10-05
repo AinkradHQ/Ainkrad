@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-@testable import Ainkrad
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 /// Measurement, not assertion — turns the Wave 2 transcript claim into a number.
 @MainActor
@@ -14,8 +15,10 @@ struct TranscriptBenchmark {
         var messages: [AgentMessage] = []
         for i in 0..<60 {
             messages.append(AgentMessage(role: .user, content: [.text("question \(i)")]))
-            messages.append(AgentMessage(role: .assistant,
-                content: [.text(String(repeating: "answer text ", count: 60))]))
+            messages.append(
+                AgentMessage(
+                    role: .assistant,
+                    content: [.text(String(repeating: "answer text ", count: 60))]))
         }
 
         // A streamed reply re-evaluates `body` per chunk. 400 chunks is a
@@ -35,8 +38,12 @@ struct TranscriptBenchmark {
         let cachedMs = cached / Double(chunks) * 1000
         print("")
         print("── Transcript timeline, 120 messages x \(chunks) streamed chunks ──")
-        print("  rebuild per chunk (old): \(String(format: "%.3f", uncached))s  (\(String(format: "%.2f", uncachedMs))ms/chunk)")
-        print("  memoized          (new): \(String(format: "%.3f", cached))s  (\(String(format: "%.2f", cachedMs))ms/chunk)")
+        print(
+            "  rebuild per chunk (old): \(String(format: "%.3f", uncached))s  (\(String(format: "%.2f", uncachedMs))ms/chunk)"
+        )
+        print(
+            "  memoized          (new): \(String(format: "%.3f", cached))s  (\(String(format: "%.2f", cachedMs))ms/chunk)"
+        )
         print("  speedup: \(String(format: "%.1f", uncached / max(cached, 0.0001)))x")
         print("  (a 30fps frame budget is 33ms; this ran on the MAIN ACTOR)")
         print("──────────────────────────────────────────────────────────────────")
@@ -60,14 +67,16 @@ struct TranscriptBenchmark {
         // 20 past chats of 40 messages each — an ordinary few weeks of use.
         for _ in 0..<20 {
             store.startNewSession()
-            store.syncActive(messages: (0..<40).map { i in
-                AgentMessage(role: i % 2 == 0 ? .user : .assistant,
-                             content: [.text(String(repeating: "message body ", count: 40))])
-            })
+            store.syncActive(
+                messages: (0..<40).map { i in
+                    AgentMessage(
+                        role: i % 2 == 0 ? .user : .assistant,
+                        content: [.text(String(repeating: "message body ", count: 40))])
+                })
             store.flush()
         }
 
-        let writes = 200            // a medium streamed reply
+        let writes = 200  // a medium streamed reply
         let start = Date()
         for _ in 0..<writes { store.flush() }
         let elapsed = Date().timeIntervalSince(start)

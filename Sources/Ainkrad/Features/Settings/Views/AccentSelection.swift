@@ -12,9 +12,11 @@ enum AccentSelection {
     ///   - swatchHex: the swatch being drawn.
     ///   - overrideHex: `ThemeManager.accentColorHex`; nil means "inherit".
     ///   - themeAccentHex: the current theme's own `accentPrimary`.
-    static func isSelected(swatchHex: String,
-                           overrideHex: String?,
-                           themeAccentHex: String) -> Bool {
+    static func isSelected(
+        swatchHex: String,
+        overrideHex: String?,
+        themeAccentHex: String
+    ) -> Bool {
         if let overrideHex {
             return overrideHex.caseInsensitiveCompare(swatchHex) == .orderedSame
         }

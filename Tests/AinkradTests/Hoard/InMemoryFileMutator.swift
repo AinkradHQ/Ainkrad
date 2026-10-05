@@ -1,4 +1,5 @@
 import Foundation
+
 @testable import Ainkrad
 
 /// Disk-free `FileMutating`. Files are paths mapped to contents; directories
@@ -80,11 +81,12 @@ class InMemoryFileMutator: FileMutating, @unchecked Sendable {
 
     func childNames(of directory: URL) -> Set<String> {
         let prefix = directory.path.hasSuffix("/") ? directory.path : directory.path + "/"
-        return Set(allPaths.compactMap { path -> String? in
-            guard path.hasPrefix(prefix) else { return nil }
-            let remainder = String(path.dropFirst(prefix.count))
-            return remainder.contains("/") ? nil : remainder
-        })
+        return Set(
+            allPaths.compactMap { path -> String? in
+                guard path.hasPrefix(prefix) else { return nil }
+                let remainder = String(path.dropFirst(prefix.count))
+                return remainder.contains("/") ? nil : remainder
+            })
     }
 
     func modificationDate(of url: URL) -> Date? {

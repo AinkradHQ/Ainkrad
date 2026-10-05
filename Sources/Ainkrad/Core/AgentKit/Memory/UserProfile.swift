@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Structured, forward-compatible model of user facts (preferences, patterns,
 /// style, tooling, conventions). Persisted as `profile.json`; every write is

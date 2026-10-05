@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/MCP/InProcessTransport.swift
 import Foundation
-import AinkradHostRuntime
 
 /// Carries MCP JSON-RPC to an Ainkrad app's in-process `MCPAppServer`.
 ///

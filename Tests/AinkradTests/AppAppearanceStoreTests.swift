@@ -1,9 +1,10 @@
-import Foundation
-import Testing
-import SwiftUI
-@testable import Ainkrad
 import AinkradAppKit
 import AinkradHostRuntime
+import Foundation
+import SwiftUI
+import Testing
+
+@testable import Ainkrad
 
 @Suite("AppAppearanceStore")
 @MainActor

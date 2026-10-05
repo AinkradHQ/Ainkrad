@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Keyless `web_search` backend backed by a SearXNG instance (self-hosted or
 /// public). No API key or payment card — configuration is just the instance
@@ -22,7 +22,11 @@ struct SearXNGSearchBackend: WebSearchBackend {
     }
 
     private struct Payload: Decodable {
-        struct Item: Decodable { let title: String?; let url: String?; let content: String? }
+        struct Item: Decodable {
+            let title: String?
+            let url: String?
+            let content: String?
+        }
         let results: [Item]
     }
 

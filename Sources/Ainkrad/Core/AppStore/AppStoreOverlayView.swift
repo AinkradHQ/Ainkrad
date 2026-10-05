@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// The App Store HUD overlay — browse the catalog and install / update /
 /// uninstall / enable apps. Same HUD language as the Launcher / Settings.
@@ -65,17 +65,24 @@ struct AppStoreOverlayView: View {
                 HStack(spacing: 10) {
                     Spacer()
                     AinkradButton(title: "Cancel", style: .ghost) { store.cancelReinstall() }
-                    AinkradButton(title: "Reset to Defaults", style: .secondary) { Task { await store.resetAndInstall(appID) } }
+                    AinkradButton(title: "Reset to Defaults", style: .secondary) {
+                        Task { await store.resetAndInstall(appID) }
+                    }
                     AinkradButton(title: "Restore", style: .primary) { Task { await store.restoreAndInstall(appID) } }
                 }
             }
             .padding(20)
             .frame(width: 380)
             .background(ChamferShape(cut: AinkradRadius.panel).fill(tokens.surface))
-            .overlay(ChamferShape(cut: AinkradRadius.panel).strokeBorder(tokens.accentPrimary.opacity(0.4), lineWidth: 1))
+            .overlay(
+                ChamferShape(cut: AinkradRadius.panel).strokeBorder(tokens.accentPrimary.opacity(0.4), lineWidth: 1)
+            )
             .shadow(color: .black.opacity(0.5), radius: 24, y: 8)
         }
-        .onKeyPress(.escape) { store.cancelReinstall(); return .handled }
+        .onKeyPress(.escape) {
+            store.cancelReinstall()
+            return .handled
+        }
     }
 
     private func panel(tokens: DesignTokens) -> some View {
@@ -84,10 +91,19 @@ struct AppStoreOverlayView: View {
                 AppStoreDetailView(
                     entry: store.entry(for: row.id), row: row, tokens: tokens, isBusy: store.busy.contains(row.id),
                     onBack: { store.closeDetail() },
-                    onInstall: { environment.sounds.play(.install); Task { await store.install(row.id) } },
+                    onInstall: {
+                        environment.sounds.play(.install)
+                        Task { await store.install(row.id) }
+                    },
                     onUpdate: { Task { await store.update(row.id) } },
-                    onUninstall: { environment.sounds.play(.uninstall); store.uninstall(row.id) },
-                    onToggleEnabled: { environment.sounds.play(.toggle); store.setEnabled($0, for: row.id) },
+                    onUninstall: {
+                        environment.sounds.play(.uninstall)
+                        store.uninstall(row.id)
+                    },
+                    onToggleEnabled: {
+                        environment.sounds.play(.toggle)
+                        store.setEnabled($0, for: row.id)
+                    },
                     onOpenScreenshot: { urls, index in
                         environment.sounds.play(.overlayOpen)
                         store.openLightbox(urls, at: index)
@@ -159,7 +175,7 @@ struct AppStoreOverlayView: View {
             .padding(48)
             .clipShape(ChamferShape(cut: AinkradRadius.md))
             .shadow(color: .black.opacity(0.6), radius: 30, y: 10)
-            .allowsHitTesting(false)   // clicks on the image fall through to nothing (backdrop closes)
+            .allowsHitTesting(false)  // clicks on the image fall through to nothing (backdrop closes)
 
             VStack {
                 HStack {
@@ -192,7 +208,9 @@ struct AppStoreOverlayView: View {
         }
     }
 
-    private func lightboxArrow(_ systemImage: String, tokens: DesignTokens, help: String, action: @escaping () -> Void) -> some View {
+    private func lightboxArrow(_ systemImage: String, tokens: DesignTokens, help: String, action: @escaping () -> Void)
+        -> some View
+    {
         AinkradIconButton(systemName: systemImage, action: action)
             .help(help)
     }
@@ -260,10 +278,12 @@ struct AppStoreOverlayView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Plugin signatures aren’t verified in this build")
                         .font(AinkradFont.display(12, weight: .semibold))
-                    Text("Downloads are still checked against the catalog’s SHA-256, so the bytes match what was published — but who published them isn’t verified.")
-                        .font(.system(size: 11))
-                        .foregroundStyle(tokens.foreground.opacity(0.7))
-                        .fixedSize(horizontal: false, vertical: true)
+                    Text(
+                        "Downloads are still checked against the catalog’s SHA-256, so the bytes match what was published — but who published them isn’t verified."
+                    )
+                    .font(.system(size: 11))
+                    .foregroundStyle(tokens.foreground.opacity(0.7))
+                    .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 0)
             }
@@ -271,7 +291,9 @@ struct AppStoreOverlayView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 12).padding(.vertical, 10)
             .background(ChamferShape(cut: AinkradRadius.sm).fill(tokens.accentSecondary.opacity(0.10)))
-            .overlay(ChamferShape(cut: AinkradRadius.sm).strokeBorder(tokens.accentSecondary.opacity(0.35), lineWidth: 1))
+            .overlay(
+                ChamferShape(cut: AinkradRadius.sm).strokeBorder(tokens.accentSecondary.opacity(0.35), lineWidth: 1)
+            )
             .padding(.horizontal, 18).padding(.bottom, 8)
         }
     }
@@ -302,7 +324,9 @@ struct AppStoreOverlayView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 12).padding(.vertical, 10)
             .background(ChamferShape(cut: AinkradRadius.sm).fill(tokens.accentTertiary.opacity(0.12)))
-            .overlay(ChamferShape(cut: AinkradRadius.sm).strokeBorder(tokens.accentTertiary.opacity(0.45), lineWidth: 1))
+            .overlay(
+                ChamferShape(cut: AinkradRadius.sm).strokeBorder(tokens.accentTertiary.opacity(0.45), lineWidth: 1)
+            )
             .padding(.horizontal, 18).padding(.bottom, 8)
         }
     }
@@ -324,10 +348,19 @@ struct AppStoreOverlayView: View {
                         AppStoreCard(
                             row: row, tokens: tokens, isBusy: store.busy.contains(row.id),
                             onOpen: { store.openDetail(row.id) },
-                            onInstall: { environment.sounds.play(.install); Task { await store.install(row.id) } },
+                            onInstall: {
+                                environment.sounds.play(.install)
+                                Task { await store.install(row.id) }
+                            },
                             onUpdate: { Task { await store.update(row.id) } },
-                            onUninstall: { environment.sounds.play(.uninstall); store.uninstall(row.id) },
-                            onToggleEnabled: { environment.sounds.play(.toggle); store.setEnabled($0, for: row.id) })
+                            onUninstall: {
+                                environment.sounds.play(.uninstall)
+                                store.uninstall(row.id)
+                            },
+                            onToggleEnabled: {
+                                environment.sounds.play(.toggle)
+                                store.setEnabled($0, for: row.id)
+                            })
                     }
                 }
                 .padding(18)

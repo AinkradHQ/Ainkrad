@@ -1,7 +1,7 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitUI
 import AinkradHostRuntime
+import SwiftUI
 
 /// The ⌘F search and ⌘P jump palette.
 ///
@@ -35,7 +35,10 @@ struct HoardFinderBar: View {
         }
         .frame(width: 560)
         .hudPanelChrome(tokens: tokens)
-        .onAppear { fieldFocused = true; highlighted = 0 }
+        .onAppear {
+            fieldFocused = true
+            highlighted = 0
+        }
         .onChange(of: search.queryText) { _, _ in highlighted = 0 }
     }
 
@@ -112,8 +115,10 @@ struct HoardFinderBar: View {
         }
         .padding(.horizontal, AinkradSpacing.md)
         .padding(.vertical, AinkradSpacing.sm)
-        .background(ChamferShape(cut: AinkradRadius.md)
-            .fill(tokens.accentSecondary.opacity(isHighlighted ? 0.12 : 0)))
+        .background(
+            ChamferShape(cut: AinkradRadius.md)
+                .fill(tokens.accentSecondary.opacity(isHighlighted ? 0.12 : 0))
+        )
         // The Launcher's targeting brackets on the highlighted row, for the
         // same reason: one selection language across every palette.
         .overlay(

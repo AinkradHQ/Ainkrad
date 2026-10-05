@@ -1,18 +1,22 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("TriggerDispatcher")
 @MainActor
 struct TriggerDispatcherTests {
     final class InstantRunner: AgentRunRunner {
-        func execute(prompt: String, posture: SavedExecutionPosture?, appendLog: @escaping (String) -> Void) async -> AgentRunOutcome { .success("ok") }
+        func execute(prompt: String, posture: SavedExecutionPosture?, appendLog: @escaping (String) -> Void) async
+            -> AgentRunOutcome
+        { .success("ok") }
     }
     private func make() -> (ScheduleStore, RunManager, TriggerDispatcher, AgentSchedule) {
         let store = ScheduleStore(persistence: InMemoryPersistenceStore())
         let runs = RunManager(persistence: InMemoryPersistenceStore(), runner: InstantRunner())
-        let s = AgentSchedule(name: "on change",
+        let s = AgentSchedule(
+            name: "on change",
             trigger: .fileChange(path: "/repo", glob: "*.swift"),
             prompt: "run tests", posture: SavedExecutionPosture(permissionMode: "ask", sandboxProfileID: nil))
         store.upsert(s)

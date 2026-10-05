@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// A passive, dismissable prompt shown after a complex clean turn: "This looked
 /// reusable — capture it as a skill?". Accept sends the reflection directive
@@ -23,7 +23,8 @@ struct SkillSuggestionChip: View {
                 AinkradButton(title: "Capture", style: .primary) {
                     session.acceptSkillSuggestion()
                 }
-                .accessibilityLabel("Capture as skill — the procedure using \(suggestion.toolNames.joined(separator: ", "))")
+                .accessibilityLabel(
+                    "Capture as skill — the procedure using \(suggestion.toolNames.joined(separator: ", "))")
                 AinkradButton(title: "Dismiss", style: .ghost) {
                     session.dismissSkillSuggestion()
                 }

@@ -1,8 +1,9 @@
+import AinkradHostRuntime
 // Tests/AinkradTests/EditQualityTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("EditQuality / EditFileTool degradation")
 @MainActor
@@ -18,7 +19,9 @@ struct EditQualityTests {
     }
 
     private func seeded(_ doc: LSPServersDocument) -> PersistenceStore {
-        let p = InMemoryPersistenceStore(); p.save(doc); return p
+        let p = InMemoryPersistenceStore()
+        p.save(doc)
+        return p
     }
 
     // MARK: - Never-block guarantee
@@ -26,9 +29,11 @@ struct EditQualityTests {
     @Test func editSucceedsWithoutLSP() async throws {
         let (dir, path) = tempFile(named: "a.txt")
         defer { try? FileManager.default.removeItem(at: dir) }
-        let tool = EditFileTool(editQuality: nil) // no LSP wired
-        let r = try await tool.execute(.object([
-            "path": .string(path), "old_string": .string(""), "new_string": .string("hello")]))
+        let tool = EditFileTool(editQuality: nil)  // no LSP wired
+        let r = try await tool.execute(
+            .object([
+                "path": .string(path), "old_string": .string(""), "new_string": .string("hello"),
+            ]))
         #expect(!r.isError)
         #expect(r.content.contains("Edited") || r.content.contains("Create"))
         #expect(try String(contentsOfFile: path, encoding: .utf8) == "hello")
@@ -37,11 +42,13 @@ struct EditQualityTests {
     @Test func editSucceedsWhenNoServerConfiguredForLanguage() async throws {
         let (dir, path) = tempFile()
         defer { try? FileManager.default.removeItem(at: dir) }
-        let registry = LSPServerRegistry(persistence: InMemoryPersistenceStore()) // no configs at all
+        let registry = LSPServerRegistry(persistence: InMemoryPersistenceStore())  // no configs at all
         let quality = EditQuality(registry: registry)
         let tool = EditFileTool(editQuality: quality)
-        let r = try await tool.execute(.object([
-            "path": .string(path), "old_string": .string(""), "new_string": .string("let x = 1")]))
+        let r = try await tool.execute(
+            .object([
+                "path": .string(path), "old_string": .string(""), "new_string": .string("let x = 1"),
+            ]))
         #expect(!r.isError)
         #expect(!r.content.contains("LSP diagnostics"))
     }
@@ -50,14 +57,17 @@ struct EditQualityTests {
         let (dir, path) = tempFile()
         defer { try? FileManager.default.removeItem(at: dir) }
         let doc = LSPServersDocument(servers: [
-            LSPServerConfig(id: "swift", command: "sourcekit-lsp", args: [], fileGlobs: ["*.swift"], enabled: true)])
+            LSPServerConfig(id: "swift", command: "sourcekit-lsp", args: [], fileGlobs: ["*.swift"], enabled: true)
+        ])
         let registry = LSPServerRegistry(persistence: seeded(doc)) { _ in
             LSPClient(transport: FailingStartTransport())
         }
         let quality = EditQuality(registry: registry)
         let tool = EditFileTool(editQuality: quality)
-        let r = try await tool.execute(.object([
-            "path": .string(path), "old_string": .string(""), "new_string": .string("let x = 1")]))
+        let r = try await tool.execute(
+            .object([
+                "path": .string(path), "old_string": .string(""), "new_string": .string("let x = 1"),
+            ]))
         #expect(!r.isError)
         #expect(!r.content.contains("LSP diagnostics"))
     }
@@ -70,19 +80,27 @@ struct EditQualityTests {
         // `formatting` would hang forever without the client's own timeout).
         let silent = StubMCPTransport { message in
             guard let id = message["id"]?.stringValue,
-                  message["method"]?.stringValue == "initialize" else { return [] }
-            return [.object(["jsonrpc": .string("2.0"), "id": .string(id),
-                "result": .object(["capabilities": .object([:])])])]
+                message["method"]?.stringValue == "initialize"
+            else { return [] }
+            return [
+                .object([
+                    "jsonrpc": .string("2.0"), "id": .string(id),
+                    "result": .object(["capabilities": .object([:])]),
+                ])
+            ]
         }
         let doc = LSPServersDocument(servers: [
-            LSPServerConfig(id: "swift", command: "sourcekit-lsp", args: [], fileGlobs: ["*.swift"], enabled: true)])
+            LSPServerConfig(id: "swift", command: "sourcekit-lsp", args: [], fileGlobs: ["*.swift"], enabled: true)
+        ])
         let registry = LSPServerRegistry(persistence: seeded(doc)) { _ in
             LSPClient(transport: silent, requestTimeout: 0.05)
         }
         let quality = EditQuality(registry: registry, diagnosticsPollTimeout: 0.05)
         let tool = EditFileTool(editQuality: quality)
-        let r = try await tool.execute(.object([
-            "path": .string(path), "old_string": .string(""), "new_string": .string("let x = 1")]))
+        let r = try await tool.execute(
+            .object([
+                "path": .string(path), "old_string": .string(""), "new_string": .string("let x = 1"),
+            ]))
         #expect(!r.isError)
         #expect(!r.content.contains("LSP diagnostics"))
     }
@@ -96,19 +114,33 @@ struct EditQualityTests {
             guard let id = message["id"]?.stringValue else {
                 // didOpen notification triggers the server "pushing" diagnostics.
                 if message["method"]?.stringValue == "textDocument/didOpen" {
-                    return [.object(["jsonrpc": .string("2.0"), "method": .string("textDocument/publishDiagnostics"),
-                        "params": .object([
-                            "uri": .string("file://\(path)"),
-                            "diagnostics": .array([.object([
-                                "range": .object(["start": .object(["line": .number(0), "character": .number(4)])]),
-                                "severity": .number(1), "message": .string("expected ';'")])])])])]
+                    return [
+                        .object([
+                            "jsonrpc": .string("2.0"), "method": .string("textDocument/publishDiagnostics"),
+                            "params": .object([
+                                "uri": .string("file://\(path)"),
+                                "diagnostics": .array([
+                                    .object([
+                                        "range": .object([
+                                            "start": .object(["line": .number(0), "character": .number(4)])
+                                        ]),
+                                        "severity": .number(1), "message": .string("expected ';'"),
+                                    ])
+                                ]),
+                            ]),
+                        ])
+                    ]
                 }
                 return []
             }
             switch message["method"]?.stringValue {
             case "initialize":
-                return [.object(["jsonrpc": .string("2.0"), "id": .string(id),
-                    "result": .object(["capabilities": .object([:])])])]
+                return [
+                    .object([
+                        "jsonrpc": .string("2.0"), "id": .string(id),
+                        "result": .object(["capabilities": .object([:])]),
+                    ])
+                ]
             case "textDocument/formatting":
                 return [.object(["jsonrpc": .string("2.0"), "id": .string(id), "result": .null])]
             default:
@@ -116,13 +148,16 @@ struct EditQualityTests {
             }
         }
         let doc = LSPServersDocument(servers: [
-            LSPServerConfig(id: "swift", command: "sourcekit-lsp", args: [], fileGlobs: ["*.swift"], enabled: true)])
+            LSPServerConfig(id: "swift", command: "sourcekit-lsp", args: [], fileGlobs: ["*.swift"], enabled: true)
+        ])
         let registry = LSPServerRegistry(persistence: seeded(doc)) { _ in LSPClient(transport: stub) }
         let quality = EditQuality(registry: registry)
         let tool = EditFileTool(editQuality: quality)
 
-        let r = try await tool.execute(.object([
-            "path": .string(path), "old_string": .string(""), "new_string": .string("let x = 1")]))
+        let r = try await tool.execute(
+            .object([
+                "path": .string(path), "old_string": .string(""), "new_string": .string("let x = 1"),
+            ]))
         #expect(!r.isError)
         #expect(r.content.contains("LSP diagnostics"))
         #expect(r.content.contains("expected ';'"))
@@ -135,29 +170,42 @@ struct EditQualityTests {
             guard let id = message["id"]?.stringValue else { return [] }
             switch message["method"]?.stringValue {
             case "initialize":
-                return [.object(["jsonrpc": .string("2.0"), "id": .string(id),
-                    "result": .object(["capabilities": .object([:])])])]
+                return [
+                    .object([
+                        "jsonrpc": .string("2.0"), "id": .string(id),
+                        "result": .object(["capabilities": .object([:])]),
+                    ])
+                ]
             case "textDocument/formatting":
-                return [.object(["jsonrpc": .string("2.0"), "id": .string(id),
-                    "result": .array([.object([
-                        "range": .object([
-                            "start": .object(["line": .number(0), "character": .number(0)]),
-                            "end": .object(["line": .number(0), "character": .number(7)]),
+                return [
+                    .object([
+                        "jsonrpc": .string("2.0"), "id": .string(id),
+                        "result": .array([
+                            .object([
+                                "range": .object([
+                                    "start": .object(["line": .number(0), "character": .number(0)]),
+                                    "end": .object(["line": .number(0), "character": .number(7)]),
+                                ]),
+                                "newText": .string("let x = 1"),
+                            ])
                         ]),
-                        "newText": .string("let x = 1"),
-                    ])])])]
+                    ])
+                ]
             default:
                 return [.object(["jsonrpc": .string("2.0"), "id": .string(id), "result": .null])]
             }
         }
         let doc = LSPServersDocument(servers: [
-            LSPServerConfig(id: "swift", command: "sourcekit-lsp", args: [], fileGlobs: ["*.swift"], enabled: true)])
+            LSPServerConfig(id: "swift", command: "sourcekit-lsp", args: [], fileGlobs: ["*.swift"], enabled: true)
+        ])
         let registry = LSPServerRegistry(persistence: seeded(doc)) { _ in LSPClient(transport: stub) }
         let quality = EditQuality(registry: registry, diagnosticsPollTimeout: 0.05)
         let tool = EditFileTool(editQuality: quality)
 
-        let r = try await tool.execute(.object([
-            "path": .string(path), "old_string": .string(""), "new_string": .string("let x=1")]))
+        let r = try await tool.execute(
+            .object([
+                "path": .string(path), "old_string": .string(""), "new_string": .string("let x=1"),
+            ]))
         #expect(!r.isError)
         #expect(try String(contentsOfFile: path, encoding: .utf8) == "let x = 1")
     }

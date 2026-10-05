@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 import AppKit
 import SwiftUI
-import AinkradHostRuntime
 
 /// The top edge of the screen — not a bar. The system traffic lights and
 /// the clickable workspace dots float directly on the sky, with no
@@ -50,10 +50,12 @@ struct HUDBar: View {
             Spacer()
 
             if let center = environment.signalCenter {
-                SignalBellButton(unread: center.totalUnread,
-                                 isMuted: center.rules.suppression.isSuppressing(at: Date()),
-                                 arrivalToken: center.arrivalToken,
-                                 tokens: tokens) {
+                SignalBellButton(
+                    unread: center.totalUnread,
+                    isMuted: center.rules.suppression.isSuppressing(at: Date()),
+                    arrivalToken: center.arrivalToken,
+                    tokens: tokens
+                ) {
                     environment.isSignalDropdownPresented.toggle()
                 }
             }
@@ -133,13 +135,19 @@ private struct WindowControlsView: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            control(color: Color(red: 1.0, green: 0.37, blue: 0.34),
-                    glyph: "xmark", help: "Close") { $0.performClose(nil) }
-            control(color: Color(red: 1.0, green: 0.74, blue: 0.18),
-                    glyph: "minus", help: "Minimize") { $0.miniaturize(nil) }
-            control(color: Color(red: 0.16, green: 0.79, blue: 0.25),
-                    glyph: "arrow.down.right.and.arrow.up.left",
-                    help: "Exit Full Screen") { $0.toggleFullScreen(nil) }
+            control(
+                color: Color(red: 1.0, green: 0.37, blue: 0.34),
+                glyph: "xmark", help: "Close"
+            ) { $0.performClose(nil) }
+            control(
+                color: Color(red: 1.0, green: 0.74, blue: 0.18),
+                glyph: "minus", help: "Minimize"
+            ) { $0.miniaturize(nil) }
+            control(
+                color: Color(red: 0.16, green: 0.79, blue: 0.25),
+                glyph: "arrow.down.right.and.arrow.up.left",
+                help: "Exit Full Screen"
+            ) { $0.toggleFullScreen(nil) }
         }
         .onHover { isHovering = $0 }
     }

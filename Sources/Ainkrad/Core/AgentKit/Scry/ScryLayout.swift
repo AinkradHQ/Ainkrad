@@ -23,25 +23,27 @@ enum ScryLayout {
     /// Columns a hint occupies, clamped to the available column count.
     static func span(_ hint: ScrySizeHint, columns: Int) -> Int {
         switch hint {
-        case .small:  return 1
+        case .small: return 1
         case .medium: return 1
-        case .large:  return min(2, columns)
-        case .full:   return columns
+        case .large: return min(2, columns)
+        case .full: return columns
         }
     }
 
     static func height(_ hint: ScrySizeHint) -> CGFloat {
         switch hint {
-        case .small:  return 72
+        case .small: return 72
         case .medium: return 240
-        case .large:  return 320
-        case .full:   return 280
+        case .large: return 320
+        case .full: return 280
         }
     }
 
-    static func frames(for elements: [ScryElement],
-                       in size: CGSize,
-                       overrides: [String: ScryRect]) -> [String: ScryRect] {
+    static func frames(
+        for elements: [ScryElement],
+        in size: CGSize,
+        overrides: [String: ScryRect]
+    ) -> [String: ScryRect] {
         let columns = columnCount(for: size.width)
         let usableWidth = max(0, size.width - 2 * padding)
         let columnWidth = (usableWidth - gutter * CGFloat(columns - 1)) / CGFloat(columns)
@@ -78,9 +80,11 @@ enum ScryLayout {
     }
 
     /// Total height the flow occupies — the scroll content height.
-    static func contentHeight(for elements: [ScryElement],
-                              in size: CGSize,
-                              overrides: [String: ScryRect]) -> CGFloat {
+    static func contentHeight(
+        for elements: [ScryElement],
+        in size: CGSize,
+        overrides: [String: ScryRect]
+    ) -> CGFloat {
         let frames = frames(for: elements, in: size, overrides: overrides)
         // Must also span overridden (floating) cards: `frames` excludes them
         // by design, so a card dragged below the flow's bottom would

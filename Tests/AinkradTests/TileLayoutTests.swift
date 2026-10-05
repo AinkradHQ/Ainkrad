@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("TileLayout (N-ary split tree)")
@@ -249,7 +250,8 @@ struct TileLayoutTests {
         layout.splitFocused(.bottom)
 
         guard case .split(_, let children, _) = layout.root,
-              case .split(let innerAxis, let inner, _) = children[1] else {
+            case .split(let innerAxis, let inner, _) = children[1]
+        else {
             Issue.record("expected nested split under the focused pane")
             return
         }

@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite struct TodoStepPresentationTests {
@@ -16,9 +17,11 @@ import Testing
     }
 
     @Test func progressSummary() {
-        let items = [TodoItem(content: "a", status: .completed),
-                     TodoItem(content: "b", status: .completed),
-                     TodoItem(content: "c", status: .pending)]
+        let items = [
+            TodoItem(content: "a", status: .completed),
+            TodoItem(content: "b", status: .completed),
+            TodoItem(content: "c", status: .pending),
+        ]
         #expect(TodoStepPresentation.summary(items) == "2 / 3")
     }
 }

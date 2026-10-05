@@ -70,7 +70,8 @@ struct EditQuality {
     /// Polls cached diagnostics until non-empty or `timeout` elapses — bounded
     /// so an unresponsive/silent server degrades to "no advice" rather than
     /// hanging the edit tool call.
-    private static func pollDiagnostics(client: LSPClient, uri: String, timeout: TimeInterval) async -> [LSPDiagnostic] {
+    private static func pollDiagnostics(client: LSPClient, uri: String, timeout: TimeInterval) async -> [LSPDiagnostic]
+    {
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
             let diagnostics = await client.diagnostics(for: uri)
@@ -114,7 +115,8 @@ struct EditQuality {
             let startLineText = lines[edit.startLine]
             let endLineText = lines[edit.endLine]
             guard let startIndex = utf16Index(startLineText, edit.startCharacter),
-                  let endIndex = utf16Index(endLineText, edit.endCharacter) else { continue }
+                let endIndex = utf16Index(endLineText, edit.endCharacter)
+            else { continue }
             let prefix = String(startLineText[..<startIndex])
             let suffix = String(endLineText[endIndex...])
             let replacement = (prefix + edit.newText + suffix).components(separatedBy: "\n")
@@ -126,7 +128,8 @@ struct EditQuality {
     private static func utf16Index(_ line: String, _ utf16Offset: Int) -> String.Index? {
         let units = line.utf16
         guard utf16Offset >= 0, utf16Offset <= units.count,
-              let unitIndex = units.index(units.startIndex, offsetBy: utf16Offset, limitedBy: units.endIndex) else {
+            let unitIndex = units.index(units.startIndex, offsetBy: utf16Offset, limitedBy: units.endIndex)
+        else {
             return nil
         }
         return unitIndex.samePosition(in: line)

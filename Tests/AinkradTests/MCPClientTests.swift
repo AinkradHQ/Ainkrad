@@ -1,8 +1,9 @@
+import AinkradHostRuntime
 // Tests/AinkradTests/MCPClientTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("MCPClient", .timeLimit(.minutes(1)))
 struct MCPClientTests {
@@ -12,36 +13,73 @@ struct MCPClientTests {
     ) -> StubMCPTransport {
         StubMCPTransport { message in
             guard let id = message["id"]?.stringValue,
-                  let method = message["method"]?.stringValue else { return [] }
+                let method = message["method"]?.stringValue
+            else { return [] }
             switch method {
             case "initialize":
                 if initializeFails {
-                    return [.object(["jsonrpc": .string("2.0"), "id": .string(id),
-                        "error": .object(["code": .number(-32000), "message": .string("bad handshake")])])]
+                    return [
+                        .object([
+                            "jsonrpc": .string("2.0"), "id": .string(id),
+                            "error": .object(["code": .number(-32000), "message": .string("bad handshake")]),
+                        ])
+                    ]
                 }
-                return [.object(["jsonrpc": .string("2.0"), "id": .string(id),
-                    "result": .object(["capabilities": .object(["tools": .object([:])]),
-                                       "serverInfo": .object(["name": .string("stub")])])])]
+                return [
+                    .object([
+                        "jsonrpc": .string("2.0"), "id": .string(id),
+                        "result": .object([
+                            "capabilities": .object(["tools": .object([:])]),
+                            "serverInfo": .object(["name": .string("stub")]),
+                        ]),
+                    ])
+                ]
             case "tools/list":
-                return [.object(["jsonrpc": .string("2.0"), "id": .string(id),
-                    "result": .object(["tools": .array([
-                        .object(["name": .string("search"),
-                                 "description": .string("web search"),
-                                 "inputSchema": .object(["type": .string("object")])])])])])]
+                return [
+                    .object([
+                        "jsonrpc": .string("2.0"), "id": .string(id),
+                        "result": .object([
+                            "tools": .array([
+                                .object([
+                                    "name": .string("search"),
+                                    "description": .string("web search"),
+                                    "inputSchema": .object(["type": .string("object")]),
+                                ])
+                            ])
+                        ]),
+                    ])
+                ]
             case "tools/call":
                 // Only "search" is a known tool; anything else is an RPC error,
                 // so callTool surfaces it (drives `surfacesRPCErrors`).
                 guard message["params"]?["name"]?.stringValue == "search" else {
-                    return [.object(["jsonrpc": .string("2.0"), "id": .string(id),
-                        "error": .object(["code": .number(-32602),
-                                          "message": .string("unknown tool")])])]
+                    return [
+                        .object([
+                            "jsonrpc": .string("2.0"), "id": .string(id),
+                            "error": .object([
+                                "code": .number(-32602),
+                                "message": .string("unknown tool"),
+                            ]),
+                        ])
+                    ]
                 }
-                return [.object(["jsonrpc": .string("2.0"), "id": .string(id),
-                    "result": .object(["content": .array([
-                        .object(["type": .string("text"), "text": .string("result-text")])])])])]
+                return [
+                    .object([
+                        "jsonrpc": .string("2.0"), "id": .string(id),
+                        "result": .object([
+                            "content": .array([
+                                .object(["type": .string("text"), "text": .string("result-text")])
+                            ])
+                        ]),
+                    ])
+                ]
             default:
-                return [.object(["jsonrpc": .string("2.0"), "id": .string(id),
-                    "error": .object(["code": .number(-32601), "message": .string("nope")])])]
+                return [
+                    .object([
+                        "jsonrpc": .string("2.0"), "id": .string(id),
+                        "error": .object(["code": .number(-32601), "message": .string("nope")]),
+                    ])
+                ]
             }
         }
     }
@@ -93,10 +131,11 @@ struct MCPClientTests {
 
         // Inject a response for an id nobody is waiting on — must be dropped,
         // never crash, and never block the next legitimate correlation.
-        await transport.inject(.object([
-            "jsonrpc": .string("2.0"), "id": .string("does-not-exist"),
-            "result": .object(["ok": .bool(true)]),
-        ]))
+        await transport.inject(
+            .object([
+                "jsonrpc": .string("2.0"), "id": .string("does-not-exist"),
+                "result": .object(["ok": .bool(true)]),
+            ]))
 
         let tools = try await client.listTools()
         #expect(tools.map(\.name) == ["search"])
@@ -121,8 +160,12 @@ struct MCPClientTests {
         let silent = StubMCPTransport { message in
             guard let id = message["id"]?.stringValue else { return [] }
             if message["method"]?.stringValue == "initialize" {
-                return [.object(["jsonrpc": .string("2.0"), "id": .string(id),
-                    "result": .object(["capabilities": .object([:])])])]
+                return [
+                    .object([
+                        "jsonrpc": .string("2.0"), "id": .string(id),
+                        "result": .object(["capabilities": .object([:])]),
+                    ])
+                ]
             }
             return []
         }
@@ -135,8 +178,7 @@ struct MCPClientTests {
         await client.disconnect()
 
         var threw = false
-        do { _ = try await callTask.value }
-        catch is MCPError { threw = true }
+        do { _ = try await callTask.value } catch is MCPError { threw = true }
         #expect(threw)
     }
 

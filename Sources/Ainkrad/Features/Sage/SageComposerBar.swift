@@ -1,8 +1,8 @@
+import AinkradAppKit
+import AinkradHostRuntime
 import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
-import AinkradAppKit
-import AinkradHostRuntime
 
 /// The Sage composer: one seamless neon surface (soft elevated fill) with a
 /// bottom control strip holding the connection·model pill, the compact
@@ -98,11 +98,13 @@ struct SageComposerBar: View {
                 mentionChips
             }
 
-            AinkradTextArea(text: $draft, placeholder: "Message Sage…",
-                            minHeight: 34, maxHeight: 80, autoFocus: autoFocusOnAppear,
-                            onSubmit: { send() })
-                .disabled(isBusy)
-                .onDrop(of: [.image, .fileURL], isTargeted: nil, perform: handleDrop)
+            AinkradTextArea(
+                text: $draft, placeholder: "Message Sage…",
+                minHeight: 34, maxHeight: 80, autoFocus: autoFocusOnAppear,
+                onSubmit: { send() }
+            )
+            .disabled(isBusy)
+            .onDrop(of: [.image, .fileURL], isTargeted: nil, perform: handleDrop)
 
             // Wave 3e: the whole strip is pinned to one uniform control height
             // (30) so the icon buttons, the model select, and the send button
@@ -113,13 +115,17 @@ struct SageComposerBar: View {
                 // buttons that cycle on click, matching the right cluster's
                 // `AinkradIconButton` idiom; model is the only real select.
                 // Replaces the old grouped "well" of three stacked selects.
-                AinkradIconButton(systemName: environment.agentStore.active.icon, size: Self.controlHeight,
-                                  tooltip: "Agent: \(environment.agentStore.active.name) — Shift+Tab") {
+                AinkradIconButton(
+                    systemName: environment.agentStore.active.icon, size: Self.controlHeight,
+                    tooltip: "Agent: \(environment.agentStore.active.name) — Shift+Tab"
+                ) {
                     environment.agentStore.cycleActive()
                 }
 
-                AinkradIconButton(systemName: environment.agentPermissionStore.mode.glyph, size: Self.controlHeight,
-                                  tooltip: "Permission: \(SageComposerBar.title(environment.agentPermissionStore.mode)) — ⌘⇧P") {
+                AinkradIconButton(
+                    systemName: environment.agentPermissionStore.mode.glyph, size: Self.controlHeight,
+                    tooltip: "Permission: \(SageComposerBar.title(environment.agentPermissionStore.mode)) — ⌘⇧P"
+                ) {
                     environment.agentPermissionStore.cycle()
                 }
 
@@ -141,8 +147,9 @@ struct SageComposerBar: View {
 
                 micTrigger
 
-                RecordingIndicatorView(status: environment.voiceService.pushToTalk.status, tokens: tokens,
-                                        notice: environment.voiceService.lastNotice)
+                RecordingIndicatorView(
+                    status: environment.voiceService.pushToTalk.status, tokens: tokens,
+                    notice: environment.voiceService.lastNotice)
 
                 SendButton(enabled: canSend(isBusy: isBusy), tokens: tokens) { send() }
             }
@@ -343,11 +350,15 @@ private struct SendButton: View {
                 .font(.system(size: 15, weight: .bold))
                 .foregroundStyle(enabled ? tokens.accentSecondary.hostContrastingText : tokens.foreground.opacity(0.3))
                 .frame(width: Self.footprint, height: Self.footprint)
-                .background(ChamferShape(cut: 6).fill(enabled ? tokens.accentSecondary.opacity(0.9) : tokens.surfaceElevated.opacity(0.5)))
+                .background(
+                    ChamferShape(cut: 6).fill(
+                        enabled ? tokens.accentSecondary.opacity(0.9) : tokens.surfaceElevated.opacity(0.5))
+                )
                 .contentShape(ChamferShape(cut: 6))
                 .scaleEffect(isHovering && enabled && !reduceMotion ? 1.06 : 1.0)
-                .shadow(color: enabled ? tokens.accentSecondary.opacity(isHovering ? 0.55 : 0.3) : .clear,
-                        radius: enabled ? 6 : 0)
+                .shadow(
+                    color: enabled ? tokens.accentSecondary.opacity(isHovering ? 0.55 : 0.3) : .clear,
+                    radius: enabled ? 6 : 0)
         }
         .buttonStyle(.plain)
         .disabled(!enabled)

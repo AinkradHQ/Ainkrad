@@ -1,15 +1,17 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("ScryChartParse")
 struct ScryDiagramTests {
     @Test func parsesValidCSVRows() {
         let bars = ScryChartParse.bars(from: "Ada,3\nBo,7")
-        #expect(bars == [
-            ScryChartBar(label: "Ada", value: 3),
-            ScryChartBar(label: "Bo", value: 7),
-        ])
+        #expect(
+            bars == [
+                ScryChartBar(label: "Ada", value: 3),
+                ScryChartBar(label: "Bo", value: 7),
+            ])
     }
 
     @Test func skipsMalformedRowsButKeepsGoodOnes() {
@@ -38,10 +40,11 @@ struct ScryDiagramTests {
 
     @Test func zeroValuesAreKept() {
         let bars = ScryChartParse.bars(from: "Ada,0\nBo,5")
-        #expect(bars == [
-            ScryChartBar(label: "Ada", value: 0),
-            ScryChartBar(label: "Bo", value: 5),
-        ])
+        #expect(
+            bars == [
+                ScryChartBar(label: "Ada", value: 0),
+                ScryChartBar(label: "Bo", value: 5),
+            ])
     }
 
     @Test func emptyLabelIsDropped() {
@@ -68,10 +71,12 @@ struct ScryDiagramRoutingTests {
 
     @Test func chartKindRoutesToChartWhenBarsParse() {
         let route = ScryDiagramRouting.route(for: element(kind: .chart, body: "Ada,3\nBo,7"))
-        #expect(route == .chart(bars: [
-            ScryChartBar(label: "Ada", value: 3),
-            ScryChartBar(label: "Bo", value: 7),
-        ]))
+        #expect(
+            route
+                == .chart(bars: [
+                    ScryChartBar(label: "Ada", value: 3),
+                    ScryChartBar(label: "Bo", value: 7),
+                ]))
     }
 
     @Test func chartKindRoutesToFallbackWhenBarsEmpty() {

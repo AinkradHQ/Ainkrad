@@ -11,8 +11,10 @@ import Foundation
 /// flag or escape its argv slot — `Process`/docker parse each element
 /// verbatim, with no shell re-tokenization step.
 enum DockerArgsBuilder {
-    static func runArgs(command: String, profile: SandboxProfile,
-                        workspacePath: String, image: String) -> [String] {
+    static func runArgs(
+        command: String, profile: SandboxProfile,
+        workspacePath: String, image: String
+    ) -> [String] {
         var args: [String] = ["run", "--rm"]
 
         switch profile.networkPolicy {

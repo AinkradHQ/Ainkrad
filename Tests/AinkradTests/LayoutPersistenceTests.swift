@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("Workspace persistence & Focus Mode")
@@ -54,7 +55,7 @@ struct LayoutPersistenceTests {
     func launchStateKeepsOnlyNamedWorkspaces() {
         let manager = WorkspaceManager()
         manager.createWorkspace().name = "Coding"
-        manager.createWorkspace()                   // stays "Workspace <n>"
+        manager.createWorkspace()  // stays "Workspace <n>"
         manager.createWorkspace().name = "WorkShop"
 
         let kept = manager.snapshot().launchState(restoringPanes: false).workspaces
@@ -91,7 +92,7 @@ struct LayoutPersistenceTests {
         let manager = WorkspaceManager()
         manager.createWorkspace().name = "Coding"
         manager.createWorkspace().name = "WorkShop"
-        #expect(manager.snapshot().activeWorkspaceIndex != 0)   // last created is active
+        #expect(manager.snapshot().activeWorkspaceIndex != 0)  // last created is active
 
         let launch = manager.snapshot().launchState(restoringPanes: false)
         let restored = WorkspaceManager()

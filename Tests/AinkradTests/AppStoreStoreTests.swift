@@ -1,8 +1,9 @@
-import Testing
+import AinkradHostRuntime
 import Foundation
 import SwiftUI
+import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @MainActor
 final class FakeAppStoreService: AppStoreServing {
@@ -24,34 +25,48 @@ final class FakeAppStoreService: AppStoreServing {
         installedResult[appID] = .init(version: v, sourceRepo: "o/\(appID)")
     }
     func update(appID: String) async throws { try await install(appID: appID) }
-    func uninstall(appID: String) throws { uninstalledCalls.append(appID); installedResult[appID] = nil }
+    func uninstall(appID: String) throws {
+        uninstalledCalls.append(appID)
+        installedResult[appID] = nil
+    }
     func installedApps() -> [String: InstalledPluginsDocument.Entry] { installedResult }
     func availableUpdates() -> [CatalogEntry] { updatesResult }
     func hasRetainedData(appID: String) -> Bool { retained.contains(appID) }
-    func restoreRetainedData(appID: String) { restoredCalls.append(appID); retained.remove(appID) }
-    func discardRetainedData(appID: String) { discardedCalls.append(appID); retained.remove(appID) }
+    func restoreRetainedData(appID: String) {
+        restoredCalls.append(appID)
+        retained.remove(appID)
+    }
+    func discardRetainedData(appID: String) {
+        discardedCalls.append(appID)
+        retained.remove(appID)
+    }
 }
 
 @MainActor
 struct AppStoreStoreTests {
     private func entry(_ id: String, _ v: String = "1.0.0") -> CatalogEntry {
-        CatalogEntry(appID: id, displayName: id.capitalized, icon: "app", description: "desc \(id)",
-                     version: v, apiVersion: 1, downloadURL: URL(string: "https://e/\(id).zip")!,
-                     sha256: "x", sourceRepo: "o/\(id)")
+        CatalogEntry(
+            appID: id, displayName: id.capitalized, icon: "app", description: "desc \(id)",
+            version: v, apiVersion: 1, downloadURL: URL(string: "https://e/\(id).zip")!,
+            sha256: "x", sourceRepo: "o/\(id)")
     }
     private func builtIn(_ id: String) -> RegisteredApp {
-        RegisteredApp(id: id, displayName: id.capitalized, icon: "terminal", isEnabledByDefault: true,
+        RegisteredApp(
+            id: id, displayName: id.capitalized, icon: "terminal", isEnabledByDefault: true,
             source: .builtIn, makeRootView: { AnyView(EmptyView()) },
             makeSettingsView: { AnyView(EmptyView()) }, chromeFill: { nil })
     }
     private func plugin(_ id: String) -> RegisteredApp {
-        RegisteredApp(id: id, displayName: id.capitalized, icon: "app", isEnabledByDefault: true,
+        RegisteredApp(
+            id: id, displayName: id.capitalized, icon: "app", isEnabledByDefault: true,
             source: .plugin(url: URL(fileURLWithPath: "/tmp/\(id).bundle"), apiVersion: 1),
             makeRootView: { AnyView(EmptyView()) },
             makeSettingsView: { AnyView(EmptyView()) }, chromeFill: { nil })
     }
-    private func store(service: FakeAppStoreService, builtIns: [RegisteredApp] = [],
-                      loaded: [RegisteredApp] = []) -> AppStoreStore {
+    private func store(
+        service: FakeAppStoreService, builtIns: [RegisteredApp] = [],
+        loaded: [RegisteredApp] = []
+    ) -> AppStoreStore {
         let registry = BuiltInAppRegistry(persistence: InMemoryPersistenceStore())
         registry.install(builtIn: builtIns, loaded: loaded)
         let s = AppStoreStore(service: service, registry: registry)
@@ -61,7 +76,8 @@ struct AppStoreStoreTests {
 
     @Test("a catalog-only app is .available")
     func availableRow() {
-        let svc = FakeAppStoreService(); svc.cachedCatalog = [entry("notes")]
+        let svc = FakeAppStoreService()
+        svc.cachedCatalog = [entry("notes")]
         let row = store(service: svc).rows.first { $0.id == "notes" }
         #expect(row?.status == .available)
         #expect(row?.kind == .plugin)
@@ -94,21 +110,27 @@ struct AppStoreStoreTests {
         svc.installedResult = ["timer": .init(version: "1.0.0", sourceRepo: "o/timer")]
         svc.updatesResult = [entry("timer", "2.0.0")]
         let s = store(service: svc, builtIns: [builtIn("terminal")])
-        s.filter = .all;       #expect(Set(s.visibleRows.map(\.id)) == ["notes", "timer", "terminal"])
-        s.filter = .installed;  #expect(Set(s.visibleRows.map(\.id)) == ["timer", "terminal"])
-        s.filter = .updates;    #expect(s.visibleRows.map(\.id) == ["timer"])
+        s.filter = .all
+        #expect(Set(s.visibleRows.map(\.id)) == ["notes", "timer", "terminal"])
+        s.filter = .installed
+        #expect(Set(s.visibleRows.map(\.id)) == ["timer", "terminal"])
+        s.filter = .updates
+        #expect(s.visibleRows.map(\.id) == ["timer"])
     }
 
     @Test("empty catalog still lists the built-in under installed")
     func emptyCatalog() {
         let s = store(service: FakeAppStoreService(), builtIns: [builtIn("terminal")])
-        s.filter = .all;       #expect(s.visibleRows.map(\.id) == ["terminal"])
-        s.filter = .updates;   #expect(s.visibleRows.isEmpty)
+        s.filter = .all
+        #expect(s.visibleRows.map(\.id) == ["terminal"])
+        s.filter = .updates
+        #expect(s.visibleRows.isEmpty)
     }
 
     @Test("install marks busy then clears, and the row becomes installed")
     func installFlow() async {
-        let svc = FakeAppStoreService(); svc.cachedCatalog = [entry("notes")]
+        let svc = FakeAppStoreService()
+        svc.cachedCatalog = [entry("notes")]
         let s = store(service: svc)
         #expect(s.rows.first { $0.id == "notes" }?.status == .available)
         await s.install("notes")
@@ -120,7 +142,8 @@ struct AppStoreStoreTests {
 
     @Test("updating an app whose bundle is already loaded asks for a restart")
     func updateOfLoadedBundleNeedsRestart() async {
-        let svc = FakeAppStoreService(); svc.cachedCatalog = [entry("notes", "2.0.0")]
+        let svc = FakeAppStoreService()
+        svc.cachedCatalog = [entry("notes", "2.0.0")]
         svc.installedResult["notes"] = .init(version: "1.0.0", sourceRepo: "o/notes")
         let s = store(service: svc, loaded: [plugin("notes")])
         s.isBundleLoaded = { $0 == "notes" }
@@ -130,7 +153,8 @@ struct AppStoreStoreTests {
 
     @Test("installing an app that was never loaded needs no restart")
     func freshInstallNeedsNoRestart() async {
-        let svc = FakeAppStoreService(); svc.cachedCatalog = [entry("notes")]
+        let svc = FakeAppStoreService()
+        svc.cachedCatalog = [entry("notes")]
         let s = store(service: svc)
         s.isBundleLoaded = { _ in false }
         await s.install("notes")
@@ -139,7 +163,8 @@ struct AppStoreStoreTests {
 
     @Test("a failing install surfaces the error and leaves rows unchanged")
     func installError() async {
-        let svc = FakeAppStoreService(); svc.cachedCatalog = [entry("notes")]
+        let svc = FakeAppStoreService()
+        svc.cachedCatalog = [entry("notes")]
         svc.installError = .checksumMismatch
         let s = store(service: svc)
         await s.install("notes")
@@ -157,7 +182,7 @@ struct AppStoreStoreTests {
         #expect(s.rows.first { $0.id == "notes" }?.status == .installed)
         s.uninstall("notes")
         #expect(svc.uninstalledCalls == ["notes"])
-        #expect(s.rows.first { $0.id == "notes" }?.status == .available)   // back to catalog-only
+        #expect(s.rows.first { $0.id == "notes" }?.status == .available)  // back to catalog-only
     }
 
     @Test("an App Store-installed plugin is managed (uninstallable)")
@@ -175,7 +200,7 @@ struct AppStoreStoreTests {
     func devSideloadedPluginRow() {
         // Registered as a plugin, but never App Store-installed → not in the
         // installed doc. Must be visible + installed, but not uninstallable.
-        let svc = FakeAppStoreService()   // installedApps() == empty
+        let svc = FakeAppStoreService()  // installedApps() == empty
         let row = store(service: svc, loaded: [plugin("hello")]).rows.first { $0.id == "hello" }
         #expect(row?.status == .installed)
         #expect(row?.kind == .plugin)
@@ -184,13 +209,16 @@ struct AppStoreStoreTests {
 
     @Test("a built-in is never managed (not uninstallable via App Store)")
     func builtInNotManaged() {
-        let row = store(service: FakeAppStoreService(), builtIns: [builtIn("terminal")]).rows.first { $0.id == "terminal" }
+        let row = store(service: FakeAppStoreService(), builtIns: [builtIn("terminal")]).rows.first {
+            $0.id == "terminal"
+        }
         #expect(row?.isManaged == false)
     }
 
     @Test("a catalog-only app is not managed")
     func availableNotManaged() {
-        let svc = FakeAppStoreService(); svc.cachedCatalog = [entry("notes")]
+        let svc = FakeAppStoreService()
+        svc.cachedCatalog = [entry("notes")]
         #expect(store(service: svc).rows.first { $0.id == "notes" }?.isManaged == false)
     }
 
@@ -208,16 +236,19 @@ struct AppStoreStoreTests {
 
     @Test("install with retained data prompts instead of installing")
     func installPrompts() async {
-        let svc = FakeAppStoreService(); svc.cachedCatalog = [entry("notes")]; svc.retained = ["notes"]
+        let svc = FakeAppStoreService()
+        svc.cachedCatalog = [entry("notes")]
+        svc.retained = ["notes"]
         let s = store(service: svc)
         await s.install("notes")
         #expect(s.pendingReinstall == "notes")
-        #expect(svc.installedCalls.isEmpty)                    // did NOT install yet
+        #expect(svc.installedCalls.isEmpty)  // did NOT install yet
     }
 
     @Test("install without retained data installs directly (no prompt)")
     func installNoPrompt() async {
-        let svc = FakeAppStoreService(); svc.cachedCatalog = [entry("notes")]
+        let svc = FakeAppStoreService()
+        svc.cachedCatalog = [entry("notes")]
         let s = store(service: svc)
         await s.install("notes")
         #expect(s.pendingReinstall == nil)
@@ -226,9 +257,11 @@ struct AppStoreStoreTests {
 
     @Test("restoreAndInstall restores then installs and clears the prompt")
     func restorePath() async {
-        let svc = FakeAppStoreService(); svc.cachedCatalog = [entry("notes")]; svc.retained = ["notes"]
+        let svc = FakeAppStoreService()
+        svc.cachedCatalog = [entry("notes")]
+        svc.retained = ["notes"]
         let s = store(service: svc)
-        await s.install("notes")                              // sets pendingReinstall
+        await s.install("notes")  // sets pendingReinstall
         await s.restoreAndInstall("notes")
         #expect(svc.restoredCalls == ["notes"])
         #expect(svc.installedCalls == ["notes"])
@@ -237,7 +270,9 @@ struct AppStoreStoreTests {
 
     @Test("resetAndInstall discards then installs and clears the prompt")
     func resetPath() async {
-        let svc = FakeAppStoreService(); svc.cachedCatalog = [entry("notes")]; svc.retained = ["notes"]
+        let svc = FakeAppStoreService()
+        svc.cachedCatalog = [entry("notes")]
+        svc.retained = ["notes"]
         let s = store(service: svc)
         await s.install("notes")
         await s.resetAndInstall("notes")
@@ -248,7 +283,9 @@ struct AppStoreStoreTests {
 
     @Test("cancelReinstall clears the prompt without installing")
     func cancelPath() async {
-        let svc = FakeAppStoreService(); svc.cachedCatalog = [entry("notes")]; svc.retained = ["notes"]
+        let svc = FakeAppStoreService()
+        svc.cachedCatalog = [entry("notes")]
+        svc.retained = ["notes"]
         let s = store(service: svc)
         await s.install("notes")
         s.cancelReinstall()
@@ -260,8 +297,9 @@ struct AppStoreStoreTests {
 @MainActor
 struct AppStoreLightboxTests {
     private func makeStore() -> AppStoreStore {
-        AppStoreStore(service: FakeAppStoreService(),
-                      registry: BuiltInAppRegistry(persistence: InMemoryPersistenceStore()))
+        AppStoreStore(
+            service: FakeAppStoreService(),
+            registry: BuiltInAppRegistry(persistence: InMemoryPersistenceStore()))
     }
 
     private var urls: [URL] {
@@ -278,9 +316,9 @@ struct AppStoreLightboxTests {
         store.closeLightbox()
         #expect(store.lightbox == nil)
 
-        store.openLightbox(urls, at: 3)   // out of range
+        store.openLightbox(urls, at: 3)  // out of range
         #expect(store.lightbox == nil)
-        store.openLightbox([], at: 0)     // empty gallery
+        store.openLightbox([], at: 0)  // empty gallery
         #expect(store.lightbox == nil)
     }
 
@@ -290,10 +328,10 @@ struct AppStoreLightboxTests {
         store.openLightbox(urls, at: 2)
 
         store.lightboxNext()
-        #expect(store.lightbox?.index == 0)   // last → first
+        #expect(store.lightbox?.index == 0)  // last → first
 
         store.lightboxPrevious()
-        #expect(store.lightbox?.index == 2)   // first → last
+        #expect(store.lightbox?.index == 2)  // first → last
 
         store.lightboxPrevious()
         #expect(store.lightbox?.index == 1)
@@ -313,10 +351,11 @@ struct AppStoreLightboxTests {
 @MainActor
 struct AppStoreStoreOperationHookTests {
     private func entry(_ id: String) -> CatalogEntry {
-        CatalogEntry(appID: id, displayName: id.capitalized, icon: "app", description: "desc",
-                     version: "1.0.0", apiVersion: 1,
-                     downloadURL: URL(string: "https://e/\(id).zip")!,
-                     sha256: "x", sourceRepo: "o/\(id)")
+        CatalogEntry(
+            appID: id, displayName: id.capitalized, icon: "app", description: "desc",
+            version: "1.0.0", apiVersion: 1,
+            downloadURL: URL(string: "https://e/\(id).zip")!,
+            sha256: "x", sourceRepo: "o/\(id)")
     }
 
     private func makeStore(_ service: FakeAppStoreService) -> AppStoreStore {
@@ -361,8 +400,9 @@ struct AppStoreStoreOperationHookTests {
         store.onOperationFinished = { op, _, _ in operations.append(op) }
 
         await store.update("quest")
-        #expect(operations == [.update],
-                "install and update have separate kinds so one can be muted alone")
+        #expect(
+            operations == [.update],
+            "install and update have separate kinds so one can be muted alone")
     }
 
     @Test("a reinstall prompt does not report an operation until it actually runs")
@@ -374,7 +414,7 @@ struct AppStoreStoreOperationHookTests {
         var count = 0
         store.onOperationFinished = { _, _, _ in count += 1 }
 
-        await store.install("raven")      // becomes a pending-reinstall prompt
+        await store.install("raven")  // becomes a pending-reinstall prompt
         #expect(count == 0, "nothing happened yet, so the feed must stay quiet")
         #expect(store.pendingReinstall == "raven")
 

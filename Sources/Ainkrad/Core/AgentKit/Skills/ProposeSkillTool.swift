@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/Skills/ProposeSkillTool.swift
 import Foundation
-import AinkradHostRuntime
 
 /// Lets the agent DRAFT a reusable skill after a gnarly task. The draft lands in
 /// `_proposed/` (`SkillRegistry.propose`) and never influences behaviour until
@@ -11,11 +11,11 @@ struct ProposeSkillTool: AgentTool {
 
     let name = "propose_skill"
     let description = """
-    Propose a new reusable skill capturing a procedure you just performed successfully, so it can \
-    be reused later. The proposal is saved for the user to review and approve — it does NOT take \
-    effect until they approve it. Use a lowercase-hyphenated name. To improve an existing skill, \
-    pass its name as both "name" and "improves" with the revised body.
-    """
+        Propose a new reusable skill capturing a procedure you just performed successfully, so it can \
+        be reused later. The proposal is saved for the user to review and approve — it does NOT take \
+        effect until they approve it. Use a lowercase-hyphenated name. To improve an existing skill, \
+        pass its name as both "name" and "improves" with the revised body.
+        """
     // PROVISIONAL: retag to .memory if Slice 1's exempt case lands (proposals are inert, so a
     // silent draft would be safe) — until then `.write` keeps it gated in Ask mode.
     let permission: ToolPermissionClass = .write
@@ -38,7 +38,8 @@ struct ProposeSkillTool: AgentTool {
                 ]),
                 "improves": .object([
                     "type": .string("string"),
-                    "description": .string("OPTIONAL: the name of an existing skill this revises. When set it must equal \"name\"."),
+                    "description": .string(
+                        "OPTIONAL: the name of an existing skill this revises. When set it must equal \"name\"."),
                 ]),
             ]),
             "required": .array([.string("name"), .string("description"), .string("body")]),
@@ -60,10 +61,13 @@ struct ProposeSkillTool: AgentTool {
         }
         if let improves = input["improves"]?.stringValue, !improves.isEmpty {
             guard improves == skillName else {
-                return ToolResult(content: "\"improves\" must equal \"name\" — an improvement revises that same skill.", isError: true)
+                return ToolResult(
+                    content: "\"improves\" must equal \"name\" — an improvement revises that same skill.", isError: true
+                )
             }
             guard registry.skill(named: improves) != nil else {
-                return ToolResult(content: "Can't improve \"\(improves)\": no active skill by that name.", isError: true)
+                return ToolResult(
+                    content: "Can't improve \"\(improves)\": no active skill by that name.", isError: true)
             }
         }
         do {

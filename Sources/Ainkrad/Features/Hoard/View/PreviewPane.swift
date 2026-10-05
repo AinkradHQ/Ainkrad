@@ -1,7 +1,7 @@
-import SwiftUI
-import QuickLookUI
 import AinkradAppKit
 import AinkradAppKitUI
+import QuickLookUI
+import SwiftUI
 
 /// The collapsible right-hand preview strip. ⌘Y toggles it, matching Quick
 /// Look's muscle memory.
@@ -20,12 +20,14 @@ struct PreviewPane: View {
         VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
             if let entry {
                 header(entry)
-                Divider().opacity(0)   // spacing only — the design forbids rules
+                Divider().opacity(0)  // spacing only — the design forbids rules
                 content(for: entry)
             } else {
-                AinkradEmptyState(icon: "sidebar.right", title: "No Selection",
-                                  message: "Select a file to preview it.")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                AinkradEmptyState(
+                    icon: "sidebar.right", title: "No Selection",
+                    message: "Select a file to preview it."
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .padding(AinkradSpacing.md)
@@ -83,9 +85,11 @@ struct PreviewPane: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
         case .directory:
-            AinkradEmptyState(icon: "folder", title: entry.name,
-                              message: "\(itemCount) item\(itemCount == 1 ? "" : "s")")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            AinkradEmptyState(
+                icon: "folder", title: entry.name,
+                message: "\(itemCount) item\(itemCount == 1 ? "" : "s")"
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
         case .none:
             unavailable
@@ -93,9 +97,11 @@ struct PreviewPane: View {
     }
 
     private var unavailable: some View {
-        AinkradEmptyState(icon: "eye.slash", title: "No Preview",
-                          message: "This file type can't be previewed.")
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        AinkradEmptyState(
+            icon: "eye.slash", title: "No Preview",
+            message: "This file type can't be previewed."
+        )
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradAppKit
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @MainActor
@@ -13,14 +14,17 @@ struct HoardMCPServerTests {
         let root = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("mcp-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-        try "alpha".write(to: root.appendingPathComponent("one.txt"),
-                          atomically: true, encoding: .utf8)
-        try "beta".write(to: root.appendingPathComponent("two.txt"),
-                         atomically: true, encoding: .utf8)
+        try "alpha".write(
+            to: root.appendingPathComponent("one.txt"),
+            atomically: true, encoding: .utf8)
+        try "beta".write(
+            to: root.appendingPathComponent("two.txt"),
+            atomically: true, encoding: .utf8)
 
         let environment = AppEnvironment.preview()
-        let store = HoardPaneStore(fileSystem: environment.filesSystemService,
-                                   persistence: environment.persistence)
+        let store = HoardPaneStore(
+            fileSystem: environment.filesSystemService,
+            persistence: environment.persistence)
         store.activeTab.navigate(to: root)
         _ = environment.filesPaneCoordinator.register(store)
         return (environment, root, store)
@@ -29,7 +33,7 @@ struct HoardMCPServerTests {
     private func call(_ server: MCPAppServer, _ tool: String, _ args: [String: Any]) async -> String {
         let request: [String: Any] = [
             "jsonrpc": "2.0", "id": 1, "method": "tools/call",
-            "params": ["name": tool, "arguments": args]
+            "params": ["name": tool, "arguments": args],
         ]
         let data = try! JSONSerialization.data(withJSONObject: request)
         return await server.handle(String(decoding: data, as: UTF8.self))
@@ -42,10 +46,12 @@ struct HoardMCPServerTests {
 
         let response = await server.handle(#"{"jsonrpc":"2.0","id":1,"method":"tools/list"}"#)
 
-        for expected in ["hoard_navigate", "hoard_get_selection", "hoard_reveal",
-                         "hoard_copy", "hoard_move", "hoard_rename", "hoard_trash",
-                         "hoard_create_folder", "hoard_batch_rename",
-                         "hoard_archive", "hoard_extract"] {
+        for expected in [
+            "hoard_navigate", "hoard_get_selection", "hoard_reveal",
+            "hoard_copy", "hoard_move", "hoard_rename", "hoard_trash",
+            "hoard_create_folder", "hoard_batch_rename",
+            "hoard_archive", "hoard_extract",
+        ] {
             #expect(response.contains(expected), "missing \(expected)")
         }
         // AgentKit already owns reading and editing content; duplicating it
@@ -101,11 +107,15 @@ struct HoardMCPServerTests {
         let (environment, root, _) = try makeWorkspace()
         let server = HoardMCPServer.make(environment: environment)
 
-        let response = await call(server, "hoard_batch_rename", [
-            "paths": [root.appendingPathComponent("one.txt").path,
-                      root.appendingPathComponent("two.txt").path],
-            "find": ".txt", "replace": ".md"
-        ])
+        let response = await call(
+            server, "hoard_batch_rename",
+            [
+                "paths": [
+                    root.appendingPathComponent("one.txt").path,
+                    root.appendingPathComponent("two.txt").path,
+                ],
+                "find": ".txt", "replace": ".md",
+            ])
         #expect(response.contains("Renamed 2"))
         #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("one.md").path))
 
@@ -148,7 +158,8 @@ struct HoardMCPServerTests {
         let server = HoardMCPServer.make(environment: environment)
 
         let response = await call(server, "hoard_trash", ["paths": ["../escape.txt"]])
-        #expect(response.contains("\\u2026") || response.lowercased().contains("refus")
+        #expect(
+            response.contains("\\u2026") || response.lowercased().contains("refus")
                 || response.contains(".."))
     }
 
@@ -159,9 +170,11 @@ struct HoardMCPServerTests {
         let (environment, root, _) = try makeWorkspace()
         let server = HoardMCPServer.make(environment: environment)
 
-        _ = await call(server, "hoard_trash", [
-            "paths": [root.appendingPathComponent("one.txt").path, "/System/x"]
-        ])
+        _ = await call(
+            server, "hoard_trash",
+            [
+                "paths": [root.appendingPathComponent("one.txt").path, "/System/x"]
+            ])
         #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("one.txt").path))
     }
 
@@ -170,20 +183,26 @@ struct HoardMCPServerTests {
         let (environment, root, _) = try makeWorkspace()
         let destination = root.appendingPathComponent("dest")
         try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: true)
-        try "existing".write(to: destination.appendingPathComponent("one.txt"),
-                             atomically: true, encoding: .utf8)
+        try "existing".write(
+            to: destination.appendingPathComponent("one.txt"),
+            atomically: true, encoding: .utf8)
         let server = HoardMCPServer.make(environment: environment)
 
-        _ = await call(server, "hoard_copy", [
-            "paths": [root.appendingPathComponent("one.txt").path],
-            "destination": destination.path
-        ])
+        _ = await call(
+            server, "hoard_copy",
+            [
+                "paths": [root.appendingPathComponent("one.txt").path],
+                "destination": destination.path,
+            ])
 
         // The pre-existing file must survive untouched.
-        #expect(try String(contentsOf: destination.appendingPathComponent("one.txt"),
-                           encoding: .utf8) == "existing")
-        #expect(FileManager.default.fileExists(
-            atPath: destination.appendingPathComponent("one 2.txt").path))
+        #expect(
+            try String(
+                contentsOf: destination.appendingPathComponent("one.txt"),
+                encoding: .utf8) == "existing")
+        #expect(
+            FileManager.default.fileExists(
+                atPath: destination.appendingPathComponent("one 2.txt").path))
     }
 
     @Test("mutating tools are marked destructive so the approval gate engages")
@@ -193,9 +212,10 @@ struct HoardMCPServerTests {
 
         let response = await server.handle(#"{"jsonrpc":"2.0","id":1,"method":"tools/list"}"#)
         guard let data = response.data(using: .utf8),
-              let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let result = root["result"] as? [String: Any],
-              let tools = result["tools"] as? [[String: Any]] else {
+            let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let result = root["result"] as? [String: Any],
+            let tools = result["tools"] as? [[String: Any]]
+        else {
             Issue.record("could not decode tools/list")
             return
         }
@@ -214,11 +234,13 @@ struct HoardMCPServerTests {
         let (environment, root, _) = try makeWorkspace()
         let server = HoardMCPServer.make(environment: environment)
 
-        let response = await call(server, "hoard_archive", [
-            "paths": [root.appendingPathComponent("one.txt").path],
-            "destination": root.path,
-            "name": "bundle.zip"
-        ])
+        let response = await call(
+            server, "hoard_archive",
+            [
+                "paths": [root.appendingPathComponent("one.txt").path],
+                "destination": root.path,
+                "name": "bundle.zip",
+            ])
         #expect(!response.lowercased().contains("failed"))
         let archive = root.appendingPathComponent("bundle.zip")
         #expect(FileManager.default.fileExists(atPath: archive.path))

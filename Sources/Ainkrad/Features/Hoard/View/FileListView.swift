@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitUI
+import SwiftUI
 
 /// The sortable header + scrolling rows for one tab.
 struct FileListView: View {
@@ -51,44 +51,48 @@ struct FileListView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let searchHits {
             if searchHits.isEmpty && !isSearching {
-                AinkradEmptyState(icon: "magnifyingglass", title: "No Matches",
-                                  message: "Nothing under this folder matches.")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                AinkradEmptyState(
+                    icon: "magnifyingglass", title: "No Matches",
+                    message: "Nothing under this folder matches."
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 searchResults(searchHits)
             }
         } else if tab.visibleEntries.isEmpty {
-            AinkradEmptyState(icon: "folder", title: "Empty",
-                              message: "This folder has nothing to show.")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            AinkradEmptyState(
+                icon: "folder", title: "Empty",
+                message: "This folder has nothing to show."
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             ScrollViewReader { proxy in
                 ScrollView {
                     if useGrid {
                         gridBody
                     } else {
-                    LazyVStack(spacing: 1) {
-                        ForEach(tab.visibleEntries) { entry in
-                            FileRowView(
-                                entry: entry,
-                                isCursor: tab.cursorEntry == entry,
-                                isSelected: tab.selection.contains(entry.url),
-                                now: now,
-                                iconSize: iconSize,
-                                rowPadding: rowPadding,
-                                showMetadata: showMetadata,
-                                gitStatus: gitStatus(entry.url),
-                                isIgnored: tab.ignoredURLs.contains(entry.url),
-                                isCut: isCut(entry.url),
-                                onTap: { tab.placeCursor(at: entry) },
-                                onDoubleTap: { tab.activate(entry) }
-                            )
-                            .fileRowMenu(entry: entry, tab: tab, actions: menuActions)
-                            .id(entry.url)
+                        LazyVStack(spacing: 1) {
+                            ForEach(tab.visibleEntries) { entry in
+                                FileRowView(
+                                    entry: entry,
+                                    isCursor: tab.cursorEntry == entry,
+                                    isSelected: tab.selection.contains(entry.url),
+                                    now: now,
+                                    iconSize: iconSize,
+                                    rowPadding: rowPadding,
+                                    showMetadata: showMetadata,
+                                    gitStatus: gitStatus(entry.url),
+                                    isIgnored: tab.ignoredURLs.contains(entry.url),
+                                    isCut: isCut(entry.url),
+                                    onTap: { tab.placeCursor(at: entry) },
+                                    onDoubleTap: { tab.activate(entry) }
+                                )
+                                .fileRowMenu(entry: entry, tab: tab, actions: menuActions)
+                                .id(entry.url)
+                            }
                         }
-                    }
-                    .padding(.horizontal, HoardColumnMetrics.rowStackInset)
-                    .padding(.vertical, AinkradSpacing.xs)
+                        .padding(.horizontal, HoardColumnMetrics.rowStackInset)
+                        .padding(.vertical, AinkradSpacing.xs)
                     }
                 }
                 // Keyed on the DIRECTORY, so arriving somewhere new builds a
@@ -145,8 +149,9 @@ struct FileListView: View {
                             isIgnored: false,
                             isCut: isCut(hit.entry.url),
                             onTap: { tab.selection = [hit.entry.url] },
-                            onDoubleTap: { onOpenHit(hit) })
-                            .fileRowMenu(entry: hit.entry, tab: tab, actions: menuActions)
+                            onDoubleTap: { onOpenHit(hit) }
+                        )
+                        .fileRowMenu(entry: hit.entry, tab: tab, actions: menuActions)
                         Text(hit.relativeDirectory)
                             .font(AinkradFontResolver.font(.caption, typography: typo))
                             .foregroundStyle(theme.foreground.opacity(0.4))
@@ -166,8 +171,10 @@ struct FileListView: View {
     /// control governs both presentations rather than each having its own.
     private var gridBody: some View {
         let cell = max(72, CGFloat(iconSize) * 5)
-        return LazyVGrid(columns: [GridItem(.adaptive(minimum: cell), spacing: AinkradSpacing.sm)],
-                         spacing: AinkradSpacing.sm) {
+        return LazyVGrid(
+            columns: [GridItem(.adaptive(minimum: cell), spacing: AinkradSpacing.sm)],
+            spacing: AinkradSpacing.sm
+        ) {
             ForEach(tab.visibleEntries) { entry in
                 FileGridCell(
                     entry: entry,
@@ -175,9 +182,10 @@ struct FileListView: View {
                     isSelected: tab.selection.contains(entry.url),
                     iconSize: iconSize * 2.2,
                     onTap: { tab.placeCursor(at: entry) },
-                    onDoubleTap: { tab.activate(entry) })
-                    .fileRowMenu(entry: entry, tab: tab, actions: menuActions)
-                    .id(entry.url)
+                    onDoubleTap: { tab.activate(entry) }
+                )
+                .fileRowMenu(entry: entry, tab: tab, actions: menuActions)
+                .id(entry.url)
             }
         }
         .padding(AinkradSpacing.md)
@@ -226,8 +234,9 @@ struct FileListView: View {
                     // sorting a column doesn't shift the header text sideways.
                     .opacity(tab.sortKey == key ? 1 : 0)
                     .rotationEffect(.degrees(tab.sortAscending ? 0 : 180))
-                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.18),
-                               value: tab.sortAscending)
+                    .animation(
+                        reduceMotion ? nil : .easeInOut(duration: 0.18),
+                        value: tab.sortAscending)
             }
             .foregroundStyle(theme.foreground.opacity(tab.sortKey == key ? 0.75 : 0.4))
         }

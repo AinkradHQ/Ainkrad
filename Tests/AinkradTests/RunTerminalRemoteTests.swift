@@ -1,9 +1,10 @@
+import AinkradAppKit
+import AinkradHostRuntime
+import Foundation
 // Tests/AinkradTests/RunTerminalRemoteTests.swift
 import Testing
-import Foundation
-import AinkradAppKit
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 /// A fake remote target. Nothing in this file ever connects to it: the `.ssh`
 /// backend under test runs `/usr/bin/false` in place of `ssh`.
@@ -41,7 +42,8 @@ struct RunTerminalRemoteTests {
     /// that asserts "the remote run did not run locally" is asserting something
     /// — the local path is genuinely wired and would have worked.
     private func router(resolver: SSHConnectionResolver?, sshPath: String = "/usr/bin/false")
-        -> ExecutionRouter {
+        -> ExecutionRouter
+    {
         var ssh = SSHBackend(resolveConnection: resolver)
         ssh.sshPath = sshPath
         return ExecutionRouter(
@@ -55,8 +57,9 @@ struct RunTerminalRemoteTests {
     /// user-reachable failures blocks the run AND leaves no local trace. The
     /// marker file is the proof — the command would have created it had it
     /// leaked to the local shell.
-    @Test("Leyline absent, unknown id, password-only and passphrase-protected never run locally",
-          arguments: resolverFailureReasons)
+    @Test(
+        "Leyline absent, unknown id, password-only and passphrase-protected never run locally",
+        arguments: resolverFailureReasons)
     func remoteFailuresNeverRunLocally(reason: String) async throws {
         let marker = FileManager.default.temporaryDirectory
             .appendingPathComponent("ain-remote-fail-closed-\(UUID().uuidString).txt")
@@ -66,10 +69,11 @@ struct RunTerminalRemoteTests {
         let hub = AgentActionRegistryHub()
         let router = router(resolver: { _ in .failure(SSHConnectionResolutionFailure(reason)) })
         let tool = RunTerminalTool(actionHub: hub, router: router)
-        let result = try await tool.execute(obj([
-            "command": .string("touch \(marker.path)"),
-            "remote": .string("prod-web"),
-        ]))
+        let result = try await tool.execute(
+            obj([
+                "command": .string("touch \(marker.path)"),
+                "remote": .string("prod-web"),
+            ]))
 
         #expect(result.isError)
         // Nothing ran here.
@@ -104,13 +108,14 @@ struct RunTerminalRemoteTests {
 
         let router = ExecutionRouter(
             profiles: SandboxProfileStore(persistence: InMemoryPersistenceStore()),
-            backends: [.host: HostBackend()])   // no .ssh
+            backends: [.host: HostBackend()])  // no .ssh
         let hub = AgentActionRegistryHub()
         let tool = RunTerminalTool(actionHub: hub, router: router)
-        let result = try await tool.execute(obj([
-            "command": .string("touch \(marker.path)"),
-            "remote": .string("prod-web"),
-        ]))
+        let result = try await tool.execute(
+            obj([
+                "command": .string("touch \(marker.path)"),
+                "remote": .string("prod-web"),
+            ]))
         #expect(result.isError)
         #expect(!FileManager.default.fileExists(atPath: marker.path))
     }
@@ -132,9 +137,10 @@ struct RunTerminalRemoteTests {
             tool.trustTier = tier
             // sshPath is /usr/bin/false, so the run "fails" — what matters is
             // that it went through SSHBackend at all.
-            _ = try await tool.execute(obj([
-                "command": .string("uptime"), "remote": .string("prod-web"),
-            ]))
+            _ = try await tool.execute(
+                obj([
+                    "command": .string("uptime"), "remote": .string("prod-web"),
+                ]))
             #expect(await asked.ids == ["prod-web"], "tier \(tier) did not route to ssh")
         }
     }
@@ -150,10 +156,11 @@ struct RunTerminalRemoteTests {
             backends: [.host: HostBackend(), .ssh: recording])
         let hub = AgentActionRegistryHub()
         var tool = RunTerminalTool(actionHub: hub, router: router)
-        tool.timeout = 7   // the existing test seam overrides the profile timeout
-        _ = try await tool.execute(obj([
-            "command": .string("uptime"), "remote": .string("prod-web"),
-        ]))
+        tool.timeout = 7  // the existing test seam overrides the profile timeout
+        _ = try await tool.execute(
+            obj([
+                "command": .string("uptime"), "remote": .string("prod-web"),
+            ]))
         #expect(await seen.timeoutSeconds == 7)
         #expect(await seen.remote == "prod-web")
     }
@@ -177,12 +184,13 @@ struct RunTerminalRemoteTests {
                     toolPermission: tool.permission,
                     toolName: tool.name,
                     mode: mode,
-                    allowlist: ["run_terminal"],      // allowlisted
+                    allowlist: ["run_terminal"],  // allowlisted
                     gateReads: false,
                     isIrreversible: tool.isIrreversible(input),
                     isTrusted: trusted)
-                #expect(decision == .requireApproval,
-                        "mode \(mode), trusted \(trusted) did not require approval")
+                #expect(
+                    decision == .requireApproval,
+                    "mode \(mode), trusted \(trusted) did not require approval")
             }
         }
     }
@@ -193,12 +201,20 @@ struct RunTerminalRemoteTests {
         let hub = AgentActionRegistryHub()
         let router = router(resolver: nil)
         let tool = RunTerminalTool(actionHub: hub, router: router)
-        #expect(tool.isIrreversible(obj(["command": .string("echo hi"),
-                                         "remote": .string("prod-web")])))
+        #expect(
+            tool.isIrreversible(
+                obj([
+                    "command": .string("echo hi"),
+                    "remote": .string("prod-web"),
+                ])))
         // A blank remote is not a remote — it must not silently make every
         // local run always-approve either.
-        #expect(!tool.isIrreversible(obj(["command": .string("echo hi"),
-                                          "remote": .string("   ")])))
+        #expect(
+            !tool.isIrreversible(
+                obj([
+                    "command": .string("echo hi"),
+                    "remote": .string("   "),
+                ])))
     }
 
     @Test("the approval card names the connection and shows the command")
@@ -206,9 +222,10 @@ struct RunTerminalRemoteTests {
         let hub = AgentActionRegistryHub()
         let router = router(resolver: nil)
         let tool = RunTerminalTool(actionHub: hub, router: router)
-        let preview = tool.approvalPreview(obj([
-            "command": .string("systemctl restart nginx"), "remote": .string("prod-web"),
-        ]))
+        let preview = tool.approvalPreview(
+            obj([
+                "command": .string("systemctl restart nginx"), "remote": .string("prod-web"),
+            ]))
         #expect(preview.title == "Remote: prod-web")
         #expect(preview.summary == "systemctl restart nginx")
     }
@@ -226,9 +243,10 @@ struct RunTerminalRemoteTests {
         let hub = AgentActionRegistryHub()
         let tool = RunTerminalTool(actionHub: hub, router: router(resolver: nil))
 
-        let byLabel = tool.approvalPreview(obj([
-            "command": .string("systemctl restart nginx"), "remote": .string("prod-web"),
-        ]))
+        let byLabel = tool.approvalPreview(
+            obj([
+                "command": .string("systemctl restart nginx"), "remote": .string("prod-web"),
+            ]))
         #expect(byLabel.title == "Remote: prod-web")
         #expect(!byLabel.title.contains("-4B7D-"))
 
@@ -236,8 +254,13 @@ struct RunTerminalRemoteTests {
         // is what the card is NOT supposed to read, so the steer lives in the
         // schema description rather than in a rejection here.
         let uuid = "9F3A1C2E-4B7D-4E19-9A6B-0C1D2E3F4A5B"
-        #expect(tool.approvalPreview(obj(["command": .string("uptime"),
-                                          "remote": .string(uuid)])).title == "Remote: \(uuid)")
+        #expect(
+            tool.approvalPreview(
+                obj([
+                    "command": .string("uptime"),
+                    "remote": .string(uuid),
+                ])
+            ).title == "Remote: \(uuid)")
 
         let described = try #require(
             tool.parametersSchema["properties"]?["remote"]?["description"]?.stringValue)
@@ -270,10 +293,11 @@ struct RunTerminalRemoteTests {
         #expect(tool.isIrreversible(obj(["command": .string("rm -rf /tmp/x")])))
 
         // And `decide` still auto-approves a local run in full-auto.
-        #expect(AgentPermissionPolicy.decide(
-            toolPermission: tool.permission, toolName: tool.name, mode: .fullAuto,
-            allowlist: [], gateReads: false,
-            isIrreversible: tool.isIrreversible(local)) == .autoApprove)
+        #expect(
+            AgentPermissionPolicy.decide(
+                toolPermission: tool.permission, toolName: tool.name, mode: .fullAuto,
+                allowlist: [], gateReads: false,
+                isIrreversible: tool.isIrreversible(local)) == .autoApprove)
     }
 
     @Test("the schema advertises remote as an optional saved-connection id")
@@ -289,7 +313,8 @@ struct RunTerminalRemoteTests {
         #expect(description.localizedCaseInsensitiveContains("approval"))
         // Still optional: only `command` is required.
         guard case .array(let required) = try #require(tool.parametersSchema["required"]) else {
-            Issue.record("required should be an array"); return
+            Issue.record("required should be an array")
+            return
         }
         #expect(required.compactMap(\.stringValue) == ["command"])
     }

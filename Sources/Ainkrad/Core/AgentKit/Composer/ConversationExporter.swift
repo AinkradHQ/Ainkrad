@@ -8,8 +8,10 @@ enum ExportFormat { case markdown, html }
 /// Kept as a standalone, side-effect-free serializer (rather than folded into a
 /// view model) so a future hosted-share path can reuse it verbatim.
 enum ConversationExporter {
-    static func export(_ messages: [AgentMessage], format: ExportFormat,
-                       title: String = "Conversation", redactions: [String] = []) -> String {
+    static func export(
+        _ messages: [AgentMessage], format: ExportFormat,
+        title: String = "Conversation", redactions: [String] = []
+    ) -> String {
         switch format {
         case .markdown: return markdown(messages, title: title, redactions: redactions)
         case .html: return html(messages, title: title, redactions: redactions)
@@ -30,7 +32,7 @@ enum ConversationExporter {
                 case .toolUse(_, let name, _): out += "```tool: \(name)\n```\n\n"
                 case .toolResult(_, let content, _): out += "```result\n\(redact(content, redactions))\n```\n\n"
                 case .image: out += "_[image]_\n\n"
-                case .thinking: break   // display-only scaffolding — omit from exports
+                case .thinking: break  // display-only scaffolding — omit from exports
                 }
             }
         }
@@ -39,8 +41,8 @@ enum ConversationExporter {
 
     private static func esc(_ s: String) -> String {
         s.replacingOccurrences(of: "&", with: "&amp;")
-         .replacingOccurrences(of: "<", with: "&lt;")
-         .replacingOccurrences(of: ">", with: "&gt;")
+            .replacingOccurrences(of: "<", with: "&lt;")
+            .replacingOccurrences(of: ">", with: "&gt;")
     }
 
     private static func html(_ messages: [AgentMessage], title: String, redactions: [String]) -> String {
@@ -53,11 +55,12 @@ enum ConversationExporter {
                 case .toolUse(_, let name, _): body += "<pre>tool: \(esc(name))</pre>"
                 case .toolResult(_, let content, _): body += "<pre>\(esc(redact(content, redactions)))</pre>"
                 case .image: body += "<p><em>[image]</em></p>"
-                case .thinking: break   // display-only scaffolding — omit from exports
+                case .thinking: break  // display-only scaffolding — omit from exports
                 }
             }
             body += "</section>"
         }
-        return "<!doctype html><html><head><meta charset=\"utf-8\"><title>\(esc(title))</title></head><body>\(body)</body></html>"
+        return
+            "<!doctype html><html><head><meta charset=\"utf-8\"><title>\(esc(title))</title></head><body>\(body)</body></html>"
     }
 }

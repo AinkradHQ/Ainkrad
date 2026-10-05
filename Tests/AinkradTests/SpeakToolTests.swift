@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("SpeakTool")
@@ -10,8 +11,9 @@ struct SpeakToolTests {
         func speak(_ text: String) { spoken.append(text) }
     }
     private func tempStore() -> GeneratedMediaStore {
-        GeneratedMediaStore(baseDirectory: URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("ainkrad-test-\(UUID().uuidString)", isDirectory: true))
+        GeneratedMediaStore(
+            baseDirectory: URL(fileURLWithPath: NSTemporaryDirectory())
+                .appendingPathComponent("ainkrad-test-\(UUID().uuidString)", isDirectory: true))
     }
     @Test func speaksText() async throws {
         let spy = SpyseSynth()

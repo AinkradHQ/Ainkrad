@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradSignal
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @MainActor
@@ -27,10 +28,13 @@ final class DeliveryDispatcherTests {
 
     @Test("each channel reaches exactly its collaborator")
     func routesToCollaborators() {
-        let banner = SpyBanner(); let toast = SpyToast(); let sound = SpySound()
+        let banner = SpyBanner()
+        let toast = SpyToast()
+        let sound = SpySound()
         var badged: [SignalSource] = []
-        let dispatcher = DeliveryDispatcher(banner: banner, toast: toast, sound: sound,
-                                            badge: { badged.append($0) })
+        let dispatcher = DeliveryDispatcher(
+            banner: banner, toast: toast, sound: sound,
+            badge: { badged.append($0) })
         dispatcher.deliver(event(), to: [.feed, .banner, .toast, .sound, .badge])
         #expect(banner.posted.count == 1)
         #expect(toast.shown.count == 1)
@@ -40,7 +44,9 @@ final class DeliveryDispatcherTests {
 
     @Test("the feed channel alone touches nothing - the store already has it")
     func feedOnlyIsInert() {
-        let banner = SpyBanner(); let toast = SpyToast(); let sound = SpySound()
+        let banner = SpyBanner()
+        let toast = SpyToast()
+        let sound = SpySound()
         let dispatcher = DeliveryDispatcher(banner: banner, toast: toast, sound: sound, badge: { _ in })
         dispatcher.deliver(event(), to: [.feed])
         #expect(banner.posted.isEmpty)
@@ -51,8 +57,9 @@ final class DeliveryDispatcherTests {
     @Test("severity picks the sound")
     func soundBySeverity() {
         let sound = SpySound()
-        let dispatcher = DeliveryDispatcher(banner: SpyBanner(), toast: SpyToast(),
-                                            sound: sound, badge: { _ in })
+        let dispatcher = DeliveryDispatcher(
+            banner: SpyBanner(), toast: SpyToast(),
+            sound: sound, badge: { _ in })
         dispatcher.deliver(event(.failure), to: [.sound])
         dispatcher.deliver(event(.success), to: [.sound])
         // One sound, not two: the success lands inside the burst window and is
@@ -63,8 +70,9 @@ final class DeliveryDispatcherTests {
     @Test("a failure is still heard when it follows chatter")
     func failureBreaksThroughABurst() {
         let sound = SpySound()
-        let dispatcher = DeliveryDispatcher(banner: SpyBanner(), toast: SpyToast(),
-                                            sound: sound, badge: { _ in })
+        let dispatcher = DeliveryDispatcher(
+            banner: SpyBanner(), toast: SpyToast(),
+            sound: sound, badge: { _ in })
         dispatcher.deliver(event(.info), to: [.sound])
         dispatcher.deliver(event(.failure), to: [.sound])
         // The direction that matters: burst suppression must never mute the

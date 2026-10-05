@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradHostRuntime
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("Terminal streaming bootstrap wiring", .timeLimit(.minutes(1)))
@@ -11,8 +12,9 @@ struct TerminalStreamingBootstrapWiringTests {
         // caller of killActive kills the tool's child.
         let controller = TerminalProcessController()
         let stream = ToolStreamStore()
-        let router = ExecutionRouter(profiles: SandboxProfileStore(persistence: InMemoryPersistenceStore()),
-                                     backends: [.host: HostBackend()])
+        let router = ExecutionRouter(
+            profiles: SandboxProfileStore(persistence: InMemoryPersistenceStore()),
+            backends: [.host: HostBackend()])
         // Bound to a local (rather than passed as an inline temporary) so ARC
         // keeps it alive for the whole test — `RunTerminalTool.actionHub` is
         // `unowned`, and an un-named temporary can be deallocated as soon as

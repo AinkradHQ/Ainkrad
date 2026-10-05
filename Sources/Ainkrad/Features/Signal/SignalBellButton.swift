@@ -1,7 +1,7 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
 import AinkradSignal
+import SwiftUI
 
 /// The notification bell in the app's own top bar, beside the workspace
 /// diamonds.
@@ -50,7 +50,8 @@ struct SignalBellButton: View {
     /// Names the reason as well as the count. A muted bell with three unread is
     /// two facts, and the tooltip is the only place either is written down.
     private var helpText: String {
-        let count = hasUnread
+        let count =
+            hasUnread
             ? "\(unread) unread notification\(unread == 1 ? "" : "s")"
             : "Notifications"
         return isMuted ? "\(count) — quiet hours are on" : count
@@ -61,18 +62,21 @@ struct SignalBellButton: View {
             HStack(spacing: 4) {
                 Image(systemName: Self.glyphName(unread: unread, isMuted: isMuted))
                     .font(.system(size: 10.5, weight: .medium))
-                    .foregroundStyle(hasUnread
-                                     ? tokens.accentSecondary
-                                     : tokens.foreground.opacity(isHovered ? 0.75 : 0.4))
+                    .foregroundStyle(
+                        hasUnread
+                            ? tokens.accentSecondary
+                            : tokens.foreground.opacity(isHovered ? 0.75 : 0.4)
+                    )
                     // The glyph is its own layer: it lifts on hover rather than
                     // the whole control moving.
                     // Hover and arrival multiply rather than fight: a pulse
                     // while hovered should still read as a pulse.
                     .scaleEffect((isHovered ? 1.14 : 1) * (pulse && !reduceMotion ? 1.18 : 1))
                     .opacity(pulse && reduceMotion ? 0.55 : 1)
-                    .shadow(color: hasUnread || pulse
+                    .shadow(
+                        color: hasUnread || pulse
                             ? tokens.accentSecondary.opacity(pulse ? 1 : 0.8) : .clear,
-                            radius: pulse ? 8 : 4)
+                        radius: pulse ? 8 : 4)
 
                 if let badge = Self.badgeText(unread) {
                     Text(badge)
@@ -103,8 +107,11 @@ struct SignalBellButton: View {
             }
             Task {
                 try? await Task.sleep(for: .seconds(AinkradMotion.durationFast))
-                withAnimation(reduceMotion ? nil
-                              : .easeInOut(duration: AinkradMotion.durationBase)) {
+                withAnimation(
+                    reduceMotion
+                        ? nil
+                        : .easeInOut(duration: AinkradMotion.durationBase)
+                ) {
                     pulse = false
                 }
             }

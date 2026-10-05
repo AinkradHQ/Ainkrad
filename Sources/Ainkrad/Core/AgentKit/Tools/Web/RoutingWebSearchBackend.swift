@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Dispatches `web_search` to the backend the user selected in Settings, read
 /// live from the persisted `WebSearchSettingsDocument.provider` on every call —

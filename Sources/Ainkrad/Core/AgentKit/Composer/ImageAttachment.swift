@@ -43,8 +43,9 @@ struct ImageAttachment: Equatable, Sendable {
             return "image/gif"
         }
         if bytes.count >= 12,
-           bytes[0...3] == [0x52, 0x49, 0x46, 0x46], // "RIFF"
-           bytes[8...11] == [0x57, 0x45, 0x42, 0x50] { // "WEBP"
+            bytes[0...3] == [0x52, 0x49, 0x46, 0x46],  // "RIFF"
+            bytes[8...11] == [0x57, 0x45, 0x42, 0x50]
+        {  // "WEBP"
             return "image/webp"
         }
         return nil

@@ -25,7 +25,8 @@ final class CustomCommandStore {
         for (url, scope) in paths.commandFiles(fileManager: fm) {
             let name = url.deletingPathExtension().lastPathComponent
             guard SkillValidator.isSafeName(name),
-                  !BuiltinCommands.reservedNames.contains(name) else { continue }
+                !BuiltinCommands.reservedNames.contains(name)
+            else { continue }
             guard let text = try? String(contentsOf: url, encoding: .utf8) else { continue }
             let cmd = CustomCommandParser.parse(text, name: name, scope: scope)
             // project (enumerated after user) overrides user on collision.

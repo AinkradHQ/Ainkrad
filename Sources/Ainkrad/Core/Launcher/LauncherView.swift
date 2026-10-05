@@ -1,7 +1,7 @@
-import SwiftUI
-import AppKit
 import AinkradAppKit
 import AinkradHostRuntime
+import AppKit
+import SwiftUI
 
 /// Four corner brackets — the targeting-cursor treatment for the selected
 /// Launcher row.
@@ -161,12 +161,36 @@ struct LauncherView: View {
                 .foregroundStyle(tokens.foreground)
                 .tint(tokens.accentSecondary)
                 .focused($isSearchFocused)
-                .onKeyPress(.escape) { dismiss(); return .handled }
-                .onKeyPress(.downArrow) { move(by: isGrid ? Self.gridColumns : 1, count: results.count); return .handled }
-                .onKeyPress(.upArrow) { move(by: isGrid ? -Self.gridColumns : -1, count: results.count); return .handled }
-                .onKeyPress(.leftArrow) { if isGrid { move(by: -1, count: results.count); return .handled }; return .ignored }
-                .onKeyPress(.rightArrow) { if isGrid { move(by: 1, count: results.count); return .handled }; return .ignored }
-                .onKeyPress(.return) { select(results); return .handled }
+                .onKeyPress(.escape) {
+                    dismiss()
+                    return .handled
+                }
+                .onKeyPress(.downArrow) {
+                    move(by: isGrid ? Self.gridColumns : 1, count: results.count)
+                    return .handled
+                }
+                .onKeyPress(.upArrow) {
+                    move(by: isGrid ? -Self.gridColumns : -1, count: results.count)
+                    return .handled
+                }
+                .onKeyPress(.leftArrow) {
+                    if isGrid {
+                        move(by: -1, count: results.count)
+                        return .handled
+                    }
+                    return .ignored
+                }
+                .onKeyPress(.rightArrow) {
+                    if isGrid {
+                        move(by: 1, count: results.count)
+                        return .handled
+                    }
+                    return .ignored
+                }
+                .onKeyPress(.return) {
+                    select(results)
+                    return .handled
+                }
         }
         .padding(.horizontal, 18)
         .frame(height: 56)
@@ -196,8 +220,9 @@ struct LauncherView: View {
 
     /// The app's neon tile, drawn live from the active theme around its SF Symbol.
     private func tile(for row: AppRow, tokens: DesignTokens) -> some View {
-        NeonAppTile(symbol: row.icon, tokens: tokens, size: 32, badge: badge(for: row),
-                    badgeStatus: badgeStatus(for: row))
+        NeonAppTile(
+            symbol: row.icon, tokens: tokens, size: 32, badge: badge(for: row),
+            badgeStatus: badgeStatus(for: row))
     }
 
     /// Unread events this app has published, for its tile badge. Nil until the
@@ -206,7 +231,7 @@ struct LauncherView: View {
     /// whose count is usually failures.
     private func badgeStatus(for row: AppRow) -> AinkradStatus? {
         guard let center = environment.signalCenter,
-              let worst = center.worstUnreadSeverity(for: .app(appID: row.id))
+            let worst = center.worstUnreadSeverity(for: .app(appID: row.id))
         else { return nil }
         return SignalPresentation.status(for: worst)
     }
@@ -235,8 +260,9 @@ struct LauncherView: View {
 
     private func gridCell(_ row: AppRow, isSelected: Bool, tokens: DesignTokens) -> some View {
         VStack(spacing: 8) {
-            NeonAppTile(symbol: row.icon, tokens: tokens, size: 46, badge: badge(for: row),
-                        badgeStatus: badgeStatus(for: row))
+            NeonAppTile(
+                symbol: row.icon, tokens: tokens, size: 46, badge: badge(for: row),
+                badgeStatus: badgeStatus(for: row))
             Text(row.displayName)
                 .font(AinkradFont.display(11, weight: isSelected ? .medium : .regular))
                 .foregroundStyle(tokens.foreground.opacity(isSelected ? 0.95 : 0.7))

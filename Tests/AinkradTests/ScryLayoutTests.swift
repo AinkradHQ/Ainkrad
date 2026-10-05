@@ -1,12 +1,15 @@
-import Foundation
 import CoreGraphics
+import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("ScryLayout")
 struct ScryLayoutTests {
-    private func element(_ id: String, _ kind: ScryElementKind,
-                         _ hint: ScrySizeHint) -> ScryElement {
+    private func element(
+        _ id: String, _ kind: ScryElementKind,
+        _ hint: ScrySizeHint
+    ) -> ScryElement {
         ScryElement(id: id, kind: kind, body: "", sizeHint: hint)
     }
 
@@ -23,7 +26,8 @@ struct ScryLayoutTests {
     func newestFirst() {
         let els = [element("old", .text, .medium), element("new", .text, .medium)]
         let f = ScryLayout.frames(for: els, in: wide, overrides: [:])
-        let new = f["new"]!, old = f["old"]!
+        let new = f["new"]!
+        let old = f["old"]!
         #expect(new.y <= old.y)
         #expect(new.x < old.x || new.y < old.y)
     }
@@ -74,7 +78,8 @@ struct ScryLayoutTests {
     @Test("identical input yields identical output")
     func deterministic() {
         let els = (0..<5).map { element("e\($0)", .chart, .large) }
-        #expect(ScryLayout.frames(for: els, in: wide, overrides: [:])
+        #expect(
+            ScryLayout.frames(for: els, in: wide, overrides: [:])
                 == ScryLayout.frames(for: els, in: wide, overrides: [:]))
     }
 

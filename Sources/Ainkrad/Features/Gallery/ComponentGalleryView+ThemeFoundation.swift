@@ -30,7 +30,8 @@ private struct GalleryRailRow: View {
             VStack(spacing: AinkradSpacing.sm) {
                 AinkradRailItem(systemName: "bubble.left.fill", help: "Selected", isSelected: true, action: nil)
                 AinkradRailItem(systemName: "bell.fill", help: "Unread 3", isSelected: false, unread: 3, action: nil)
-                AinkradRailItem(systemName: "tray.fill", help: "Unread 120", isSelected: false, unread: 120, action: nil)
+                AinkradRailItem(
+                    systemName: "tray.fill", help: "Unread 120", isSelected: false, unread: 120, action: nil)
                 AinkradRailItem(
                     systemName: "moon.fill", help: "Muted", isSelected: false, isDimmed: true,
                     cornerSymbol: "speaker.slash.fill", action: nil)
@@ -105,7 +106,8 @@ private struct GalleryOverlayChromeRow: View {
         AinkradCaption(title)
             .padding(AinkradSpacing.lg)
             .frame(width: skin.size.s160, height: skin.size.s80)
-            .ainkradOverlayChrome(backgroundOpacity: skin.chrome.overlay.backgroundOpacity, blurEnabled: true, blending: blending)
+            .ainkradOverlayChrome(
+                backgroundOpacity: skin.chrome.overlay.backgroundOpacity, blurEnabled: true, blending: blending)
     }
 }
 

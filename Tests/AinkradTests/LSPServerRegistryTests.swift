@@ -1,8 +1,9 @@
+import AinkradHostRuntime
 // Tests/AinkradTests/LSPServerRegistryTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 /// Transport whose `start()` always throws — used to make a server's handshake fail
 /// deterministically (no dependence on timing/timeouts). Mirrors
@@ -23,19 +24,27 @@ struct LSPServerRegistryTests {
     private func workingTransport() -> StubMCPTransport {
         StubMCPTransport { message in
             guard let id = message["id"]?.stringValue else { return [] }
-            return [.object(["jsonrpc": .string("2.0"), "id": .string(id),
-                "result": .object(["capabilities": .object([:])])])]
+            return [
+                .object([
+                    "jsonrpc": .string("2.0"), "id": .string(id),
+                    "result": .object(["capabilities": .object([:])]),
+                ])
+            ]
         }
     }
 
     private func seeded(_ doc: LSPServersDocument) -> PersistenceStore {
-        let p = InMemoryPersistenceStore(); p.save(doc); return p
+        let p = InMemoryPersistenceStore()
+        p.save(doc)
+        return p
     }
 
     @Test func matchesLanguageByGlob() {
         let doc = LSPServersDocument(servers: [
-            LSPServerConfig(id: "swift", command: "sourcekit-lsp", args: [],
-                            fileGlobs: ["*.swift"], enabled: true)])
+            LSPServerConfig(
+                id: "swift", command: "sourcekit-lsp", args: [],
+                fileGlobs: ["*.swift"], enabled: true)
+        ])
         let registry = LSPServerRegistry(persistence: seeded(doc))
         #expect(registry.language(forFilePath: "/x/File.swift") == "swift")
         #expect(registry.language(forFilePath: "/x/File.rs") == nil)
@@ -43,8 +52,10 @@ struct LSPServerRegistryTests {
 
     @Test func disabledServersDoNotMatch() {
         let doc = LSPServersDocument(servers: [
-            LSPServerConfig(id: "swift", command: "sourcekit-lsp", args: [],
-                            fileGlobs: ["*.swift"], enabled: false)])
+            LSPServerConfig(
+                id: "swift", command: "sourcekit-lsp", args: [],
+                fileGlobs: ["*.swift"], enabled: false)
+        ])
         let registry = LSPServerRegistry(persistence: seeded(doc))
         #expect(registry.language(forFilePath: "/x/File.swift") == nil)
     }
@@ -57,8 +68,10 @@ struct LSPServerRegistryTests {
 
     @Test func reusesOneClientPerLanguageAndWorkspaceRoot() async {
         let doc = LSPServersDocument(servers: [
-            LSPServerConfig(id: "swift", command: "sourcekit-lsp", args: [],
-                            fileGlobs: ["*.swift"], enabled: true)])
+            LSPServerConfig(
+                id: "swift", command: "sourcekit-lsp", args: [],
+                fileGlobs: ["*.swift"], enabled: true)
+        ])
         var spawnCount = 0
         let registry = LSPServerRegistry(persistence: seeded(doc)) { [self] _ in
             spawnCount += 1
@@ -98,7 +111,8 @@ struct LSPServerRegistryTests {
         if case .failed = registry.health["bad::file:///root"] {
             // expected
         } else {
-            Issue.record("expected 'bad' to be marked failed, got \(String(describing: registry.health["bad::file:///root"]))")
+            Issue.record(
+                "expected 'bad' to be marked failed, got \(String(describing: registry.health["bad::file:///root"]))")
         }
         #expect(registry.health["good::file:///root"] == .connected)
     }
@@ -108,7 +122,8 @@ struct LSPServerRegistryTests {
         // that language, OR (here) a config whose command is empty because the default
         // client factory refuses to spawn an empty path.
         let doc = LSPServersDocument(servers: [
-            LSPServerConfig(id: "swift", command: "", args: [], fileGlobs: ["*.swift"], enabled: true)])
+            LSPServerConfig(id: "swift", command: "", args: [], fileGlobs: ["*.swift"], enabled: true)
+        ])
         let registry = LSPServerRegistry(persistence: seeded(doc))
         let client = await registry.client(forFilePath: "/x/File.swift", rootURI: "file:///root")
         #expect(client == nil)
@@ -139,14 +154,18 @@ struct LSPServerRegistryTests {
         let registry = LSPServerRegistry(persistence: persistence)
         #expect(registry.servers().isEmpty)
 
-        registry.upsert(LSPServerConfig(id: "swift", command: "sourcekit-lsp",
-                                         fileGlobs: ["*.swift"], enabled: true))
+        registry.upsert(
+            LSPServerConfig(
+                id: "swift", command: "sourcekit-lsp",
+                fileGlobs: ["*.swift"], enabled: true))
         #expect(registry.servers().map(\.id) == ["swift"])
         #expect(registry.config(id: "swift")?.command == "sourcekit-lsp")
 
         // Replacing the same id updates in place rather than appending.
-        registry.upsert(LSPServerConfig(id: "swift", command: "/opt/sourcekit-lsp",
-                                         fileGlobs: ["*.swift"], enabled: true))
+        registry.upsert(
+            LSPServerConfig(
+                id: "swift", command: "/opt/sourcekit-lsp",
+                fileGlobs: ["*.swift"], enabled: true))
         #expect(registry.servers().count == 1)
         #expect(registry.config(id: "swift")?.command == "/opt/sourcekit-lsp")
 
@@ -157,7 +176,8 @@ struct LSPServerRegistryTests {
 
     @Test func setEnabledTogglesAndPersists() {
         let doc = LSPServersDocument(servers: [
-            LSPServerConfig(id: "swift", command: "sourcekit-lsp", fileGlobs: ["*.swift"], enabled: true)])
+            LSPServerConfig(id: "swift", command: "sourcekit-lsp", fileGlobs: ["*.swift"], enabled: true)
+        ])
         let persistence = seeded(doc)
         let registry = LSPServerRegistry(persistence: persistence)
 
@@ -195,11 +215,16 @@ struct LSPServerRegistryTests {
         var spawnCount: [String: Int] = [:]
         let registry = LSPServerRegistry(persistence: seeded(doc)) { config in
             spawnCount[config.id, default: 0] += 1
-            return LSPClient(transport: StubMCPTransport { message in
-                guard let id = message["id"]?.stringValue else { return [] }
-                return [.object(["jsonrpc": .string("2.0"), "id": .string(id),
-                    "result": .object(["capabilities": .object([:])])])]
-            })
+            return LSPClient(
+                transport: StubMCPTransport { message in
+                    guard let id = message["id"]?.stringValue else { return [] }
+                    return [
+                        .object([
+                            "jsonrpc": .string("2.0"), "id": .string(id),
+                            "result": .object(["capabilities": .object([:])]),
+                        ])
+                    ]
+                })
         }
 
         _ = await registry.client(forFilePath: "/x/A.swift", rootURI: "file:///root")
@@ -210,8 +235,10 @@ struct LSPServerRegistryTests {
         #expect(registry.health["go::file:///root"] == .connected)
 
         // Editing "swift" must drop only its own cached client/health, not "go"'s.
-        registry.upsert(LSPServerConfig(id: "swift", command: "/opt/sourcekit-lsp",
-                                         fileGlobs: ["*.swift"], enabled: true))
+        registry.upsert(
+            LSPServerConfig(
+                id: "swift", command: "/opt/sourcekit-lsp",
+                fileGlobs: ["*.swift"], enabled: true))
         #expect(registry.health["swift::file:///root"] == nil)
         #expect(registry.health["go::file:///root"] == .connected)
 

@@ -1,7 +1,7 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/Router/LocalModelAvailability.swift
 import Foundation
 import Observation
-import AinkradHostRuntime
 
 /// In-memory, non-persisted cache of which LOCAL connections (Ollama / LM
 /// Studio / other loopback servers) are currently reachable — refreshed

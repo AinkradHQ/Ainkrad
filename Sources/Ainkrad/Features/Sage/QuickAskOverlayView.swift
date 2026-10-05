@@ -1,5 +1,5 @@
-import SwiftUI
 import AinkradHostRuntime
+import SwiftUI
 
 /// A summonable HUD overlay hosting the Sage surface (bound to the shared
 /// `AgentSession`) so the user can ask from anywhere: streaming, gated tools,

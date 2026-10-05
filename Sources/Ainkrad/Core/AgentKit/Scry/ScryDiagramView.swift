@@ -1,8 +1,8 @@
-import SwiftUI
-import WebKit
-import AppKit
 import AinkradAppKit
 import AinkradHostRuntime
+import AppKit
+import SwiftUI
+import WebKit
 
 /// Which concrete branch `ScryDiagramView` will render for a given element.
 /// A pure, synchronous seam over the kind/body dispatch logic so the routing
@@ -152,8 +152,10 @@ private struct MermaidWebView: NSViewRepresentable {
         // NOT recreated per update. Only reload the ~3.4MB mermaid HTML when
         // the diagram source or theme actually changed since the last load;
         // otherwise this would reload (and visibly flash) on every mouse move.
-        guard context.coordinator.lastLoaded?.source != source
-            || context.coordinator.lastLoaded?.tokens != tokens else {
+        guard
+            context.coordinator.lastLoaded?.source != source
+                || context.coordinator.lastLoaded?.tokens != tokens
+        else {
             return
         }
         load(into: webView, context: context)
@@ -161,7 +163,8 @@ private struct MermaidWebView: NSViewRepresentable {
 
     private func load(into webView: WKWebView, context: Context) {
         guard let jsURL = Bundle.main.url(forResource: "mermaid.min", withExtension: "js"),
-              let js = try? String(contentsOf: jsURL, encoding: .utf8) else {
+            let js = try? String(contentsOf: jsURL, encoding: .utf8)
+        else {
             onError("mermaid.min.js resource not found in app bundle")
             return
         }
@@ -170,7 +173,8 @@ private struct MermaidWebView: NSViewRepresentable {
     }
 
     private static func html(js: String, source: String, tokens: DesignTokens) -> String {
-        let escapedSource = source
+        let escapedSource =
+            source
             .replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "`", with: "\\`")
             .replacingOccurrences(of: "${", with: "\\${")
@@ -180,55 +184,55 @@ private struct MermaidWebView: NSViewRepresentable {
         let primary = tokens.accentPrimary.hexString ?? "2563EB"
         let secondary = tokens.accentSecondary.hexString ?? "22D3EE"
         return """
-        <!doctype html>
-        <html>
-        <head>
-        <meta charset="utf-8">
-        <style>
-          html, body { margin: 0; padding: 0; background: #\(bg); overflow: auto; }
-          #diagram { display: flex; align-items: center; justify-content: center; padding: 8px; }
-          #diagram svg { max-width: 100%; height: auto; }
-        </style>
-        </head>
-        <body>
-        <div id="diagram"></div>
-        <script>\(js)</script>
-        <script>
-        (function () {
-          function reportError(err) {
-            var message = (err && err.message) ? err.message : String(err);
-            if (window.webkit && window.webkit.messageHandlers.mermaidBridge) {
-              window.webkit.messageHandlers.mermaidBridge.postMessage(message);
-            }
-          }
-          window.onerror = function (message) { reportError(message); return true; };
-          try {
-            window.mermaid.initialize({
-              startOnLoad: false,
-              theme: "dark",
-              themeVariables: {
-                background: "#\(bg)",
-                primaryColor: "#\(primary)",
-                primaryTextColor: "#\(fg)",
-                primaryBorderColor: "#\(secondary)",
-                lineColor: "#\(secondary)",
-                textColor: "#\(fg)"
+            <!doctype html>
+            <html>
+            <head>
+            <meta charset="utf-8">
+            <style>
+              html, body { margin: 0; padding: 0; background: #\(bg); overflow: auto; }
+              #diagram { display: flex; align-items: center; justify-content: center; padding: 8px; }
+              #diagram svg { max-width: 100%; height: auto; }
+            </style>
+            </head>
+            <body>
+            <div id="diagram"></div>
+            <script>\(js)</script>
+            <script>
+            (function () {
+              function reportError(err) {
+                var message = (err && err.message) ? err.message : String(err);
+                if (window.webkit && window.webkit.messageHandlers.mermaidBridge) {
+                  window.webkit.messageHandlers.mermaidBridge.postMessage(message);
+                }
               }
-            });
-            var source = `\(escapedSource)`;
-            window.mermaid.render("ainkradMermaidDiagram", source)
-              .then(function (result) {
-                document.getElementById("diagram").innerHTML = result.svg;
-              })
-              .catch(function (err) { reportError(err); });
-          } catch (err) {
-            reportError(err);
-          }
-        })();
-        </script>
-        </body>
-        </html>
-        """
+              window.onerror = function (message) { reportError(message); return true; };
+              try {
+                window.mermaid.initialize({
+                  startOnLoad: false,
+                  theme: "dark",
+                  themeVariables: {
+                    background: "#\(bg)",
+                    primaryColor: "#\(primary)",
+                    primaryTextColor: "#\(fg)",
+                    primaryBorderColor: "#\(secondary)",
+                    lineColor: "#\(secondary)",
+                    textColor: "#\(fg)"
+                  }
+                });
+                var source = `\(escapedSource)`;
+                window.mermaid.render("ainkradMermaidDiagram", source)
+                  .then(function (result) {
+                    document.getElementById("diagram").innerHTML = result.svg;
+                  })
+                  .catch(function (err) { reportError(err); });
+              } catch (err) {
+                reportError(err);
+              }
+            })();
+            </script>
+            </body>
+            </html>
+            """
     }
 
     @MainActor

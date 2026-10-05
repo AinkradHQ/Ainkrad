@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// `.text` / `.markdown`. Like every other card, this is a plain `View`
 /// constructed uniformly as `(element:tokens:)` by the dispatcher — a

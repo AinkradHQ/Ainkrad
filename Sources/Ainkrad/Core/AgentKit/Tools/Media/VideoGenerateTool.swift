@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Generates a video from a prompt, writes it to disk, and renders it as a
 /// `video` card on the Live Scry (body = a `file:` URL). Read-class + reversible
@@ -19,10 +19,14 @@ struct VideoGenerateTool: AgentTool {
         .object([
             "type": .string("object"),
             "properties": .object([
-                "prompt": .object(["type": .string("string"),
-                                   "description": .string("Text description of the video to generate.")]),
-                "title": .object(["type": .string("string"),
-                                  "description": .string("Optional card title.")]),
+                "prompt": .object([
+                    "type": .string("string"),
+                    "description": .string("Text description of the video to generate."),
+                ]),
+                "title": .object([
+                    "type": .string("string"),
+                    "description": .string("Optional card title."),
+                ]),
             ]),
             "required": .array([.string("prompt")]),
         ])

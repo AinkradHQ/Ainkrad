@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// The App Store's per-app detail page (AIN-147): large icon, name, author,
 /// version, long description, screenshot gallery, links, and the primary

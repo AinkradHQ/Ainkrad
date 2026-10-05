@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("MemoryService")
 @MainActor
@@ -12,15 +13,17 @@ struct MemoryServiceTests {
     }
 
     @Test func writeIndexesAndLogs() throws {
-        let (svc, root) = try make(); defer { try? FileManager.default.removeItem(at: root) }
+        let (svc, root) = try make()
+        defer { try? FileManager.default.removeItem(at: root) }
         svc.write("prefers dark mode", to: .memory, provenance: .agent)
         #expect(svc.search("dark", limit: 10).count == 1)
         #expect(svc.log.entries().count == 1)
     }
 
     @Test func rebuildReindexesFromFiles() throws {
-        let (svc, root) = try make(); defer { try? FileManager.default.removeItem(at: root) }
-        svc.store.write("findable content", to: .agents)   // direct edit, bypasses write()
+        let (svc, root) = try make()
+        defer { try? FileManager.default.removeItem(at: root) }
+        svc.store.write("findable content", to: .agents)  // direct edit, bypasses write()
         svc.rebuildIndex()
         #expect(svc.search("findable", limit: 10).count == 1)
     }

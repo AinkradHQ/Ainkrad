@@ -22,7 +22,9 @@ extension TileLayout {
     /// running sessions survive. With `collapseTo` set (Focus Mode), that
     /// pane's path takes everything and gaps/seams disappear; collapsed
     /// panes get zero-sized frames but remain mounted.
-    func paneGeometry(in size: CGSize, gap: CGFloat, collapseTo: UUID? = nil) -> (frames: [UUID: CGRect], seams: [SeamPlacement]) {
+    func paneGeometry(in size: CGSize, gap: CGFloat, collapseTo: UUID? = nil) -> (
+        frames: [UUID: CGRect], seams: [SeamPlacement]
+    ) {
         guard let root else { return ([:], []) }
         var frames: [UUID: CGRect] = [:]
         var seams: [SeamPlacement] = []
@@ -68,27 +70,32 @@ extension TileLayout {
 
             for (index, child) in children.enumerated() {
                 let length = available * CGFloat(fractions[index])
-                let childRect = axis == .horizontal
+                let childRect =
+                    axis == .horizontal
                     ? CGRect(x: cursor, y: rect.minY, width: length, height: rect.height)
                     : CGRect(x: rect.minX, y: cursor, width: rect.width, height: length)
 
-                collectGeometry(child, rect: childRect, gap: gap, collapseTo: collapseTo, path: path + [index], frames: &frames, seams: &seams)
+                collectGeometry(
+                    child, rect: childRect, gap: gap, collapseTo: collapseTo, path: path + [index], frames: &frames,
+                    seams: &seams)
                 cursor += length
 
                 if index < children.count - 1 {
                     if collapseTo == nil {
-                        let seamRect = axis == .horizontal
+                        let seamRect =
+                            axis == .horizontal
                             ? CGRect(x: cursor, y: rect.minY, width: gap, height: rect.height)
                             : CGRect(x: rect.minX, y: cursor, width: rect.width, height: gap)
-                        seams.append(SeamPlacement(
-                            id: "\(path.map(String.init).joined(separator: "."))#\(index)",
-                            axis: axis,
-                            frame: seamRect,
-                            path: path,
-                            index: index,
-                            containerOrigin: containerOrigin,
-                            containerLength: totalLength
-                        ))
+                        seams.append(
+                            SeamPlacement(
+                                id: "\(path.map(String.init).joined(separator: "."))#\(index)",
+                                axis: axis,
+                                frame: seamRect,
+                                path: path,
+                                index: index,
+                                containerOrigin: containerOrigin,
+                                containerLength: totalLength
+                            ))
                     }
                     cursor += gap
                 }

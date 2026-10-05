@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 struct WebSearchResult: Equatable, Sendable {
     let title: String
@@ -28,7 +28,11 @@ struct BraveSearchBackend: WebSearchBackend {
 
     private struct Payload: Decodable {
         struct Web: Decodable { let results: [Item] }
-        struct Item: Decodable { let title: String; let url: String; let description: String? }
+        struct Item: Decodable {
+            let title: String
+            let url: String
+            let description: String?
+        }
         let web: Web?
     }
 

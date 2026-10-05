@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/MCP/MCPTransport.swift
 import Foundation
-import AinkradHostRuntime
 
 /// A bidirectional JSON-RPC message pipe to one MCP server. Framing is the
 /// transport's concern; `MCPClient` only sees decoded `JSONValue` messages.
@@ -46,7 +46,10 @@ actor StubMCPTransport: MCPTransport {
     /// Test hook: push an unsolicited inbound message.
     func inject(_ message: JSONValue) { box.yield(message) }
 
-    func stop() async { stopCount += 1; box.finish() }
+    func stop() async {
+        stopCount += 1
+        box.finish()
+    }
 }
 
 /// Thread-safe holder for an `AsyncThrowingStream` continuation, so a

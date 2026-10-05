@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("TerminalProcessController", .timeLimit(.minutes(1)))
@@ -17,10 +18,10 @@ struct TerminalProcessControllerTests {
         let result = await running
         let elapsed = Date().timeIntervalSince(start)
         #expect(elapsed < 10, "expected killActive to end the 30s sleep early (elapsed \(elapsed)s)")
-        _ = result   // exit status is irrelevant; the point is it returned promptly
+        _ = result  // exit status is irrelevant; the point is it returned promptly
     }
 
     @Test func killActiveWithNoProcessIsANoOp() {
-        TerminalProcessController().killActive()   // must not crash
+        TerminalProcessController().killActive()  // must not crash
     }
 }

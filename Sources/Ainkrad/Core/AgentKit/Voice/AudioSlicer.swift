@@ -1,5 +1,5 @@
-import Foundation
 import AVFoundation
+import Foundation
 
 protocol AudioSlicer: Sendable {
     func duration(of url: URL) async throws -> Double

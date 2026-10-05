@@ -1,7 +1,7 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
 import AinkradSignal
+import SwiftUI
 
 /// One event in the bell dropdown, in the toast's vocabulary: the sending
 /// app's launcher icon, the link's symbol beside the title, a one-line body
@@ -54,8 +54,10 @@ struct SignalGlanceRow: View {
         .animation(reduceMotion ? nil : AinkradMotion.hover, value: hovering)
         .animation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.86), value: expanded)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(SignalPresentation.accessibilityLabel(
-            for: event, repeatCount: repeatCount, isUnread: isUnread, now: now))
+        .accessibilityLabel(
+            SignalPresentation.accessibilityLabel(
+                for: event, repeatCount: repeatCount, isUnread: isUnread, now: now)
+        )
         .accessibilityAddTraits(.isButton)
         .accessibilityAction { onActivate(event) }
         .accessibilityActions {
@@ -107,7 +109,9 @@ struct SignalGlanceRow: View {
                 .font(AinkradFont.display(10))
                 .foregroundStyle(theme.foreground.opacity(0.4))
             if overflowing || expanded {
-                Button { expanded.toggle() } label: {
+                Button {
+                    expanded.toggle()
+                } label: {
                     Image(systemName: "chevron.down")
                         .font(.system(size: 8, weight: .bold))
                         .foregroundStyle(theme.foreground.opacity(hovering ? 0.7 : 0.4))
@@ -141,12 +145,13 @@ struct SignalGlanceRow: View {
                             .fixedSize(horizontal: false, vertical: true)
                             .frame(width: clamped.size.width, alignment: .leading)
                             .hidden()
-                            .background(GeometryReader { full in
-                                Color.clear.onAppear { overflowing = full.size.height > clamped.size.height + 1 }
-                                    .onChange(of: clamped.size.width) {
-                                        if !expanded { overflowing = full.size.height > clamped.size.height + 1 }
-                                    }
-                            })
+                            .background(
+                                GeometryReader { full in
+                                    Color.clear.onAppear { overflowing = full.size.height > clamped.size.height + 1 }
+                                        .onChange(of: clamped.size.width) {
+                                            if !expanded { overflowing = full.size.height > clamped.size.height + 1 }
+                                        }
+                                })
                     }
                     .allowsHitTesting(false)
                 }
@@ -168,13 +173,17 @@ struct SignalGlanceRow: View {
     private var actions: some View {
         HStack(spacing: AinkradSpacing.xs) {
             ForEach(event.actions.prefix(2), id: \.id) { action in
-                iconButton(action.symbol ?? "arrow.up.forward.circle", help: action.label,
-                           tint: action.isDestructive ? status.danger : theme.accentPrimary) {
+                iconButton(
+                    action.symbol ?? "arrow.up.forward.circle", help: action.label,
+                    tint: action.isDestructive ? status.danger : theme.accentPrimary
+                ) {
                     onAction(event, action)
                 }
             }
             if isUnread {
-                iconButton("envelope.open", help: "Mark read", tint: theme.foreground.opacity(0.75)) { onMarkRead(event) }
+                iconButton("envelope.open", help: "Mark read", tint: theme.foreground.opacity(0.75)) {
+                    onMarkRead(event)
+                }
             }
             iconButton("trash", help: "Dismiss", tint: theme.foreground.opacity(0.75)) { onDismiss(event) }
         }

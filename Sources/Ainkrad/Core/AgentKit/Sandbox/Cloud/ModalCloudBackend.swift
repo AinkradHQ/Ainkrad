@@ -29,7 +29,8 @@ final class ModalCloudBackend: CloudSandboxBackend {
     /// researched Modal Sandboxes driver lands; tests inject a fake.
     var remoteExec: RemoteExec = { _, _ in
         throw BackendError.unavailable(
-            "Modal remote execution driver not implemented yet — run blocked (6b research item; never falls back to host).")
+            "Modal remote execution driver not implemented yet — run blocked (6b research item; never falls back to host)."
+        )
     }
 
     init(credentials: CloudCredentialsStore) {

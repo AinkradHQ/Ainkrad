@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/Sandbox/SSHConnectionResolver.swift
 import Foundation
-import AinkradHostRuntime
 
 /// Why a connection id did not become a connection. Carries the user-facing
 /// text and nothing else — the callers have no reason to branch on the cause,
@@ -47,21 +47,25 @@ enum LeylineConnectionResolver {
             // nil means no handler is registered for the id: Leyline isn't
             // installed, or isn't loaded in this session.
             guard let reply = await hub.invoke(actionID: actionID, input: payload) else {
-                return .failure(SSHConnectionResolutionFailure(
-                    "No SSH connection provider is available — the Leyline app is not "
-                    + "installed or did not load. Install Leyline and add the connection "
-                    + "there, then run this again."))
+                return .failure(
+                    SSHConnectionResolutionFailure(
+                        "No SSH connection provider is available — the Leyline app is not "
+                            + "installed or did not load. Install Leyline and add the connection "
+                            + "there, then run this again."))
             }
             // Leyline's own refusals are already specific and actionable
             // (unknown id, password-only, passphrase-protected key), so they
             // are passed through verbatim rather than flattened into a generic
             // message here.
             if reply.isError { return .failure(SSHConnectionResolutionFailure(reply.text)) }
-            guard let info = try? JSONDecoder()
-                .decode(SSHConnectionInfo.self, from: Data(reply.text.utf8)) else {
-                return .failure(SSHConnectionResolutionFailure(
-                    "The SSH connection provider returned something this version of Ainkrad "
-                    + "could not read. Update Leyline and Ainkrad to matching versions."))
+            guard
+                let info = try? JSONDecoder()
+                    .decode(SSHConnectionInfo.self, from: Data(reply.text.utf8))
+            else {
+                return .failure(
+                    SSHConnectionResolutionFailure(
+                        "The SSH connection provider returned something this version of Ainkrad "
+                            + "could not read. Update Leyline and Ainkrad to matching versions."))
             }
             return .success(info)
         }
@@ -70,8 +74,11 @@ enum LeylineConnectionResolver {
     /// `{"connection": "<id>"}`, encoded rather than interpolated so an id with
     /// a quote in it cannot forge a second field.
     private static func requestJSON(connection: String) -> String {
-        guard let data = try? JSONSerialization
-            .data(withJSONObject: ["connection": connection]) else { return "{}" }
+        guard
+            let data =
+                try? JSONSerialization
+                .data(withJSONObject: ["connection": connection])
+        else { return "{}" }
         return String(decoding: data, as: UTF8.self)
     }
 }

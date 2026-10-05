@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("Setup gate")
@@ -9,37 +10,47 @@ struct SetupGateTests {
     // wizard's eight steps unusable: every field was inert because the gate
     // consumed the keystroke before AppKit delivered it.
     @Test func plainCharactersReachTheOverlayWhileGated() {
-        #expect(!SetupGate.swallows(isSetupPresented: true, isConfirmingQuit: false,
-                                    isRegisteredShortcut: false, isWorkspaceChord: false,
-                                    command: false, characters: "a", keyCode: 0))
+        #expect(
+            !SetupGate.swallows(
+                isSetupPresented: true, isConfirmingQuit: false,
+                isRegisteredShortcut: false, isWorkspaceChord: false,
+                command: false, characters: "a", keyCode: 0))
     }
 
     @Test func editingChordsReachTheOverlayWhileGated() {
         for character in ["a", "c", "v", "x", "z"] {
-            #expect(!SetupGate.swallows(isSetupPresented: true, isConfirmingQuit: false,
-                                        isRegisteredShortcut: false, isWorkspaceChord: false,
-                                        command: true, characters: character, keyCode: 0),
-                    "⌘\(character.uppercased()) must reach a focused text field")
+            #expect(
+                !SetupGate.swallows(
+                    isSetupPresented: true, isConfirmingQuit: false,
+                    isRegisteredShortcut: false, isWorkspaceChord: false,
+                    command: true, characters: character, keyCode: 0),
+                "⌘\(character.uppercased()) must reach a focused text field")
         }
     }
 
     @Test func registeredWorkspaceShortcutsAreSwallowedWhileGated() {
-        #expect(SetupGate.swallows(isSetupPresented: true, isConfirmingQuit: false,
-                                   isRegisteredShortcut: true, isWorkspaceChord: false,
-                                   command: true, characters: "k", keyCode: 40))
+        #expect(
+            SetupGate.swallows(
+                isSetupPresented: true, isConfirmingQuit: false,
+                isRegisteredShortcut: true, isWorkspaceChord: false,
+                command: true, characters: "k", keyCode: 40))
     }
 
     @Test func hardcodedWorkspaceChordsAreSwallowedWhileGated() {
-        #expect(SetupGate.swallows(isSetupPresented: true, isConfirmingQuit: false,
-                                   isRegisteredShortcut: false, isWorkspaceChord: true,
-                                   command: true, characters: "1", keyCode: 18))
+        #expect(
+            SetupGate.swallows(
+                isSetupPresented: true, isConfirmingQuit: false,
+                isRegisteredShortcut: false, isWorkspaceChord: true,
+                command: true, characters: "1", keyCode: 18))
     }
 
     // The trap that has now appeared four times at four depths.
     @Test func commandQAlwaysEscapes() {
-        #expect(!SetupGate.swallows(isSetupPresented: true, isConfirmingQuit: false,
-                                    isRegisteredShortcut: true, isWorkspaceChord: true,
-                                    command: true, characters: "q", keyCode: 12))
+        #expect(
+            !SetupGate.swallows(
+                isSetupPresented: true, isConfirmingQuit: false,
+                isRegisteredShortcut: true, isWorkspaceChord: true,
+                command: true, characters: "q", keyCode: 12))
     }
 
     // Dvorak puts "q" on keyCode 39, AZERTY on 0. Matching the physical key
@@ -47,24 +58,30 @@ struct SetupGateTests {
     @Test func commandQEscapesOnNonQwertyLayouts() {
         for keyCode: UInt16 in [39, 0] {
             #expect(keyCode != 12)
-            #expect(!SetupGate.swallows(isSetupPresented: true, isConfirmingQuit: false,
-                                        isRegisteredShortcut: false, isWorkspaceChord: false,
-                                        command: true, characters: "q", keyCode: keyCode))
+            #expect(
+                !SetupGate.swallows(
+                    isSetupPresented: true, isConfirmingQuit: false,
+                    isRegisteredShortcut: false, isWorkspaceChord: false,
+                    command: true, characters: "q", keyCode: keyCode))
         }
     }
 
     @Test func quitConfirmationKeysPassOnlyWhileConfirming() {
         for keyCode: UInt16 in [36, 76, 53] {
-            #expect(!SetupGate.swallows(isSetupPresented: true, isConfirmingQuit: true,
-                                        isRegisteredShortcut: false, isWorkspaceChord: false,
-                                        command: false, characters: nil, keyCode: keyCode))
+            #expect(
+                !SetupGate.swallows(
+                    isSetupPresented: true, isConfirmingQuit: true,
+                    isRegisteredShortcut: false, isWorkspaceChord: false,
+                    command: false, characters: nil, keyCode: keyCode))
         }
     }
 
     @Test func nothingIsSwallowedWhenTheGateIsDown() {
-        #expect(!SetupGate.swallows(isSetupPresented: false, isConfirmingQuit: false,
-                                    isRegisteredShortcut: true, isWorkspaceChord: true,
-                                    command: true, characters: "k", keyCode: 40))
+        #expect(
+            !SetupGate.swallows(
+                isSetupPresented: false, isConfirmingQuit: false,
+                isRegisteredShortcut: true, isWorkspaceChord: true,
+                command: true, characters: "k", keyCode: 40))
     }
 }
 
@@ -85,20 +102,23 @@ struct WorkspaceChordTests {
 
     /// Every chord `KeyboardShortcutMonitor.handle` acts on without consulting a
     /// `ShortcutAction` binding. If a branch is added to `handle`, it belongs here.
-    private static let all: [(name: String, keyCode: UInt16, characters: String?,
-                              option: Bool, shift: Bool)] = [
-        ("⌘1 switch workspace", one, "1", false, false),
-        ("⌘← focus pane", leftArrow, nil, false, false),
-        ("⌘→ focus pane", rightArrow, nil, false, false),
-        ("⌘↓ focus pane", downArrow, nil, false, false),
-        ("⌘↑ focus pane", upArrow, nil, false, false),
-        ("⌘⇧← resize pane", leftArrow, nil, false, true),
-        ("⌘⌥← cycle workspace", leftArrow, nil, true, false),
-        ("⌘⌥→ cycle workspace", rightArrow, nil, true, false),
-        ("⌘D split trailing", d, "d", false, false),
-        ("⌘⇧D split bottom", d, "d", false, true),
-        ("⌘M toggle focus mode", m, "m", false, false),
-    ]
+    private static let all:
+        [(
+            name: String, keyCode: UInt16, characters: String?,
+            option: Bool, shift: Bool
+        )] = [
+            ("⌘1 switch workspace", one, "1", false, false),
+            ("⌘← focus pane", leftArrow, nil, false, false),
+            ("⌘→ focus pane", rightArrow, nil, false, false),
+            ("⌘↓ focus pane", downArrow, nil, false, false),
+            ("⌘↑ focus pane", upArrow, nil, false, false),
+            ("⌘⇧← resize pane", leftArrow, nil, false, true),
+            ("⌘⌥← cycle workspace", leftArrow, nil, true, false),
+            ("⌘⌥→ cycle workspace", rightArrow, nil, true, false),
+            ("⌘D split trailing", d, "d", false, false),
+            ("⌘⇧D split bottom", d, "d", false, true),
+            ("⌘M toggle focus mode", m, "m", false, false),
+        ]
 
     // ⌘D splits the focused pane and ⌘M toggles view mode AND calls
     // `workspaceManager.persist()` — while gated that writes into the
@@ -106,28 +126,34 @@ struct WorkspaceChordTests {
     // leaked through the first version of the gate.
     @Test func everyHardcodedChordIsSwallowedWhileGated() {
         for chord in Self.all {
-            #expect(WorkspaceChord.matches(keyCode: chord.keyCode, characters: chord.characters,
-                                           command: true, option: chord.option, shift: chord.shift),
-                    "\(chord.name) must be a recognised workspace chord")
-            #expect(SetupGate.swallows(isSetupPresented: true, isConfirmingQuit: false,
-                                       isRegisteredShortcut: false,
-                                       isWorkspaceChord: WorkspaceChord.matches(
-                                        keyCode: chord.keyCode, characters: chord.characters,
-                                        command: true, option: chord.option, shift: chord.shift),
-                                       command: true, characters: chord.characters,
-                                       keyCode: chord.keyCode),
-                    "\(chord.name) must not reach the workspace while setup is presented")
+            #expect(
+                WorkspaceChord.matches(
+                    keyCode: chord.keyCode, characters: chord.characters,
+                    command: true, option: chord.option, shift: chord.shift),
+                "\(chord.name) must be a recognised workspace chord")
+            #expect(
+                SetupGate.swallows(
+                    isSetupPresented: true, isConfirmingQuit: false,
+                    isRegisteredShortcut: false,
+                    isWorkspaceChord: WorkspaceChord.matches(
+                        keyCode: chord.keyCode, characters: chord.characters,
+                        command: true, option: chord.option, shift: chord.shift),
+                    command: true, characters: chord.characters,
+                    keyCode: chord.keyCode),
+                "\(chord.name) must not reach the workspace while setup is presented")
         }
     }
 
     @Test func everyHardcodedChordWorksAgainOnceTheGateIsDown() {
         for chord in Self.all {
-            #expect(!SetupGate.swallows(isSetupPresented: false, isConfirmingQuit: false,
-                                        isRegisteredShortcut: false,
-                                        isWorkspaceChord: true,
-                                        command: true, characters: chord.characters,
-                                        keyCode: chord.keyCode),
-                    "\(chord.name) must work again once setup is dismissed")
+            #expect(
+                !SetupGate.swallows(
+                    isSetupPresented: false, isConfirmingQuit: false,
+                    isRegisteredShortcut: false,
+                    isWorkspaceChord: true,
+                    command: true, characters: chord.characters,
+                    keyCode: chord.keyCode),
+                "\(chord.name) must work again once setup is dismissed")
         }
     }
 
@@ -135,9 +161,11 @@ struct WorkspaceChordTests {
     /// focused text field in the wizard.
     @Test func theSameKeysWithoutCommandAreJustTyping() {
         for characters in ["d", "m", "1"] {
-            #expect(!WorkspaceChord.matches(keyCode: 0, characters: characters,
-                                            command: false, option: false, shift: false),
-                    "bare \"\(characters)\" is typing, not a chord")
+            #expect(
+                !WorkspaceChord.matches(
+                    keyCode: 0, characters: characters,
+                    command: false, option: false, shift: false),
+                "bare \"\(characters)\" is typing, not a chord")
         }
     }
 
@@ -155,9 +183,11 @@ struct WorkspaceChordTests {
     /// the overlay's text fields.
     @Test func editingChordsAreNotWorkspaceChords() {
         for characters in ["a", "c", "v", "x", "z", "q"] {
-            #expect(!WorkspaceChord.matches(keyCode: 0, characters: characters,
-                                            command: true, option: false, shift: false),
-                    "⌘\(characters.uppercased()) must reach a focused text field")
+            #expect(
+                !WorkspaceChord.matches(
+                    keyCode: 0, characters: characters,
+                    command: true, option: false, shift: false),
+                "⌘\(characters.uppercased()) must reach a focused text field")
         }
     }
 }

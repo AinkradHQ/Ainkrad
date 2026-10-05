@@ -1,6 +1,6 @@
-import Testing
-import SwiftUI
 import AinkradAppKitContract
+import SwiftUI
+import Testing
 
 @Suite("SettingsCatalog")
 @MainActor
@@ -15,19 +15,27 @@ struct SettingsCatalogTests {
                 path: page, title: "General", icon: "gearshape",
                 group: .workspace, order: 0,
                 groups: [
-                    SettingsGroup(path: visible, title: "Startup", disclosure: .always, fields: [
-                        SettingsField(path: visible.appending("statusBar"), label: "Show status bar",
-                                      help: "Clock and battery in the title strip.",
-                                      keywords: ["clock", "battery"],
-                                      kind: .toggle(.constant(true))),
-                        SettingsField(path: visible.appending("layout"), label: "Launcher layout",
-                                      kind: .select(options: [SettingsOption(id: "list", title: "List")],
-                                                    selection: .constant("list")))
-                    ]),
-                    SettingsGroup(path: advanced, title: "Advanced", disclosure: .collapsedByDefault, fields: [
-                        SettingsField(path: advanced.appending("diagnostics"), label: "Diagnostics",
-                                      kind: .custom(AnyView(EmptyView())), isAdvanced: true)
-                    ])
+                    SettingsGroup(
+                        path: visible, title: "Startup", disclosure: .always,
+                        fields: [
+                            SettingsField(
+                                path: visible.appending("statusBar"), label: "Show status bar",
+                                help: "Clock and battery in the title strip.",
+                                keywords: ["clock", "battery"],
+                                kind: .toggle(.constant(true))),
+                            SettingsField(
+                                path: visible.appending("layout"), label: "Launcher layout",
+                                kind: .select(
+                                    options: [SettingsOption(id: "list", title: "List")],
+                                    selection: .constant("list"))),
+                        ]),
+                    SettingsGroup(
+                        path: advanced, title: "Advanced", disclosure: .collapsedByDefault,
+                        fields: [
+                            SettingsField(
+                                path: advanced.appending("diagnostics"), label: "Diagnostics",
+                                kind: .custom(AnyView(EmptyView())), isAdvanced: true)
+                        ]),
                 ])
         ])
     }

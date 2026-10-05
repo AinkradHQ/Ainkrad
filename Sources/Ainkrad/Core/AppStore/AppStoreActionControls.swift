@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// The status-driven action controls — Install / Update / Enable / Disable /
 /// Uninstall, plus the busy affordance — shared by `AppStoreCard` and
@@ -62,10 +62,12 @@ struct AppStoreActionControls: View {
                         .transition(rowTransition)
                 }
             case .installed where row.needsRestart:
-                actionButton("Restart to Apply", style: .primary, morphsBusy: false,
-                             action: HostRelaunch.relaunch)
-                    .help("The update is installed. Ainkrad keeps running the old version until it restarts.")
-                    .transition(rowTransition)
+                actionButton(
+                    "Restart to Apply", style: .primary, morphsBusy: false,
+                    action: HostRelaunch.relaunch
+                )
+                .help("The update is installed. Ainkrad keeps running the old version until it restarts.")
+                .transition(rowTransition)
             case .installed:
                 installedLabel
                     .transition(rowTransition)
@@ -126,7 +128,9 @@ struct AppStoreActionControls: View {
     /// An `AinkradButton` that, while `morphsBusy && isBusy`, crossfades to
     /// an `AinkradSpinner` in place. Both views are always mounted — only
     /// `.opacity` toggles — so this never swaps the button's identity.
-    private func actionButton(_ title: String, style buttonStyle: AinkradButtonStyle, morphsBusy: Bool, action: @escaping () -> Void) -> some View {
+    private func actionButton(
+        _ title: String, style buttonStyle: AinkradButtonStyle, morphsBusy: Bool, action: @escaping () -> Void
+    ) -> some View {
         let showsSpinner = morphsBusy && isBusy
         return ZStack {
             AinkradButton(title: title, style: buttonStyle, action: action)

@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Segmented-picker-friendly stand-in for `NetworkPolicy`'s associated-value
 /// case (`AinkradSegmentedPicker` needs a plain `Hashable` selection). The
@@ -71,7 +71,7 @@ enum SandboxPolicyExplainer {
             isIrreversible: false)
         return SandboxPermissionPolicy.compose(
             gate: gate,
-            agentAllowList: nil,   // this inspector explains the SANDBOX layer; no per-Agent restriction assumed
+            agentAllowList: nil,  // this inspector explains the SANDBOX layer; no per-Agent restriction assumed
             sandboxAllowList: profile.toolAllowList,
             toolName: toolName)
     }

@@ -1,4 +1,5 @@
 import Testing
+
 @testable import Ainkrad
 
 @Suite("GeneratedImageView")
@@ -8,6 +9,6 @@ struct GeneratedImageViewTests {
         #expect(GeneratedImageView.fileExtension(for: "data:image/gif;base64,QQ==") == "gif")
         #expect(GeneratedImageView.fileExtension(for: "data:image/webp;base64,QQ==") == "webp")
         #expect(GeneratedImageView.fileExtension(for: "data:image/png;base64,QQ==") == "png")
-        #expect(GeneratedImageView.fileExtension(for: "not a data url") == "png") // default
+        #expect(GeneratedImageView.fileExtension(for: "not a data url") == "png")  // default
     }
 }

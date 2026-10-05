@@ -55,7 +55,8 @@ public struct DeveloperIDSignaturePolicy: PluginSignaturePolicy {
     /// The Developer-ID Application designated requirement, optionally pinned
     /// to one team. Exposed for tests.
     public var requirementText: String {
-        var text = "anchor apple generic"
+        var text =
+            "anchor apple generic"
             + " and certificate 1[field.1.2.840.113635.100.6.2.6] exists"
             + " and certificate leaf[field.1.2.840.113635.100.6.1.13] exists"
         if let team = teamIdentifier, !team.isEmpty {
@@ -88,7 +89,9 @@ public struct DeveloperIDSignaturePolicy: PluginSignaturePolicy {
         // integrity*, both of which are offline properties.
         let validity = SecStaticCodeCheckValidity(code, [], requirement)
         guard validity == errSecSuccess else {
-            return .failure(PluginRejection(reason: Self.describe(validity, fallback: "not signed with a valid Developer-ID identity")))
+            return .failure(
+                PluginRejection(
+                    reason: Self.describe(validity, fallback: "not signed with a valid Developer-ID identity")))
         }
 
         Log.registry.info("Developer-ID policy: accepted \(bundleURL.lastPathComponent, privacy: .public)")
@@ -130,7 +133,8 @@ public struct UnverifiedDistributionPolicy: PluginSignaturePolicy {
     public init() {}
     public func validate(bundleURL: URL) -> Result<Void, PluginRejection> {
         Log.registry.error(
-            "Plugin signatures are NOT being verified: this host is not Developer-ID signed. Accepting \(bundleURL.lastPathComponent, privacy: .public)")
+            "Plugin signatures are NOT being verified: this host is not Developer-ID signed. Accepting \(bundleURL.lastPathComponent, privacy: .public)"
+        )
         return .success(())
     }
 }
@@ -190,9 +194,11 @@ public enum PluginTrust {
         var selfCode: SecCode?
         guard SecCodeCopySelf([], &selfCode) == errSecSuccess, let selfCode else { return false }
         var requirement: SecRequirement?
-        guard SecRequirementCreateWithString(
+        guard
+            SecRequirementCreateWithString(
                 DeveloperIDSignaturePolicy().requirementText as CFString, [], &requirement) == errSecSuccess,
-              let requirement else { return false }
+            let requirement
+        else { return false }
         return SecCodeCheckValidity(selfCode, [], requirement) == errSecSuccess
     }
 

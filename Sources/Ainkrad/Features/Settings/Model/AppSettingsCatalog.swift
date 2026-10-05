@@ -1,7 +1,7 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitContract
 import AinkradHostRuntime
+import SwiftUI
 
 /// One settings page per ENABLED app — a disabled app has no settings page,
 /// same as it has no Launcher entry. If the app publishes a catalog
@@ -54,14 +54,16 @@ enum AppSettingsCatalog {
                 groups = published.groups.map { namespaced($0, under: root) }
             } else {
                 groups = [
-                    SettingsGroup(path: root.appending("settings"), title: app.displayName, fields: [
-                        SettingsField(
-                            path: root.appending("settings").appending("pane"),
-                            label: "\(app.displayName) settings",
-                            help: nil,
-                            keywords: [app.displayName.lowercased()],
-                            kind: .custom(app.makeSettingsView()))
-                    ])
+                    SettingsGroup(
+                        path: root.appending("settings"), title: app.displayName,
+                        fields: [
+                            SettingsField(
+                                path: root.appending("settings").appending("pane"),
+                                label: "\(app.displayName) settings",
+                                help: nil,
+                                keywords: [app.displayName.lowercased()],
+                                kind: .custom(app.makeSettingsView()))
+                        ])
                 ]
             }
 
@@ -69,9 +71,10 @@ enum AppSettingsCatalog {
             // still rendering one custom view draws them itself (the kit's
             // `AinkradSurfaceSettings`), so adding them here would show them twice.
             let declared = isBuiltIn || published != nil
-            let tab = appearanceTab(appID: app.id, appName: app.displayName, root: root,
-                                    taking: &groups, includeSurface: declared,
-                                    environment: environment)
+            let tab = appearanceTab(
+                appID: app.id, appName: app.displayName, root: root,
+                taking: &groups, includeSurface: declared,
+                environment: environment)
             if !tab.fields.isEmpty { groups.insert(tab, at: 0) }
 
             return SettingsPage(
@@ -153,18 +156,21 @@ enum AppSettingsCatalog {
         let own = groups.first { isTitled($0, "Appearance") }
         groups.removeAll { isTitled($0, "Appearance") || (includeSurface && isTitled($0, "Surface")) }
 
-        var fields = includeSurface
-            ? BuiltInSurfaceSettings.fields(in: path, appID: appID, appName: appName,
-                                            environment: environment)
+        var fields =
+            includeSurface
+            ? BuiltInSurfaceSettings.fields(
+                in: path, appID: appID, appName: appName,
+                environment: environment)
             : []
         fields += own?.fields ?? []
         let declaresBlur = fields.contains { $0.path.segments.last == "blur" }
         if !declaresBlur && !ownsItsAppearance.contains(appID) {
             fields.append(blurField(appID: appID, group: path, environment: environment))
         }
-        return SettingsGroup(path: path, title: "Appearance",
-                             footerNote: own?.footerNote ?? "How \(appName) opens, and how it looks.",
-                             fields: fields)
+        return SettingsGroup(
+            path: path, title: "Appearance",
+            footerNote: own?.footerNote ?? "How \(appName) opens, and how it looks.",
+            fields: fields)
     }
 
     /// The blur toggle every app but the Sage gets — the host renders
@@ -175,15 +181,16 @@ enum AppSettingsCatalog {
     ) -> SettingsField {
         let store = environment.appAppearanceStore
         return SettingsField(
-                path: group.appending("blur"),
-                label: "Blur",
-                help: "Blur the workspace revealed behind this app when it's translucent.",
-                keywords: ["blur", "transparency", "translucent", "backdrop"],
-                kind: .toggle(Binding(
+            path: group.appending("blur"),
+            label: "Blur",
+            help: "Blur the workspace revealed behind this app when it's translucent.",
+            keywords: ["blur", "transparency", "translucent", "backdrop"],
+            kind: .toggle(
+                Binding(
                     get: { store.blurEnabled(appID) },
                     set: { store.setBlurEnabled(appID, $0) })),
-                defaultDescription: "Off",
-                isModified: { store.blurEnabled(appID) != false },
-                reset: { store.setBlurEnabled(appID, false) })
+            defaultDescription: "Off",
+            isModified: { store.blurEnabled(appID) != false },
+            reset: { store.setBlurEnabled(appID, false) })
     }
 }

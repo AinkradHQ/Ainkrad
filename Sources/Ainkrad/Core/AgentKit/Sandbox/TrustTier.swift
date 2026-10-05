@@ -7,11 +7,11 @@ import Foundation
 /// (`SandboxProfile.allowHostOverride`) to ever touch `.host` (see
 /// `ExecutionRouter`).
 enum TrustTier: String, Codable, Equatable, Sendable, CaseIterable {
-    case mainInteractive   // the user's foreground session → host
-    case background        // fire-and-forget host-app run → sandboxed
-    case scheduled          // cron/scheduled run → sandboxed
-    case subagent           // spawned subagent → sandboxed
-    case untrustedMCP        // untrusted MCP stdio server → sandboxed
+    case mainInteractive  // the user's foreground session → host
+    case background  // fire-and-forget host-app run → sandboxed
+    case scheduled  // cron/scheduled run → sandboxed
+    case subagent  // spawned subagent → sandboxed
+    case untrustedMCP  // untrusted MCP stdio server → sandboxed
 }
 
 /// The per-Agent execution policy the router consumes. Slice 5's

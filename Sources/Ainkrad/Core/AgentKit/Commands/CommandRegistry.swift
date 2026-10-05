@@ -1,6 +1,6 @@
+import AppKit
 // Sources/Ainkrad/Core/AgentKit/Commands/CommandRegistry.swift
 import Foundation
-import AppKit
 
 /// Single slash-command dispatch path. `AgentSession.send` runs every input through
 /// this registry first — this is also where Slice 1's old `/remember ` prefix
@@ -14,7 +14,10 @@ final class CommandRegistry {
     init(builtins: [SlashCommand]) {
         commands = [:]
         order = []
-        for c in builtins where commands[c.name] == nil { commands[c.name] = c; order.append(c.name) }
+        for c in builtins where commands[c.name] == nil {
+            commands[c.name] = c
+            order.append(c.name)
+        }
     }
 
     /// Appends (or overwrites) a command — the seam Slice 4 skill commands register
@@ -48,7 +51,8 @@ final class CommandRegistry {
 
     func run(_ input: String, on session: AgentSession) -> CommandResult {
         guard let (command, args) = parse(input) else {
-            return input.trimmingCharacters(in: .whitespaces).hasPrefix("/") ? .handled(note: "Unknown command.") : .notACommand
+            return input.trimmingCharacters(in: .whitespaces).hasPrefix("/")
+                ? .handled(note: "Unknown command.") : .notACommand
         }
         return command.handler(args, session)
     }
@@ -87,27 +91,34 @@ enum BuiltinCommands {
         Set(make(runtime: nil, usage: nil, router: nil, catalog: nil).map(\.name))
     }
 
-    static func make(runtime: RuntimeOptionsStore?, usage: UsageTracker?,
-                     router: ModelRouter?, catalog: ModelCatalog?,
-                     pasteboard: TextPasteboard = SystemPasteboard()) -> [SlashCommand] {
+    static func make(
+        runtime: RuntimeOptionsStore?, usage: UsageTracker?,
+        router: ModelRouter?, catalog: ModelCatalog?,
+        pasteboard: TextPasteboard = SystemPasteboard()
+    ) -> [SlashCommand] {
         [
             SlashCommand(name: "new", summary: "Start a new session", usage: "/new", category: .session) { _, session in
                 session.reset()
                 runtime?.resetForNewSession()
                 return .handled(note: nil)
             },
-            SlashCommand(name: "reset", summary: "Start a new session", usage: "/reset", category: .session) { _, session in
+            SlashCommand(name: "reset", summary: "Start a new session", usage: "/reset", category: .session) {
+                _, session in
                 session.reset()
                 runtime?.resetForNewSession()
                 return .handled(note: nil)
             },
-            SlashCommand(name: "remember", summary: "Save a fact to memory", usage: "/remember <fact>", category: .memory) { args, session in
+            SlashCommand(
+                name: "remember", summary: "Save a fact to memory", usage: "/remember <fact>", category: .memory
+            ) { args, session in
                 let fact = args.trimmingCharacters(in: .whitespaces)
                 guard !fact.isEmpty else { return .handled(note: "Usage: /remember <fact>") }
                 session.remember(fact)
                 return .handled(note: nil)
             },
-            SlashCommand(name: "model", summary: "Pin the model used for this session", usage: "/model <id>", category: .model) { args, _ in
+            SlashCommand(
+                name: "model", summary: "Pin the model used for this session", usage: "/model <id>", category: .model
+            ) { args, _ in
                 let id = args.trimmingCharacters(in: .whitespaces)
                 guard !id.isEmpty else { return .handled(note: "Usage: /model <id>") }
                 guard let runtime else { return .handled(note: "Model pinning is unavailable right now.") }
@@ -118,7 +129,10 @@ enum BuiltinCommands {
                 runtime.pinModel(id)
                 return .handled(note: "Pinned model to \(id) for this session.")
             },
-            SlashCommand(name: "think", summary: "Set the reasoning-effort level", usage: "/think <low|medium|high|max>", category: .model) { args, session in
+            SlashCommand(
+                name: "think", summary: "Set the reasoning-effort level", usage: "/think <low|medium|high|max>",
+                category: .model
+            ) { args, session in
                 let level = args.trimmingCharacters(in: .whitespaces).lowercased()
                 guard ["low", "medium", "high", "max"].contains(level) else {
                     return .handled(note: "Usage: /think <low|medium|high|max>")
@@ -133,19 +147,34 @@ enum BuiltinCommands {
                 if capable {
                     return .handled(note: "Reasoning effort set to \(level).")
                 }
-                return .handled(note: "Reasoning effort set to \(level), but \(modelID) doesn't support adjustable effort — no effect.")
+                return .handled(
+                    note:
+                        "Reasoning effort set to \(level), but \(modelID) doesn't support adjustable effort — no effect."
+                )
             },
-            SlashCommand(name: "verbose", summary: "Toggle verbose transcript detail", usage: "/verbose on|off", category: .info) { args, _ in
+            SlashCommand(
+                name: "verbose", summary: "Toggle verbose transcript detail", usage: "/verbose on|off", category: .info
+            ) { args, _ in
                 switch args.trimmingCharacters(in: .whitespaces).lowercased() {
-                case "on": runtime?.setVerbose(true); return .handled(note: "Verbose mode on.")
-                case "off": runtime?.setVerbose(false); return .handled(note: "Verbose mode off.")
+                case "on":
+                    runtime?.setVerbose(true)
+                    return .handled(note: "Verbose mode on.")
+                case "off":
+                    runtime?.setVerbose(false)
+                    return .handled(note: "Verbose mode off.")
                 default: return .handled(note: "Usage: /verbose on|off")
                 }
             },
-            SlashCommand(name: "trace", summary: "Toggle router/tool trace detail", usage: "/trace on|off", category: .info) { args, _ in
+            SlashCommand(
+                name: "trace", summary: "Toggle router/tool trace detail", usage: "/trace on|off", category: .info
+            ) { args, _ in
                 switch args.trimmingCharacters(in: .whitespaces).lowercased() {
-                case "on": runtime?.setTrace(true); return .handled(note: "Trace mode on.")
-                case "off": runtime?.setTrace(false); return .handled(note: "Trace mode off.")
+                case "on":
+                    runtime?.setTrace(true)
+                    return .handled(note: "Trace mode on.")
+                case "off":
+                    runtime?.setTrace(false)
+                    return .handled(note: "Trace mode off.")
                 default: return .handled(note: "Usage: /trace on|off")
                 }
             },
@@ -157,19 +186,23 @@ enum BuiltinCommands {
                 // means "never priced", NEVER a real zero-dollar turn. Mirrors
                 // `formattedUsageCost`'s `cost > 0` convention (`UsageDashboardView.swift`)
                 // so the text note and the dashboard never disagree.
-                let sessionCost = usage.sessionCostUSD > 0 ? "$" + String(format: "%.4f", usage.sessionCostUSD) : "cost unknown"
+                let sessionCost =
+                    usage.sessionCostUSD > 0 ? "$" + String(format: "%.4f", usage.sessionCostUSD) : "cost unknown"
                 let lifeCost = costUSD > 0 ? "$" + String(format: "%.2f", costUSD) : "cost unknown"
                 let note = """
-                Session: \(usage.session.input) in / \(usage.session.output) out · \(sessionCost)
-                Lifetime: \(cumulative.input) in / \(cumulative.output) out · \(lifeCost) (saved $\(String(format: "%.2f", savingsUSD)))
-                """
+                    Session: \(usage.session.input) in / \(usage.session.output) out · \(sessionCost)
+                    Lifetime: \(cumulative.input) in / \(cumulative.output) out · \(lifeCost) (saved $\(String(format: "%.2f", savingsUSD)))
+                    """
                 return .handled(note: note)
             },
             // `/compact` and `/export` both need LIVE session state (the transcript),
             // which `SlashCommand.handler` already receives as its `session` argument —
             // that existing seam is the cleanest way to reach it, so neither command
             // needs `BuiltinCommands.make` to take an `AgentSession` dependency itself.
-            SlashCommand(name: "compact", summary: "Summarize older messages to shrink the transcript", usage: "/compact", category: .session) { _, session in
+            SlashCommand(
+                name: "compact", summary: "Summarize older messages to shrink the transcript", usage: "/compact",
+                category: .session
+            ) { _, session in
                 // Guard against mid-turn execution: `replaceMessages` overwrites
                 // `session.messages` wholesale, so compacting while a turn is
                 // in flight (thinking/streaming/tool-calling/awaiting approval)
@@ -185,21 +218,34 @@ enum BuiltinCommands {
                 let originalCount = session.messages.count
                 let keepRecent = 6
                 guard originalCount > keepRecent else {
-                    return .handled(note: "Nothing to compact yet — only \(originalCount) message\(originalCount == 1 ? "" : "s") in this session.")
+                    return .handled(
+                        note:
+                            "Nothing to compact yet — only \(originalCount) message\(originalCount == 1 ? "" : "s") in this session."
+                    )
                 }
                 let summary = TranscriptCompactor.summarizeHeuristically(session.messages)
                 let compacted = TranscriptCompactor.compact(session.messages, keepRecent: keepRecent, summary: summary)
                 session.replaceMessages(compacted)
                 let summarizedCount = originalCount - keepRecent
-                return .handled(note: "Compacted \(summarizedCount) earlier message\(summarizedCount == 1 ? "" : "s") into a summary; kept the most recent \(keepRecent).")
+                return .handled(
+                    note:
+                        "Compacted \(summarizedCount) earlier message\(summarizedCount == 1 ? "" : "s") into a summary; kept the most recent \(keepRecent)."
+                )
             },
-            SlashCommand(name: "export", summary: "Copy the transcript to the clipboard as Markdown", usage: "/export", category: .info) { _, session in
+            SlashCommand(
+                name: "export", summary: "Copy the transcript to the clipboard as Markdown", usage: "/export",
+                category: .info
+            ) { _, session in
                 guard !session.messages.isEmpty else { return .handled(note: "Nothing to export yet.") }
                 let rendered = ConversationExporter.export(session.messages, format: .markdown)
                 pasteboard.copy(rendered)
-                return .handled(note: "Copied the transcript to your clipboard as Markdown (\(rendered.count) characters).")
+                return .handled(
+                    note: "Copied the transcript to your clipboard as Markdown (\(rendered.count) characters).")
             },
-            SlashCommand(name: "undo", summary: "Undo the last turn's file edits + transcript", usage: "/undo", category: .session) { _, session in
+            SlashCommand(
+                name: "undo", summary: "Undo the last turn's file edits + transcript", usage: "/undo",
+                category: .session
+            ) { _, session in
                 let summary = session.undoLastTurn()
                 if !summary.irreversible.isEmpty {
                     let ran = summary.irreversible.joined(separator: " ")
@@ -211,19 +257,27 @@ enum BuiltinCommands {
                 let plural = summary.revertedEdits == 1 ? "edit" : "edits"
                 return .handled(note: "Undid the last turn — reverted \(summary.revertedEdits) file \(plural).")
             },
-            SlashCommand(name: "retry", summary: "Re-run the last user prompt", usage: "/retry", category: .session) { _, session in
+            SlashCommand(name: "retry", summary: "Re-run the last user prompt", usage: "/retry", category: .session) {
+                _, session in
                 session.retryLastTurn()
                 return .handled(note: nil)
             },
-            SlashCommand(name: "rewind", summary: "List or restore durable checkpoints", usage: "/rewind [n] [code|chat|both]", category: .session) { args, session in
+            SlashCommand(
+                name: "rewind", summary: "List or restore durable checkpoints", usage: "/rewind [n] [code|chat|both]",
+                category: .session
+            ) { args, session in
                 let list = session.activeCheckpointer()?.checkpoints() ?? []
                 let parts = args.split(separator: " ", maxSplits: 1).map(String.init)
                 guard let first = parts.first, let n = Int(first) else {
                     guard !list.isEmpty else { return .handled(note: "No checkpoints yet.") }
-                    let lines = list.enumerated().map { "\($0.offset + 1). \($0.element.label)" }.joined(separator: "\n")
-                    return .handled(note: "Checkpoints (newest first):\n\(lines)\n\nRestore with /rewind <n> [code|chat|both].")
+                    let lines = list.enumerated().map { "\($0.offset + 1). \($0.element.label)" }.joined(
+                        separator: "\n")
+                    return .handled(
+                        note: "Checkpoints (newest first):\n\(lines)\n\nRestore with /rewind <n> [code|chat|both].")
                 }
-                guard n >= 1, n <= list.count else { return .handled(note: "No checkpoint \(n). There are \(list.count).") }
+                guard n >= 1, n <= list.count else {
+                    return .handled(note: "No checkpoint \(n). There are \(list.count).")
+                }
                 let mode: CheckpointCoordinator.RestoreMode
                 switch parts.count > 1 ? parts[1].lowercased() : "both" {
                 case "code": mode = .code
@@ -237,7 +291,9 @@ enum BuiltinCommands {
                 Task { [label = target.label] in
                     let outcome = await session.restoreCheckpoint(target, mode: mode)
                     if outcome?.success == false {
-                        session.appendSystemNote("Rewind to \(label) (\(mode)) failed to restore the workspace — the transcript may be out of sync with your files.")
+                        session.appendSystemNote(
+                            "Rewind to \(label) (\(mode)) failed to restore the workspace — the transcript may be out of sync with your files."
+                        )
                     }
                 }
                 return .handled(note: "Rewinding to \(n). \(target.label) (\(mode))…")

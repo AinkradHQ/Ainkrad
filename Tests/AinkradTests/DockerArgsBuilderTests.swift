@@ -1,17 +1,21 @@
 // Tests/AinkradTests/DockerArgsBuilderTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("DockerArgsBuilder")
 struct DockerArgsBuilderTests {
-    private func profile(fs: FilesystemPolicy, net: NetworkPolicy,
-                          mem: Int? = nil, cpu: Int? = nil) -> SandboxProfile {
-        SandboxProfile(id: "d", name: "d", backend: .docker,
-                       fsPolicy: fs,
-                       networkPolicy: net,
-                       resourceLimits: ResourceLimits(cpuCount: cpu, memoryMB: mem, timeoutSeconds: 60),
-                       toolAllowList: [])
+    private func profile(
+        fs: FilesystemPolicy, net: NetworkPolicy,
+        mem: Int? = nil, cpu: Int? = nil
+    ) -> SandboxProfile {
+        SandboxProfile(
+            id: "d", name: "d", backend: .docker,
+            fsPolicy: fs,
+            networkPolicy: net,
+            resourceLimits: ResourceLimits(cpuCount: cpu, memoryMB: mem, timeoutSeconds: 60),
+            toolAllowList: [])
     }
 
     @Test func networkOffAddsNetworkNone() {
@@ -31,8 +35,9 @@ struct DockerArgsBuilderTests {
         // (unlike a blanket `.on`) must fail CLOSED to `--network none` —
         // matching SeatbeltProfileGenerator's posture for this same
         // un-filterable case — rather than silently degrading to full bridge.
-        let p = profile(fs: FilesystemPolicy(readablePaths: [], writablePaths: ["<workspace>"]),
-                         net: .allowList(["example.com"]))
+        let p = profile(
+            fs: FilesystemPolicy(readablePaths: [], writablePaths: ["<workspace>"]),
+            net: .allowList(["example.com"]))
         let args = DockerArgsBuilder.runArgs(command: "ls", profile: p, workspacePath: "/ws", image: "img")
         #expect(zip(args, args.dropFirst()).contains { $0 == "--network" && $1 == "none" })
         #expect(!zip(args, args.dropFirst()).contains { $0 == "--network" && $1 == "bridge" })
@@ -47,15 +52,17 @@ struct DockerArgsBuilderTests {
     }
 
     @Test func readablePathsMountedReadOnly() {
-        let p = profile(fs: FilesystemPolicy(readablePaths: ["/opt/ro-dep"], writablePaths: ["<workspace>"]),
-                         net: .off)
+        let p = profile(
+            fs: FilesystemPolicy(readablePaths: ["/opt/ro-dep"], writablePaths: ["<workspace>"]),
+            net: .off)
         let args = DockerArgsBuilder.runArgs(command: "ls", profile: p, workspacePath: "/ws", image: "img")
         #expect(zip(args, args.dropFirst()).contains { $0 == "-v" && $1 == "/opt/ro-dep:/opt/ro-dep:ro" })
     }
 
     @Test func writablePathsMountedReadWrite() {
-        let p = profile(fs: FilesystemPolicy(readablePaths: [], writablePaths: ["<workspace>", "/opt/rw-cache"]),
-                         net: .off)
+        let p = profile(
+            fs: FilesystemPolicy(readablePaths: [], writablePaths: ["<workspace>", "/opt/rw-cache"]),
+            net: .off)
         let args = DockerArgsBuilder.runArgs(command: "ls", profile: p, workspacePath: "/ws", image: "img")
         #expect(zip(args, args.dropFirst()).contains { $0 == "-v" && $1 == "/opt/rw-cache:/opt/rw-cache" })
         // Never also mounted read-only.
@@ -63,8 +70,9 @@ struct DockerArgsBuilderTests {
     }
 
     @Test func pathNotInPolicyIsNotMounted() {
-        let p = profile(fs: FilesystemPolicy(readablePaths: ["/opt/allowed"], writablePaths: ["<workspace>"]),
-                         net: .off)
+        let p = profile(
+            fs: FilesystemPolicy(readablePaths: ["/opt/allowed"], writablePaths: ["<workspace>"]),
+            net: .off)
         let args = DockerArgsBuilder.runArgs(command: "ls", profile: p, workspacePath: "/ws", image: "img")
         let joined = args.joined(separator: "\u{0}")
         #expect(!joined.contains("/etc/secret"))
@@ -73,8 +81,9 @@ struct DockerArgsBuilderTests {
     }
 
     @Test func appliesResourceLimits() {
-        let p = profile(fs: FilesystemPolicy(readablePaths: [], writablePaths: ["<workspace>"]),
-                         net: .on, mem: 512, cpu: 2)
+        let p = profile(
+            fs: FilesystemPolicy(readablePaths: [], writablePaths: ["<workspace>"]),
+            net: .on, mem: 512, cpu: 2)
         let args = DockerArgsBuilder.runArgs(command: "ls", profile: p, workspacePath: "/ws", image: "img")
         #expect(zip(args, args.dropFirst()).contains { $0 == "--memory" && $1 == "512m" })
         #expect(zip(args, args.dropFirst()).contains { $0 == "--cpus" && $1 == "2" })
@@ -101,8 +110,9 @@ struct DockerArgsBuilderTests {
     }
 
     @Test func deterministicForSameInput() {
-        let p = profile(fs: FilesystemPolicy(readablePaths: ["/opt/a"], writablePaths: ["<workspace>", "/opt/b"]),
-                         net: .on, mem: 256, cpu: 1)
+        let p = profile(
+            fs: FilesystemPolicy(readablePaths: ["/opt/a"], writablePaths: ["<workspace>", "/opt/b"]),
+            net: .on, mem: 256, cpu: 1)
         let a = DockerArgsBuilder.runArgs(command: "ls", profile: p, workspacePath: "/ws", image: "img")
         let b = DockerArgsBuilder.runArgs(command: "ls", profile: p, workspacePath: "/ws", image: "img")
         #expect(a == b)
@@ -110,8 +120,9 @@ struct DockerArgsBuilderTests {
 
     @Test func invalidPolicyPathIsSkippedNotMounted() {
         // Non-absolute path: fail-closed, silently skipped rather than mounted.
-        let p = profile(fs: FilesystemPolicy(readablePaths: ["relative/path"], writablePaths: ["<workspace>"]),
-                         net: .off)
+        let p = profile(
+            fs: FilesystemPolicy(readablePaths: ["relative/path"], writablePaths: ["<workspace>"]),
+            net: .off)
         let args = DockerArgsBuilder.runArgs(command: "ls", profile: p, workspacePath: "/ws", image: "img")
         #expect(!args.contains { $0.contains("relative/path") })
     }
@@ -121,9 +132,11 @@ struct DockerArgsBuilderTests {
         // source:dest:mode` separator and would produce a malformed/
         // misinterpreted triple. Fail-closed: skip the mount entirely rather
         // than emit it, matching SeatbeltProfileGenerator.resolve's rigor.
-        let p = profile(fs: FilesystemPolicy(readablePaths: ["/opt/weird:path"],
-                                              writablePaths: ["<workspace>", "/opt/other:weird"]),
-                         net: .off)
+        let p = profile(
+            fs: FilesystemPolicy(
+                readablePaths: ["/opt/weird:path"],
+                writablePaths: ["<workspace>", "/opt/other:weird"]),
+            net: .off)
         let args = DockerArgsBuilder.runArgs(command: "ls", profile: p, workspacePath: "/ws", image: "img")
         #expect(!args.contains { $0.contains("/opt/weird:path") })
         #expect(!args.contains { $0.contains("/opt/other:weird") })

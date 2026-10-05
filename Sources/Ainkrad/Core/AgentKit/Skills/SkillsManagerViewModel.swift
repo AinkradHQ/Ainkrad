@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// The logic behind the Skills settings tabs. Owns the local-skill editor drafts and
 /// the bind/unbind flow; kept separate from the view body so the
@@ -28,8 +28,10 @@ final class SkillsManagerViewModel {
     /// guarded-but-silent contract; the manager is where the user finds out).
     private(set) var bindError: String?
 
-    init(registry: SkillRegistry, store: SkillCommandStore, resyncCommands: @escaping () -> Void,
-         fileManager: FileManager = .default) {
+    init(
+        registry: SkillRegistry, store: SkillCommandStore, resyncCommands: @escaping () -> Void,
+        fileManager: FileManager = .default
+    ) {
         self.registry = registry
         self.store = store
         self.resyncCommands = resyncCommands
@@ -98,7 +100,8 @@ final class SkillsManagerViewModel {
             return false
         }
         guard SkillCommandStore.isValidCommandName(trimmed) else {
-            bindError = "\"/\(trimmed)\" is invalid — command names must be a lowercase slug (letters, numbers, \"-\") and can't shadow a builtin like /new or /model."
+            bindError =
+                "\"/\(trimmed)\" is invalid — command names must be a lowercase slug (letters, numbers, \"-\") and can't shadow a builtin like /new or /model."
             return false
         }
         store.bind(command: trimmed, toSkill: skillName)

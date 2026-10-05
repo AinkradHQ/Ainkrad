@@ -65,16 +65,19 @@ enum BatchRenameMode: String, CaseIterable, Sendable {
 /// Collisions are detected in BOTH directions — against files already on disk,
 /// and against other rows in the same batch, which is the case a naive
 /// implementation misses and which silently destroys data.
-func batchRenamePlan(entries: [FileEntry], mode: BatchRenameMode,
-                     find: String, replace: String,
-                     existingNames: Set<String>,
-                     startNumber: Int = 1) -> [BatchRenamePlanItem] {
+func batchRenamePlan(
+    entries: [FileEntry], mode: BatchRenameMode,
+    find: String, replace: String,
+    existingNames: Set<String>,
+    startNumber: Int = 1
+) -> [BatchRenamePlanItem] {
     var plan: [BatchRenamePlanItem] = []
     var claimed: Set<String> = []
 
     for (offset, entry) in entries.enumerated() {
-        let newName = renamedName(entry: entry, mode: mode, find: find,
-                                  replace: replace, index: startNumber + offset)
+        let newName = renamedName(
+            entry: entry, mode: mode, find: find,
+            replace: replace, index: startNumber + offset)
 
         var problem: BatchRenamePlanItem.Problem?
         if newName.isEmpty {
@@ -93,8 +96,10 @@ func batchRenamePlan(entries: [FileEntry], mode: BatchRenameMode,
     return plan
 }
 
-private func renamedName(entry: FileEntry, mode: BatchRenameMode,
-                         find: String, replace: String, index: Int) -> String {
+private func renamedName(
+    entry: FileEntry, mode: BatchRenameMode,
+    find: String, replace: String, index: Int
+) -> String {
     let name = entry.name
     switch mode {
     case .findReplace:

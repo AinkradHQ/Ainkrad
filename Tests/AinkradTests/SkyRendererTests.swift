@@ -1,8 +1,9 @@
-import Testing
-import SwiftUI
-@testable import Ainkrad
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
+import Testing
+
+@testable import Ainkrad
 
 /// Pixel-level regression tests for the sky's large-area gradient layers.
 /// These layers must be soft by construction — a hard edge anywhere reads
@@ -60,9 +61,11 @@ struct SkyRendererTests {
             throw NSError(domain: "SkyRendererTests", code: 2)
         }
         let rep = NSBitmapImageRep(cgImage: cgImage)
-        let width = rep.pixelsWide, height = rep.pixelsHigh
+        let width = rep.pixelsWide
+        let height = rep.pixelsHigh
 
-        var maxRowStep = 0.0, maxLuminance = 0.0
+        var maxRowStep = 0.0
+        var maxLuminance = 0.0
         var previousRow = [Double]()
         for y in 0..<height {
             var row = [Double](repeating: 0, count: width)
@@ -101,7 +104,8 @@ struct SkyRendererTests {
             throw NSError(domain: "SkyRendererTests", code: 1)
         }
         let rep = NSBitmapImageRep(cgImage: cgImage)
-        let width = rep.pixelsWide, height = rep.pixelsHigh
+        let width = rep.pixelsWide
+        let height = rep.pixelsHigh
 
         var luminance = [Double](repeating: 0, count: width * height)
         for y in 0..<height {

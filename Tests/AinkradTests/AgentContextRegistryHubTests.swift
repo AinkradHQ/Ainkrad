@@ -1,8 +1,9 @@
-import Testing
-import Foundation
 import AinkradAppKit
-@testable import Ainkrad
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 @MainActor
 @Suite("AgentContextRegistryHub")

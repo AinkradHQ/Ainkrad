@@ -1,8 +1,9 @@
-import Testing
+import AinkradHostRuntime
 import Foundation
 import SwiftUI
+import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("BuiltInAppRegistry")
 @MainActor
@@ -22,7 +23,7 @@ final class BuiltInAppRegistryTests {
     private var stubApps: [RegisteredApp] {
         [
             app("terminal", displayName: "Terminal", isEnabledByDefault: true),
-            app("settings", displayName: "Settings", isEnabledByDefault: false)
+            app("settings", displayName: "Settings", isEnabledByDefault: false),
         ]
     }
 

@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// The first-run gate. Deliberately non-dismissible: no scrim tap, no Escape,
 /// no onDismiss closure — that trio is what makes every other overlay closable.
@@ -115,16 +115,19 @@ struct SetupOverlayView: View {
 
     /// Full-bleed: rail, heading, step, nav — no panel chrome, no fixed size.
     private func stage(coordinator: SetupCoordinator, tokens: DesignTokens) -> some View {
-        SetupStage(coordinator: coordinator,
-                   tokens: tokens,
-                   reduceMotion: reduceMotion) { step in
-            SetupStepBody(step: step,
-                          coordinator: coordinator,
-                          didMigrateLegacyData: didMigrateLegacyData,
-                          onAdopted: { rebuilt, migrated in
-                              didMigrateLegacyData = migrated
-                              reseat(after: coordinator, using: rebuilt)
-                          })
+        SetupStage(
+            coordinator: coordinator,
+            tokens: tokens,
+            reduceMotion: reduceMotion
+        ) { step in
+            SetupStepBody(
+                step: step,
+                coordinator: coordinator,
+                didMigrateLegacyData: didMigrateLegacyData,
+                onAdopted: { rebuilt, migrated in
+                    didMigrateLegacyData = migrated
+                    reseat(after: coordinator, using: rebuilt)
+                })
         }
     }
 
@@ -162,7 +165,8 @@ struct SetupOverlayView: View {
             // otherwise appear to have simply not moved.
             if let target, step != target {
                 Log.persistence.error(
-                    "Setup re-seat could not reach \(target.rawValue, privacy: .public); stopped at \(step.rawValue, privacy: .public)")
+                    "Setup re-seat could not reach \(target.rawValue, privacy: .public); stopped at \(step.rawValue, privacy: .public)"
+                )
             }
         }
     }
@@ -209,8 +213,9 @@ struct SetupStepBody: View {
         case .assistant:
             SetupAssistantStepView(coordinator: coordinator)
         case .done:
-            SetupDoneStepView(coordinator: coordinator,
-                              didMigrateLegacyData: didMigrateLegacyData)
+            SetupDoneStepView(
+                coordinator: coordinator,
+                didMigrateLegacyData: didMigrateLegacyData)
         }
     }
 }

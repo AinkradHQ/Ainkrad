@@ -121,7 +121,8 @@ final class ScryStore {
         var m = m
         var evictedIDs: [String] = []
         while m.elements.count > Self.cardCap,
-              let victim = m.elements.first(where: { !$0.pinned }) {
+            let victim = m.elements.first(where: { !$0.pinned })
+        {
             m.remove(id: victim.id)
             evictedIDs.append(victim.id)
         }

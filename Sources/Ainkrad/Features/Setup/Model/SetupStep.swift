@@ -12,14 +12,14 @@ enum SetupStep: String, CaseIterable, Identifiable, Sendable {
 
     var title: String {
         switch self {
-        case .welcome:        return "Welcome"
-        case .home:           return "Your Ainkrad Home"
-        case .appearance:     return "Appearance"
+        case .welcome: return "Welcome"
+        case .home: return "Your Ainkrad Home"
+        case .appearance: return "Appearance"
         case .motionAndSound: return "Motion & Sound"
-        case .you:            return "You"
-        case .providers:      return "Connect an AI Provider"
-        case .assistant:      return "Your Sage"
-        case .done:           return "Ready"
+        case .you: return "You"
+        case .providers: return "Connect an AI Provider"
+        case .assistant: return "Your Sage"
+        case .done: return "Ready"
         }
     }
 
@@ -43,7 +43,7 @@ enum SetupStep: String, CaseIterable, Identifiable, Sendable {
         // about what the product is, on the one screen whose entire job is to
         // say that.
         case .welcome: return "Ainkrad is a workspace where agents work beside you."
-        default:       return title
+        default: return title
         }
     }
 

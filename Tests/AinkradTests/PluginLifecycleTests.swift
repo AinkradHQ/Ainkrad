@@ -1,10 +1,11 @@
 import AinkradAppKit
-import Testing
-import Foundation
-import CryptoKit
-import SwiftUI
-@testable import Ainkrad
 import AinkradHostRuntime
+import CryptoKit
+import Foundation
+import SwiftUI
+import Testing
+
+@testable import Ainkrad
 
 @MainActor
 struct PluginLifecycleTests {
@@ -15,22 +16,31 @@ struct PluginLifecycleTests {
     private func bundleZip(dir: URL) throws -> Data {
         let b = dir.appendingPathComponent("hello.bundle/Contents", isDirectory: true)
         try FileManager.default.createDirectory(at: b, withIntermediateDirectories: true)
-        let info: [String: Any] = ["AinkradAppID": "hello", "AinkradDisplayName": "Hello",
-            "AinkradIconSymbol": "app", "AinkradAPIVersion": AinkradAppKit.apiVersion, "NSPrincipalClass": "X", "CFBundleExecutable": "hello"]
-        try PropertyListSerialization.data(fromPropertyList: info, format: .xml, options: 0).write(to: b.appendingPathComponent("Info.plist"))
+        let info: [String: Any] = [
+            "AinkradAppID": "hello", "AinkradDisplayName": "Hello",
+            "AinkradIconSymbol": "app", "AinkradAPIVersion": AinkradAppKit.apiVersion, "NSPrincipalClass": "X",
+            "CFBundleExecutable": "hello",
+        ]
+        try PropertyListSerialization.data(fromPropertyList: info, format: .xml, options: 0).write(
+            to: b.appendingPathComponent("Info.plist"))
         let zip = dir.appendingPathComponent("hello.bundle.zip")
-        let p = Process(); p.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
-        p.arguments = ["-c", "-k", dir.appendingPathComponent("hello.bundle").path, zip.path]; try p.run(); p.waitUntilExit()
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
+        p.arguments = ["-c", "-k", dir.appendingPathComponent("hello.bundle").path, zip.path]
+        try p.run()
+        p.waitUntilExit()
         return try Data(contentsOf: zip)
     }
     // `author`/non-empty `description` required to pass `StorePolicy` at
     // install intake (see PluginInstallerStorePolicyTests).
     private func entry(_ v: String, url: URL, sha: String) -> CatalogEntry {
-        CatalogEntry(appID: "hello", displayName: "Hello", icon: "app", description: "Test fixture plugin.", version: v,
-                     apiVersion: 7, downloadURL: url, sha256: sha, sourceRepo: "o/hello", author: "Ainkrad")
+        CatalogEntry(
+            appID: "hello", displayName: "Hello", icon: "app", description: "Test fixture plugin.", version: v,
+            apiVersion: 7, downloadURL: url, sha256: sha, sourceRepo: "o/hello", author: "Ainkrad")
     }
     private func hello(_ url: URL) -> RegisteredApp {
-        RegisteredApp(id: "hello", displayName: "Hello", icon: "app", isEnabledByDefault: true,
+        RegisteredApp(
+            id: "hello", displayName: "Hello", icon: "app", isEnabledByDefault: true,
             source: .plugin(url: url, apiVersion: 1), makeRootView: { AnyView(EmptyView()) },
             makeSettingsView: { AnyView(EmptyView()) }, chromeFill: { nil })
     }
@@ -38,7 +48,8 @@ struct PluginLifecycleTests {
     @Test("install → update → disable/enable → uninstall(retain) → reinstall(restore)")
     func fullLifecycle() async throws {
         let root = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
-        let src = root.appendingPathComponent("src"); try FileManager.default.createDirectory(at: src, withIntermediateDirectories: true)
+        let src = root.appendingPathComponent("src")
+        try FileManager.default.createDirectory(at: src, withIntermediateDirectories: true)
         let bytes = try bundleZip(dir: src)
         let url = URL(string: "https://e/hello.bundle.zip")!
         let http = StubHTTPClient(responses: [url: .success(bytes)])
@@ -69,8 +80,10 @@ struct PluginLifecycleTests {
         #expect((try? Data(contentsOf: dataDir.appendingPathComponent("s.bin"))) == Data("mysetting".utf8))
 
         // 3. Disable then enable
-        registry.setEnabled(false, for: "hello"); #expect(!registry.isEnabled("hello"))
-        registry.setEnabled(true, for: "hello");  #expect(registry.isEnabled("hello"))
+        registry.setEnabled(false, for: "hello")
+        #expect(!registry.isEnabled("hello"))
+        registry.setEnabled(true, for: "hello")
+        #expect(registry.isEnabled("hello"))
 
         // 4. Uninstall — retains scoped data
         try installer.uninstall(appID: "hello")

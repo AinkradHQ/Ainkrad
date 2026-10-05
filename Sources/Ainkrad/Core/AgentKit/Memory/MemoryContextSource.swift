@@ -1,6 +1,6 @@
-import Foundation
 import AinkradAppKit
 import AinkradHostRuntime
+import Foundation
 
 /// Publishes the always-loaded memory set (USER.md / MEMORY.md / AGENTS.md,
 /// size-capped by `MemoryStore.alwaysLoadedSet`) as a single workspace-context
@@ -15,7 +15,8 @@ enum MemoryContextSource {
     static func snapshot(from service: MemoryService) -> AgentContextSnapshot? {
         let loaded = service.alwaysLoaded()
         guard !loaded.isEmpty else { return nil }
-        let body = loaded
+        let body =
+            loaded
             .map { "### \($0.0.rawValue)\n\($0.1)" }
             .joined(separator: "\n\n")
         return AgentContextSnapshot(kind: kind, title: "Sage Memory", text: body)

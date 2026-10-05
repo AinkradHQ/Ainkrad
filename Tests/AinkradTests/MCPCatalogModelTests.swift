@@ -1,14 +1,15 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("MCP catalog model")
 struct MCPCatalogModelTests {
     @Test func decodesLegacyPluginEntryAsPluginKind() throws {
         let json = """
-        {"appID":"x","displayName":"X","icon":"app","description":"d","version":"1.0",
-         "apiVersion":4,"downloadURL":"https://e/x.zip","sha256":"abc","sourceRepo":"o/r"}
-        """.data(using: .utf8)!
+            {"appID":"x","displayName":"X","icon":"app","description":"d","version":"1.0",
+             "apiVersion":4,"downloadURL":"https://e/x.zip","sha256":"abc","sourceRepo":"o/r"}
+            """.data(using: .utf8)!
         let entry = try JSONDecoder().decode(CatalogEntry.self, from: json)
         #expect(entry.kind == .plugin)
         #expect(entry.mcp == nil)
@@ -16,12 +17,12 @@ struct MCPCatalogModelTests {
 
     @Test func decodesMCPServerEntry() throws {
         let json = """
-        {"appID":"web-search","displayName":"Web Search","icon":"magnifyingglass",
-         "description":"search the web","version":"1.0","apiVersion":0,
-         "downloadURL":"https://e/none","sha256":"","sourceRepo":"o/r","kind":"mcpServer",
-         "mcp":{"transport":"stdio","command":"npx","args":["-y","srv"],
-                "envKeys":["API_KEY"],"headerKeys":[]}}
-        """.data(using: .utf8)!
+            {"appID":"web-search","displayName":"Web Search","icon":"magnifyingglass",
+             "description":"search the web","version":"1.0","apiVersion":0,
+             "downloadURL":"https://e/none","sha256":"","sourceRepo":"o/r","kind":"mcpServer",
+             "mcp":{"transport":"stdio","command":"npx","args":["-y","srv"],
+                    "envKeys":["API_KEY"],"headerKeys":[]}}
+            """.data(using: .utf8)!
         let entry = try JSONDecoder().decode(CatalogEntry.self, from: json)
         #expect(entry.kind == .mcpServer)
         #expect(entry.mcp?.transport == .stdio)
@@ -31,11 +32,11 @@ struct MCPCatalogModelTests {
 
     @Test func roundTripsThroughRemoteCatalog() throws {
         let json = """
-        {"apps":[{"appID":"s","displayName":"S","icon":"i","description":"d","version":"1",
-          "apiVersion":0,"downloadURL":"https://e/n","sha256":"","sourceRepo":"o/r",
-          "kind":"mcpServer","mcp":{"transport":"httpSSE","url":"https://mcp.example/api",
-          "args":[],"envKeys":[],"headerKeys":["Authorization"]}}]}
-        """.data(using: .utf8)!
+            {"apps":[{"appID":"s","displayName":"S","icon":"i","description":"d","version":"1",
+              "apiVersion":0,"downloadURL":"https://e/n","sha256":"","sourceRepo":"o/r",
+              "kind":"mcpServer","mcp":{"transport":"httpSSE","url":"https://mcp.example/api",
+              "args":[],"envKeys":[],"headerKeys":["Authorization"]}}]}
+            """.data(using: .utf8)!
         let catalog = try JSONDecoder().decode(RemoteCatalog.self, from: json)
         #expect(catalog.apps.first?.mcp?.url?.absoluteString == "https://mcp.example/api")
         #expect(catalog.apps.first?.mcp?.headerKeys == ["Authorization"])

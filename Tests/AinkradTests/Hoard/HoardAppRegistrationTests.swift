@@ -1,5 +1,6 @@
-import Testing
 import AinkradAppKit
+import Testing
+
 @testable import Ainkrad
 
 @MainActor
