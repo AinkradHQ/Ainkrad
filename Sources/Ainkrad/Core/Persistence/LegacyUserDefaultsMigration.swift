@@ -11,7 +11,20 @@ enum LegacyUserDefaultsMigration {
         var didImport: Bool = false
     }
 
-    static func runIfNeeded(persistence: PersistenceStore, defaults: UserDefaults = .standard) {
+    /// True in a DEBUG fixture launch. The Debug host shares the daily host's UserDefaults
+    /// domain (same bundle id), so importing would pull the real settings and workspaces
+    /// into the fixture vault.
+    static var isFixtureLaunch: Bool {
+        #if DEBUG
+        return debugFixtureRoots != nil
+        #else
+        return false
+        #endif
+    }
+
+    static func runIfNeeded(persistence: PersistenceStore, defaults: UserDefaults = .standard,
+                            isFixtureLaunch: Bool = LegacyUserDefaultsMigration.isFixtureLaunch) {
+        if isFixtureLaunch { return }
         if persistence.load(LegacyImportMarker.self)?.didImport == true { return }
 
         let decoder = JSONDecoder()  // M1 wrote plain JSON with no date strategy

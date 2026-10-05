@@ -29,6 +29,17 @@ final class LegacyUserDefaultsMigrationTests {
         #expect(store.load(RegistryStateDocument.self)?.enabled == ["terminal": false])
     }
 
+    @Test("a fixture launch imports nothing from the shared UserDefaults domain")
+    func fixtureLaunchSkipsImport() {
+        seedLegacy()
+        let store = InMemoryPersistenceStore()
+        LegacyUserDefaultsMigration.runIfNeeded(persistence: store, defaults: defaults, isFixtureLaunch: true)
+
+        #expect(store.load(GlobalSettings.self) == nil)
+        #expect(store.load(RegistryStateDocument.self) == nil)
+        #expect(store.load(LegacyUserDefaultsMigration.LegacyImportMarker.self) == nil)
+    }
+
     @Test("imports the legacy terminal-settings blob into the file store, type-free")
     func importsTerminalSettingsRawIntoFileStore() throws {
         seedLegacy()
