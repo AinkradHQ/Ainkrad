@@ -12,15 +12,8 @@ public enum Theme: String, Codable, CaseIterable {
     case solarizedDark
 
     public var tokens: DesignTokens {
-        switch self {
-        case .neonBlue: return .neonBlue
-        case .cyberPurple: return .cyberPurple
-        case .dracula: return .dracula
-        case .nord: return .nord
-        case .tokyoNight: return .tokyoNight
-        case .gruvbox: return .gruvbox
-        case .solarizedDark: return .solarizedDark
-        }
+        let file = ThemeCatalog.shared.themeFile(for: rawValue)
+        return DesignTokens(skin: file.skin)
     }
 
     /// Human-readable name for the theme picker.
@@ -39,6 +32,9 @@ public enum Theme: String, Codable, CaseIterable {
     /// Which app-icon color family this theme uses when the App Icon color is
     /// set to Auto. See App Icon Picker v2 — Design.
     public var iconColorFamily: AppIconColor {
+        if let section = ThemeCatalog.shared.hostSection(for: rawValue) {
+            return section.iconColorFamily
+        }
         switch self {
         case .cyberPurple, .dracula: return .purple
         case .neonBlue, .nord, .tokyoNight, .gruvbox, .solarizedDark: return .blue
@@ -50,6 +46,9 @@ public enum Theme: String, Codable, CaseIterable {
     /// Gruvbox a warm ember-forward sunset, Nord a cool misty calm — without
     /// rewriting any effect. See `SkyProfile`.
     public var skyProfile: SkyProfile {
+        if let section = ThemeCatalog.shared.hostSection(for: rawValue) {
+            return section.skyProfile
+        }
         switch self {
         //                             aurora, embers, mist, fireflies, rays
         case .neonBlue:     return SkyProfile(1.00, 0.90, 0.90, 1.00, 1.00)

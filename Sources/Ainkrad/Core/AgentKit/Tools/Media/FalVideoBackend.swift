@@ -34,25 +34,32 @@ struct FalVideoBackend: VideoBackend {
             throw ToolError.message("fal did not return queue URLs.")
         }
         // 2. Poll the status URL until COMPLETED.
+        guard let statusURL = URL(string: urls.statusURL) else {
+            throw ToolError.message("fal returned an invalid status URL.")
+        }
         _ = try await VideoJobPolling.poll { [http] in
-            var poll = URLRequest(url: URL(string: urls.statusURL)!, timeoutInterval: 60)
+            var poll = URLRequest(url: statusURL, timeoutInterval: 60)
             poll.setValue("Key \(key)", forHTTPHeaderField: "Authorization")
             let (data, _) = try await http.data(for: poll)
             return try Self.pollStatus(in: data)
         }
         // 3. Fetch the response payload and extract the video URL.
-        var responseReq = URLRequest(url: URL(string: urls.responseURL)!, timeoutInterval: 60)
+        guard let responseURL = URL(string: urls.responseURL) else {
+            throw ToolError.message("fal returned an invalid response URL.")
+        }
+        var responseReq = URLRequest(url: responseURL, timeoutInterval: 60)
         responseReq.setValue("Key \(key)", forHTTPHeaderField: "Authorization")
         let (responseData, _) = try await http.data(for: responseReq)
-        guard let videoURL = Self.videoURL(in: responseData) else {
+        guard let videoURLString = Self.videoURL(in: responseData),
+              let videoURL = URL(string: videoURLString) else {
             throw ToolError.message("fal response contained no video URL.")
         }
         // 4. Download.
-        let (bytes, dlResp) = try await http.data(for: URLRequest(url: URL(string: videoURL)!, timeoutInterval: 120))
+        let (bytes, dlResp) = try await http.data(for: URLRequest(url: videoURL, timeoutInterval: 120))
         guard (200..<300).contains(dlResp.statusCode), !bytes.isEmpty else {
             throw ToolError.message("Failed to download the fal video (HTTP \(dlResp.statusCode)).")
         }
-        return GeneratedVideo(data: bytes, fileExtension: MediaFileExtension.forURL(videoURL, default: "mp4"))
+        return GeneratedVideo(data: bytes, fileExtension: MediaFileExtension.forURL(videoURLString, default: "mp4"))
     }
 
     // MARK: - Parsing (pure, testable)

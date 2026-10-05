@@ -26,7 +26,7 @@ struct GeminiProvider: LLMProvider {
         return AsyncThrowingStream { continuation in
             let task = Task {
                 do {
-                    let request = Self.makeRequest(baseURL: baseURL, messages: messages, system: system,
+                    let request = try Self.makeRequest(baseURL: baseURL, messages: messages, system: system,
                                                    tools: tools, model: model, apiKey: apiKey)
                     let bytes = try await http.post(request)
                     var finishReason: String?
@@ -94,9 +94,11 @@ struct GeminiProvider: LLMProvider {
     private static func makeRequest(
         baseURL: String, messages: [AgentMessage], system: String,
         tools: [AgentToolSchema], model: AgentModelConfig, apiKey: String
-    ) -> URLRequest {
+    ) throws -> URLRequest {
         let trimmed = baseURL.hasSuffix("/") ? String(baseURL.dropLast()) : baseURL
-        let url = URL(string: "\(trimmed)/models/\(model.model):streamGenerateContent?alt=sse")!
+        guard let url = URL(string: "\(trimmed)/models/\(model.model):streamGenerateContent?alt=sse") else {
+            throw URLError(.badURL)
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue(apiKey, forHTTPHeaderField: "x-goog-api-key")

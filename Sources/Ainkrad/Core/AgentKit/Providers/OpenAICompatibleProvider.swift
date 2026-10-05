@@ -24,7 +24,7 @@ struct OpenAICompatibleProvider: LLMProvider {
         return AsyncThrowingStream { continuation in
             let task = Task {
                 do {
-                    let request = Self.makeRequest(baseURL: baseURL, messages: messages, system: system, tools: tools, model: model, apiKey: apiKey)
+                    let request = try Self.makeRequest(baseURL: baseURL, messages: messages, system: system, tools: tools, model: model, apiKey: apiKey)
                     let bytes = try await http.post(request)
 
                     var finishReason: String?
@@ -111,9 +111,12 @@ struct OpenAICompatibleProvider: LLMProvider {
         tools: [AgentToolSchema],
         model: AgentModelConfig,
         apiKey: String
-    ) -> URLRequest {
+    ) throws -> URLRequest {
         let trimmed = baseURL.hasSuffix("/") ? String(baseURL.dropLast()) : baseURL
-        var request = URLRequest(url: URL(string: trimmed + "/chat/completions")!)
+        guard let url = URL(string: trimmed + "/chat/completions") else {
+            throw URLError(.badURL)
+        }
+        var request = URLRequest(url: url)
         request.httpMethod = "POST"
         // Ollama and other keyless local endpoints send no auth header.
         if !apiKey.isEmpty {

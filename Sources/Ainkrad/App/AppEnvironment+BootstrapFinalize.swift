@@ -594,6 +594,27 @@ extension AppEnvironment {
         }
 
         Log.app.info("AppEnvironment bootstrapped with \(registry.allApps.count) registered app(s)")
+
+        #if DEBUG
+        if let (openAppID, payload) = parseDebugOpenAppArguments({ UserDefaults.standard.string(forKey: $0) }) {
+            let registered = registry.allApps.first { $0.id == openAppID }
+            if let registered, registry.isEnabled(openAppID) {
+                if let payload {
+                    pluginLaunchHub.enqueue(target: openAppID, payload: payload)
+                }
+                pluginLaunchHub.requestOpen(openAppID)
+                Log.app.info("DEBUG launch arg: opened app \(openAppID, privacy: .public)")
+            } else if registered == nil {
+                Log.app.info("DEBUG launch arg: unknown app \(openAppID, privacy: .public)")
+            } else {
+                Log.app.info("DEBUG launch arg: disabled app \(openAppID, privacy: .public)")
+            }
+        }
+        if parseDebugOpenGalleryArgument({ UserDefaults.standard.string(forKey: $0) }) {
+            environment.isComponentGalleryPresented = true
+            Log.app.info("DEBUG launch arg: presented Component Gallery")
+        }
+        #endif
     }
 
     /// A user-facing reason string. `AppStoreError` already writes for humans;
@@ -607,3 +628,7 @@ extension AppEnvironment {
         return String(describing: error)
     }
 }
+
+
+
+

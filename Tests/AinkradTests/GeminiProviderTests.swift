@@ -71,4 +71,20 @@ struct GeminiProviderTests {
         if case .failed(let m) = out.first { #expect(!m.contains("sk-secret")); #expect(m == "bad model") }
         else { Issue.record("expected .failed") }
     }
+
+    @Test("invalid base URL yields .failed instead of crashing")
+    func invalidBaseURLFailsInsteadOfCrashing() async throws {
+        try #require(URL(string: "http://[::1/models/gemini-2.5-flash:streamGenerateContent?alt=sse") == nil)
+        let provider = GeminiProvider(http: StubStreamingHTTPClient(chunks: [], captured: nil), baseURL: "http://[::1")
+        var out: [AgentEvent] = []
+        for try await e in provider.send(messages: [AgentMessage(role: .user, text: "hi")], system: "sys", tools: [],
+                                          model: AgentModelConfig(model: "gemini-2.5-flash", effort: "xhigh"),
+                                          credential: .apiKey("sk-secret")) { out.append(e) }
+        #expect(out.count == 1)
+        if case .failed(let message) = out.first {
+            #expect(!message.contains("sk-secret"))
+        } else {
+            Issue.record("expected .failed event")
+        }
+    }
 }

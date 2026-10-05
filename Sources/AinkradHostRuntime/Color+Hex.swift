@@ -1,3 +1,4 @@
+// design-lint: allow-file hex-color,raw-color hex parser
 import SwiftUI
 import AppKit
 

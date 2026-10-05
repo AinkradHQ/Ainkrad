@@ -27,7 +27,7 @@ struct UIFontFamilyTests {
 struct DesignTokensAccentOverrideTests {
     @Test("a non-nil color replaces accentPrimary and leaves the other tokens equal")
     func nonNilReplaces() {
-        let base = DesignTokens.neonBlue
+        let base = LegacyDesignTokens.neonBlue
         let overridden = base.overridingAccentPrimary(.red)
 
         #expect(overridden.accentPrimary == .red)
@@ -41,7 +41,7 @@ struct DesignTokensAccentOverrideTests {
 
     @Test("nil returns an equal copy, unchanged")
     func nilReturnsEqualCopy() {
-        let base = DesignTokens.cyberPurple
+        let base = LegacyDesignTokens.cyberPurple
         #expect(base.overridingAccentPrimary(nil) == base)
     }
 }

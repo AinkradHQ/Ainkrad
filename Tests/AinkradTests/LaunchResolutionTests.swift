@@ -254,4 +254,45 @@ struct LaunchResolutionTests {
         #expect(second.vaultRoot.standardizedFileURL == first.vaultRoot.standardizedFileURL)
         #expect(!FileManager.default.fileExists(atPath: elsewhere.path))
     }
+
+    #if DEBUG
+    @Test func debugFixtureRootParsing() {
+        #expect(parseDebugFixtureRootArgument { @Sendable key in key == "AinkradFixtureRoot" ? "/tmp/test-fixture" : nil } == URL(fileURLWithPath: "/tmp/test-fixture").standardizedFileURL)
+        #expect(parseDebugFixtureRootArgument { @Sendable key in key == "AinkradFixtureRoot" ? "   " : nil } == nil)
+        #expect(parseDebugFixtureRootArgument { @Sendable _ in nil } == nil)
+    }
+
+    @Test func debugFixtureRootsCreateAllThreeSubdirectories() throws {
+        let base = FileManager.default.temporaryDirectory
+            .appendingPathComponent("fixture-test-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: base) }
+        let lookup: ArgumentLookup = { @Sendable key in key == "AinkradFixtureRoot" ? base.path : nil }
+
+        let roots = try #require(try resolveDebugFixtureRoots(lookup))
+
+        #expect(roots.pointerDirectory.lastPathComponent == "Pointer")
+        #expect(roots.cacheRoot.lastPathComponent == "Cache")
+        #expect(roots.defaultVaultRoot.lastPathComponent == "Vault")
+        // Vault/ must exist before adopt() validates it, or the launch stalls on the recovery alert.
+        for directory in [roots.pointerDirectory, roots.cacheRoot, roots.defaultVaultRoot] {
+            var isDirectory: ObjCBool = false
+            #expect(FileManager.default.fileExists(atPath: directory.path, isDirectory: &isDirectory))
+            #expect(isDirectory.boolValue)
+        }
+    }
+
+    @Test func debugFixtureRootThatIsAFileIsRefused() throws {
+        let file = FileManager.default.temporaryDirectory
+            .appendingPathComponent("fixture-file-\(UUID().uuidString)")
+        try Data().write(to: file)
+        defer { try? FileManager.default.removeItem(at: file) }
+        let lookup: ArgumentLookup = { @Sendable key in key == "AinkradFixtureRoot" ? file.path : nil }
+
+        #expect(throws: DebugFixtureRootError.self) { try resolveDebugFixtureRoots(lookup) }
+    }
+
+    @Test func noFixtureArgumentMeansNoFixture() throws {
+        #expect(try resolveDebugFixtureRoots { @Sendable _ in nil } == nil)
+    }
+    #endif
 }

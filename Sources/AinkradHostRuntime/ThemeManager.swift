@@ -1,5 +1,6 @@
 import Observation
 import SwiftUI
+import AinkradAppKitUI
 
 /// Holds the active theme, exposes theme tokens, and is the single place the
 /// theme is applied: update state and persist. See ADR-0006 Theming Approach.
@@ -17,6 +18,11 @@ public final class ThemeManager {
     public private(set) var uiFontFamily: UIFontFamily
     public private(set) var accentColorHex: String?
     private let persistence: PersistenceStore
+
+    /// The current theme's skin (accent override is NOT applied to skin — R2).
+    public var skin: AinkradSkin {
+        ThemeCatalog.shared.themeFile(for: currentTheme.rawValue).skin
+    }
 
     /// The current theme's tokens with the custom accent (if any) applied.
     public var tokens: DesignTokens {
