@@ -3,6 +3,11 @@ import SwiftUI
 
 /// Semantic color tokens for one theme. Views read these — never a raw hex
 /// literal — so a view is automatically correct in both themes.
+///
+/// A read-only bridge: `Theme.tokens` builds it from the theme's skin
+/// (`init(skin:)`), so host views that still take `tokens:` see exactly the
+/// skin's palette. Each area PR moves its views to `@Environment(\.ainkradSkin)`;
+/// 5A.15 deletes this type.
 public struct DesignTokens: Equatable, Sendable {
     public let background: Color
     public let surface: Color
