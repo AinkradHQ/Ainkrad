@@ -139,8 +139,8 @@ extension AppEnvironment {
 
         // The app catalog is a single hosted document (the central
         // AinkradCatalog). Adding/updating apps is a catalog edit — no host
-        // release. Only this URL is compiled in.
-        let catalogURL = URL(string: "https://raw.githubusercontent.com/AinkradHQ/AinkradCatalog/main/catalog.json")!
+        // release. Only this URL is compiled in (a DEBUG fixture launch points it at a local file).
+        let catalogURL = defaultHostCatalogURL()
         let catalogService = CatalogService(
             source: RemoteCatalogSource(url: catalogURL, http: URLSessionHTTPClient()),
             persistence: persistence)

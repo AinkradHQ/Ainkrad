@@ -167,3 +167,23 @@ func defaultHostCacheRoot(bundleID: String = Bundle.main.bundleIdentifier ?? "co
     #endif
     return AinkradHome.defaultCacheRoot(bundleID: bundleID)
 }
+
+/// The hosted App Store catalog (the central AinkradCatalog).
+let remoteCatalogURL = URL(string: "https://raw.githubusercontent.com/AinkradHQ/AinkradCatalog/main/catalog.json")!
+
+/// The App Store catalog location: `<fixture root>/catalog.json` in a DEBUG fixture launch
+/// (no network, identical content in every capture; a missing file just leaves the store
+/// empty/offline), else the hosted catalog.
+func defaultHostCatalogURL() -> URL {
+    #if DEBUG
+    if let roots = debugFixtureRoots { return fixtureCatalogURL(in: roots) }
+    #endif
+    return remoteCatalogURL
+}
+
+#if DEBUG
+/// `catalog.json` beside the fixture's `Pointer/`, `Cache/` and `Vault/`.
+func fixtureCatalogURL(in roots: DebugFixtureRoots) -> URL {
+    roots.cacheRoot.deletingLastPathComponent().appendingPathComponent("catalog.json")
+}
+#endif
