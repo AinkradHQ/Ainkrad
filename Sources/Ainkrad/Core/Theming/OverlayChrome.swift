@@ -12,28 +12,6 @@ enum OverlayChrome {
     static let cornerRadius: CGFloat = AinkradRadius.panel
     /// Opacity of the dimming scrim behind a summoned overlay.
     static let backdropOpacity: Double = 0.42
-    /// Default panel background opacity (overridable in Settings → Appearance).
-    static let backgroundOpacity: Double = 0.94
-}
-
-/// A frosted-glass blur that blurs the app content behind the panel — used as
-/// the overlay panel backing when "background blur" is enabled in Settings.
-struct VisualEffectBlur: NSViewRepresentable {
-    var material: NSVisualEffectView.Material = .hudWindow
-    var blending: NSVisualEffectView.BlendingMode = .withinWindow
-
-    func makeNSView(context: Context) -> NSVisualEffectView {
-        let view = NSVisualEffectView()
-        view.material = material
-        view.blendingMode = blending
-        view.state = .active
-        return view
-    }
-
-    func updateNSView(_ view: NSVisualEffectView, context: Context) {
-        view.material = material
-        view.blendingMode = blending
-    }
 }
 
 /// The shared panel finish: a (settings-driven) translucent + optionally
@@ -58,7 +36,9 @@ private struct HUDPanelChrome: ViewModifier {
             .background {
                 ZStack {
                     if store.overlayBlurEnabled {
-                        VisualEffectBlur(blending: blending)
+                        // The kit's `.panel` level is `.hudWindow`, the material
+                        // the host's own blur used — same pixels.
+                        VisualEffectBlur(level: .panel, blendingMode: blending)
                     }
                     tokens.background.opacity(store.overlayBackgroundOpacity)
                 }

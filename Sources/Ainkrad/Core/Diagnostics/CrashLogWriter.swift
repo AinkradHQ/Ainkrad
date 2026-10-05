@@ -1,3 +1,4 @@
+import AinkradHostRuntime
 import Foundation
 
 /// Append-only NDJSON diagnostics log with a hard size cap.

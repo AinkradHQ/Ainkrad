@@ -1,15 +1,20 @@
+import AinkradAppKitContract
 import os
 
-/// Module-local mirror of the host app's `Log` enum (`Sources/Ainkrad/Core/Logging/Log.swift`).
-/// `AinkradHostRuntime` cannot import the app (dependencies only flow app →
-/// module), so the plugin-runtime code that used to log through the app's
-/// shared `Log` facade gets its own copy here — same subsystem and category
-/// strings, so Console.app filtering and log output are unchanged. Only the
-/// categories the moved files actually use are mirrored.
-enum Log {
-    private static let subsystem = "com.ainkrad.app"
-
-    static let registry = Logger(subsystem: subsystem, category: "registry")
-    static let settings = Logger(subsystem: subsystem, category: "settings")
-    static let persistence = Logger(subsystem: subsystem, category: "persistence")
+/// The host's `os.Logger` categories — the one `Log` for both the app target
+/// and this module (the app imports it from here). Every logger comes from
+/// `AinkradLog.logger(app:area:)` (S-LOG-1), so the host shares the subsystem
+/// every plugin logs under and one Console.app filter covers the whole install.
+/// Categories read `host.<area>`. See AIN-45.
+public enum Log {
+    public static let app = AinkradLog.logger(app: "host", area: "app")
+    public static let registry = AinkradLog.logger(app: "host", area: "registry")
+    public static let settings = AinkradLog.logger(app: "host", area: "settings")
+    public static let terminal = AinkradLog.logger(app: "host", area: "terminal")
+    public static let persistence = AinkradLog.logger(app: "host", area: "persistence")
+    public static let appStore = AinkradLog.logger(app: "host", area: "appStore")
+    public static let mcp = AinkradLog.logger(app: "host", area: "mcp")
+    public static let lsp = AinkradLog.logger(app: "host", area: "lsp")
+    /// Crash sentinel and signpost plumbing — see `CrashSentinel`, AIN-45.
+    public static let diagnostics = AinkradLog.logger(app: "host", area: "diagnostics")
 }

@@ -1,3 +1,4 @@
+import AinkradHostRuntime
 import Foundation
 import MetricKit
 
@@ -34,12 +35,6 @@ enum CrashSentinel {
         }
         MXMetricManager.shared.add(subscriber)
         Log.diagnostics.info("Crash sentinel installed at \(writer.fileURL.path, privacy: .public)")
-    }
-
-    /// Records written by earlier runs. Read at launch so a crash the user hit
-    /// yesterday is still visible today.
-    static func pendingReports() -> [CrashReport] {
-        (writer ?? CrashLogWriter(directory: CrashLogWriter.defaultDirectory)).readAll()
     }
 
     private static var appVersion: String {
