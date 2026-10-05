@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/MCP/AppMCPDiscovery.swift
 import Foundation
-import AinkradHostRuntime
 
 /// Synthesizes an `MCPServerConfig` for every installed app that publishes an
 /// MCP server.
@@ -23,8 +23,10 @@ enum AppMCPDiscovery {
     /// the user's own and is never touched, matched or not.
     static func refresh(apps: [RegisteredApp], into store: MCPServerConfigStore) {
         let installed = Set(apps.map(\.id))
-        for config in store.all() where config.transport == .inProcess
-            && !installed.contains(config.appID ?? config.id) {
+        for config in store.all()
+        where config.transport == .inProcess
+            && !installed.contains(config.appID ?? config.id)
+        {
             store.remove(id: config.id)
         }
 
@@ -39,16 +41,17 @@ enum AppMCPDiscovery {
                 updated.appID = app.id
                 store.upsert(updated)
             } else {
-                store.upsert(MCPServerConfig(
-                    id: app.id,
-                    displayName: app.displayName,
-                    transport: .inProcess,
-                    // On by default so an installed app's tools are usable,
-                    // but NOT trusted — first-party still hits the approval
-                    // gate until the user says otherwise.
-                    enabled: true,
-                    trusted: false,
-                    appID: app.id))
+                store.upsert(
+                    MCPServerConfig(
+                        id: app.id,
+                        displayName: app.displayName,
+                        transport: .inProcess,
+                        // On by default so an installed app's tools are usable,
+                        // but NOT trusted — first-party still hits the approval
+                        // gate until the user says otherwise.
+                        enabled: true,
+                        trusted: false,
+                        appID: app.id))
             }
         }
     }

@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/LSP/LSPClient.swift
 import Foundation
-import AinkradHostRuntime
 
 /// One JSON-RPC client per running language server. Owns the transport,
 /// performs the LSP `initialize`/`initialized` handshake, tracks document
@@ -74,8 +74,9 @@ actor LSPClient {
     /// document's sync version at 1.
     func didOpen(uri: String, languageId: String, text: String) async throws {
         documentVersions[uri] = 1
-        try await transport.send(LSPRPC.didOpenNotification(
-            uri: uri, languageId: languageId, version: 1, text: text))
+        try await transport.send(
+            LSPRPC.didOpenNotification(
+                uri: uri, languageId: languageId, version: 1, text: text))
     }
 
     /// `textDocument/didChange` — a notification (no response), full-document
@@ -127,8 +128,9 @@ actor LSPClient {
         let outcome = await withCheckedContinuation { (cont: CheckedContinuation<Result<JSONValue, MCPError>, Never>) in
             pending[id] = cont
             Task {
-                do { try await transport.send(message) }
-                catch { await self.resolve(id: id, .failure(.transport(String(describing: error)))) }
+                do { try await transport.send(message) } catch {
+                    await self.resolve(id: id, .failure(.transport(String(describing: error))))
+                }
             }
             // Bounded round-trip: if no response is correlated within the
             // ceiling, resolve the waiter with a typed error. `resolve`
@@ -167,7 +169,8 @@ actor LSPClient {
             // them. `publishDiagnostics` is the one this slice acts on;
             // anything else is dropped (mirrors MCPClient's v1 behavior).
             if message["method"]?.stringValue == "textDocument/publishDiagnostics",
-               let uri = message["params"]?["uri"]?.stringValue {
+                let uri = message["params"]?["uri"]?.stringValue
+            {
                 diagnosticsByURI[uri] = LSPRPC.decodeDiagnostics(message["params"] ?? .object([:]))
             }
             return
@@ -175,8 +178,11 @@ actor LSPClient {
         switch MCPRPC.decodeResponse(message) {
         case .success(let (id, result)): resolve(id: id, .success(result))
         case .failure(let error):
-            if let id = message["id"]?.stringValue { resolve(id: id, .failure(error)) }
-            else { Log.lsp.error("dropped malformed LSP message (no id, not a notification)") }
+            if let id = message["id"]?.stringValue {
+                resolve(id: id, .failure(error))
+            } else {
+                Log.lsp.error("dropped malformed LSP message (no id, not a notification)")
+            }
         }
     }
 

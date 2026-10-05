@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradHostRuntime
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("RoutingWebSearchBackend")
@@ -10,7 +11,10 @@ struct RoutingWebSearchBackendTests {
     private struct StubHTTP: DataHTTPClient {
         let payload: String
         func data(for request: URLRequest) async throws -> (Data, HTTPURLResponse) {
-            (Data(payload.utf8), HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
+            (
+                Data(payload.utf8),
+                HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
+            )
         }
     }
 
@@ -23,12 +27,14 @@ struct RoutingWebSearchBackendTests {
                 secrets: secrets,
                 http: StubHTTP(payload: #"{"web":{"results":[{"title":"BRAVE","url":"u","description":"d"}]}}"#)),
             duckduckgo: DuckDuckGoSearchBackend(
-                http: StubHTTP(payload: #"<a class="result__a" href="https://ddg">DDG</a><a class="result__snippet" href="x">s</a>"#)),
+                http: StubHTTP(
+                    payload:
+                        #"<a class="result__a" href="https://ddg">DDG</a><a class="result__snippet" href="x">s</a>"#)),
             searxngHTTP: StubHTTP(payload: #"{"results":[{"title":"SEARX","url":"u","content":"c"}]}"#))
     }
 
     @Test func defaultsToBrave() async throws {
-        let router = makeRouter(persistence: InMemoryPersistenceStore()) // no doc saved
+        let router = makeRouter(persistence: InMemoryPersistenceStore())  // no doc saved
         #expect(router.isConfigured)
         #expect(try await router.search(query: "q", count: 5).first?.title == "BRAVE")
     }
@@ -37,7 +43,7 @@ struct RoutingWebSearchBackendTests {
         let p = InMemoryPersistenceStore()
         p.save(WebSearchSettingsDocument(provider: "duckduckgo"))
         let router = makeRouter(persistence: p)
-        #expect(router.isConfigured) // DDG is always configured
+        #expect(router.isConfigured)  // DDG is always configured
         #expect(try await router.search(query: "q", count: 5).first?.title == "DDG")
     }
 

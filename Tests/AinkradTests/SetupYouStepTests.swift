@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("Setup you step")
@@ -10,9 +11,12 @@ struct SetupYouStepTests {
         defer { t.cleanup() }
         let env = AppEnvironment.bootstrap(home: t.home, defaults: t.defaults)
 
-        SetupYou.apply(values: ["name": "Ahmed", "callMe": "Ahmed", "role": "Engineer",
-                                "timezone": "Africa/Cairo"],
-                       store: env.userProfileStore)
+        SetupYou.apply(
+            values: [
+                "name": "Ahmed", "callMe": "Ahmed", "role": "Engineer",
+                "timezone": "Africa/Cairo",
+            ],
+            store: env.userProfileStore)
 
         #expect(env.userProfileStore.all()["name"] == "Ahmed")
         #expect(env.userProfileStore.all()["role"] == "Engineer")
@@ -31,8 +35,9 @@ struct SetupYouStepTests {
         defer { t.cleanup() }
         let env = AppEnvironment.bootstrap(home: t.home, defaults: t.defaults)
 
-        SetupYou.apply(values: ["name": "Ahmed", "callMe": "", "role": "  ", "timezone": ""],
-                       store: env.userProfileStore)
+        SetupYou.apply(
+            values: ["name": "Ahmed", "callMe": "", "role": "  ", "timezone": ""],
+            store: env.userProfileStore)
 
         #expect(env.userProfileStore.all()["callMe"] == nil)
         #expect(env.userProfileStore.all()["role"] == nil)
@@ -50,8 +55,9 @@ struct SetupYouStepTests {
         defer { t.cleanup() }
         let env = AppEnvironment.bootstrap(home: t.home, defaults: t.defaults)
 
-        let values = Dictionary(uniqueKeysWithValues:
-            UserProfileField.all.map { ($0.key, "value-for-\($0.key)") })
+        let values = Dictionary(
+            uniqueKeysWithValues:
+                UserProfileField.all.map { ($0.key, "value-for-\($0.key)") })
         SetupYou.apply(values: values, store: env.userProfileStore)
 
         for field in UserProfileField.all {

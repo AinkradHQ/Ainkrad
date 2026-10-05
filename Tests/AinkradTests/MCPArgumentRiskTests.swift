@@ -1,36 +1,45 @@
+import AinkradHostRuntime
 // Tests/AinkradTests/MCPArgumentRiskTests.swift
 import Testing
-import AinkradHostRuntime
+
 @testable import Ainkrad
 
 @Suite("MCPArgumentRisk")
 struct MCPArgumentRiskTests {
     @Test("a plain payload carries no option-looking value")
     func plainPayloadIsClean() {
-        #expect(!MCPArgumentRisk.hasOptionLookingValue(.object([
-            "repoPath": .string("/tmp/repo"), "message": .string("fix: thing"),
-        ])))
+        #expect(
+            !MCPArgumentRisk.hasOptionLookingValue(
+                .object([
+                    "repoPath": .string("/tmp/repo"), "message": .string("fix: thing"),
+                ])))
     }
 
     @Test("a leading-dash value anywhere is flagged")
     func leadingDashIsFlagged() {
-        #expect(MCPArgumentRisk.hasOptionLookingValue(.object([
-            "branch": .string("--upload-pack=/bin/sh"),
-        ])))
+        #expect(
+            MCPArgumentRisk.hasOptionLookingValue(
+                .object([
+                    "branch": .string("--upload-pack=/bin/sh")
+                ])))
     }
 
     @Test("recurses into nested arrays and objects")
     func recursesIntoNestedValues() {
-        #expect(MCPArgumentRisk.hasOptionLookingValue(.object([
-            "args": .object(["paths": .array([.string("ok"), .string("--exec=sh")])]),
-        ])))
+        #expect(
+            MCPArgumentRisk.hasOptionLookingValue(
+                .object([
+                    "args": .object(["paths": .array([.string("ok"), .string("--exec=sh")])])
+                ])))
     }
 
     @Test("the ext:: transport helper is flagged even without a dash")
     func extTransportIsFlagged() {
-        #expect(MCPArgumentRisk.hasOptionLookingValue(.object([
-            "url": .string("ext::sh -c whoami"),
-        ])))
+        #expect(
+            MCPArgumentRisk.hasOptionLookingValue(
+                .object([
+                    "url": .string("ext::sh -c whoami")
+                ])))
     }
 
     // The rule only ever inspects `.string` values for option-looking
@@ -49,9 +58,11 @@ struct MCPArgumentRiskTests {
 
     @Test("ext:: is case-insensitively flagged")
     func extTransportIsCaseInsensitive() {
-        #expect(MCPArgumentRisk.hasOptionLookingValue(.object([
-            "url": .string("EXT::sh -c whoami"),
-        ])))
+        #expect(
+            MCPArgumentRisk.hasOptionLookingValue(
+                .object([
+                    "url": .string("EXT::sh -c whoami")
+                ])))
     }
 
     // MARK: - prose must not flag
@@ -80,17 +91,21 @@ struct MCPArgumentRiskTests {
 
     @Test("a multi-line markdown body with bullets is not an option")
     func markdownBodyIsNotFlagged() {
-        #expect(!MCPArgumentRisk.hasOptionLookingValue(.object([
-            "title": .string("Notes"),
-            "body": .string("---\ntags: [x]\n---\n\n# Heading\n\n- first\n- second\n"),
-        ])))
+        #expect(
+            !MCPArgumentRisk.hasOptionLookingValue(
+                .object([
+                    "title": .string("Notes"),
+                    "body": .string("---\ntags: [x]\n---\n\n# Heading\n\n- first\n- second\n"),
+                ])))
     }
 
     @Test("an ordinary sentence is not an option")
     func plainSentenceIsNotFlagged() {
-        #expect(!MCPArgumentRisk.hasOptionLookingValue(.object([
-            "query": .string("what did I write about caching"),
-        ])))
+        #expect(
+            !MCPArgumentRisk.hasOptionLookingValue(
+                .object([
+                    "query": .string("what did I write about caching")
+                ])))
     }
 
     // MARK: - the real attack forms, all of which still flag
@@ -101,18 +116,23 @@ struct MCPArgumentRiskTests {
 
     @Test("every documented git argument-injection form is still flagged")
     func gitInjectionFormsAreStillFlagged() {
-        for value in ["--upload-pack=/bin/sh", "--receive-pack=/bin/sh", "--exec=sh",
-                      "-c", "-c core.pager=sh", "-o ProxyCommand=sh", "--output=/tmp/x",
-                      "-C", "--config=x", "-4"] {
-            #expect(MCPArgumentRisk.hasOptionLookingValue(.object(["v": .string(value)])),
-                    "\"\(value)\" stopped being flagged")
+        for value in [
+            "--upload-pack=/bin/sh", "--receive-pack=/bin/sh", "--exec=sh",
+            "-c", "-c core.pager=sh", "-o ProxyCommand=sh", "--output=/tmp/x",
+            "-C", "--config=x", "-4",
+        ] {
+            #expect(
+                MCPArgumentRisk.hasOptionLookingValue(.object(["v": .string(value)])),
+                "\"\(value)\" stopped being flagged")
         }
     }
 
     @Test("a short-form leading-dash flag is flagged")
     func shortFormDashIsFlagged() {
-        #expect(MCPArgumentRisk.hasOptionLookingValue(.object([
-            "opt": .string("-c core.pager=sh"),
-        ])))
+        #expect(
+            MCPArgumentRisk.hasOptionLookingValue(
+                .object([
+                    "opt": .string("-c core.pager=sh")
+                ])))
     }
 }

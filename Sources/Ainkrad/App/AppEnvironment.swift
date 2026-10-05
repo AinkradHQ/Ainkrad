@@ -1,7 +1,7 @@
-import Foundation
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import Foundation
+import SwiftUI
 
 /// Persisted root directory for the `@`-mention file index (M7 Slice 5c Task 22).
 /// Defaults to the user's home directory until a later folder-picker (Task 22b,
@@ -537,7 +537,8 @@ final class AppEnvironment {
             persistence, secrets, registry, themeManager, workspaceManager, pluginDirs,
             pluginDataRoot, retainedDataRoot, agentContextHub, agentActionHub, pluginLaunchHub,
             signalHub,
-            appAppearanceStore, webSearchSettingsStore, mediaSettingsStore, sessionShareStore, loader, mcpConfigStore, skillsRoot, appStore, appStoreStore, appIconStore,
+            appAppearanceStore, webSearchSettingsStore, mediaSettingsStore, sessionShareStore, loader, mcpConfigStore,
+            skillsRoot, appStore, appStoreStore, appIconStore,
             generalSettingsStore, skySettingsStore, sounds, connectionStore, discoveredModelsStore,
             assistantDocuments
         ) = bootstrapCoreStores(home: home, defaults: defaults)
@@ -580,7 +581,8 @@ final class AppEnvironment {
         let sp4 = AinkradSignposts.begin(AinkradSignposts.launch, "boot-session-and-runs")
         let (
             subagentCoordinator, runManager, assistantSessionStore, scheduleStore, scheduleRunner, triggerDispatcher,
-            fileChangeWatcher, assistantWorkingDirectory, workspaceFileIndex, agentSession, voiceService, menuBarPresence,
+            fileChangeWatcher, assistantWorkingDirectory, workspaceFileIndex, agentSession, voiceService,
+            menuBarPresence,
             oauthStore, toolHooksStore, customCommandStore, customCommandWatcher,
             remoteChannelSettingsStore, remoteChannelService
         ) = bootstrapAgentSessionAndRuns(
@@ -603,7 +605,8 @@ final class AppEnvironment {
             registry: registry,
             themeManager: themeManager,
             workspaceManager: workspaceManager,
-            launcherStore: LauncherStore(registry: registry, workspaceManager: workspaceManager, appAppearanceStore: appAppearanceStore),
+            launcherStore: LauncherStore(
+                registry: registry, workspaceManager: workspaceManager, appAppearanceStore: appAppearanceStore),
             connectionStore: connectionStore,
             discoveredModelsStore: discoveredModelsStore,
             appStore: appStore,
@@ -725,8 +728,9 @@ final class AppEnvironment {
         // from the vault path, so this throwaway vault gets a throwaway namespace
         // (see `Home+KeychainService.swift`). Several test suites use `preview()`,
         // so that is load-bearing, not incidental.
-        let home = Home(vaultRoot: root.appendingPathComponent("vault", isDirectory: true),
-                        cacheRoot: root.appendingPathComponent("cache", isDirectory: true))
+        let home = Home(
+            vaultRoot: root.appendingPathComponent("vault", isDirectory: true),
+            cacheRoot: root.appendingPathComponent("cache", isDirectory: true))
         let environment = bootstrap(home: home, defaults: defaults)
         environment.previewTeardown = {
             try? FileManager.default.removeItem(at: root)

@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("CustomCommandStore")
@@ -14,7 +15,8 @@ struct CustomCommandStoreTests {
     }
 
     @Test func loadsValidCommands() throws {
-        let user = temp(); defer { try? FileManager.default.removeItem(at: user) }
+        let user = temp()
+        defer { try? FileManager.default.removeItem(at: user) }
         try write("Fix $ARGUMENTS", name: "fix", at: user)
         let store = CustomCommandStore(paths: CustomCommandPaths(userRoot: user, projectRoot: nil))
         #expect(store.all().map(\.name) == ["fix"])
@@ -22,16 +24,21 @@ struct CustomCommandStoreTests {
     }
 
     @Test func rejectsReservedAndUnsafeNames() throws {
-        let user = temp(); defer { try? FileManager.default.removeItem(at: user) }
-        try write("x", name: "new", at: user)        // builtin -> dropped
-        try write("x", name: "Bad Name", at: user)   // unsafe slug -> dropped
+        let user = temp()
+        defer { try? FileManager.default.removeItem(at: user) }
+        try write("x", name: "new", at: user)  // builtin -> dropped
+        try write("x", name: "Bad Name", at: user)  // unsafe slug -> dropped
         let store = CustomCommandStore(paths: CustomCommandPaths(userRoot: user, projectRoot: nil))
         #expect(store.all().isEmpty)
     }
 
     @Test func projectOverridesUserOnNameCollision() throws {
-        let user = temp(); let project = temp()
-        defer { try? FileManager.default.removeItem(at: user); try? FileManager.default.removeItem(at: project) }
+        let user = temp()
+        let project = temp()
+        defer {
+            try? FileManager.default.removeItem(at: user)
+            try? FileManager.default.removeItem(at: project)
+        }
         try write("USER version", name: "ship", at: user)
         try write("PROJECT version", name: "ship", at: project)
         let store = CustomCommandStore(paths: CustomCommandPaths(userRoot: user, projectRoot: project))

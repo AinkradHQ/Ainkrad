@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("CrashReport")
@@ -31,8 +32,10 @@ struct CrashReportTests {
     }
 
     @Test func everyKindRoundTrips() throws {
-        for kind in [CrashReport.Kind.uncaughtException, .hang, .diskWriteException,
-                     .cpuException, .crashDiagnostic] {
+        for kind in [
+            CrashReport.Kind.uncaughtException, .hang, .diskWriteException,
+            .cpuException, .crashDiagnostic,
+        ] {
             let decoded = try CrashReport.decode(ndjsonLine: sample(kind: kind).ndjsonLine())
             #expect(decoded.kind == kind)
         }

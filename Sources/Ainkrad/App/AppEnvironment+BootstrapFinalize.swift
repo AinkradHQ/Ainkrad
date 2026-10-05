@@ -1,7 +1,7 @@
-import Foundation
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import Foundation
+import SwiftUI
 
 /// `AppEnvironment.bootstrap(home:defaults:)` split into cohesive helpers
 /// (M7 finalize Wave D, D2) — this file holds the final, post-construction
@@ -58,8 +58,9 @@ extension AppEnvironment {
         notificationSoundStore.effectSource = { [weak environment] event in
             environment?.generalSettingsStore.effect(for: event) ?? event
         }
-        let notificationSounds = SoundEngine(settings: notificationSoundStore,
-                                             overrideDirectory: home.shared(.sounds))
+        let notificationSounds = SoundEngine(
+            settings: notificationSoundStore,
+            overrideDirectory: home.shared(.sounds))
         let signalCenter = AppEnvironment.makeSignalCenter(
             storeURL: AppEnvironment.signalStoreURL(
                 applicationSupport: home.cacheRoot.deletingLastPathComponent()),
@@ -78,17 +79,19 @@ extension AppEnvironment {
         // tiled panes and overlay presentation.
         signalContextProvider.visibleAppIDs = { [weak environment] in
             guard let environment else { return [] }
-            return Set(environment.registry.enabledApps.map(\.id)
-                .filter { environment.isAppOpen($0) })
+            return Set(
+                environment.registry.enabledApps.map(\.id)
+                    .filter { environment.isAppOpen($0) })
         }
         // One writer for all three fields: a callback that rebuilt
         // SignalPreferences from two of them would drop whichever it forgot.
         let saveSignalPreferences = { [weak signalCenter, weak notificationSoundStore] in
             guard let signalCenter else { return }
-            signalPreferencesStore.save(SignalPreferences(
-                rules: signalCenter.rules,
-                retention: signalCenter.retention,
-                sound: notificationSoundStore?.settings ?? NotificationSoundSettings()))
+            signalPreferencesStore.save(
+                SignalPreferences(
+                    rules: signalCenter.rules,
+                    retention: signalCenter.retention,
+                    sound: notificationSoundStore?.settings ?? NotificationSoundSettings()))
         }
         signalCenter.onRulesChanged = { _ in saveSignalPreferences() }
         signalCenter.onRetentionChanged = { _ in saveSignalPreferences() }
@@ -104,9 +107,11 @@ extension AppEnvironment {
         // two copies of this would drift.
         let reveal: (String, String?, Data?) -> Void = { [weak environment] appID, locator, payload in
             guard let environment else { return }
-            let declared = environment.registry.allApps
+            let declared =
+                environment.registry.allApps
                 .first { $0.id == appID }?.presentation ?? .pane
-            let effective = environment.appAppearanceStore
+            let effective =
+                environment.appAppearanceStore
                 .presentationOverride(appID) ?? declared
             let action = SignalReveal.action(
                 appID: appID,
@@ -138,15 +143,17 @@ extension AppEnvironment {
             // reason: an empty payload is still a payload as far as the hub is
             // concerned, and it would evict a real one.
             if let payload, action.deliversPayload {
-                pluginLaunchHub.enqueue(target: appID,
-                                        payload: String(decoding: payload, as: UTF8.self))
+                pluginLaunchHub.enqueue(
+                    target: appID,
+                    payload: String(decoding: payload, as: UTF8.self))
             } else if let payload {
                 // `.focus`: no pane is created, so nothing pulls the launch slot.
                 // An open app that polls (Whisper, to jump to the chat that
                 // notified) collects this within seconds; for any other app it
                 // simply expires, touching nothing.
-                pluginLaunchHub.enqueueTransient(target: appID,
-                                                 payload: String(decoding: payload, as: UTF8.self))
+                pluginLaunchHub.enqueueTransient(
+                    target: appID,
+                    payload: String(decoding: payload, as: UTF8.self))
             }
 
             switch action {
@@ -222,9 +229,10 @@ extension AppEnvironment {
             // so: a sentence asserting an absence spends context the user's
             // actual question does not get.
             guard !summary.isEmpty else { return nil }
-            return AgentContextSnapshot(kind: "notifications",
-                                        title: "Recent notifications",
-                                        text: summary)
+            return AgentContextSnapshot(
+                kind: "notifications",
+                title: "Recent notifications",
+                text: summary)
         }
 
         // External ingress (M3). Everything below is supplementary: in-process
@@ -259,8 +267,9 @@ extension AppEnvironment {
             // anywhere to say why.
             if !parsed.invalid.isEmpty {
                 signalCenter.emit(
-                    .subscriptionsDropped(displayName: app.displayName,
-                                          patterns: parsed.invalid),
+                    .subscriptionsDropped(
+                        displayName: app.displayName,
+                        patterns: parsed.invalid),
                     from: .host)
             }
 
@@ -301,8 +310,9 @@ extension AppEnvironment {
             // Recorded rather than only logged because the consequence is
             // invisible otherwise: hooks and scripts would post into nothing
             // and no one would know why.
-            signalCenter.emit(.externalIngressUnavailable(reason: String(describing: error)),
-                              from: .host)
+            signalCenter.emit(
+                .externalIngressUnavailable(reason: String(describing: error)),
+                from: .host)
         }
 
         // The hub was built in `bootstrapCoreStores`, before the feed existed;
@@ -324,13 +334,17 @@ extension AppEnvironment {
             case (.install, nil):
                 center.emit(.appInstalled(displayName: name), from: .host)
             case (.install, let error?):
-                center.emit(.appInstallFailed(displayName: name,
-                                              reason: Self.describe(error)), from: .host)
+                center.emit(
+                    .appInstallFailed(
+                        displayName: name,
+                        reason: Self.describe(error)), from: .host)
             case (.update, nil):
                 center.emit(.appUpdated(displayName: name), from: .host)
             case (.update, let error?):
-                center.emit(.appUpdateFailed(displayName: name,
-                                             reason: Self.describe(error)), from: .host)
+                center.emit(
+                    .appUpdateFailed(
+                        displayName: name,
+                        reason: Self.describe(error)), from: .host)
             }
         }
 
@@ -379,36 +393,40 @@ extension AppEnvironment {
         // `AppDataDirectoryRename` has already moved <Apps>/terminal to <Apps>/rune
         // earlier in bootstrap, so writing to the old id would strand this migration
         // in a directory the plugin no longer reads.
-        let runeHost = HostServicesImpl(appID: "rune", dataRootURL: pluginDataRoot,
-                                            secretStore: secrets, themeManager: themeManager,
-                                            hub: agentContextHub, actionHub: agentActionHub, launchHub: pluginLaunchHub, signalHub: signalHub,
-                                            declaredPresentation: .pane, appAppearanceStore: appAppearanceStore)
+        let runeHost = HostServicesImpl(
+            appID: "rune", dataRootURL: pluginDataRoot,
+            secretStore: secrets, themeManager: themeManager,
+            hub: agentContextHub, actionHub: agentActionHub, launchHub: pluginLaunchHub, signalHub: signalHub,
+            declaredPresentation: .pane, appAppearanceStore: appAppearanceStore)
         TerminalSettingsMigration.runIfNeeded(
             legacyRawPayload: { (persistence as? FileDocumentStore)?.rawPayloadData(forID: $0) },
             scoped: runeHost.documents, defaults: defaults)
 
         // Sage is a host-embedded built-in (its views read `AppEnvironment`
         // directly), scoped like any other app for its documents/secrets/theme/context.
-        let sageHost = HostServicesImpl(appID: "sage", dataRootURL: pluginDataRoot,
-                                             secretStore: secrets, themeManager: themeManager,
-                                             hub: agentContextHub, actionHub: agentActionHub, launchHub: pluginLaunchHub, signalHub: signalHub,
-                                             declaredPresentation: .pane, appAppearanceStore: appAppearanceStore)
+        let sageHost = HostServicesImpl(
+            appID: "sage", dataRootURL: pluginDataRoot,
+            secretStore: secrets, themeManager: themeManager,
+            hub: agentContextHub, actionHub: agentActionHub, launchHub: pluginLaunchHub, signalHub: signalHub,
+            declaredPresentation: .pane, appAppearanceStore: appAppearanceStore)
 
         // Live Scry (M7 Slice 7) is likewise a host-embedded built-in — its
         // pane reads `AppEnvironment.scryStore` directly (see `ScryApp`).
-        let scryHost = HostServicesImpl(appID: "scry", dataRootURL: pluginDataRoot,
-                                          secretStore: secrets, themeManager: themeManager,
-                                          hub: agentContextHub, actionHub: agentActionHub, launchHub: pluginLaunchHub, signalHub: signalHub,
-                                          declaredPresentation: .pane, appAppearanceStore: appAppearanceStore)
+        let scryHost = HostServicesImpl(
+            appID: "scry", dataRootURL: pluginDataRoot,
+            secretStore: secrets, themeManager: themeManager,
+            hub: agentContextHub, actionHub: agentActionHub, launchHub: pluginLaunchHub, signalHub: signalHub,
+            declaredPresentation: .pane, appAppearanceStore: appAppearanceStore)
 
         // Hoard (M1) — a host-embedded built-in like Sage and Scry. It
         // inherits the host's unsandboxed filesystem access; its own views read
         // `AppEnvironment` directly.
-        let hoardHost = HostServicesImpl(appID: "hoard", dataRootURL: pluginDataRoot,
-                                         secretStore: secrets, themeManager: themeManager,
-                                         hub: agentContextHub, actionHub: agentActionHub, launchHub: pluginLaunchHub, signalHub: signalHub,
-                                         declaredPresentation: .pane, declaredMode: .basic,
-                                         appAppearanceStore: appAppearanceStore)
+        let hoardHost = HostServicesImpl(
+            appID: "hoard", dataRootURL: pluginDataRoot,
+            secretStore: secrets, themeManager: themeManager,
+            hub: agentContextHub, actionHub: agentActionHub, launchHub: pluginLaunchHub, signalHub: signalHub,
+            declaredPresentation: .pane, declaredMode: .basic,
+            appAppearanceStore: appAppearanceStore)
 
         // Hoard' MCP server and agent context are built HERE, not in
         // `HoardApp`, for the same reason its settings are: the SDK entry
@@ -417,7 +435,8 @@ extension AppEnvironment {
         // the host is entitled to wire it directly.
         var filesRegistration = RegisteredApp.builtIn(
             HoardApp.self,
-            summary: "Browse, search and organise your files — keyboard-driven, git-aware, and wired into the assistant.",
+            summary:
+                "Browse, search and organise your files — keyboard-driven, git-aware, and wired into the assistant.",
             host: hoardHost,
             chromeFillOverride: {
                 HoardApp.surfaceFill(
@@ -439,7 +458,8 @@ extension AppEnvironment {
         // browser's state without having to ask for it.
         _ = hoardHost.context.register { [weak environment] in
             guard let environment,
-                  let summary = environment.filesPaneCoordinator.contextSummary else { return nil }
+                let summary = environment.filesPaneCoordinator.contextSummary
+            else { return nil }
             return AgentContextSnapshot(
                 kind: "hoard", title: "Hoard", text: summary)
         }
@@ -457,7 +477,8 @@ extension AppEnvironment {
             builtIn: [
                 RegisteredApp.builtIn(
                     SageApp.self,
-                    summary: "Your in-workspace AI assistant — chat about your code, run gated tools, and drive the terminal and git without leaving Ainkrad.",
+                    summary:
+                        "Your in-workspace AI assistant — chat about your code, run gated tools, and drive the terminal and git without leaving Ainkrad.",
                     host: sageHost,
                     // Reading `surfaceOpacity` inside this closure — invoked
                     // synchronously from `TileLayoutView.hasTranslucentPane`
@@ -478,9 +499,10 @@ extension AppEnvironment {
                 ),
                 RegisteredApp.builtIn(
                     ScryApp.self,
-                    summary: "The Live Scry — the assistant lays out tables, diagrams, charts, code and status as movable HUD cards.",
+                    summary:
+                        "The Live Scry — the assistant lays out tables, diagrams, charts, code and status as movable HUD cards.",
                     host: scryHost),
-                filesRegistration
+                filesRegistration,
             ],
             loaded: loaded.apps,
             failures: loaded.failures
@@ -523,7 +545,9 @@ extension AppEnvironment {
             workspaceManager.restore(from: launch)
             workspaceManager.pruneApps(keeping: Set(registry.allApps.map { $0.id }))
             let paneState = restorePanes ? "restored" : "cleared"
-            Log.app.info("Restored workspace layout: \(launch.workspaces.count) of \(saved.workspaces.count) workspace(s) kept, panes \(paneState, privacy: .public), active = main")
+            Log.app.info(
+                "Restored workspace layout: \(launch.workspaces.count) of \(saved.workspaces.count) workspace(s) kept, panes \(paneState, privacy: .public), active = main"
+            )
         }
         workspaceManager.onStateChange = { [weak workspaceManager] in
             guard let workspaceManager else { return }
@@ -566,8 +590,10 @@ extension AppEnvironment {
                 // BASIC root consumes a pending launch — so the payload sat
                 // unread and the file never opened. Peeked, not taken: the app
                 // itself still consumes it.
-                if let requested = AinkradLaunchIntent
-                    .decode(environment.pluginLaunchHub.peekPending(for: appID))?.mode {
+                if let requested =
+                    AinkradLaunchIntent
+                    .decode(environment.pluginLaunchHub.peekPending(for: appID))?.mode
+                {
                     block.mode = requested
                 }
                 environment.presentedOverlayAppID = nil
@@ -628,7 +654,3 @@ extension AppEnvironment {
         return String(describing: error)
     }
 }
-
-
-
-

@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// The in-app HUD shown before Ainkrad actually quits — summoned by
 /// `QuitCoordinator.isConfirming` from ⌘Q, the app menu's Quit, or the
@@ -63,6 +63,9 @@ struct QuitConfirmationView: View {
             .padding(20)
         }
         .hudPanelChrome(tokens: tokens)
-        .onKeyPress(.escape) { coordinator.cancel(); return .handled }
+        .onKeyPress(.escape) {
+            coordinator.cancel()
+            return .handled
+        }
     }
 }

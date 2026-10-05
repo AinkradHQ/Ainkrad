@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import AinkradHostRuntime
 
 /// Source tripwire: no file may DECLARE a retired app id or publish an MCP tool
@@ -22,10 +23,10 @@ import Foundation
 struct AppIDSourceInvariantTests {
     private static var sourcesRoot: URL {
         URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent()   // Naming
-            .deletingLastPathComponent()   // AinkradTests
-            .deletingLastPathComponent()   // Tests
-            .deletingLastPathComponent()   // repo root
+            .deletingLastPathComponent()  // Naming
+            .deletingLastPathComponent()  // AinkradTests
+            .deletingLastPathComponent()  // Tests
+            .deletingLastPathComponent()  // repo root
             .appending(path: "Sources")
     }
 
@@ -40,12 +41,15 @@ struct AppIDSourceInvariantTests {
         for file in files {
             let source = try String(contentsOf: file, encoding: .utf8)
             for old in AppIDRenames.map.keys {
-                #expect(!source.contains("static let id = \"\(old)\""),
-                        "\(file.lastPathComponent) declares the retired app id \"\(old)\"")
-                #expect(!source.contains("appID: \"\(old)\""),
-                        "\(file.lastPathComponent) builds host services for \"\(old)\"")
-                #expect(!source.contains("name: \"\(old)_"),
-                        "\(file.lastPathComponent) publishes a tool under the retired \"\(old)_\" prefix")
+                #expect(
+                    !source.contains("static let id = \"\(old)\""),
+                    "\(file.lastPathComponent) declares the retired app id \"\(old)\"")
+                #expect(
+                    !source.contains("appID: \"\(old)\""),
+                    "\(file.lastPathComponent) builds host services for \"\(old)\"")
+                #expect(
+                    !source.contains("name: \"\(old)_"),
+                    "\(file.lastPathComponent) publishes a tool under the retired \"\(old)_\" prefix")
             }
         }
     }

@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// One profile fact the user can state about themselves.
 ///
@@ -16,22 +16,26 @@ struct UserProfileField: Identifiable {
     var id: String { key }
 
     static let all: [UserProfileField] = [
-        UserProfileField(key: "name",
-                         title: "Name",
-                         hint: "How you are referred to in writing.",
-                         placeholder: "Ada Lovelace"),
-        UserProfileField(key: "callMe",
-                         title: "What to call you",
-                         hint: "How the assistant addresses you.",
-                         placeholder: "Ada"),
-        UserProfileField(key: "role",
-                         title: "Role",
-                         hint: "What you do — it shapes the level the assistant pitches at.",
-                         placeholder: "Engineer"),
-        UserProfileField(key: "timezone",
-                         title: "Timezone",
-                         hint: "Used for scheduling and time-aware answers.",
-                         placeholder: TimeZone.current.identifier)
+        UserProfileField(
+            key: "name",
+            title: "Name",
+            hint: "How you are referred to in writing.",
+            placeholder: "Ada Lovelace"),
+        UserProfileField(
+            key: "callMe",
+            title: "What to call you",
+            hint: "How the assistant addresses you.",
+            placeholder: "Ada"),
+        UserProfileField(
+            key: "role",
+            title: "Role",
+            hint: "What you do — it shapes the level the assistant pitches at.",
+            placeholder: "Engineer"),
+        UserProfileField(
+            key: "timezone",
+            title: "Timezone",
+            hint: "Used for scheduling and time-aware answers.",
+            placeholder: TimeZone.current.identifier),
     ]
 }
 
@@ -59,11 +63,13 @@ struct UserProfileSettingsView: View {
                 }
             }
 
-            Text("These facts are projected into USER.md and the assistant's memory — "
-                 + "they change what it knows about you, not just what it calls you.")
-                .font(AinkradFont.display(11))
-                .foregroundStyle(environment.themeManager.tokens.foreground.opacity(0.4))
-                .fixedSize(horizontal: false, vertical: true)
+            Text(
+                "These facts are projected into USER.md and the assistant's memory — "
+                    + "they change what it knows about you, not just what it calls you."
+            )
+            .font(AinkradFont.display(11))
+            .foregroundStyle(environment.themeManager.tokens.foreground.opacity(0.4))
+            .fixedSize(horizontal: false, vertical: true)
         }
         .onAppear { values = environment.userProfileStore.all() }
     }

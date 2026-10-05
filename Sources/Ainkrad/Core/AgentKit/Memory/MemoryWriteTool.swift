@@ -1,17 +1,17 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/Memory/MemoryWriteTool.swift
 import Foundation
-import AinkradHostRuntime
 
 struct MemoryWriteTool: AgentTool {
     let service: MemoryService
 
     let name = "memory_write"
     let description = """
-    Persist a durable fact, preference, or convention to the assistant's long-term memory. \
-    Use this proactively whenever you learn something worth remembering across sessions — \
-    no need to ask the user. target: "user" (about the user), "memory" (facts/decisions), \
-    or "agents" (rules/conventions to always follow).
-    """
+        Persist a durable fact, preference, or convention to the assistant's long-term memory. \
+        Use this proactively whenever you learn something worth remembering across sessions — \
+        no need to ask the user. target: "user" (about the user), "memory" (facts/decisions), \
+        or "agents" (rules/conventions to always follow).
+        """
     let permission: ToolPermissionClass = .memory
 
     var parametersSchema: JSONValue {
@@ -35,7 +35,8 @@ struct MemoryWriteTool: AgentTool {
     @MainActor
     func execute(_ input: JSONValue) async throws -> ToolResult {
         guard let target = input["target"]?.stringValue,
-              let file = Self.file(for: target) else {
+            let file = Self.file(for: target)
+        else {
             throw ToolError.message("memory_write requires target = user | memory | agents.")
         }
         guard let content = input["content"]?.stringValue, !content.isEmpty else {

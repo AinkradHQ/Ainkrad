@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Docked approval bar shown just above the composer while a tool call awaits
 /// the user's decision. The operation's details (identity/summary/diff) stay in
@@ -35,8 +35,11 @@ struct SageApprovalBar: View {
             }
             Spacer(minLength: 12)
             ToolCardButton(title: "Deny", tint: tokens.accentTertiary, filled: false, tokens: tokens, action: onDeny)
-            ToolCardButton(title: "Allow always", tint: tokens.accentSecondary, filled: false, tokens: tokens, action: onApproveAlways)
-            ToolCardButton(title: "Approve", tint: tokens.accentPrimary, filled: true, tokens: tokens, action: onApprove)
+            ToolCardButton(
+                title: "Allow always", tint: tokens.accentSecondary, filled: false, tokens: tokens,
+                action: onApproveAlways)
+            ToolCardButton(
+                title: "Approve", tint: tokens.accentPrimary, filled: true, tokens: tokens, action: onApprove)
         }
         .padding(.horizontal, 14).padding(.vertical, 9)
         .frame(maxWidth: .infinity, alignment: .leading)

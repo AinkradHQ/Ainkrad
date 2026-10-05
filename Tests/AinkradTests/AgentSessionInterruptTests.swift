@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 /// Covers Task 8: `interrupt()` (hard-cancel the in-flight turn but keep the
@@ -72,13 +73,16 @@ struct AgentSessionInterruptTests {
         // .ask mode gates the write; unattended → auto-deny instead of awaiting approval.
         let session = TestSessionFactory.make(provider: provider, unattended: true)
         session.send("edit it")
-        await session.currentTask?.value          // must NOT hang
+        await session.currentTask?.value  // must NOT hang
         #expect(session.state == .idle)
         // The file was not changed (the write was denied before running).
         #expect((try? String(contentsOfFile: path, encoding: .utf8)) == "v1")
-        #expect(session.messages.contains { m in
-            m.content.contains { if case .toolResult(_, _, let isError) = $0 { return isError } else { return false } }
-        })
+        #expect(
+            session.messages.contains { m in
+                m.content.contains {
+                    if case .toolResult(_, _, let isError) = $0 { return isError } else { return false }
+                }
+            })
     }
 
     /// Never escalates: the always-on irreversible guard forces `.requireApproval`
@@ -95,11 +99,14 @@ struct AgentSessionInterruptTests {
         let provider = EditOnceStubProvider(path: path, newContents: "v2", toolName: "irreversible_tool")
         let session = TestSessionFactory.make(provider: provider, mode: .fullAuto, unattended: true)
         session.send("edit it")
-        await session.currentTask?.value          // must NOT hang
+        await session.currentTask?.value  // must NOT hang
         #expect(session.state == .idle)
-        #expect(session.messages.contains { m in
-            m.content.contains { if case .toolResult(_, _, let isError) = $0 { return isError } else { return false } }
-        })
+        #expect(
+            session.messages.contains { m in
+                m.content.contains {
+                    if case .toolResult(_, _, let isError) = $0 { return isError } else { return false }
+                }
+            })
     }
 
     /// Attended (default) path is unchanged: a requireApproval call still parks
@@ -109,7 +116,7 @@ struct AgentSessionInterruptTests {
         try? "v1".write(toFile: path, atomically: true, encoding: .utf8)
         defer { try? FileManager.default.removeItem(atPath: path) }
         let provider = EditOnceStubProvider(path: path, newContents: "v2")
-        let session = TestSessionFactory.make(provider: provider) // unattended defaults false
+        let session = TestSessionFactory.make(provider: provider)  // unattended defaults false
         session.send("edit it")
         for _ in 0..<200 {
             if case .awaitingApproval = session.state { break }
@@ -134,8 +141,10 @@ struct AgentSessionInterruptTests {
 private final class ScriptedApprovalProvider: LLMProvider {
     private var turnIndex = 0
 
-    func send(messages: [AgentMessage], system: String, tools: [AgentToolSchema],
-              model: AgentModelConfig, credential: ProviderCredential) -> AsyncThrowingStream<AgentEvent, Error> {
+    func send(
+        messages: [AgentMessage], system: String, tools: [AgentToolSchema],
+        model: AgentModelConfig, credential: ProviderCredential
+    ) -> AsyncThrowingStream<AgentEvent, Error> {
         turnIndex += 1
         let isFirstTurn = turnIndex == 1
         return AsyncThrowingStream { cont in

@@ -7,9 +7,9 @@ enum SSEParser {
     static func events(from upstream: AsyncThrowingStream<Data, Error>) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { cont in
             let task = Task {
-                var buffer = ""          // unterminated tail across chunks
+                var buffer = ""  // unterminated tail across chunks
                 var dataLines: [String] = []
-                func flush() -> Bool {   // returns false to signal [DONE]
+                func flush() -> Bool {  // returns false to signal [DONE]
                     guard !dataLines.isEmpty else { return true }
                     let payload = dataLines.joined(separator: "\n")
                     dataLines.removeAll()
@@ -24,8 +24,11 @@ enum SSEParser {
                             let raw = String(buffer[..<nl])
                             buffer = String(buffer[buffer.index(after: nl)...])
                             let line = raw.hasSuffix("\r") ? String(raw.dropLast()) : raw
-                            if line.isEmpty {                // event boundary
-                                if !flush() { cont.finish(); return }
+                            if line.isEmpty {  // event boundary
+                                if !flush() {
+                                    cont.finish()
+                                    return
+                                }
                             } else if line.hasPrefix(":") {  // comment / keep-alive
                                 continue
                             } else if line.hasPrefix("data:") {

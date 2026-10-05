@@ -24,7 +24,7 @@ final class ShortcutRecorder {
         store.isRecordingShortcut = true
         monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self else { return event }
-            if event.keyCode == 53 {   // Esc cancels the recording without rebinding.
+            if event.keyCode == 53 {  // Esc cancels the recording without rebinding.
                 self.stop()
                 return nil
             }
@@ -39,7 +39,8 @@ final class ShortcutRecorder {
                 self.conflictMessage = nil
             } else {
                 let owner = store.bindings.conflict(of: chord, excluding: action)
-                self.conflictMessage = "\(chord.displayString) is already used by \(owner?.displayName ?? "another shortcut")."
+                self.conflictMessage =
+                    "\(chord.displayString) is already used by \(owner?.displayName ?? "another shortcut")."
             }
             self.stop()
             return nil

@@ -1,8 +1,9 @@
+import AinkradHostRuntime
 // Tests/AinkradTests/SpawnSubagentToolTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("SpawnSubagentTool")
 @MainActor
@@ -27,8 +28,9 @@ struct SpawnSubagentToolTests {
     }
 
     private func tool(_ runner: SubagentRunner, agents: AgentStore? = nil) -> SpawnSubagentTool {
-        SpawnSubagentTool(coordinator: SubagentCoordinator(runner: runner),
-                          agents: agents ?? AgentStore(persistence: InMemoryPersistenceStore()))
+        SpawnSubagentTool(
+            coordinator: SubagentCoordinator(runner: runner),
+            agents: agents ?? AgentStore(persistence: InMemoryPersistenceStore()))
     }
 
     @Test func permissionIsWrite() {
@@ -36,11 +38,13 @@ struct SpawnSubagentToolTests {
     }
 
     @Test func fansOutTasksAndAggregates() async throws {
-        let r = try await tool(EchoRunner()).execute(.object([
-            "tasks": .array([
-                .object(["prompt": .string("audit deps")]),
-                .object(["prompt": .string("write tests"), "model_budget": .string("premium")]),
-            ])]))
+        let r = try await tool(EchoRunner()).execute(
+            .object([
+                "tasks": .array([
+                    .object(["prompt": .string("audit deps")]),
+                    .object(["prompt": .string("write tests"), "model_budget": .string("premium")]),
+                ])
+            ]))
         #expect(!r.isError)
         #expect(r.content.contains("echo:audit deps"))
         #expect(r.content.contains("echo:write tests"))
@@ -64,11 +68,13 @@ struct SpawnSubagentToolTests {
                     : SubagentOutcome(id: spec.id, status: .succeeded, resultText: "good")
             }
         }
-        let r = try await tool(MixedRunner()).execute(.object([
-            "tasks": .array([
-                .object(["prompt": .string("good one")]),
-                .object(["prompt": .string("bad one")]),
-            ])]))
+        let r = try await tool(MixedRunner()).execute(
+            .object([
+                "tasks": .array([
+                    .object(["prompt": .string("good one")]),
+                    .object(["prompt": .string("bad one")]),
+                ])
+            ]))
         #expect(!r.isError)
         #expect(r.content.contains("good"))
         #expect(r.content.contains("boom"))
@@ -88,17 +94,19 @@ struct SpawnSubagentToolTests {
 
     @Test func rejectsTaskWithMissingPrompt() async {
         await #expect(throws: ToolError.self) {
-            _ = try await tool(EchoRunner()).execute(.object([
-                "tasks": .array([.object(["agent": .string("Build")])])
-            ]))
+            _ = try await tool(EchoRunner()).execute(
+                .object([
+                    "tasks": .array([.object(["agent": .string("Build")])])
+                ]))
         }
     }
 
     @Test func rejectsTaskWithEmptyPrompt() async {
         await #expect(throws: ToolError.self) {
-            _ = try await tool(EchoRunner()).execute(.object([
-                "tasks": .array([.object(["prompt": .string("")])])
-            ]))
+            _ = try await tool(EchoRunner()).execute(
+                .object([
+                    "tasks": .array([.object(["prompt": .string("")])])
+                ]))
         }
     }
 
@@ -117,35 +125,40 @@ struct SpawnSubagentToolTests {
 
     @Test func parsesModelBudgetAndToolAllowList() async throws {
         let runner = RecordingRunner()
-        _ = try await tool(runner).execute(.object([
-            "tasks": .array([
-                .object([
-                    "prompt": .string("scoped task"),
-                    "model_budget": .string("local"),
-                    "tools": .array([.string("read_file"), .string("run_terminal")]),
+        _ = try await tool(runner).execute(
+            .object([
+                "tasks": .array([
+                    .object([
+                        "prompt": .string("scoped task"),
+                        "model_budget": .string("local"),
+                        "tools": .array([.string("read_file"), .string("run_terminal")]),
+                    ])
                 ])
-            ])
-        ]))
+            ]))
         #expect(runner.seen.first?.budgetTier == .local)
         #expect(runner.seen.first?.toolAllowList == ["read_file", "run_terminal"])
     }
 
     @Test func resolvesAgentNameToProfileID() async throws {
         let agents = AgentStore(persistence: InMemoryPersistenceStore())
-        let profile = agents.add(AgentProfile(name: "Auditor", instructions: "audit",
-                                               toolPolicy: .all))
+        let profile = agents.add(
+            AgentProfile(
+                name: "Auditor", instructions: "audit",
+                toolPolicy: .all))
         let runner = RecordingRunner()
-        _ = try await tool(runner, agents: agents).execute(.object([
-            "tasks": .array([.object(["prompt": .string("go"), "agent": .string("auditor")])])
-        ]))
+        _ = try await tool(runner, agents: agents).execute(
+            .object([
+                "tasks": .array([.object(["prompt": .string("go"), "agent": .string("auditor")])])
+            ]))
         #expect(runner.seen.first?.profileID == profile.id)
     }
 
     @Test func unknownAgentNameLeavesProfileIDNil() async throws {
         let runner = RecordingRunner()
-        _ = try await tool(runner).execute(.object([
-            "tasks": .array([.object(["prompt": .string("go"), "agent": .string("nonexistent")])])
-        ]))
+        _ = try await tool(runner).execute(
+            .object([
+                "tasks": .array([.object(["prompt": .string("go"), "agent": .string("nonexistent")])])
+            ]))
         #expect(runner.seen.first?.profileID == nil)
     }
 

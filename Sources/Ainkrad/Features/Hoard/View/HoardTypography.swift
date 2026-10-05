@@ -1,7 +1,7 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitUI
 import AinkradHostRuntime
+import SwiftUI
 
 /// Resolves the typography Hoard renders with: its own per-app override if the
 /// user set one, otherwise the global Appearance setting.
@@ -30,7 +30,8 @@ extension View {
     /// this scope, and the call below then fails to resolve.
     @MainActor
     func filesTypography(_ appEnvironment: AppEnvironment) -> some View {
-        self.environment(\.ainkradTypography,
-                          HoardTypography.resolve(appEnvironment: appEnvironment))
+        self.environment(
+            \.ainkradTypography,
+            HoardTypography.resolve(appEnvironment: appEnvironment))
     }
 }

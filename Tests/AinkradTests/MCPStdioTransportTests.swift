@@ -1,8 +1,9 @@
+import AinkradHostRuntime
 // Tests/AinkradTests/MCPStdioTransportTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("StdioTransport (real subprocess)")
 struct MCPStdioTransportTests {
@@ -14,8 +15,11 @@ struct MCPStdioTransportTests {
         defer { Task { await t.stop() } }
 
         var iterator = t.incoming().makeAsyncIterator()
-        try await t.send(.object(["jsonrpc": .string("2.0"), "id": .string("1"),
-                                  "method": .string("ping"), "params": .object([:])]))
+        try await t.send(
+            .object([
+                "jsonrpc": .string("2.0"), "id": .string("1"),
+                "method": .string("ping"), "params": .object([:]),
+            ]))
         let received = try await iterator.next()
         #expect(received?["id"]?.stringValue == "1")
         #expect(received?["method"]?.stringValue == "ping")
@@ -43,8 +47,11 @@ struct MCPStdioTransportTests {
         try await Task.sleep(for: .milliseconds(200))
 
         await #expect(throws: MCPError.self) {
-            try await t.send(.object(["jsonrpc": .string("2.0"), "id": .string("1"),
-                                      "method": .string("ping"), "params": .object([:])]))
+            try await t.send(
+                .object([
+                    "jsonrpc": .string("2.0"), "id": .string("1"),
+                    "method": .string("ping"), "params": .object([:]),
+                ]))
         }
     }
 
@@ -54,7 +61,10 @@ struct MCPStdioTransportTests {
     @Test func swallowsGarbageLineAndDeliversValidJSON() async throws {
         let t = StdioTransport(
             command: "/bin/sh",
-            args: ["-c", "printf 'not json at all\\n{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"method\":\"ping\",\"params\":{}}\\n'; sleep 1"],
+            args: [
+                "-c",
+                "printf 'not json at all\\n{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"method\":\"ping\",\"params\":{}}\\n'; sleep 1",
+            ],
             env: [:]
         )
         try await t.start()

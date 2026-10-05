@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradHostRuntime
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("AgentSession terminal kill + stream", .timeLimit(.minutes(1)))
@@ -18,7 +19,7 @@ struct AgentSessionTerminalKillTests {
         let start = Date()
         session.interrupt()
         await session.currentTask?.value
-        #expect(Date().timeIntervalSince(start) < 10)   // the child was killed, not left for 30s
+        #expect(Date().timeIntervalSince(start) < 10)  // the child was killed, not left for 30s
         #expect(session.state == .idle)
     }
 }

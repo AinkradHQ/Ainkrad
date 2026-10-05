@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 import AppKit
 import Observation
-import AinkradHostRuntime
 
 /// Drives the in-app quit confirmation HUD around `NSApplication`'s
 /// `applicationShouldTerminate(_:)` / `.terminateLater` flow. The app

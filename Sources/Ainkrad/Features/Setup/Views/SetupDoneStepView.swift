@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// The closing step, and the ONLY place `SetupCoordinator.complete()` is called.
 ///
@@ -46,8 +46,9 @@ struct SetupDoneStepView: View {
                         .font(AinkradFont.display(14))
                         .foregroundStyle(tokens.foreground)
                         .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth),
-                               alignment: .leading)
+                        .frame(
+                            maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth),
+                            alignment: .leading)
 
                     // One point per row, each card full width. A flowing grid
                     // was tried and rejected here for the same reason it was on
@@ -55,42 +56,47 @@ struct SetupDoneStepView: View {
                     // sequence, and a second column asks the reader to work out
                     // an order that carries no meaning.
                     VStack(alignment: .leading, spacing: 12) {
-                        point(title: "In your Home folder",
-                              body: "Workspaces, notes, skills, commands, agent history and "
-                                  + "your settings all live in the folder you chose. It is "
-                                  + "yours: back it up or copy it to another Mac and your "
-                                  + "Ainkrad comes with it.",
-                              icon: "folder",
-                              tokens: tokens)
+                        point(
+                            title: "In your Home folder",
+                            body: "Workspaces, notes, skills, commands, agent history and "
+                                + "your settings all live in the folder you chose. It is "
+                                + "yours: back it up or copy it to another Mac and your "
+                                + "Ainkrad comes with it.",
+                            icon: "folder",
+                            tokens: tokens)
 
                         if didMigrateLegacyData {
-                            point(title: "Your existing data was moved in",
-                                  body: "Ainkrad found data from an earlier version and copied "
-                                      + "it into your new Home folder — it is all there, nothing "
-                                      + "was lost. The original copy has not been deleted: it is "
-                                      + "still on this Mac at \(legacyCopyPath). You can remove "
-                                      + "it once you are happy everything came across.",
-                                  icon: "arrow.right.doc.on.clipboard",
-                                  tokens: tokens)
-                                .accessibilityIdentifier("setup.done.migrated")
+                            point(
+                                title: "Your existing data was moved in",
+                                body: "Ainkrad found data from an earlier version and copied "
+                                    + "it into your new Home folder — it is all there, nothing "
+                                    + "was lost. The original copy has not been deleted: it is "
+                                    + "still on this Mac at \(legacyCopyPath). You can remove "
+                                    + "it once you are happy everything came across.",
+                                icon: "arrow.right.doc.on.clipboard",
+                                tokens: tokens
+                            )
+                            .accessibilityIdentifier("setup.done.migrated")
                         }
 
-                        point(title: "Not in your Home folder: your API keys",
-                              body: "API keys are stored in this Mac's Keychain, never in "
-                                  + "your Home folder, and they will not travel with it. If "
-                                  + "you copy your Home to another Mac, reconnect your "
-                                  + "providers there once — everything else is already in "
-                                  + "place.",
-                              icon: "key",
-                              tokens: tokens)
+                        point(
+                            title: "Not in your Home folder: your API keys",
+                            body: "API keys are stored in this Mac's Keychain, never in "
+                                + "your Home folder, and they will not travel with it. If "
+                                + "you copy your Home to another Mac, reconnect your "
+                                + "providers there once — everything else is already in "
+                                + "place.",
+                            icon: "key",
+                            tokens: tokens)
                     }
 
                     Text("You can change any of these choices later in Settings.")
                         .font(AinkradFont.display(12))
                         .foregroundStyle(tokens.foreground.opacity(0.6))
                         .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth),
-                               alignment: .leading)
+                        .frame(
+                            maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth),
+                            alignment: .leading)
                 }
                 .padding(20)
                 // FILLS the group, like every other step. The point cards hold
@@ -107,9 +113,11 @@ struct SetupDoneStepView: View {
             // `isProvisionalHome: false`, which drops `.home` from `steps`
             // entirely. `back()` walks `steps`, so it cannot return the user to
             // a screen that would re-ask for a Home already adopted.
-            SetupStepFooter(coordinator: coordinator,
-                            primaryTitle: "Start using Ainkrad",
-                            primaryIdentifier: "setup.done.finish") {
+            SetupStepFooter(
+                coordinator: coordinator,
+                primaryTitle: "Start using Ainkrad",
+                primaryIdentifier: "setup.done.finish"
+            ) {
                 finish()
             }
         }
@@ -133,8 +141,10 @@ struct SetupDoneStepView: View {
         environment.isSetupReplay = false
     }
 
-    private func point(title: String, body: String, icon: String,
-                       tokens: DesignTokens) -> some View {
+    private func point(
+        title: String, body: String, icon: String,
+        tokens: DesignTokens
+    ) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 13))

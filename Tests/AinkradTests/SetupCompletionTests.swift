@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("Setup completion")
 @MainActor
@@ -11,8 +12,11 @@ struct SetupCompletionTests {
         defer { t.cleanup() }
         let env = AppEnvironment.bootstrap(home: t.home, defaults: t.defaults)
         // Real vault, but setup never finished.
-        #expect(SetupCoordinator(persistence: env.persistence,
-                                 isProvisionalHome: false).isComplete == false)
+        #expect(
+            SetupCoordinator(
+                persistence: env.persistence,
+                isProvisionalHome: false
+            ).isComplete == false)
     }
 
     @Test func completingClearsTheGateAndSurvivesARebootstrap() {
@@ -23,8 +27,11 @@ struct SetupCompletionTests {
         SetupCoordinator(persistence: first.persistence, isProvisionalHome: true).complete()
 
         let second = AppEnvironment.bootstrap(home: t.home, defaults: t.defaults)
-        #expect(SetupCoordinator(persistence: second.persistence,
-                                 isProvisionalHome: false).isComplete)
+        #expect(
+            SetupCoordinator(
+                persistence: second.persistence,
+                isProvisionalHome: false
+            ).isComplete)
     }
 
     /// The marker lives in the vault, so a user who moves their vault to a new Mac
@@ -35,8 +42,9 @@ struct SetupCompletionTests {
         let env = AppEnvironment.bootstrap(home: t.home, defaults: t.defaults)
         SetupCoordinator(persistence: env.persistence, isProvisionalHome: true).complete()
 
-        #expect(FileManager.default.fileExists(
-            atPath: t.home.shared(.config).appendingPathComponent("setup.json").path))
+        #expect(
+            FileManager.default.fileExists(
+                atPath: t.home.shared(.config).appendingPathComponent("setup.json").path))
     }
 
     /// The launch-time gate: no Home yet, or a Home whose setup never finished
@@ -54,18 +62,24 @@ struct SetupCompletionTests {
         defer { t.cleanup() }
 
         let first = AppEnvironment.bootstrap(home: t.home, defaults: t.defaults)
-        #expect(SetupGate.raisedAtLaunch(
-            provisionalHome: false,
-            setupIsComplete: SetupCoordinator(persistence: first.persistence,
-                                              isProvisionalHome: false).isComplete))
+        #expect(
+            SetupGate.raisedAtLaunch(
+                provisionalHome: false,
+                setupIsComplete: SetupCoordinator(
+                    persistence: first.persistence,
+                    isProvisionalHome: false
+                ).isComplete))
 
         SetupCoordinator(persistence: first.persistence, isProvisionalHome: false).complete()
 
         let second = AppEnvironment.bootstrap(home: t.home, defaults: t.defaults)
-        #expect(!SetupGate.raisedAtLaunch(
-            provisionalHome: false,
-            setupIsComplete: SetupCoordinator(persistence: second.persistence,
-                                              isProvisionalHome: false).isComplete))
+        #expect(
+            !SetupGate.raisedAtLaunch(
+                provisionalHome: false,
+                setupIsComplete: SetupCoordinator(
+                    persistence: second.persistence,
+                    isProvisionalHome: false
+                ).isComplete))
     }
 
     /// Back on the closing step must never be able to re-ask for a Home. After
@@ -82,9 +96,11 @@ struct SetupCompletionTests {
     /// mid-wizard one.
     @Test func backFromDoneCannotReturnToTheHomeStepOnACompletedVault() {
         let store = InMemoryPersistenceStore()
-        store.save(SetupDocument(completedAt: Date(),
-                                 setupVersion: SetupCoordinator.currentSetupVersion,
-                                 deferredSteps: [SetupStep.providers.rawValue]))
+        store.save(
+            SetupDocument(
+                completedAt: Date(),
+                setupVersion: SetupCoordinator.currentSetupVersion,
+                deferredSteps: [SetupStep.providers.rawValue]))
         let reseated = SetupCoordinator(persistence: store, isProvisionalHome: false)
         #expect(!reseated.steps.contains(.home))
         #expect(reseated.steps.count > 1, "otherwise Back has nowhere to go and this proves nothing")

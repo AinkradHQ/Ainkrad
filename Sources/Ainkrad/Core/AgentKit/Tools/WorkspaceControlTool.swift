@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/Tools/WorkspaceControlTool.swift
 import Foundation
-import AinkradHostRuntime
 
 /// Host-native tool that drives the workspace layer via `WorkspaceManager`.
 /// Scoped to the manager's existing verbs. `deleteWorkspace` is irreversible.
@@ -18,9 +18,9 @@ struct WorkspaceControlTool: AgentTool {
 
     let name = "workspace_control"
     let description = """
-    Rearrange the workspace: create/delete workspaces, move or duplicate an open \
-    app between workspaces, switch the active workspace, and open an app.
-    """
+        Rearrange the workspace: create/delete workspaces, move or duplicate an open \
+        app between workspaces, switch the active workspace, and open an app.
+        """
     let permission: ToolPermissionClass = .write
 
     var parametersSchema: JSONValue {
@@ -38,20 +38,32 @@ struct WorkspaceControlTool: AgentTool {
                     ]),
                     "description": .string(
                         "The workspace operation to perform. Use openApp to bring an app "
-                        + "on screen; other tools run in the background and do NOT open one."),
+                            + "on screen; other tools run in the background and do NOT open one."),
                 ]),
-                "id": .object(["type": .string("string"),
-                               "description": .string("Workspace UUID (deleteWorkspace, switchTo).")]),
-                "index": .object(["type": .string("integer"),
-                                  "description": .string("0-based workspace index (switchToWorkspace).")]),
-                "blockID": .object(["type": .string("string"),
-                                    "description": .string("Open app block UUID (moveApp).")]),
-                "from": .object(["type": .string("string"),
-                                 "description": .string("Source workspace UUID (moveApp).")]),
-                "to": .object(["type": .string("string"),
-                               "description": .string("Destination workspace UUID (moveApp, duplicateApp).")]),
-                "appID": .object(["type": .string("string"),
-                                  "description": .string("App id to duplicate (duplicateApp) or open (openApp).")]),
+                "id": .object([
+                    "type": .string("string"),
+                    "description": .string("Workspace UUID (deleteWorkspace, switchTo)."),
+                ]),
+                "index": .object([
+                    "type": .string("integer"),
+                    "description": .string("0-based workspace index (switchToWorkspace)."),
+                ]),
+                "blockID": .object([
+                    "type": .string("string"),
+                    "description": .string("Open app block UUID (moveApp)."),
+                ]),
+                "from": .object([
+                    "type": .string("string"),
+                    "description": .string("Source workspace UUID (moveApp)."),
+                ]),
+                "to": .object([
+                    "type": .string("string"),
+                    "description": .string("Destination workspace UUID (moveApp, duplicateApp)."),
+                ]),
+                "appID": .object([
+                    "type": .string("string"),
+                    "description": .string("App id to duplicate (duplicateApp) or open (openApp)."),
+                ]),
             ]),
             "required": .array([.string("action")]),
         ])
@@ -110,16 +122,18 @@ struct WorkspaceControlTool: AgentTool {
                 throw ToolError.message("openApp requires \"appID\".")
             }
             guard let launchHub else {
-                return ToolResult(content: "Cannot open \(appID): no launch hub is available.",
-                                  isError: true)
+                return ToolResult(
+                    content: "Cannot open \(appID): no launch hub is available.",
+                    isError: true)
             }
             // Reported rather than silently no-oped: `requestOpen` on an unknown
             // or disabled app does nothing at all, and the model would otherwise
             // tell the user the app is open when no window ever appeared.
             switch launchHub.availability(of: appID) {
             case .unknown:
-                return ToolResult(content: "Cannot open \(appID): no app with that id is installed.",
-                                  isError: true)
+                return ToolResult(
+                    content: "Cannot open \(appID): no app with that id is installed.",
+                    isError: true)
             case .disabled:
                 return ToolResult(content: "Cannot open \(appID): the app is disabled.", isError: true)
             case .available:

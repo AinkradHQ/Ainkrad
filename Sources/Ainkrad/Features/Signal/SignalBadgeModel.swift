@@ -1,7 +1,7 @@
-import Foundation
-import Observation
 import AinkradHostRuntime
 import AinkradSignal
+import Foundation
+import Observation
 
 /// Per-app unread counts for launcher and dock badges.
 ///

@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("CustomCommandPaths")
@@ -9,12 +10,16 @@ struct CustomCommandPathsTests {
     }
 
     @Test func enumeratesMarkdownFilesWithScope() throws {
-        let user = temp(); let project = temp()
-        defer { try? FileManager.default.removeItem(at: user); try? FileManager.default.removeItem(at: project) }
+        let user = temp()
+        let project = temp()
+        defer {
+            try? FileManager.default.removeItem(at: user)
+            try? FileManager.default.removeItem(at: project)
+        }
         try FileManager.default.createDirectory(at: user, withIntermediateDirectories: true)
         try FileManager.default.createDirectory(at: project, withIntermediateDirectories: true)
         try "a".write(to: user.appendingPathComponent("alpha.md"), atomically: true, encoding: .utf8)
-        try "b".write(to: user.appendingPathComponent("notes.txt"), atomically: true, encoding: .utf8)   // ignored
+        try "b".write(to: user.appendingPathComponent("notes.txt"), atomically: true, encoding: .utf8)  // ignored
         try "c".write(to: project.appendingPathComponent("beta.md"), atomically: true, encoding: .utf8)
 
         let paths = CustomCommandPaths(userRoot: user, projectRoot: project)
@@ -26,7 +31,7 @@ struct CustomCommandPathsTests {
 
     @Test func nilProjectRootYieldsUserOnly() {
         let paths = CustomCommandPaths(userRoot: temp(), projectRoot: nil)
-        #expect(paths.commandFiles().isEmpty)   // dir does not exist -> empty, never crashes
+        #expect(paths.commandFiles().isEmpty)  // dir does not exist -> empty, never crashes
     }
 
     @Test func projectRootIsDotAinkradCommands() {

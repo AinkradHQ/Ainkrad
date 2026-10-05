@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("MemoryUIViewModel")
 @MainActor
@@ -23,7 +24,8 @@ struct MemoryUIViewModelTests {
     }
 
     @Test func saveWritesLogsAsEditAndReindexes() throws {
-        let (vm, root) = try make(); defer { try? FileManager.default.removeItem(at: root) }
+        let (vm, root) = try make()
+        defer { try? FileManager.default.removeItem(at: root) }
         vm.setDraft("the user prefers dark mode", for: .user)
         vm.save(.user)
 
@@ -35,13 +37,15 @@ struct MemoryUIViewModelTests {
     }
 
     @Test func saveIsNoOpWhenDraftUnchanged() throws {
-        let (vm, root) = try make(); defer { try? FileManager.default.removeItem(at: root) }
-        vm.save(.memory)   // draft == disk content ("") — nothing to persist
+        let (vm, root) = try make()
+        defer { try? FileManager.default.removeItem(at: root) }
+        vm.save(.memory)  // draft == disk content ("") — nothing to persist
         #expect(vm.logEntries.isEmpty)
     }
 
     @Test func hasUnsavedChangesTracksDraftVsDisk() throws {
-        let (vm, root) = try make(); defer { try? FileManager.default.removeItem(at: root) }
+        let (vm, root) = try make()
+        defer { try? FileManager.default.removeItem(at: root) }
         #expect(vm.hasUnsavedChanges(.memory) == false)
         vm.setDraft("a new fact", for: .memory)
         #expect(vm.hasUnsavedChanges(.memory) == true)
@@ -50,19 +54,20 @@ struct MemoryUIViewModelTests {
     }
 
     @Test func undoRestoresPriorSnapshotAndRefreshesDrafts() throws {
-        let (vm, root) = try make(); defer { try? FileManager.default.removeItem(at: root) }
+        let (vm, root) = try make()
+        defer { try? FileManager.default.removeItem(at: root) }
         vm.setDraft("first edit", for: .agents)
         vm.save(.agents)
         vm.setDraft("second edit", for: .agents)
         vm.save(.agents)
         #expect(vm.logEntries.count == 2)
 
-        let latest = vm.logEntries.first! // entries() sorts newest-first
+        let latest = vm.logEntries.first!  // entries() sorts newest-first
         #expect(latest.addedText == "second edit")
         vm.undo(latest.id)
 
         #expect(vm.service.store.read(.agents) == "first edit")
-        #expect(vm.draft(for: .agents) == "first edit")   // refreshed, not stale
+        #expect(vm.draft(for: .agents) == "first edit")  // refreshed, not stale
         #expect(vm.logEntries.count == 1)
     }
 }

@@ -1,7 +1,7 @@
-import Foundation
-import CryptoKit
 import AinkradAppKit
 import AinkradHostRuntime
+import CryptoKit
+import Foundation
 
 enum AppStoreError: Error, Equatable {
     case download(String)
@@ -33,20 +33,27 @@ final class PluginInstaller {
     // actor boundary is safe (same pattern as `CatalogService.source`).
     private nonisolated(unsafe) let loadBundle: (URL) -> Result<RegisteredApp, PluginRejection>
 
-    init(http: HTTPClient, unzipper: Unzipper, pluginsDir: URL, pluginDataDir: URL,
-         retainedDataDir: URL, persistence: PersistenceStore, registry: BuiltInAppRegistry,
-         loadBundle: @escaping (URL) -> Result<RegisteredApp, PluginRejection>) {
-        self.http = http; self.unzipper = unzipper
-        self.pluginsDir = pluginsDir; self.pluginDataDir = pluginDataDir
+    init(
+        http: HTTPClient, unzipper: Unzipper, pluginsDir: URL, pluginDataDir: URL,
+        retainedDataDir: URL, persistence: PersistenceStore, registry: BuiltInAppRegistry,
+        loadBundle: @escaping (URL) -> Result<RegisteredApp, PluginRejection>
+    ) {
+        self.http = http
+        self.unzipper = unzipper
+        self.pluginsDir = pluginsDir
+        self.pluginDataDir = pluginDataDir
         self.retainedDataDir = retainedDataDir
-        self.persistence = persistence; self.registry = registry; self.loadBundle = loadBundle
+        self.persistence = persistence
+        self.registry = registry
+        self.loadBundle = loadBundle
     }
 
     func install(_ entry: CatalogEntry) async throws {
         // 1. Download.
         let data: Data
-        do { data = try await http.get(entry.downloadURL) }
-        catch { throw AppStoreError.download(String(describing: error)) }
+        do { data = try await http.get(entry.downloadURL) } catch {
+            throw AppStoreError.download(String(describing: error))
+        }
 
         // 2. Compute integrity digest (compared via StorePolicy in step 4,
         //    alongside the other store-review checks).
@@ -57,8 +64,10 @@ final class PluginInstaller {
         defer { try? FileManager.default.removeItem(at: work) }
         let zip = work.appendingPathComponent("dl.zip")
         try FileManager.default.createDirectory(at: work, withIntermediateDirectories: true)
-        do { try data.write(to: zip); try unzipper.unzip(zip, to: work.appendingPathComponent("x")) }
-        catch { throw AppStoreError.unpack(String(describing: error)) }
+        do {
+            try data.write(to: zip)
+            try unzipper.unzip(zip, to: work.appendingPathComponent("x"))
+        } catch { throw AppStoreError.unpack(String(describing: error)) }
 
         // 4. Locate the bundle root and validate it (metadata + appID matches
         //    entry). `DittoUnzipper` (used both here and by the tooling that
@@ -70,17 +79,24 @@ final class PluginInstaller {
         let unpacked = work.appendingPathComponent("x")
         func readMetadata(at url: URL) -> (PluginBundleMetadata, [String: Any])? {
             guard let info = Bundle(url: url)?.infoDictionary,
-                  case .success(let m) = PluginBundleMetadata.parse(infoDictionary: info) else { return nil }
+                case .success(let m) = PluginBundleMetadata.parse(infoDictionary: info)
+            else { return nil }
             return (m, info)
         }
         let bundleURL: URL
         let metadata: PluginBundleMetadata
         let infoDict: [String: Any]
         if let (m, info) = readMetadata(at: unpacked) {
-            bundleURL = unpacked; metadata = m; infoDict = info
-        } else if let child = (try? FileManager.default.contentsOfDirectory(at: unpacked, includingPropertiesForKeys: nil))?
-            .first(where: { $0.pathExtension == "bundle" }), let (m, info) = readMetadata(at: child) {
-            bundleURL = child; metadata = m; infoDict = info
+            bundleURL = unpacked
+            metadata = m
+            infoDict = info
+        } else if let child =
+            (try? FileManager.default.contentsOfDirectory(at: unpacked, includingPropertiesForKeys: nil))?
+            .first(where: { $0.pathExtension == "bundle" }), let (m, info) = readMetadata(at: child)
+        {
+            bundleURL = child
+            metadata = m
+            infoDict = info
         } else {
             throw AppStoreError.invalidBundle("no readable .bundle in archive")
         }
@@ -92,7 +108,8 @@ final class PluginInstaller {
             metadata: metadata, infoDictionary: infoDict,
             author: entry.author, description: entry.description, iconSymbol: entry.icon,
             declaredSHA256: entry.sha256, computedSHA256: digest)
-        var issues = StorePolicy.check(manifest: manifest, minSupported: GenerationSupport.minSupported, current: GenerationSupport.current)
+        var issues = StorePolicy.check(
+            manifest: manifest, minSupported: GenerationSupport.minSupported, current: GenerationSupport.current)
         // Grandfather legacy catalog entries published before store-listing
         // completeness existed: an entry whose manifest carried no `author` at
         // all (`author == nil`) predates the author/description requirement, so
@@ -121,8 +138,11 @@ final class PluginInstaller {
 
         // 7. Register live (best-effort — install succeeds even if a relaunch is
         //    needed to load; the files + state are already committed).
-        if case .success(let app) = loadBundle(dest) { registry.register(app) }
-        else { Log.appStore.error("Installed \(entry.appID, privacy: .public) but live-load failed; effective next launch") }
+        if case .success(let app) = loadBundle(dest) {
+            registry.register(app)
+        } else {
+            Log.appStore.error("Installed \(entry.appID, privacy: .public) but live-load failed; effective next launch")
+        }
     }
 
     /// Installs only if `entry.version` is newer than the installed version.
@@ -165,7 +185,9 @@ final class PluginInstaller {
         do {
             try FileManager.default.moveItem(at: retained, to: live)
         } catch {
-            Log.appStore.error("Failed to move retained data for \(appID, privacy: .public) into \(live.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            Log.appStore.error(
+                "Failed to move retained data for \(appID, privacy: .public) into \(live.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
+            )
         }
     }
 
@@ -185,7 +207,9 @@ final class PluginInstaller {
         do {
             try FileManager.default.moveItem(at: live, to: retained)
         } catch {
-            Log.appStore.error("Failed to move live data for \(appID, privacy: .public) into retained storage: \(error.localizedDescription, privacy: .public)")
+            Log.appStore.error(
+                "Failed to move live data for \(appID, privacy: .public) into retained storage: \(error.localizedDescription, privacy: .public)"
+            )
         }
     }
 }
@@ -197,7 +221,8 @@ enum PluginVersion {
         let a = lhs.split(separator: ".").map { Int($0) ?? 0 }
         let b = rhs.split(separator: ".").map { Int($0) ?? 0 }
         for i in 0..<max(a.count, b.count) {
-            let x = i < a.count ? a[i] : 0, y = i < b.count ? b[i] : 0
+            let x = i < a.count ? a[i] : 0
+            let y = i < b.count ? b[i] : 0
             if x != y { return x > y }
         }
         return false

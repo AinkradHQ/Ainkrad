@@ -1,7 +1,8 @@
-import Testing
-import SwiftUI
-@testable import Ainkrad
 import AinkradAppKitContract
+import SwiftUI
+import Testing
+
+@testable import Ainkrad
 
 /// Pins the Task 7 decomposition — as it stands AFTER review.
 ///
@@ -79,10 +80,11 @@ struct SettingsSoundVoiceFieldsTests {
 
     @Test("a toggle round-trips through its real store")
     func toggleRoundTrips() throws {
-        let field = try #require(voiceFields.first {
-            if case .toggle = $0.kind { return true }
-            return false
-        })
+        let field = try #require(
+            voiceFields.first {
+                if case .toggle = $0.kind { return true }
+                return false
+            })
         guard case .toggle(let binding) = field.kind else { return }
         let original = binding.wrappedValue
         binding.wrappedValue = !original
@@ -94,7 +96,8 @@ struct SettingsSoundVoiceFieldsTests {
     func resetRestoresDefault() {
         for field in valueFields {
             field.reset?()
-            let why = "\(field.path) still reads as modified after reset — its declared default "
+            let why =
+                "\(field.path) still reads as modified after reset — its declared default "
                 + "probably disagrees with the store's real default"
             #expect(field.isModified() == false, "\(why)")
         }
@@ -107,9 +110,11 @@ struct SettingsSoundVoiceFieldsTests {
     @Test("every voice control survived the conversion")
     func voiceControlsSurvived() {
         let labels = Set(voiceFields.map(\.label))
-        for expected in ["Backend", "Push-to-talk mode", "Auto-send after dictation",
-                         "Upload audio to provider", "Connection", "Model", "Locale",
-                         "Push-to-talk hotkey"] {
+        for expected in [
+            "Backend", "Push-to-talk mode", "Auto-send after dictation",
+            "Upload audio to provider", "Connection", "Model", "Locale",
+            "Push-to-talk hotkey",
+        ] {
             #expect(labels.contains(expected), "\(expected) became unreachable")
         }
     }
@@ -121,8 +126,9 @@ struct SettingsSoundVoiceFieldsTests {
     func soundIsOneRowPerCue() throws {
         let environment = AppEnvironment.preview()
         environment.generalSettingsStore.setSoundEnabled(true)
-        let page = try #require(HostSettingsCatalog.build(environment: environment).pages
-            .first { $0.path == SettingsPath(["workspace", "soundAndVoice"]) })
+        let page = try #require(
+            HostSettingsCatalog.build(environment: environment).pages
+                .first { $0.path == SettingsPath(["workspace", "soundAndVoice"]) })
         let sound = try #require(page.groups.first { $0.title == "Sound" })
         #expect(sound.fields.count == 2 + UISound.allCases.count)
         #expect(Array(sound.fields.map(\.label).prefix(2)) == ["Sound effects", "Volume"])
@@ -139,8 +145,9 @@ struct SettingsSoundVoiceFieldsTests {
     func affirmativeTogglesDefaultOff() {
         for label in ["Auto-send after dictation", "Upload audio to provider"] {
             let field = voiceFields.first { $0.label == label }
-            #expect(field?.defaultDescription == "Off",
-                    "\(label) must declare Off — the store default is false")
+            #expect(
+                field?.defaultDescription == "Off",
+                "\(label) must declare Off — the store default is false")
         }
     }
 
@@ -150,7 +157,8 @@ struct SettingsSoundVoiceFieldsTests {
     func voiceTextFieldsAreNotSecure() {
         for label in ["Model", "Locale"] {
             let field = voiceFields.first { $0.label == label }
-            if case .text = field?.kind {} else {
+            if case .text = field?.kind {
+            } else {
                 Issue.record("\(label) should be .text")
             }
         }

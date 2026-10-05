@@ -36,7 +36,10 @@ final class CrashLogWriter: @unchecked Sendable {
     }
 
     // Internal initializer for testing with a custom appendBytes implementation
-    internal init(directory: URL, maxBytes: Int = 1_048_576, fileManager: FileManager = .default, appendBytes: @escaping (Data, URL) throws -> Void) {
+    internal init(
+        directory: URL, maxBytes: Int = 1_048_576, fileManager: FileManager = .default,
+        appendBytes: @escaping (Data, URL) throws -> Void
+    ) {
         self.directory = directory
         self.maxBytes = maxBytes
         self.fileManager = fileManager

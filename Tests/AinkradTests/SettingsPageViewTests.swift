@@ -1,7 +1,7 @@
-import Testing
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitContract
+import SwiftUI
+import Testing
 
 @Suite("SettingsPageView")
 @MainActor
@@ -11,10 +11,13 @@ struct SettingsPageViewTests {
         return SettingsPage(
             path: root, title: "Test", icon: "gear", group: .workspace, order: 0,
             groups: (0..<groupCount).map { i in
-                SettingsGroup(path: root.appending("g\(i)"), title: "Group \(i)", fields: [
-                    SettingsField(path: root.appending("g\(i)").appending("f"),
-                                  label: "Field", kind: .toggle(.constant(false)))
-                ])
+                SettingsGroup(
+                    path: root.appending("g\(i)"), title: "Group \(i)",
+                    fields: [
+                        SettingsField(
+                            path: root.appending("g\(i)").appending("f"),
+                            label: "Field", kind: .toggle(.constant(false)))
+                    ])
             })
     }
 
@@ -53,12 +56,15 @@ struct SettingsPageViewTests {
     @Test("a group is pane-only when every field in it is a pane")
     func paneOnlyDetection() {
         let g = SettingsPath(["p", "g"])
-        #expect(SettingsGroupView.isPaneOnly(
-            SettingsGroup(path: g, title: "G", fields: [pane(g.appending("a")), pane(g.appending("b"))])))
-        #expect(!SettingsGroupView.isPaneOnly(
-            SettingsGroup(path: g, title: "G", fields: [pane(g.appending("a")), control(g.appending("b"))])))
-        #expect(!SettingsGroupView.isPaneOnly(
-            SettingsGroup(path: g, title: "G", fields: [control(g.appending("a"))])))
+        #expect(
+            SettingsGroupView.isPaneOnly(
+                SettingsGroup(path: g, title: "G", fields: [pane(g.appending("a")), pane(g.appending("b"))])))
+        #expect(
+            !SettingsGroupView.isPaneOnly(
+                SettingsGroup(path: g, title: "G", fields: [pane(g.appending("a")), control(g.appending("b"))])))
+        #expect(
+            !SettingsGroupView.isPaneOnly(
+                SettingsGroup(path: g, title: "G", fields: [control(g.appending("a"))])))
         // An empty group is not "pane-only" — suppressing its header would
         // leave nothing at all on screen for it.
         #expect(!SettingsGroupView.isPaneOnly(SettingsGroup(path: g, title: "G", fields: [])))
@@ -69,32 +75,45 @@ struct SettingsPageViewTests {
         let g = SettingsPath(["p", "g"])
         // Pane-only + always expanded: the pane draws its own heading, so the
         // catalog's would be the second one on the page.
-        #expect(!SettingsGroupView.showsHeader(for:
-            SettingsGroup(path: g, title: "G", fields: [pane(g.appending("a"))])))
+        #expect(
+            !SettingsGroupView.showsHeader(
+                for:
+                    SettingsGroup(path: g, title: "G", fields: [pane(g.appending("a"))])))
 
         // Collapsible: the header IS the disclosure control — never suppressed,
         // or the group could not be opened.
-        #expect(SettingsGroupView.showsHeader(for:
-            SettingsGroup(path: g, title: "G", disclosure: .collapsedByDefault,
-                          fields: [pane(g.appending("a"))])))
+        #expect(
+            SettingsGroupView.showsHeader(
+                for:
+                    SettingsGroup(
+                        path: g, title: "G", disclosure: .collapsedByDefault,
+                        fields: [pane(g.appending("a"))])))
 
         // Any real control in the group means real rows, which have no heading
         // of their own and need the group's.
-        #expect(SettingsGroupView.showsHeader(for:
-            SettingsGroup(path: g, title: "G", fields: [control(g.appending("a"))])))
-        #expect(SettingsGroupView.showsHeader(for:
-            SettingsGroup(path: g, title: "G",
-                          fields: [pane(g.appending("a")), control(g.appending("b"))])))
+        #expect(
+            SettingsGroupView.showsHeader(
+                for:
+                    SettingsGroup(path: g, title: "G", fields: [control(g.appending("a"))])))
+        #expect(
+            SettingsGroupView.showsHeader(
+                for:
+                    SettingsGroup(
+                        path: g, title: "G",
+                        fields: [pane(g.appending("a")), control(g.appending("b"))])))
     }
 
     @Test("an always-expanded group composes AinkradSectionFrame")
     func alwaysGroupUsesSectionFrame() {
         let root = SettingsPath(["test", "page"])
-        let group = SettingsGroup(path: root.appending("g"), title: "Startup",
-                                  disclosure: .always, fields: [
-            SettingsField(path: root.appending("g").appending("f"),
-                          label: "Field", kind: .toggle(.constant(false)))
-        ])
+        let group = SettingsGroup(
+            path: root.appending("g"), title: "Startup",
+            disclosure: .always,
+            fields: [
+                SettingsField(
+                    path: root.appending("g").appending("f"),
+                    label: "Field", kind: .toggle(.constant(false)))
+            ])
         let described = String(describing: SettingsGroupView(group: group, layout: .stacked).body)
         #expect(described.contains("AinkradSectionFrame"))
     }
@@ -102,11 +121,14 @@ struct SettingsPageViewTests {
     @Test("a collapsed-by-default group composes AinkradDisclosureGroup")
     func collapsibleGroupUsesDisclosure() {
         let root = SettingsPath(["test", "page"])
-        let group = SettingsGroup(path: root.appending("g"), title: "Advanced",
-                                  disclosure: .collapsedByDefault, fields: [
-            SettingsField(path: root.appending("g").appending("f"),
-                          label: "Field", kind: .toggle(.constant(false)))
-        ])
+        let group = SettingsGroup(
+            path: root.appending("g"), title: "Advanced",
+            disclosure: .collapsedByDefault,
+            fields: [
+                SettingsField(
+                    path: root.appending("g").appending("f"),
+                    label: "Field", kind: .toggle(.constant(false)))
+            ])
         let described = String(describing: SettingsGroupView(group: group, layout: .stacked).body)
         #expect(described.contains("AinkradDisclosureGroup"))
     }
@@ -115,12 +137,14 @@ struct SettingsPageViewTests {
     func mustExpandForHighlightedPath() {
         let g = SettingsPath(["p", "g"])
         let target = g.appending("f")
-        let group = SettingsGroup(path: g, title: "G", disclosure: .collapsedByDefault,
-                                  fields: [control(target)])
+        let group = SettingsGroup(
+            path: g, title: "G", disclosure: .collapsedByDefault,
+            fields: [control(target)])
         #expect(SettingsGroupView.mustExpand(group: group, highlightedPath: target, matchedPaths: nil))
         // A highlight for a path outside the group must not force it open.
-        #expect(!SettingsGroupView.mustExpand(
-            group: group, highlightedPath: SettingsPath(["other", "path"]), matchedPaths: nil))
+        #expect(
+            !SettingsGroupView.mustExpand(
+                group: group, highlightedPath: SettingsPath(["other", "path"]), matchedPaths: nil))
         // No highlight, no filter: stays closed.
         #expect(!SettingsGroupView.mustExpand(group: group, highlightedPath: nil, matchedPaths: nil))
     }
@@ -129,12 +153,14 @@ struct SettingsPageViewTests {
     func mustExpandForFilterMatch() {
         let g = SettingsPath(["p", "g"])
         let target = g.appending("f")
-        let group = SettingsGroup(path: g, title: "G", disclosure: .collapsedByDefault,
-                                  fields: [control(target)])
+        let group = SettingsGroup(
+            path: g, title: "G", disclosure: .collapsedByDefault,
+            fields: [control(target)])
         #expect(SettingsGroupView.mustExpand(group: group, highlightedPath: nil, matchedPaths: [target]))
         // A match elsewhere doesn't force this group open.
-        #expect(!SettingsGroupView.mustExpand(
-            group: group, highlightedPath: nil, matchedPaths: [SettingsPath(["other", "path"])]))
+        #expect(
+            !SettingsGroupView.mustExpand(
+                group: group, highlightedPath: nil, matchedPaths: [SettingsPath(["other", "path"])]))
         // `matchedPaths == nil` means no active filter — never forces open on that basis alone.
         #expect(!SettingsGroupView.mustExpand(group: group, highlightedPath: nil, matchedPaths: nil))
     }

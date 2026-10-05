@@ -1,7 +1,7 @@
-import SwiftUI
-import AppKit
 import AinkradAppKit
 import AinkradHostRuntime
+import AppKit
+import SwiftUI
 
 /// The delete-workspace confirmation, in the app's HUD language: a hazard
 /// emblem inside targeting brackets, an energy-seam divider, and a glowing
@@ -30,13 +30,15 @@ struct DeleteWorkspaceConfirmation: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 22)
 
-            Text("\(appCount) app\(appCount == 1 ? "" : "s") still running here — \(appCount == 1 ? "its session" : "their sessions") will end.")
-                .font(AinkradFont.display(12))
-                .foregroundStyle(tokens.foreground.opacity(0.62))
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 26)
-                .padding(.top, 7)
+            Text(
+                "\(appCount) app\(appCount == 1 ? "" : "s") still running here — \(appCount == 1 ? "its session" : "their sessions") will end."
+            )
+            .font(AinkradFont.display(12))
+            .foregroundStyle(tokens.foreground.opacity(0.62))
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, 26)
+            .padding(.top, 7)
 
             LinearGradient(colors: [.clear, danger.opacity(0.4), .clear], startPoint: .leading, endPoint: .trailing)
                 .frame(height: 1)
@@ -55,8 +57,9 @@ struct DeleteWorkspaceConfirmation: View {
         .overlay(
             RoundedRectangle(cornerRadius: 14)
                 .strokeBorder(
-                    LinearGradient(colors: [danger.opacity(0.55), tokens.accentPrimary.opacity(0.2)],
-                                   startPoint: .top, endPoint: .bottom),
+                    LinearGradient(
+                        colors: [danger.opacity(0.55), tokens.accentPrimary.opacity(0.2)],
+                        startPoint: .top, endPoint: .bottom),
                     lineWidth: 1
                 )
         )
@@ -92,7 +95,9 @@ struct DeleteWorkspaceConfirmation: View {
                 .frame(width: 108, height: 32)
                 .background(tokens.surfaceElevated.opacity(cancelHover ? 0.95 : 0.75))
                 .clipShape(RoundedRectangle(cornerRadius: 8))
-                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(tokens.accentPrimary.opacity(cancelHover ? 0.5 : 0.28), lineWidth: 1))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8).strokeBorder(
+                        tokens.accentPrimary.opacity(cancelHover ? 0.5 : 0.28), lineWidth: 1))
         }
         .buttonStyle(.plain)
         .onHover { cancelHover = $0 }

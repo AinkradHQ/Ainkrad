@@ -3,7 +3,9 @@ import Foundation
 /// How hard a turn is judged to be — drives the minimum `ModelTier` the Model Router
 /// (Task 13) requires when selecting a candidate model.
 enum Difficulty: Int, Comparable, Sendable {
-    case trivial = 0, moderate = 1, hard = 2
+    case trivial = 0
+    case moderate = 1
+    case hard = 2
     static func < (l: Difficulty, r: Difficulty) -> Bool { l.rawValue < r.rawValue }
 }
 
@@ -21,8 +23,10 @@ struct ClassifierResult: Equatable, Sendable {
 /// classifier model (injected as an async closure in `ModelRouter`, Task 13) is unavailable,
 /// not configured, or errors.
 enum DifficultyClassifier {
-    private static let reasoningKeywords = ["prove", "refactor", "design", "architect", "debug",
-                                            "optimize", "algorithm", "why", "explain", "analyze"]
+    private static let reasoningKeywords = [
+        "prove", "refactor", "design", "architect", "debug",
+        "optimize", "algorithm", "why", "explain", "analyze",
+    ]
 
     /// Pure heuristic scoring over a `TaskSignal` + the last user message: length, reasoning
     /// keywords, and declared size/tool-use features. Never blocks, never throws — this is
@@ -54,8 +58,10 @@ enum DifficultyClassifier {
     /// Whether the router should escalate a task up a tier: low classifier confidence,
     /// a tool/parse failure, or a self-critique quality miss — bounded by `maxAttempts` so
     /// escalation can never loop unbounded.
-    static func shouldEscalate(confidence: Double, threshold: Double, toolFailed: Bool,
-                               selfCritiqueFailed: Bool, attempt: Int, maxAttempts: Int) -> Bool {
+    static func shouldEscalate(
+        confidence: Double, threshold: Double, toolFailed: Bool,
+        selfCritiqueFailed: Bool, attempt: Int, maxAttempts: Int
+    ) -> Bool {
         guard attempt < maxAttempts else { return false }
         return confidence < threshold || toolFailed || selfCritiqueFailed
     }

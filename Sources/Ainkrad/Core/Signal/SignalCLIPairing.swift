@@ -1,7 +1,7 @@
-import Foundation
 import AinkradAppKit
-import AinkradSignal
 import AinkradHostRuntime
+import AinkradSignal
+import Foundation
 
 /// Gives `ainkrad notify` a credential, so the CLI works without the user
 /// pairing anything by hand.
@@ -43,8 +43,10 @@ enum SignalCLIPairing {
     /// unpaired — where it reports `noToken` on stderr and exits 0 — rather
     /// than propagating.
     @discardableResult
-    static func ensurePaired(registry: SignalTokenRegistry,
-                             configURL url: URL = SignalCLIPairing.configURL()) -> Bool {
+    static func ensurePaired(
+        registry: SignalTokenRegistry,
+        configURL url: URL = SignalCLIPairing.configURL()
+    ) -> Bool {
         if let existing = readToken(at: url), registry.source(for: existing) != nil {
             return false
         }
@@ -55,14 +57,16 @@ enum SignalCLIPairing {
 
     private static func readToken(at url: URL) -> String? {
         guard let data = try? Data(contentsOf: url),
-              let config = try? JSONDecoder().decode([String: String].self, from: data),
-              let token = config["token"], !token.isEmpty else { return nil }
+            let config = try? JSONDecoder().decode([String: String].self, from: data),
+            let token = config["token"], !token.isEmpty
+        else { return nil }
         return token
     }
 
     private static func write(token: String, to url: URL) {
-        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
-                                                 withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true)
         guard let data = try? JSONEncoder().encode(["token": token]) else { return }
         // Written with 0600 in the ATTRIBUTES, not chmod'ed afterwards: a file
         // that exists world-readable for even an instant has already leaked
@@ -70,9 +74,12 @@ enum SignalCLIPairing {
         do {
             try data.write(to: url, options: .atomic)
         } catch {
-            Log.settings.error("Failed to write \(data.count, privacy: .public) bytes to \(url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            Log.settings.error(
+                "Failed to write \(data.count, privacy: .public) bytes to \(url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
+            )
         }
-        try? FileManager.default.setAttributes([.posixPermissions: 0o600],
-                                              ofItemAtPath: url.path)
+        try? FileManager.default.setAttributes(
+            [.posixPermissions: 0o600],
+            ofItemAtPath: url.path)
     }
 }

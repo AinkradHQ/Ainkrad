@@ -1,14 +1,16 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("Setup providers step")
 @MainActor
 struct SetupProvidersStepTests {
     private static func oauthToken(_ access: String) -> OAuthToken {
-        OAuthToken(accessToken: access, refreshToken: "refresh-secret-value",
-                   expiresAt: Date().addingTimeInterval(3600), scopes: ["user:inference"])
+        OAuthToken(
+            accessToken: access, refreshToken: "refresh-secret-value",
+            expiresAt: Date().addingTimeInterval(3600), scopes: ["user:inference"])
     }
 
     // MARK: - Connecting more than one provider
@@ -38,8 +40,9 @@ struct SetupProvidersStepTests {
             connections: env.connectionStore, agentConfig: env.agentConfigStore, verify: ok)
 
         let presets = Set(env.connectionStore.connections.map(\.presetID))
-        #expect(presets == ["openrouter", "openai"],
-                "both connections must survive; the step lists them from here")
+        #expect(
+            presets == ["openrouter", "openai"],
+            "both connections must survive; the step lists them from here")
         #expect(env.connectionStore.connections.count == 2)
     }
 
@@ -69,8 +72,10 @@ struct SetupProvidersStepTests {
         // Verify-before-save: the failure left nothing behind, so the working
         // connection is still the only one — and the step is still satisfied.
         #expect(env.connectionStore.connections.count == 1)
-        #expect(SetupValidation.canAdvance(from: .providers,
-                                           values: ["isConnected": "true", "isDeferred": "false"]))
+        #expect(
+            SetupValidation.canAdvance(
+                from: .providers,
+                values: ["isConnected": "true", "isDeferred": "false"]))
     }
 
     @Test func averifiedConnectionIsSavedAndMadeActive() async {
@@ -104,7 +109,9 @@ struct SetupProvidersStepTests {
             baseURL: "https://example.invalid/v1",
             connections: env.connectionStore,
             agentConfig: env.agentConfigStore,
-            verify: { _, _, _ in ConnectionTestResult(ok: false, message: "HTTP 401", failure: .unauthorized(status: 401)) })
+            verify: { _, _, _ in
+                ConnectionTestResult(ok: false, message: "HTTP 401", failure: .unauthorized(status: 401))
+            })
 
         #expect(outcome == .failed(message: "HTTP 401", failure: .unauthorized(status: 401)))
         #expect(env.connectionStore.connections.isEmpty)
@@ -121,7 +128,9 @@ struct SetupProvidersStepTests {
             preset: ProviderPreset.preset(id: "openai"), token: secret,
             baseURL: "https://example.invalid/v1",
             connections: env.connectionStore, agentConfig: env.agentConfigStore,
-            verify: { _, _, _ in ConnectionTestResult(ok: false, message: "HTTP 401", failure: .unauthorized(status: 401)) })
+            verify: { _, _, _ in
+                ConnectionTestResult(ok: false, message: "HTTP 401", failure: .unauthorized(status: 401))
+            })
 
         if case .failed(let message, _) = outcome {
             #expect(!message.contains(secret))
@@ -144,7 +153,10 @@ struct SetupProvidersStepTests {
         let outcome = await SetupProviders.connect(
             preset: ollama, token: "", baseURL: ollama.defaultBaseURL,
             connections: env.connectionStore, agentConfig: env.agentConfigStore,
-            verify: { _, _, _ in probed = true; return ConnectionTestResult(ok: true, message: "Connected · 3 models") })
+            verify: { _, _, _ in
+                probed = true
+                return ConnectionTestResult(ok: true, message: "Connected · 3 models")
+            })
 
         #expect(probed)
         #expect(outcome == .connected(message: "Connected · 3 models"))
@@ -175,7 +187,9 @@ struct SetupProvidersStepTests {
             connections: env.connectionStore,
             agentConfig: env.agentConfigStore,
             oauth: env.oauthStore,
-            verify: { _, _, _ in ConnectionTestResult(ok: false, message: "HTTP 401", failure: .unauthorized(status: 401)) })
+            verify: { _, _, _ in
+                ConnectionTestResult(ok: false, message: "HTTP 401", failure: .unauthorized(status: 401))
+            })
 
         #expect(outcome == .failed(message: "HTTP 401", failure: .unauthorized(status: 401)))
         #expect(env.connectionStore.connections.isEmpty)
@@ -219,8 +233,9 @@ struct SetupProvidersStepTests {
         #expect(flow.awaitingPaste)
 
         // A paste that the controller rejected (bad code).
-        flow.attemptFailed(duringPaste: true, connections: env.connectionStore,
-                           agentConfig: env.agentConfigStore, oauth: env.oauthStore)
+        flow.attemptFailed(
+            duringPaste: true, connections: env.connectionStore,
+            agentConfig: env.agentConfigStore, oauth: env.oauthStore)
 
         // The paste field is still shown AND still has something to paste against.
         #expect(flow.awaitingPaste)
@@ -244,8 +259,9 @@ struct SetupProvidersStepTests {
         env.oauthStore.store(Self.oauthToken("oauth-secret-value"), for: created.id, source: .freshLogin)
         flow.needsPaste()
 
-        flow.attemptFailed(duringPaste: false, connections: env.connectionStore,
-                           agentConfig: env.agentConfigStore, oauth: env.oauthStore)
+        flow.attemptFailed(
+            duringPaste: false, connections: env.connectionStore,
+            agentConfig: env.agentConfigStore, oauth: env.oauthStore)
 
         #expect(!flow.awaitingPaste)
         #expect(flow.pending == nil)

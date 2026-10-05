@@ -1,8 +1,9 @@
-import Testing
-import Foundation
 import AinkradAppKit
-@testable import Ainkrad
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 @MainActor
 @Suite("RunTerminalTool")
@@ -46,7 +47,7 @@ struct RunTerminalToolTests {
 
     @Test("missing echo handler is a no-op (best effort)")
     func echoNoOp() async throws {
-        let hub = AgentActionRegistryHub()   // nothing registered
+        let hub = AgentActionRegistryHub()  // nothing registered
         let router = hostRouter()
         let tool = RunTerminalTool(actionHub: hub, router: router)
         let result = try await tool.execute(obj(["command": .string("echo ok")]))
@@ -133,9 +134,11 @@ struct RunTerminalToolRoutingTests {
         // is not used for background — the seatbelt backend must be selected.
         guard await SeatbeltBackend().isAvailable() else { return }  // guard-skip
         let ctx = makeContext(tier: .background)
-        let r = try await ctx.tool.execute(.object([
-            "command": .string("echo sandboxed"),
-            "working_dir": .string(NSTemporaryDirectory())]))
+        let r = try await ctx.tool.execute(
+            .object([
+                "command": .string("echo sandboxed"),
+                "working_dir": .string(NSTemporaryDirectory()),
+            ]))
         #expect(r.content.contains("sandboxed"))
     }
 

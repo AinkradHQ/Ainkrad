@@ -1,7 +1,7 @@
-import SwiftUI
-import AppKit
 import AinkradAppKit
 import AinkradHostRuntime
+import AppKit
+import SwiftUI
 
 /// The Sage Block's content: a transcript bound to the host's single
 /// `AgentSession`, a collapsible "thinking" disclosure, and a composer. Reads
@@ -103,7 +103,8 @@ struct SageRootView: View {
                 )
                 .transition(reduceMotion ? .identity : .move(edge: .bottom).combined(with: .opacity))
             } else if session.state == .idle,
-                      let plan = PlanTurnHeuristics.pendingPlan(in: session.messages) {
+                let plan = PlanTurnHeuristics.pendingPlan(in: session.messages)
+            {
                 PlanApprovalBar(
                     plan: plan,
                     tokens: tokens,
@@ -232,27 +233,32 @@ struct SageRootView: View {
                                     .id(index)
                                     .transition(reduceMotion ? .identity : .opacity.combined(with: .offset(y: 6)))
                             case .agentTurn(let id, let steps):
-                                AgentTurnTimelineView(steps: steps, tokens: tokens,
-                                                      typography: assistantTypography, reduceMotion: reduceMotion,
-                                                      toolStream: environment.toolStreamStore,
-                                                      scryStore: environment.scryStore,
-                                                      onOpenImage: { lightboxImage = $0 },
-                                                      onOpenVideo: { lightboxVideoURL = $0 })
-                                    .id(id)
-                                    .transition(reduceMotion ? .identity : .opacity.combined(with: .offset(y: 6)))
+                                AgentTurnTimelineView(
+                                    steps: steps, tokens: tokens,
+                                    typography: assistantTypography, reduceMotion: reduceMotion,
+                                    toolStream: environment.toolStreamStore,
+                                    scryStore: environment.scryStore,
+                                    onOpenImage: { lightboxImage = $0 },
+                                    onOpenVideo: { lightboxVideoURL = $0 }
+                                )
+                                .id(id)
+                                .transition(reduceMotion ? .identity : .opacity.combined(with: .offset(y: 6)))
                             }
                         }
 
                         if session.state == .thinking || session.state == .streaming
-                            || isCallingToolWithoutCard(session) {
-                            LiveStepView(streamingText: session.streamingText,
-                                         streamingBlocks: session.streamingBlocks,
-                                         streamingThinking: session.streamingThinking,
-                                         isStreaming: session.state == .streaming,
-                                         tokens: tokens, typography: assistantTypography,
-                                         reduceMotion: reduceMotion)
-                                .id("streaming")
-                                .transition(reduceMotion ? .identity : .opacity)
+                            || isCallingToolWithoutCard(session)
+                        {
+                            LiveStepView(
+                                streamingText: session.streamingText,
+                                streamingBlocks: session.streamingBlocks,
+                                streamingThinking: session.streamingThinking,
+                                isStreaming: session.state == .streaming,
+                                tokens: tokens, typography: assistantTypography,
+                                reduceMotion: reduceMotion
+                            )
+                            .id("streaming")
+                            .transition(reduceMotion ? .identity : .opacity)
                         }
 
                         if case .awaitingApproval(let pending) = session.state {
@@ -270,7 +276,8 @@ struct SageRootView: View {
                                     tokens: tokens,
                                     pendingApproval: true,
                                     fileDiff: pending.preview.fileDiff,
-                                    rejectedHunkIDs: Binding(get: { session.rejectedHunkIDs }, set: { session.setRejectedHunkIDs($0) })
+                                    rejectedHunkIDs: Binding(
+                                        get: { session.rejectedHunkIDs }, set: { session.setRejectedHunkIDs($0) })
                                 )
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             }
@@ -296,7 +303,9 @@ struct SageRootView: View {
             .scrollContentBackground(.hidden)
             .onChange(of: session.messages.count) { _, _ in
                 followTail = true
-                withAnimation(reduceMotion ? nil : AinkradMotion.present) { proxy.scrollTo("streaming", anchor: .bottom) }
+                withAnimation(reduceMotion ? nil : AinkradMotion.present) {
+                    proxy.scrollTo("streaming", anchor: .bottom)
+                }
             }
             .onChange(of: session.streamingBlocks.count) { _, _ in
                 // Blocks, not text: this now fires when a new block appears
@@ -380,7 +389,7 @@ struct SageRootView: View {
             Text(message)
                 .font(AinkradFont.mono(11))
                 .foregroundStyle(tokens.foreground.opacity(0.85))
-                .textSelection(.enabled)   // never truncated — an unreadable error is useless
+                .textSelection(.enabled)  // never truncated — an unreadable error is useless
             HStack {
                 Spacer()
                 ErrorRetryButton(tokens: tokens) { session.retryLastTurn() }

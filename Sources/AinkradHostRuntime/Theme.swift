@@ -51,12 +51,12 @@ public enum Theme: String, Codable, CaseIterable {
         }
         switch self {
         //                             aurora, embers, mist, fireflies, rays
-        case .neonBlue:     return SkyProfile(1.00, 0.90, 0.90, 1.00, 1.00)
-        case .cyberPurple:  return SkyProfile(1.25, 0.90, 0.80, 1.10, 1.00)
-        case .dracula:      return SkyProfile(1.20, 0.85, 0.85, 1.15, 1.00)
-        case .nord:         return SkyProfile(0.80, 0.70, 1.40, 0.70, 0.90)
-        case .tokyoNight:   return SkyProfile(1.10, 0.90, 1.10, 1.00, 1.00)
-        case .gruvbox:      return SkyProfile(0.70, 1.50, 1.00, 1.20, 1.30)
+        case .neonBlue: return SkyProfile(1.00, 0.90, 0.90, 1.00, 1.00)
+        case .cyberPurple: return SkyProfile(1.25, 0.90, 0.80, 1.10, 1.00)
+        case .dracula: return SkyProfile(1.20, 0.85, 0.85, 1.15, 1.00)
+        case .nord: return SkyProfile(0.80, 0.70, 1.40, 0.70, 0.90)
+        case .tokyoNight: return SkyProfile(1.10, 0.90, 1.10, 1.00, 1.00)
+        case .gruvbox: return SkyProfile(0.70, 1.50, 1.00, 1.20, 1.30)
         case .solarizedDark: return SkyProfile(0.90, 0.80, 1.20, 0.80, 1.00)
         }
     }
@@ -73,8 +73,10 @@ public struct SkyProfile: Equatable, Hashable, Sendable {
     public let fireflies: Double
     public let lightRays: Double
 
-    public init(_ aurora: Double, _ embers: Double, _ mist: Double,
-         _ fireflies: Double, _ lightRays: Double) {
+    public init(
+        _ aurora: Double, _ embers: Double, _ mist: Double,
+        _ fireflies: Double, _ lightRays: Double
+    ) {
         self.aurora = aurora
         self.embers = embers
         self.mist = mist

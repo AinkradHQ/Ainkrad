@@ -1,11 +1,14 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("SkillValidator")
 struct SkillValidatorTests {
-    private func skill(name: String = "ok-skill", body: String = "do things",
-                       desc: String = "does things") -> Skill {
+    private func skill(
+        name: String = "ok-skill", body: String = "do things",
+        desc: String = "does things"
+    ) -> Skill {
         Skill(name: name, description: desc, body: body, allowedTools: [], triggers: [], source: .local)
     }
 

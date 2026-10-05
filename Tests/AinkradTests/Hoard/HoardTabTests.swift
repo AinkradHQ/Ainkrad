@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @MainActor
@@ -127,7 +128,6 @@ struct HoardTabTests {
         tab.showIgnored = true
         #expect(tab.visibleEntries.count == 3)
     }
-
 
     // Reported 2026-08-02: launch on Desktop (correct), sidebar to Downloads,
     // sidebar back to Desktop — EMPTY pane. Sidebar Home, then sidebar Desktop

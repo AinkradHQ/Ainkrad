@@ -1,5 +1,5 @@
-import SwiftUI
 import Foundation
+import SwiftUI
 
 /// A workspace row's drop target: dragging another workspace row reorders the
 /// list; dropping an app dragged from the detail pane moves that app here.
@@ -11,8 +11,9 @@ struct WorkspaceRowDropDelegate: DropDelegate {
 
     func dropEntered(info: DropInfo) {
         guard let dragged = draggedWorkspace, dragged != target,
-              let from = manager.workspaces.firstIndex(where: { $0.id == dragged }),
-              let to = manager.workspaces.firstIndex(where: { $0.id == target }) else { return }
+            let from = manager.workspaces.firstIndex(where: { $0.id == dragged }),
+            let to = manager.workspaces.firstIndex(where: { $0.id == target })
+        else { return }
         manager.moveWorkspace(fromOffsets: IndexSet(integer: from), toOffset: to > from ? to + 1 : to)
     }
 

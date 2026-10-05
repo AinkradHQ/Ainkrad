@@ -42,15 +42,18 @@ public enum BundleAppIcon {
     ///   - currentBundleVersion: the running app's `CFBundleVersion`.
     ///   - matchesShippedIcon: whether `resolved` is byte-for-byte the icon the
     ///     bundle already ships as `AppIcon.icns`.
-    public static func decide(resolved: String,
-                              lastWritten: String?,
-                              lastWrittenBundleVersion: String? = nil,
-                              currentBundleVersion: String? = nil,
-                              matchesShippedIcon: Bool) -> BundleAppIconDecision {
+    public static func decide(
+        resolved: String,
+        lastWritten: String?,
+        lastWrittenBundleVersion: String? = nil,
+        currentBundleVersion: String? = nil,
+        matchesShippedIcon: Bool
+    ) -> BundleAppIconDecision {
         // Staleness is only detectable when both versions are actually known;
         // callers that don't pass version info (or tests exercising the
         // version-agnostic behavior) get the old, un-versioned semantics.
-        let staleBookkeeping = lastWritten != nil
+        let staleBookkeeping =
+            lastWritten != nil
             && lastWrittenBundleVersion != nil
             && currentBundleVersion != nil
             && lastWrittenBundleVersion != currentBundleVersion

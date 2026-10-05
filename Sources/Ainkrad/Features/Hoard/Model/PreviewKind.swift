@@ -27,23 +27,23 @@ private let codeLanguages: [String: String] = [
     "sh": "bash", "bash": "bash", "zsh": "bash", "fish": "bash",
     "json": "json", "yml": "yaml", "yaml": "yaml", "toml": "toml",
     "xml": "xml", "html": "html", "css": "css", "scss": "scss",
-    "sql": "sql", "swiftinterface": "swift"
+    "sql": "sql", "swiftinterface": "swift",
 ]
 
 /// Extensions that are plain text — shown as text, not highlighted as code.
 private let textExtensions: Set<String> = [
     "txt", "md", "markdown", "rst", "log", "csv", "tsv", "env",
-    "gitignore", "gitattributes", "editorconfig", "plist", "strings"
+    "gitignore", "gitattributes", "editorconfig", "plist", "strings",
 ]
 
 private let imageExtensions: Set<String> = [
-    "png", "jpg", "jpeg", "gif", "heic", "webp", "tiff", "bmp", "svg", "ico"
+    "png", "jpg", "jpeg", "gif", "heic", "webp", "tiff", "bmp", "svg", "ico",
 ]
 
 /// Files Quick Look handles well and we have no better renderer for.
 private let quickLookExtensions: Set<String> = [
     "pdf", "mov", "mp4", "m4v", "avi", "mkv", "mp3", "wav", "aac", "flac",
-    "m4a", "key", "pages", "numbers", "doc", "docx", "xls", "xlsx", "ppt", "pptx"
+    "m4a", "key", "pages", "numbers", "doc", "docx", "xls", "xlsx", "ppt", "pptx",
 ]
 
 func previewKind(for entry: FileEntry) -> PreviewKind {

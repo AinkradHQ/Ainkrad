@@ -1,6 +1,6 @@
+import AinkradSignal
 import Foundation
 import UserNotifications
-import AinkradSignal
 
 @MainActor protocol BannerPosting: AnyObject {
     func post(_ event: SignalEvent)
@@ -36,8 +36,9 @@ final class UserNotificationBannerChannel: BannerPosting {
     /// go looking.
     nonisolated static func bannerActions(for event: SignalEvent) -> [UNNotificationAction] {
         event.actions.prefix(2).map { action in
-            UNNotificationAction(identifier: action.id, title: action.label,
-                                 options: action.isDestructive ? [.destructive] : [])
+            UNNotificationAction(
+                identifier: action.id, title: action.label,
+                options: action.isDestructive ? [.destructive] : [])
         }
     }
 
@@ -51,12 +52,14 @@ final class UserNotificationBannerChannel: BannerPosting {
         // Urgent means the user is BLOCKED on this. That is the one case worth
         // asking the system to break through Focus for, and `.timeSensitive` is
         // precisely that request — not a louder banner, a permission.
-        content.interruptionLevel = event.proposedImportance == .urgent
+        content.interruptionLevel =
+            event.proposedImportance == .urgent
             ? .timeSensitive : .active
         // The feed coalesces on the dedupe key; Notification Center coalesces
         // on the thread. Using the same string makes the two agree, so the
         // nineteen Raven warnings that are one row here are one thread there.
-        content.threadIdentifier = event.dedupeKey
+        content.threadIdentifier =
+            event.dedupeKey
             ?? "\(sourceSlug(event.source)):\(event.kind)"
         if !event.actions.isEmpty { content.categoryIdentifier = categoryID(for: event) }
         return content
@@ -82,8 +85,10 @@ final class UserNotificationBannerChannel: BannerPosting {
         // handing one to a non-isolated completion is a Swift 6 region-isolation
         // error — and the original code's shape was already the answer to it.
         UNUserNotificationCenter.current().getNotificationSettings { settings in
-            guard settings.authorizationStatus == .authorized
-                || settings.authorizationStatus == .provisional else { return }
+            guard
+                settings.authorizationStatus == .authorized
+                    || settings.authorizationStatus == .provisional
+            else { return }
             let actions = Self.bannerActions(for: event)
             guard !actions.isEmpty else {
                 Self.submit(event: event)
@@ -108,8 +113,9 @@ final class UserNotificationBannerChannel: BannerPosting {
     }
 
     nonisolated private static func submit(event: SignalEvent) {
-        let request = UNNotificationRequest(identifier: event.id.uuidString,
-                                            content: content(for: event), trigger: nil)
+        let request = UNNotificationRequest(
+            identifier: event.id.uuidString,
+            content: content(for: event), trigger: nil)
         UNUserNotificationCenter.current().add(request) { _ in
             // Best-effort: a failed banner never surfaces as an error. The
             // feed row exists regardless, which is the durable record.

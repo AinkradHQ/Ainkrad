@@ -1,5 +1,5 @@
-import Foundation
 import CoreServices
+import Foundation
 
 /// The only thing that crosses the FSEvents C-callback boundary. The watcher
 /// itself is NOT `Sendable` (it owns a stream pointer), so handing *it* to the

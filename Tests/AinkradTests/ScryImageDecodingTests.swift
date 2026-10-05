@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("ScryImageDecoding")
@@ -13,8 +14,8 @@ struct ScryImageDecodingTests {
 
     @Test func rejectsNonDataAndMalformed() {
         #expect(ScryImageDecoding.base64Payload("https://example.com/x.png") == nil)
-        #expect(ScryImageDecoding.base64Payload("data:image/png,notbase64") == nil) // no ;base64
-        #expect(ScryImageDecoding.base64Payload("data:image/png;base64,") == nil)   // empty payload
+        #expect(ScryImageDecoding.base64Payload("data:image/png,notbase64") == nil)  // no ;base64
+        #expect(ScryImageDecoding.base64Payload("data:image/png;base64,") == nil)  // empty payload
         #expect(ScryImageDecoding.base64Payload("") == nil)
     }
 }

@@ -52,7 +52,7 @@ enum CrashSentinel {
     /// MetricKit hands diagnostics over on a background queue; this just
     /// translates them into `CrashReport`s and appends.
     private final class MetricSubscriber: NSObject, MXMetricManagerSubscriber {
-        func didReceive(_ payloads: [MXMetricPayload]) { /* aggregate metrics: not used */ }
+        func didReceive(_ payloads: [MXMetricPayload]) { /* aggregate metrics: not used */  }
 
         func didReceive(_ payloads: [MXDiagnosticPayload]) {
             for payload in payloads {

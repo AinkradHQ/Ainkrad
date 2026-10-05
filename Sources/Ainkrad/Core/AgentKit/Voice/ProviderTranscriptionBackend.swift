@@ -39,8 +39,10 @@ struct ProviderTranscriptionBackend: TranscriptionService {
         if !apiKey.isEmpty { request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization") }
         request.httpBody = MultipartForm.build(
             boundary: boundary, fields: fields,
-            file: (name: "file", filename: fileName, data: audio,
-                   contentType: Self.contentTypes[ext] ?? "application/octet-stream"))
+            file: (
+                name: "file", filename: fileName, data: audio,
+                contentType: Self.contentTypes[ext] ?? "application/octet-stream"
+            ))
 
         let (data, response) = try await http.data(for: request)
         guard (200..<300).contains(response.statusCode) else {

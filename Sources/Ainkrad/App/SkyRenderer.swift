@@ -1,6 +1,6 @@
-import SwiftUI
-import AppKit
 import AinkradHostRuntime
+import AppKit
+import SwiftUI
 
 extension Color {
     /// Linear blend in sRGB toward `other` (`t` clamped to 0…1). Used to
@@ -42,7 +42,8 @@ enum SkyRenderer {
         // so the screen-blended ribbon stays band-free (SkyRendererTests).
         let accents = [tokens.accentPrimary, tokens.accentSecondary, tokens.accentTertiary]
         func auroraHue(ribbon: Int, segment: Int) -> Color {
-            let phase = Double(segment) / Double(SkyMath.auroraSegments) * Double(accents.count)
+            let phase =
+                Double(segment) / Double(SkyMath.auroraSegments) * Double(accents.count)
                 + Double(ribbon)
             let base = Int(phase.rounded(.down)) % accents.count
             let next = (base + 1) % accents.count
@@ -61,8 +62,10 @@ enum SkyRenderer {
                 layer.translateBy(x: blob.x * size.width, y: blob.y * size.height)
                 layer.scaleBy(x: 1, y: radiusY / radiusX)
                 layer.fill(
-                    Path(ellipseIn: CGRect(x: -radiusX, y: -radiusX,
-                                           width: radiusX * 2, height: radiusX * 2)),
+                    Path(
+                        ellipseIn: CGRect(
+                            x: -radiusX, y: -radiusX,
+                            width: radiusX * 2, height: radiusX * 2)),
                     with: .radialGradient(
                         Gradient(colors: [color.opacity(opacity), color.opacity(0)]),
                         center: .zero, startRadius: 0, endRadius: radiusX
@@ -119,7 +122,7 @@ enum SkyRenderer {
         let inclination = abs(streak.angle)
         let direction = CGVector(
             dx: (streak.angle >= 0 ? 1 : -1) * cos(inclination),
-            dy: sin(inclination)                     // always descending
+            dy: sin(inclination)  // always descending
         )
         let travel = size.width * (comet ? 0.55 : 0.22)
         let length = size.width * (comet ? 0.16 : 0.10)
@@ -154,8 +157,10 @@ enum SkyRenderer {
         if comet {
             let headRadius = 2.6
             context.fill(
-                Path(ellipseIn: CGRect(x: head.x - headRadius, y: head.y - headRadius,
-                                       width: headRadius * 2, height: headRadius * 2)),
+                Path(
+                    ellipseIn: CGRect(
+                        x: head.x - headRadius, y: head.y - headRadius,
+                        width: headRadius * 2, height: headRadius * 2)),
                 with: .color(tokens.foreground.opacity(0.9 * streak.brightness))
             )
         }
@@ -178,10 +183,14 @@ enum SkyRenderer {
             layer.translateBy(x: band.x * size.width, y: band.y * size.height)
             layer.scaleBy(x: 1, y: radiusY / radiusX)
             layer.fill(
-                Path(ellipseIn: CGRect(x: -radiusX, y: -radiusX,
-                                       width: radiusX * 2, height: radiusX * 2)),
+                Path(
+                    ellipseIn: CGRect(
+                        x: -radiusX, y: -radiusX,
+                        width: radiusX * 2, height: radiusX * 2)),
                 with: .radialGradient(
-                    Gradient(colors: [tokens.foreground.opacity(band.opacity * intensity), tokens.foreground.opacity(0)]),
+                    Gradient(colors: [
+                        tokens.foreground.opacity(band.opacity * intensity), tokens.foreground.opacity(0),
+                    ]),
                     center: .zero, startRadius: 0, endRadius: radiusX
                 )
             )
@@ -206,8 +215,8 @@ enum SkyRenderer {
         for index in 0..<SkyMath.lightRayCount {
             let ray = SkyMath.lightRay(index: index, time: time)
             let color = accents[index % accents.count]
-            let along = size.height * 0.45                    // beam half-length
-            let across = ray.width * size.width * 0.7         // beam half-width
+            let along = size.height * 0.45  // beam half-length
+            let across = ray.width * size.width * 0.7  // beam half-width
             // Up-sky unit vector for this beam's tilt (y grows downward).
             let direction = CGVector(dx: sin(ray.angle), dy: -cos(ray.angle))
             let mid = CGPoint(
@@ -254,8 +263,10 @@ enum SkyRenderer {
                 with: .color(color.opacity(opacity * 0.3))
             )
             context.fill(
-                Path(ellipseIn: CGRect(x: x - fly.radius, y: y - fly.radius,
-                                       width: fly.radius * 2, height: fly.radius * 2)),
+                Path(
+                    ellipseIn: CGRect(
+                        x: x - fly.radius, y: y - fly.radius,
+                        width: fly.radius * 2, height: fly.radius * 2)),
                 with: .color(color.opacity(opacity))
             )
         }
@@ -281,8 +292,10 @@ enum SkyRenderer {
             var layer = context
             layer.blendMode = .screen
             layer.fill(
-                Path(ellipseIn: CGRect(x: orb.x * size.width - radius, y: orb.y * size.height - radius,
-                                       width: radius * 2, height: radius * 2)),
+                Path(
+                    ellipseIn: CGRect(
+                        x: orb.x * size.width - radius, y: orb.y * size.height - radius,
+                        width: radius * 2, height: radius * 2)),
                 with: .radialGradient(
                     Gradient(colors: [color.opacity(orb.opacity), color.opacity(0)]),
                     center: CGPoint(x: orb.x * size.width, y: orb.y * size.height),
@@ -308,8 +321,10 @@ enum SkyRenderer {
         halo.blendMode = .screen
         let haloRadius = radius * 3.4
         halo.fill(
-            Path(ellipseIn: CGRect(x: center.x - haloRadius, y: center.y - haloRadius,
-                                   width: haloRadius * 2, height: haloRadius * 2)),
+            Path(
+                ellipseIn: CGRect(
+                    x: center.x - haloRadius, y: center.y - haloRadius,
+                    width: haloRadius * 2, height: haloRadius * 2)),
             with: .radialGradient(
                 Gradient(colors: [
                     tokens.foreground.opacity(0.16 * celestial.brightness),
@@ -321,15 +336,19 @@ enum SkyRenderer {
 
         context.drawLayer { body in
             body.fill(
-                Path(ellipseIn: CGRect(x: center.x - radius, y: center.y - radius,
-                                       width: radius * 2, height: radius * 2)),
+                Path(
+                    ellipseIn: CGRect(
+                        x: center.x - radius, y: center.y - radius,
+                        width: radius * 2, height: radius * 2)),
                 with: .color(tokens.foreground.opacity(0.5 * celestial.brightness))
             )
             body.blendMode = .destinationOut
             let punch = CGPoint(x: center.x + radius * 0.5, y: center.y - radius * 0.28)
             body.fill(
-                Path(ellipseIn: CGRect(x: punch.x - radius, y: punch.y - radius,
-                                       width: radius * 2, height: radius * 2)),
+                Path(
+                    ellipseIn: CGRect(
+                        x: punch.x - radius, y: punch.y - radius,
+                        width: radius * 2, height: radius * 2)),
                 with: .color(.black)
             )
         }
@@ -343,8 +362,10 @@ enum SkyRenderer {
         _ vessel: SkyMath.Vessel,
         in context: inout GraphicsContext, size: CGSize, time: TimeInterval, tokens: DesignTokens
     ) {
-        let x = (vessel.direction > 0 ? -0.04 + 1.08 * vessel.progress
-                                      : 1.04 - 1.08 * vessel.progress) * size.width
+        let x =
+            (vessel.direction > 0
+                ? -0.04 + 1.08 * vessel.progress
+                : 1.04 - 1.08 * vessel.progress) * size.width
         let y = vessel.y * size.height + sin(vessel.progress * 4 * .pi) * 2
 
         var glow = context
@@ -368,8 +389,10 @@ enum SkyRenderer {
         )
         let blink = sin(time * 2 * .pi * 0.9) > 0.55 ? 1.0 : 0.15
         context.fill(
-            Path(ellipseIn: CGRect(x: x + 4 * vessel.direction - 0.9, y: y - 0.9,
-                                   width: 1.8, height: 1.8)),
+            Path(
+                ellipseIn: CGRect(
+                    x: x + 4 * vessel.direction - 0.9, y: y - 0.9,
+                    width: 1.8, height: 1.8)),
             with: .color(tokens.accentSecondary.opacity(0.9 * vessel.brightness * blink))
         )
     }
@@ -423,8 +446,9 @@ enum SkyRenderer {
             let y = ember.y * size.height
             let color = (ember.isAccent ? tokens.accentSecondary : tokens.foreground)
                 .opacity(ember.opacity * emphasis)
-            let rect = CGRect(x: x - ember.radius, y: y - ember.radius,
-                              width: ember.radius * 2, height: ember.radius * 2)
+            let rect = CGRect(
+                x: x - ember.radius, y: y - ember.radius,
+                width: ember.radius * 2, height: ember.radius * 2)
             context.fill(Path(ellipseIn: rect), with: .color(color))
         }
     }

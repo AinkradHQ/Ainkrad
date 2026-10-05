@@ -1,4 +1,5 @@
 import Testing
+
 @testable import Ainkrad
 
 @Suite("AgentContent")
@@ -10,11 +11,13 @@ struct AgentContentTests {
     }
 
     @Test func textAccessorJoinsOnlyTextBlocks() {
-        let m = AgentMessage(role: .assistant, content: [
-            .text("a"),
-            .toolUse(id: "t1", name: "read_file", input: .object(["path": .string("/x")])),
-            .text("b"),
-        ])
+        let m = AgentMessage(
+            role: .assistant,
+            content: [
+                .text("a"),
+                .toolUse(id: "t1", name: "read_file", input: .object(["path": .string("/x")])),
+                .text("b"),
+            ])
         #expect(m.text == "ab")
     }
 

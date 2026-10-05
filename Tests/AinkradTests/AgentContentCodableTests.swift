@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite struct AgentContentCodableTests {
@@ -9,12 +10,14 @@ import Testing
     }
 
     @Test func roundTripsAllBlockTypes() throws {
-        let message = AgentMessage(role: .assistant, content: [
-            .text("hello"),
-            .toolUse(id: "t1", name: "read_file", input: .object(["path": .string("/x")])),
-            .toolResult(toolUseID: "t1", content: "ok", isError: false),
-            .image(mediaType: "image/png", base64: "AAAA")
-        ])
+        let message = AgentMessage(
+            role: .assistant,
+            content: [
+                .text("hello"),
+                .toolUse(id: "t1", name: "read_file", input: .object(["path": .string("/x")])),
+                .toolResult(toolUseID: "t1", content: "ok", isError: false),
+                .image(mediaType: "image/png", base64: "AAAA"),
+            ])
         let decoded = try roundTrip(message)
         #expect(decoded == message)
     }

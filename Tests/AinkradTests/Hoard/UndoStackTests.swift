@@ -1,14 +1,16 @@
-import Testing
-import Foundation
 import AinkradHostRuntime
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @MainActor
 @Suite("UndoStack")
 struct UndoStackTests {
     private func entry(_ label: String) -> InverseOperation {
-        InverseOperation(label: label, action: .delete([URL(fileURLWithPath: "/x/\(label)")]),
-                         recordedAt: Date(), affectedURLs: [URL(fileURLWithPath: "/x/\(label)")])
+        InverseOperation(
+            label: label, action: .delete([URL(fileURLWithPath: "/x/\(label)")]),
+            recordedAt: Date(), affectedURLs: [URL(fileURLWithPath: "/x/\(label)")])
     }
 
     @Test("starts empty with nothing to undo or redo")

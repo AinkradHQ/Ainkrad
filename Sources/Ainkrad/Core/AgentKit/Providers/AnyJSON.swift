@@ -8,12 +8,20 @@ struct AnyJSON: Decodable {
     let value: Any
     init(from decoder: Decoder) throws {
         let c = try decoder.singleValueContainer()
-        if let v = try? c.decode(Bool.self) { value = v }
-        else if let v = try? c.decode(Int.self) { value = v }
-        else if let v = try? c.decode(Double.self) { value = v }
-        else if let v = try? c.decode(String.self) { value = v }
-        else if let v = try? c.decode([String: AnyJSON].self) { value = v.mapValues(\.value) }
-        else if let v = try? c.decode([AnyJSON].self) { value = v.map(\.value) }
-        else { value = [String: Any]() }
+        if let v = try? c.decode(Bool.self) {
+            value = v
+        } else if let v = try? c.decode(Int.self) {
+            value = v
+        } else if let v = try? c.decode(Double.self) {
+            value = v
+        } else if let v = try? c.decode(String.self) {
+            value = v
+        } else if let v = try? c.decode([String: AnyJSON].self) {
+            value = v.mapValues(\.value)
+        } else if let v = try? c.decode([AnyJSON].self) {
+            value = v.map(\.value)
+        } else {
+            value = [String: Any]()
+        }
     }
 }

@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitUI
+import SwiftUI
 
 /// The always-present scoped search field, sitting in the breadcrumb row.
 ///
@@ -62,8 +62,9 @@ struct HoardFilterField: View {
         // when the caret is sitting in the field.
         .overlay(
             ChamferShape(cut: 4)
-                .strokeBorder(theme.accentSecondary.opacity(
-                    focus.wrappedValue == .search ? 0.7 : 0), lineWidth: 1)
+                .strokeBorder(
+                    theme.accentSecondary.opacity(
+                        focus.wrappedValue == .search ? 0.7 : 0), lineWidth: 1)
         )
     }
 }

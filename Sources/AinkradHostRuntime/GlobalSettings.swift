@@ -79,26 +79,28 @@ public struct GlobalSettings: PersistableDocument {
     /// still restored; only the pane contents are dropped.
     public var restoreLayoutOnLaunch: Bool = false
 
-    public init(theme: Theme = .neonBlue,
-         appIconChoice: AppIconChoice = .auto,
-         appIconAppearance: AppIconAppearance = .system,
-         launcherViewMode: LauncherViewMode = .list,
-         confirmBeforeQuit: Bool = true,
-         uiFontScale: UIFontScale = .medium,
-         uiFontFamily: UIFontFamily = .exo2,
-         accentColorHex: String? = nil,
-         showFullScreenStatusBar: Bool = true,
-         soundEnabled: Bool = false,
-         soundVolume: Double = 0.7,
-         soundEventEnabled: [String: Bool] = [:],
-         soundEventEffects: [String: String] = [:],
-         skyMotionEnabled: Bool = true,
-         skyMotionSpeed: Double = 1.0,
-         skyEffectEnabled: [String: Bool] = [:],
-         overlayBackgroundOpacity: Double = 0.94,
-         overlayBlurEnabled: Bool = true,
-         uiReduceMotion: Bool = false,
-         restoreLayoutOnLaunch: Bool = false) {
+    public init(
+        theme: Theme = .neonBlue,
+        appIconChoice: AppIconChoice = .auto,
+        appIconAppearance: AppIconAppearance = .system,
+        launcherViewMode: LauncherViewMode = .list,
+        confirmBeforeQuit: Bool = true,
+        uiFontScale: UIFontScale = .medium,
+        uiFontFamily: UIFontFamily = .exo2,
+        accentColorHex: String? = nil,
+        showFullScreenStatusBar: Bool = true,
+        soundEnabled: Bool = false,
+        soundVolume: Double = 0.7,
+        soundEventEnabled: [String: Bool] = [:],
+        soundEventEffects: [String: String] = [:],
+        skyMotionEnabled: Bool = true,
+        skyMotionSpeed: Double = 1.0,
+        skyEffectEnabled: [String: Bool] = [:],
+        overlayBackgroundOpacity: Double = 0.94,
+        overlayBlurEnabled: Bool = true,
+        uiReduceMotion: Bool = false,
+        restoreLayoutOnLaunch: Bool = false
+    ) {
         self.theme = theme
         self.appIconChoice = appIconChoice
         self.appIconAppearance = appIconAppearance

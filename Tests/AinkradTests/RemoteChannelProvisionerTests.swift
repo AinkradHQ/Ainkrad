@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-@testable import Ainkrad
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 @MainActor
 @Suite("RemoteChannelProvisioner")
@@ -14,7 +15,8 @@ struct RemoteChannelProvisionerTests {
         // idempotent when the same id is passed back
         let second = RemoteChannelProvisioner.ensureChannelSchedule(in: store, existing: first.id)
         #expect(second.id == first.id)
-        #expect(store.schedules.filter { if case .webhook = $0.trigger { return true } else { return false } }.count == 1)
+        #expect(
+            store.schedules.filter { if case .webhook = $0.trigger { return true } else { return false } }.count == 1)
     }
 
     @Test func firingChannelScheduleEnqueuesRunWithPayloadPrompt() {
@@ -31,6 +33,8 @@ struct RemoteChannelProvisionerTests {
     }
 
     final class NoopRunner: AgentRunRunner {
-        func execute(prompt: String, posture: SavedExecutionPosture?, appendLog: @escaping (String) -> Void) async -> AgentRunOutcome { .success("") }
+        func execute(prompt: String, posture: SavedExecutionPosture?, appendLog: @escaping (String) -> Void) async
+            -> AgentRunOutcome
+        { .success("") }
     }
 }

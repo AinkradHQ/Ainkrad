@@ -1,6 +1,6 @@
-import Foundation
 import AinkradAppKit
 import AinkradSignal
+import Foundation
 
 /// Persists what each app declared and what the user approved.
 ///
@@ -15,20 +15,23 @@ final class SignalSubscriptionStore {
     /// Approved patterns per appID, as their canonical string form.
     func load() -> [String: Set<String>] {
         guard let data = try? Data(contentsOf: url),
-              let raw = try? JSONDecoder().decode([String: [String]].self, from: data)
+            let raw = try? JSONDecoder().decode([String: [String]].self, from: data)
         else { return [:] }
         return raw.mapValues(Set.init)
     }
 
     func save(_ approved: [String: Set<String>]) {
-        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
-                                                 withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true)
         guard let data = try? JSONEncoder().encode(approved.mapValues { Array($0).sorted() })
         else { return }
         do {
             try data.write(to: url, options: .atomic)
         } catch {
-            Log.registry.error("Failed to write \(data.count, privacy: .public) bytes to \(self.url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            Log.registry.error(
+                "Failed to write \(data.count, privacy: .public) bytes to \(self.url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
+            )
         }
     }
 }
@@ -169,7 +172,8 @@ final class SignalSubscriptionRegistry {
         case .app(let appID): source = "app:\(appID)"
         @unknown default: source = "unknown"
         }
-        let kind = subscription.isWildcard
+        let kind =
+            subscription.isWildcard
             ? (subscription.kindPattern.isEmpty ? "*" : "\(subscription.kindPattern).*")
             : subscription.kindPattern
         return "\(source)/\(kind)"

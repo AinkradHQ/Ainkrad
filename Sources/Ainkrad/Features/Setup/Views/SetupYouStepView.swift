@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Writes the You step into the profile store, which projects into `USER.md` so
 /// the assistant can read it. Blank fields are omitted rather than stored empty:
@@ -84,8 +84,10 @@ struct SetupYouStepView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            SetupStepFooter(coordinator: coordinator,
-                            isPrimaryDisabled: !unmet.isEmpty) {
+            SetupStepFooter(
+                coordinator: coordinator,
+                isPrimaryDisabled: !unmet.isEmpty
+            ) {
                 commit()
                 coordinator.advance()
             }
@@ -128,16 +130,19 @@ struct SetupYouStepView: View {
     }
 
     private func intro(tokens: DesignTokens) -> some View {
-        Text("Anything you fill in here goes into the assistant's memory, so it knows who "
-             + "it's working with. Your name and role are needed so it knows who it is "
-             + "working for; the rest is optional, and all of it is editable later in "
-             + "Memory.")
-            .font(AinkradFont.display(12))
-            .foregroundStyle(tokens.foreground.opacity(0.6))
-            .fixedSize(horizontal: false, vertical: true)
-            // Prose is capped even though the column fills.
-            .frame(maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth),
-                   alignment: .leading)
+        Text(
+            "Anything you fill in here goes into the assistant's memory, so it knows who "
+                + "it's working with. Your name and role are needed so it knows who it is "
+                + "working for; the rest is optional, and all of it is editable later in "
+                + "Memory."
+        )
+        .font(AinkradFont.display(12))
+        .foregroundStyle(tokens.foreground.opacity(0.6))
+        .fixedSize(horizontal: false, vertical: true)
+        // Prose is capped even though the column fills.
+        .frame(
+            maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth),
+            alignment: .leading)
     }
 
     /// The four fields, each one full width, stacked.
@@ -152,10 +157,11 @@ struct SetupYouStepView: View {
     private func fieldGrid(tokens: DesignTokens) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             ForEach(UserProfileField.all) { profileField in
-                field(tokens: tokens, title: profileField.title,
-                      subtitle: profileField.hint,
-                      placeholder: profileField.placeholder,
-                      text: binding(for: profileField.key), key: profileField.key)
+                field(
+                    tokens: tokens, title: profileField.title,
+                    subtitle: profileField.hint,
+                    placeholder: profileField.placeholder,
+                    text: binding(for: profileField.key), key: profileField.key)
             }
         }
     }
@@ -169,8 +175,10 @@ struct SetupYouStepView: View {
         Binding(get: { values[key] ?? "" }, set: { values[key] = $0 })
     }
 
-    private func field(tokens: DesignTokens, title: String, subtitle: String,
-                       placeholder: String, text: Binding<String>, key: String) -> some View {
+    private func field(
+        tokens: DesignTokens, title: String, subtitle: String,
+        placeholder: String, text: Binding<String>, key: String
+    ) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
                 Text(title)

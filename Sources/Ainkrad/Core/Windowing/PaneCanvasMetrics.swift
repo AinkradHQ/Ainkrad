@@ -1,5 +1,5 @@
-import CoreGraphics
 import AinkradAppKit
+import CoreGraphics
 
 /// Where a workspace's pane canvas sits inside the workspace's own frame.
 ///

@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// The Ainkrad → Appearance section: a theme picker bound to `ThemeManager`.
 /// Selecting a theme applies tokens immediately, with no Save button. The
@@ -43,18 +43,20 @@ struct AppearanceSettingsView: View {
             ) {
                 VStack(alignment: .leading, spacing: 9) {
                     AinkradCaptionedRow("Size") {
-                        segmented(UIFontScale.allCases,
-                                  selected: environment.themeManager.uiFontScale,
-                                  tokens: tokens,
-                                  title: fontScaleTitle,
-                                  action: { environment.themeManager.setFontScale($0) })
+                        segmented(
+                            UIFontScale.allCases,
+                            selected: environment.themeManager.uiFontScale,
+                            tokens: tokens,
+                            title: fontScaleTitle,
+                            action: { environment.themeManager.setFontScale($0) })
                     }
                     AinkradCaptionedRow("Typeface") {
-                        segmented(UIFontFamily.allCases,
-                                  selected: environment.themeManager.uiFontFamily,
-                                  tokens: tokens,
-                                  title: fontFamilyTitle,
-                                  action: { environment.themeManager.setFontFamily($0) })
+                        segmented(
+                            UIFontFamily.allCases,
+                            selected: environment.themeManager.uiFontFamily,
+                            tokens: tokens,
+                            title: fontFamilyTitle,
+                            action: { environment.themeManager.setFontFamily($0) })
                     }
                 }
                 .accessibilityElement(children: .contain)
@@ -67,11 +69,12 @@ struct AppearanceSettingsView: View {
                     + "across Ainkrad. Independent of the macOS system Reduce Motion setting."
             ) {
                 AinkradCaptionedRow("Reduce motion") {
-                    segmented([true, false],
-                              selected: environment.generalSettingsStore.uiReduceMotion,
-                              tokens: tokens,
-                              title: { $0 ? "On" : "Off" },
-                              action: { environment.generalSettingsStore.setUiReduceMotion($0) })
+                    segmented(
+                        [true, false],
+                        selected: environment.generalSettingsStore.uiReduceMotion,
+                        tokens: tokens,
+                        title: { $0 ? "On" : "Off" },
+                        action: { environment.generalSettingsStore.setUiReduceMotion($0) })
                 }
             }
 
@@ -104,15 +107,18 @@ struct AppearanceSettingsView: View {
                 }
             }
             AinkradCaptionedRow("Blur") {
-                segmented([true, false], selected: store.overlayBlurEnabled, tokens: tokens,
-                          title: { $0 ? "On" : "Off" },
-                          action: { store.setOverlayBlurEnabled($0) })
+                segmented(
+                    [true, false], selected: store.overlayBlurEnabled, tokens: tokens,
+                    title: { $0 ? "On" : "Off" },
+                    action: { store.setOverlayBlurEnabled($0) })
             }
         }
     }
 
-    private func segmented<T: Hashable>(_ items: [T], selected: T, tokens: DesignTokens,
-                                        title: @escaping (T) -> String, action: @escaping (T) -> Void) -> some View {
+    private func segmented<T: Hashable>(
+        _ items: [T], selected: T, tokens: DesignTokens,
+        title: @escaping (T) -> String, action: @escaping (T) -> Void
+    ) -> some View {
         // Delegates to the kit segmented control; the imperative `action`
         // write-back rides in the binding's setter. `AinkradSegmentedPicker`
         // self-gates its selection motion, so the former host `.animation`
@@ -125,7 +131,11 @@ struct AppearanceSettingsView: View {
     }
 
     private func fontScaleTitle(_ scale: UIFontScale) -> String {
-        switch scale { case .small: return "Small"; case .medium: return "Medium"; case .large: return "Large" }
+        switch scale {
+        case .small: return "Small"
+        case .medium: return "Medium"
+        case .large: return "Large"
+        }
     }
 
     private func fontFamilyTitle(_ family: UIFontFamily) -> String {
@@ -166,14 +176,17 @@ struct AppearanceSettingsView: View {
                     Text("Theme default")
                         .font(AinkradFont.display(11))
                 }
-                .foregroundStyle(manager.accentColorHex == nil ? tokens.accentSecondary : tokens.foreground.opacity(0.5))
+                .foregroundStyle(
+                    manager.accentColorHex == nil ? tokens.accentSecondary : tokens.foreground.opacity(0.5))
             }
             .buttonStyle(.plain)
         }
     }
 
-    private func accentSwatch(_ color: Color, tokens: DesignTokens,
-                              manager: ThemeManager) -> some View {
+    private func accentSwatch(
+        _ color: Color, tokens: DesignTokens,
+        manager: ThemeManager
+    ) -> some View {
         let hex = color.hexString ?? ""
         let isSelected = AccentSelection.isSelected(
             swatchHex: hex,
@@ -189,7 +202,8 @@ struct AppearanceSettingsView: View {
                 .overlay(
                     ChamferShape(cut: 7).strokeBorder(
                         isSelected ? tokens.foreground.opacity(0.95) : .white.opacity(0.16),
-                        lineWidth: isSelected ? 2 : 1))
+                        lineWidth: isSelected ? 2 : 1)
+                )
                 .overlay(
                     Image(systemName: "checkmark")
                         .font(.system(size: 12, weight: .bold))
@@ -256,4 +270,3 @@ struct AppearanceSettingsView: View {
         .animation(reduceMotion ? nil : .easeOut(duration: 0.14), value: isSelected)
     }
 }
-

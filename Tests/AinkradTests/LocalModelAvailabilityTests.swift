@@ -7,13 +7,15 @@
 // it (`LocalModelAvailability.refresh`).
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("LocalModelAvailability")
 @MainActor
 struct LocalModelAvailabilityTests {
     private func candidate(_ connectionID: UUID, model: String, tier: ModelTier) -> RouterCandidate {
-        RouterCandidate(connectionID: connectionID, model: model,
+        RouterCandidate(
+            connectionID: connectionID, model: model,
             descriptor: ModelDescriptor(id: model, tier: tier, contextWindow: 32_000, capabilities: [.toolUse]))
     }
 
@@ -75,8 +77,9 @@ struct LocalModelAvailabilityTests {
     @Test func refreshMarksReachableSetEmptyWhenLocalServerIsDown() async {
         let catalog = ModelCatalogService(http: ThrowingDataHTTPClient())
         let probe = LocalModelProbe(catalog: catalog)
-        let connection = Connection(id: UUID(), presetID: "ollama", kind: .openAICompatible,
-                                    displayName: "Ollama", baseURL: "http://localhost:11434", createdAt: Date())
+        let connection = Connection(
+            id: UUID(), presetID: "ollama", kind: .openAICompatible,
+            displayName: "Ollama", baseURL: "http://localhost:11434", createdAt: Date())
         let availability = LocalModelAvailability()
 
         await availability.refresh(connections: [connection], probe: probe, tokenFor: { _ in nil })
@@ -88,8 +91,9 @@ struct LocalModelAvailabilityTests {
         let body = #"{"data":[{"id":"llama3.2"}]}"#.data(using: .utf8)!
         let catalog = ModelCatalogService(http: StubDataHTTPClient(status: 200, body: body))
         let probe = LocalModelProbe(catalog: catalog)
-        let connection = Connection(id: UUID(), presetID: "ollama", kind: .openAICompatible,
-                                    displayName: "Ollama", baseURL: "http://localhost:11434", createdAt: Date())
+        let connection = Connection(
+            id: UUID(), presetID: "ollama", kind: .openAICompatible,
+            displayName: "Ollama", baseURL: "http://localhost:11434", createdAt: Date())
         let availability = LocalModelAvailability()
 
         await availability.refresh(connections: [connection], probe: probe, tokenFor: { _ in nil })
@@ -102,8 +106,9 @@ struct LocalModelAvailabilityTests {
         // its shape) must never even be probed — `refresh` only iterates locals.
         let catalog = ModelCatalogService(http: ThrowingDataHTTPClient())
         let probe = LocalModelProbe(catalog: catalog)
-        let remote = Connection(id: UUID(), presetID: "claude", kind: .claude,
-                                displayName: "Claude", baseURL: "https://api.anthropic.com/v1", createdAt: Date())
+        let remote = Connection(
+            id: UUID(), presetID: "claude", kind: .claude,
+            displayName: "Claude", baseURL: "https://api.anthropic.com/v1", createdAt: Date())
         let availability = LocalModelAvailability()
 
         await availability.refresh(connections: [remote], probe: probe, tokenFor: { _ in nil })

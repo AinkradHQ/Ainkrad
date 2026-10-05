@@ -1,7 +1,7 @@
-import Testing
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitContract
+import SwiftUI
+import Testing
 
 @Suite("SettingsRow layout")
 @MainActor
@@ -33,7 +33,7 @@ struct SettingsRowTests {
             .text(.constant("")),
             .secure(.constant("")),
             .shortcut(.constant("⌘K")),
-            .action(title: "Do it", handler: {})
+            .action(title: "Do it", handler: {}),
         ]
         for kind in controls {
             #expect(SettingsRow.presentation(for: field(kind)) == .row)
@@ -46,20 +46,24 @@ struct SettingsRowTests {
         let plain = SettingsField(path: path, label: "Plain", kind: .toggle(.constant(false)))
         #expect(SettingsRow.badges(for: plain).isEmpty)
 
-        let flagged = SettingsField(path: path, label: "Flagged", kind: .toggle(.constant(false)),
-                                    isAdvanced: true, requiresRestart: true)
+        let flagged = SettingsField(
+            path: path, label: "Flagged", kind: .toggle(.constant(false)),
+            isAdvanced: true, requiresRestart: true)
         #expect(SettingsRow.badges(for: flagged) == ["Advanced", "Restart required"])
     }
 
     @Test("the revert affordance appears only for a modified field with a reset")
     func revertVisibility() {
         let path = SettingsPath(["a", "b", "c"])
-        let modified = SettingsField(path: path, label: "X", kind: .toggle(.constant(false)),
-                                     isModified: { true }, reset: {})
-        let unmodified = SettingsField(path: path, label: "X", kind: .toggle(.constant(false)),
-                                       isModified: { false }, reset: {})
-        let noReset = SettingsField(path: path, label: "X", kind: .toggle(.constant(false)),
-                                    isModified: { true })
+        let modified = SettingsField(
+            path: path, label: "X", kind: .toggle(.constant(false)),
+            isModified: { true }, reset: {})
+        let unmodified = SettingsField(
+            path: path, label: "X", kind: .toggle(.constant(false)),
+            isModified: { false }, reset: {})
+        let noReset = SettingsField(
+            path: path, label: "X", kind: .toggle(.constant(false)),
+            isModified: { true })
         #expect(SettingsRow.showsRevert(for: modified))
         #expect(!SettingsRow.showsRevert(for: unmodified))
         #expect(!SettingsRow.showsRevert(for: noReset))
@@ -68,21 +72,24 @@ struct SettingsRowTests {
     @Test("the row path composes AinkradFormRow rather than a local row")
     func composesFormRow() throws {
         let path = SettingsPath(["a", "b", "c"])
-        let field = SettingsField(path: path, label: "Sound effects",
-                                  help: "Workspace interaction sounds.",
-                                  kind: .toggle(.constant(true)))
+        let field = SettingsField(
+            path: path, label: "Sound effects",
+            help: "Workspace interaction sounds.",
+            kind: .toggle(.constant(true)))
         let row = SettingsRow(field: field, layout: .sideBySide)
         let described = String(describing: row.body)
-        #expect(described.contains("AinkradFormRow"),
-                "row path must compose AinkradFormRow; found: \(described.prefix(200))")
+        #expect(
+            described.contains("AinkradFormRow"),
+            "row path must compose AinkradFormRow; found: \(described.prefix(200))")
     }
 
     @Test("badges and control width are handed to FormRow, not re-implemented")
     func handsSlotsToFormRow() {
         let path = SettingsPath(["a", "b", "c"])
-        let field = SettingsField(path: path, label: "Sandbox",
-                                  kind: .toggle(.constant(true)),
-                                  isAdvanced: true, requiresRestart: true)
+        let field = SettingsField(
+            path: path, label: "Sandbox",
+            kind: .toggle(.constant(true)),
+            isAdvanced: true, requiresRestart: true)
         #expect(SettingsRow.badges(for: field) == ["Advanced", "Restart required"])
         #expect(SettingsRowLayout(detailWidth: 1000) == .sideBySide)
     }

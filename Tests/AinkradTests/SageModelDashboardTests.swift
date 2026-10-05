@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 /// Pure-logic coverage for Task 17's model pill (Auto/pin + curated badge) and
@@ -80,13 +81,15 @@ struct SageModelDashboardTests {
 
     @Test("The option row label prefixes curated models with the verified glyph")
     func optionRowLabelPrefixesCuratedGlyph() {
-        #expect(modelOptionRowLabel(connectionName: "Claude Key", model: "claude-opus-4-8", isCurated: true)
+        #expect(
+            modelOptionRowLabel(connectionName: "Claude Key", model: "claude-opus-4-8", isCurated: true)
                 == "✓ Claude Key · claude-opus-4-8")
     }
 
     @Test("The option row label leaves non-curated models unmarked")
     func optionRowLabelLeavesNonCuratedUnmarked() {
-        #expect(modelOptionRowLabel(connectionName: "Claude Key", model: "some-custom-model", isCurated: false)
+        #expect(
+            modelOptionRowLabel(connectionName: "Claude Key", model: "some-custom-model", isCurated: false)
                 == "Claude Key · some-custom-model")
     }
 

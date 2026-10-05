@@ -1,6 +1,7 @@
+import AinkradAppKitUI
 // design-lint: allow-file hex-color theme palette data until default.theme (3.3)
 import SwiftUI
-import AinkradAppKitUI
+
 @testable import AinkradHostRuntime
 
 /// Fixtures of the legacy literal `DesignTokens` palettes, used to verify theme file parity.

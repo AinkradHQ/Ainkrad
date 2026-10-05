@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-@testable import Ainkrad
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 @MainActor
 @Suite("WorkspaceControlTool")
@@ -21,10 +22,13 @@ struct WorkspaceControlToolTests {
     @Test("switchToWorkspace by index changes the active workspace")
     func switchByIndex() async throws {
         let wm = WorkspaceManager()
-        _ = wm.createWorkspace()               // index 1 exists now
+        _ = wm.createWorkspace()  // index 1 exists now
         let tool = WorkspaceControlTool(workspaces: wm)
-        _ = try await tool.execute(obj(["action": .string("switchToWorkspace"),
-                                        "index": .number(0)]))
+        _ = try await tool.execute(
+            obj([
+                "action": .string("switchToWorkspace"),
+                "index": .number(0),
+            ]))
         #expect(wm.activeWorkspaceID == wm.workspaces[0].id)
     }
 
@@ -33,8 +37,11 @@ struct WorkspaceControlToolTests {
         let wm = WorkspaceManager()
         let created = wm.createWorkspace()
         let tool = WorkspaceControlTool(workspaces: wm)
-        _ = try await tool.execute(obj(["action": .string("deleteWorkspace"),
-                                        "id": .string(created.id.uuidString)]))
+        _ = try await tool.execute(
+            obj([
+                "action": .string("deleteWorkspace"),
+                "id": .string(created.id.uuidString),
+            ]))
         #expect(!wm.workspaces.contains { $0.id == created.id })
     }
 
@@ -54,8 +61,10 @@ struct WorkspaceControlToolTests {
 
     /// Builds a hub whose availability answers come from a fixed table and that
     /// records every open request, so `openApp` can be checked without a host.
-    private func hub(_ availability: @escaping (String) -> PluginLaunchHub.Availability,
-                     opened: @escaping (String) -> Void) -> PluginLaunchHub {
+    private func hub(
+        _ availability: @escaping (String) -> PluginLaunchHub.Availability,
+        opened: @escaping (String) -> Void
+    ) -> PluginLaunchHub {
         let hub = PluginLaunchHub()
         hub.setAvailabilityProvider(availability)
         hub.setOpenHandler(opened)
@@ -70,8 +79,11 @@ struct WorkspaceControlToolTests {
         let box = Box()
         let launchHub = hub({ _ in .available }, opened: { box.ids.append($0) })
         let tool = WorkspaceControlTool(workspaces: WorkspaceManager(), launchHub: launchHub)
-        let result = try await tool.execute(obj(["action": .string("openApp"),
-                                                 "appID": .string("lore")]))
+        let result = try await tool.execute(
+            obj([
+                "action": .string("openApp"),
+                "appID": .string("lore"),
+            ]))
         #expect(!result.isError)
         #expect(box.ids == ["lore"])
     }
@@ -82,8 +94,11 @@ struct WorkspaceControlToolTests {
         let box = Box()
         let launchHub = hub({ _ in .unknown }, opened: { box.ids.append($0) })
         let tool = WorkspaceControlTool(workspaces: WorkspaceManager(), launchHub: launchHub)
-        let result = try await tool.execute(obj(["action": .string("openApp"),
-                                                 "appID": .string("ghost")]))
+        let result = try await tool.execute(
+            obj([
+                "action": .string("openApp"),
+                "appID": .string("ghost"),
+            ]))
         #expect(result.isError)
         #expect(result.content.contains("installed"))
         #expect(box.ids.isEmpty)
@@ -96,8 +111,11 @@ struct WorkspaceControlToolTests {
         let box = Box()
         let launchHub = hub({ _ in .disabled }, opened: { box.ids.append($0) })
         let tool = WorkspaceControlTool(workspaces: WorkspaceManager(), launchHub: launchHub)
-        let result = try await tool.execute(obj(["action": .string("openApp"),
-                                                 "appID": .string("lore")]))
+        let result = try await tool.execute(
+            obj([
+                "action": .string("openApp"),
+                "appID": .string("lore"),
+            ]))
         #expect(result.isError)
         #expect(result.content.contains("disabled"))
         #expect(box.ids.isEmpty)
@@ -125,24 +143,39 @@ struct WorkspaceControlToolTests {
         let wm = WorkspaceManager()
         let tool = WorkspaceControlTool(workspaces: wm)
 
-        let infResult = try await tool.execute(obj(["action": .string("switchToWorkspace"),
-                                                     "index": .number(Double.infinity)]))
+        let infResult = try await tool.execute(
+            obj([
+                "action": .string("switchToWorkspace"),
+                "index": .number(Double.infinity),
+            ]))
         #expect(infResult.isError)
 
-        let nanResult = try await tool.execute(obj(["action": .string("switchToWorkspace"),
-                                                     "index": .number(Double.nan)]))
+        let nanResult = try await tool.execute(
+            obj([
+                "action": .string("switchToWorkspace"),
+                "index": .number(Double.nan),
+            ]))
         #expect(nanResult.isError)
 
-        let hugeResult = try await tool.execute(obj(["action": .string("switchToWorkspace"),
-                                                      "index": .number(1e30)]))
+        let hugeResult = try await tool.execute(
+            obj([
+                "action": .string("switchToWorkspace"),
+                "index": .number(1e30),
+            ]))
         #expect(hugeResult.isError)
 
-        let fractionalResult = try await tool.execute(obj(["action": .string("switchToWorkspace"),
-                                                            "index": .number(2.5)]))
+        let fractionalResult = try await tool.execute(
+            obj([
+                "action": .string("switchToWorkspace"),
+                "index": .number(2.5),
+            ]))
         #expect(fractionalResult.isError)
 
-        let negativeResult = try await tool.execute(obj(["action": .string("switchToWorkspace"),
-                                                          "index": .number(-1)]))
+        let negativeResult = try await tool.execute(
+            obj([
+                "action": .string("switchToWorkspace"),
+                "index": .number(-1),
+            ]))
         #expect(negativeResult.isError)
     }
 }

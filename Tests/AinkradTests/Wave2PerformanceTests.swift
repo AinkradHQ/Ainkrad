@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-@testable import Ainkrad
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 /// Wave 2 performance work. These pin *behaviour that implies the cost* —
 /// a unit test can't measure frame time, but it can assert that the expensive
@@ -41,7 +42,7 @@ struct TranscriptTimelineCacheTests {
     func cacheIsTransparent() {
         let messages = [userMessage("a"), userMessage("b"), userMessage("c")]
         let cache = TranscriptTimelineCache()
-        _ = cache.items(for: messages)   // prime
+        _ = cache.items(for: messages)  // prime
         #expect(cache.items(for: messages) == TranscriptTimelineBuilder.build(from: messages))
     }
 

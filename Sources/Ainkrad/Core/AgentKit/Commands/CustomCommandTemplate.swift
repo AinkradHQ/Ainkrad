@@ -15,20 +15,30 @@ enum CustomCommandTemplate {
         let chars = Array(body)
         var i = 0
         while i < chars.count {
-            guard chars[i] == "$" else { out.append(chars[i]); i += 1; continue }
+            guard chars[i] == "$" else {
+                out.append(chars[i])
+                i += 1
+                continue
+            }
             let rest = chars[(i + 1)...]
-            if rest.first == "$" {                          // $$ -> literal $
-                out.append("$"); i += 2; continue
+            if rest.first == "$" {  // $$ -> literal $
+                out.append("$")
+                i += 2
+                continue
             }
             if body[body.index(body.startIndex, offsetBy: i)...].hasPrefix("$ARGUMENTS") {
-                out.append(all); i += "$ARGUMENTS".count; continue
+                out.append(all)
+                i += "$ARGUMENTS".count
+                continue
             }
             if let digit = rest.first, digit.isNumber, digit != "0" {
                 let idx = digit.wholeNumberValue! - 1
                 if idx < positional.count { out.append(positional[idx]) }
-                i += 2; continue                            // else -> empty
+                i += 2
+                continue  // else -> empty
             }
-            out.append("$"); i += 1                          // lone $ -> verbatim
+            out.append("$")
+            i += 1  // lone $ -> verbatim
         }
         return out
     }

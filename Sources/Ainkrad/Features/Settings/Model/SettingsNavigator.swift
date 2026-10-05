@@ -1,5 +1,5 @@
-import Observation
 import AinkradAppKitContract
+import Observation
 
 /// Owns which settings page is showing and which field, if any, a deep-link
 /// asked us to reveal. Deep-links come from search, ⌘, on a focused app,

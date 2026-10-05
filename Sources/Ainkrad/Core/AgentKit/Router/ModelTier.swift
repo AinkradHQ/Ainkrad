@@ -7,7 +7,10 @@ import Foundation
 /// the router's internal, `Comparable`, Int-backed representation; the two types
 /// coexist and this bridges from the persisted mirror to the router type.
 enum ModelTier: Int, Codable, Sendable, Comparable, CaseIterable {
-    case local = 0, free = 1, cheapPaid = 2, premium = 3
+    case local = 0
+    case free = 1
+    case cheapPaid = 2
+    case premium = 3
 
     static func < (l: ModelTier, r: ModelTier) -> Bool { l.rawValue < r.rawValue }
 

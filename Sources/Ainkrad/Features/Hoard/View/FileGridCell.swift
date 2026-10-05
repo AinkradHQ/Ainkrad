@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitUI
+import SwiftUI
 
 /// One grid cell. Shares `FileRowView`'s cursor/selection semantics — a
 /// leading accent for the cursor, a filled background for selection — so

@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// What is installed and at which version — the source of truth for update
 /// detection and uninstall. (Enabled/disabled state stays in RegistryStateDocument.)
@@ -17,15 +17,16 @@ struct InstalledPluginsDocument: PersistableDocument {
     static let migrators: [DocumentMigrator] = [
         DocumentMigrator(from: 1) { payload in
             guard case .object(var root) = payload,
-                  case .object(let installed)? = root["installed"] else { return payload }
+                case .object(let installed)? = root["installed"]
+            else { return payload }
             root["installed"] = .object(AppIDRenames.rekeyed(installed))
             return .object(root)
-        },
+        }
     ]
 
     struct Entry: Codable, Equatable {
         let version: String
         let sourceRepo: String
     }
-    var installed: [String: Entry] = [:]      // keyed by appID
+    var installed: [String: Entry] = [:]  // keyed by appID
 }

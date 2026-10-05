@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitUI
+import SwiftUI
 
 /// Pane footer. Note this is a local view, NOT the kit's `AinkradStatusBar` —
 /// that component is an HP-bar segmented gauge, a different thing entirely.

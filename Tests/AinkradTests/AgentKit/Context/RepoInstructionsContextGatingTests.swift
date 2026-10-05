@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-@testable import Ainkrad
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 @MainActor @Suite struct RepoInstructionsContextGatingTests {
     private func makeRepo() throws -> URL {

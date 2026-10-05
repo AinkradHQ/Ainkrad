@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("TranscriptCompactor")
@@ -10,7 +11,7 @@ struct TranscriptCompactorTests {
 
     @Test func keepsRecentTailAndInsertsSummary() {
         let out = TranscriptCompactor.compact(convo(20), keepRecent: 4, summary: "did stuff")
-        #expect(out.count == 5)                 // 1 summary + 4 recent
+        #expect(out.count == 5)  // 1 summary + 4 recent
         #expect(out.first?.text.contains("summarized") == true)
         #expect(out.last?.text == "msg 19")
     }

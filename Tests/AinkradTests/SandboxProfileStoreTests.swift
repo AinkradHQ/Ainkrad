@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("SandboxProfileStore")
 @MainActor
@@ -63,7 +64,7 @@ struct SandboxProfileStoreTests {
     @Test func upsertCannotShadowBuiltIn() {
         let store = SandboxProfileStore(persistence: InMemoryPersistenceStore())
         var evil = BuiltInSandboxProfiles.hostTrusted
-        evil.backend = .host   // attempt to redefine host-trusted
+        evil.backend = .host  // attempt to redefine host-trusted
         evil.name = "hijacked"
         store.upsert(evil)
         #expect(store.profile(id: BuiltInSandboxProfiles.mainID)?.name != "hijacked")
@@ -79,7 +80,7 @@ struct SandboxProfileStoreTests {
         store.upsert(custom)
         store.delete(id: "mine")
         #expect(store.profile(id: "mine") == nil)
-        store.delete(id: BuiltInSandboxProfiles.mainID)   // no-op
+        store.delete(id: BuiltInSandboxProfiles.mainID)  // no-op
         #expect(store.profile(id: BuiltInSandboxProfiles.mainID) != nil)
     }
 
@@ -103,24 +104,24 @@ struct SandboxProfileStoreTests {
         // One well-formed profile, one with fsPolicy/networkPolicy missing entirely
         // (Task 1 decodes those as REQUIRED, so the malformed entry throws on decode).
         let json = """
-        {
-          "userDefined": [
             {
-              "id": "good",
-              "name": "Good",
-              "backend": "seatbelt",
-              "fsPolicy": {"readablePaths": [], "writablePaths": []},
-              "networkPolicy": {"off": {}},
-              "resourceLimits": {"timeoutSeconds": 10},
-              "toolAllowList": []
-            },
-            {
-              "id": "bad",
-              "name": "Bad"
+              "userDefined": [
+                {
+                  "id": "good",
+                  "name": "Good",
+                  "backend": "seatbelt",
+                  "fsPolicy": {"readablePaths": [], "writablePaths": []},
+                  "networkPolicy": {"off": {}},
+                  "resourceLimits": {"timeoutSeconds": 10},
+                  "toolAllowList": []
+                },
+                {
+                  "id": "bad",
+                  "name": "Bad"
+                }
+              ]
             }
-          ]
-        }
-        """.data(using: .utf8)!
+            """.data(using: .utf8)!
 
         let doc = try JSONDecoder().decode(SandboxProfileDocument.self, from: json)
 
@@ -145,8 +146,8 @@ struct SandboxProfileStoreTests {
         // userDefined present but not an array of profiles at all — must not crash,
         // must not yield a permissive default; falling back to no user profiles is fine.
         let json = """
-        {"userDefined": "not-an-array"}
-        """.data(using: .utf8)!
+            {"userDefined": "not-an-array"}
+            """.data(using: .utf8)!
         let doc = try JSONDecoder().decode(SandboxProfileDocument.self, from: json)
         #expect(doc.userDefined.isEmpty)
 

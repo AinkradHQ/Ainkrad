@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/Router/RouterOutcomeStore.swift
 import Foundation
-import AinkradHostRuntime
 
 /// Per-(difficulty, model) counters the router learns from: successes, failures, and
 /// explicit user overrides (the user manually picked this model for this difficulty).
@@ -85,9 +85,11 @@ final class RouterOutcomeStore {
             .sorted { model(from: $0.key) < model(from: $1.key) }
         guard !entries.isEmpty else { return nil }
 
-        if let override = entries
+        if let override =
+            entries
             .filter({ $0.value.overrides > 0 })
-            .max(by: { $0.value.overrides < $1.value.overrides }) {
+            .max(by: { $0.value.overrides < $1.value.overrides })
+        {
             return model(from: override.key)
         }
 

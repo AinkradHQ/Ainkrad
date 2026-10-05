@@ -1,7 +1,7 @@
-import Foundation
-import Observation
 import AinkradHostRuntime
 import AinkradSignal
+import Foundation
+import Observation
 
 /// Receives the routing decision and does something about it. Split out so
 /// `SignalCenter` is testable without AppKit, notification authorization, or
@@ -92,11 +92,13 @@ final class SignalCenter {
     var onRulesChanged: ((RoutingRules) -> Void)?
     var onRetentionChanged: ((RetentionPolicy) -> Void)?
 
-    init(store: SignalStore?,
-         deliverer: (any SignalDeliverer)?,
-         contextProvider: any SignalContextProviding,
-         rules: RoutingRules = .default,
-         retention: RetentionPolicy = .default) {
+    init(
+        store: SignalStore?,
+        deliverer: (any SignalDeliverer)?,
+        contextProvider: any SignalContextProviding,
+        rules: RoutingRules = .default,
+        retention: RetentionPolicy = .default
+    ) {
         self.store = store
         self.ingest = store.map { SignalIngest(store: $0) }
         self.deliverer = deliverer
@@ -136,13 +138,15 @@ final class SignalCenter {
             refreshFromStore()
         } else {
             guard SignalKind.isValid(draft.kind),
-                  !draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                !draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             else { return }
-            event = SignalEvent(source: source, kind: draft.kind, severity: draft.severity,
-                                title: draft.title, body: draft.body,
-                                proposedImportance: draft.importance,
-                                deepLink: draft.deepLink, actions: draft.actions,
-                                dedupeKey: draft.dedupeKey).normalized(source: source)
+            event = SignalEvent(
+                source: source, kind: draft.kind, severity: draft.severity,
+                title: draft.title, body: draft.body,
+                proposedImportance: draft.importance,
+                deepLink: draft.deepLink, actions: draft.actions,
+                dedupeKey: draft.dedupeKey
+            ).normalized(source: source)
             degradedBuffer.insert(event, at: 0)
             if degradedBuffer.count > Self.degradedBufferLimit { degradedBuffer.removeLast() }
             recent = degradedBuffer
@@ -182,7 +186,10 @@ final class SignalCenter {
     }
 
     func markAllRead(filter: SignalFilter) {
-        guard let store else { unreadCounts = [:]; return }
+        guard let store else {
+            unreadCounts = [:]
+            return
+        }
         store.markAllRead(filter: filter)
         refreshFromStore()
     }
@@ -217,7 +224,10 @@ final class SignalCenter {
         store?.enforceRetention(RetentionPolicy(maxAgeDays: 0, maxEvents: 0))
         degradedBuffer.removeAll()
         refreshFromStore()
-        if store == nil { recent = []; unreadCounts = [:] }
+        if store == nil {
+            recent = []
+            unreadCounts = [:]
+        }
     }
 
     /// Sources that have actually recorded something, host and Sage aside.
@@ -266,7 +276,8 @@ final class SignalCenter {
     func event(id: UUID) -> SignalEvent? {
         recent.first { $0.id == id }
             ?? store?.event(id: id)
-            ?? degradedBuffer.first { $0.id == id }    }
+            ?? degradedBuffer.first { $0.id == id }
+    }
 
     /// The worst severity among a source's UNREAD events, for its launcher
     /// badge. Nil when nothing is outstanding.
@@ -360,13 +371,17 @@ final class SignalCenter {
 /// type) drive the feed. The hub holds this weakly, so a torn-down host does
 /// not keep the feed alive.
 extension SignalCenter: SignalEmitting {
-    func record(_ appID: String, kind: String, severity: SignalSeverity, title: String,
-                body: String?, importance: SignalImportance,
-                deepLink: SignalDeepLink?, actions: [SignalAction], dedupeKey: String?) {
-        emit(SignalDraft(kind: kind, severity: severity, title: title, body: body,
-                         importance: importance, deepLink: deepLink,
-                         actions: actions, dedupeKey: dedupeKey),
-             from: .app(appID: appID))
+    func record(
+        _ appID: String, kind: String, severity: SignalSeverity, title: String,
+        body: String?, importance: SignalImportance,
+        deepLink: SignalDeepLink?, actions: [SignalAction], dedupeKey: String?
+    ) {
+        emit(
+            SignalDraft(
+                kind: kind, severity: severity, title: title, body: body,
+                importance: importance, deepLink: deepLink,
+                actions: actions, dedupeKey: dedupeKey),
+            from: .app(appID: appID))
     }
 
     func events(forAppID appID: String, limit: Int) -> [SignalEvent] {

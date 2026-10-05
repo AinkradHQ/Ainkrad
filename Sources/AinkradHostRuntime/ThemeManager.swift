@@ -1,6 +1,6 @@
+import AinkradAppKitUI
 import Observation
 import SwiftUI
-import AinkradAppKitUI
 
 /// Holds the active theme, exposes theme tokens, and is the single place the
 /// theme is applied: update state and persist. See ADR-0006 Theming Approach.

@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 import Foundation
 import Observation
-import AinkradHostRuntime
 
 @MainActor
 @Observable
@@ -54,12 +54,14 @@ final class SageSessionStore {
         let session = SavedSession(createdAt: now(), updatedAt: now())
         sessions.insert(session, at: 0)
         activeID = session.id
-        resort(); save()
+        resort()
+        save()
     }
 
     @discardableResult
     func activate(_ id: UUID) -> [AgentMessage] {
-        activeID = id; save()
+        activeID = id
+        save()
         return sessions.first(where: { $0.id == id })?.messages ?? []
     }
 
@@ -88,7 +90,9 @@ final class SageSessionStore {
 
     private func seedActive() {
         let session = SavedSession(createdAt: now(), updatedAt: now())
-        sessions = [session]; activeID = session.id; save()
+        sessions = [session]
+        activeID = session.id
+        save()
     }
 
     private func resort() { sessions.sort { $0.updatedAt > $1.updatedAt } }
@@ -116,7 +120,8 @@ final class SageSessionStore {
     }
 
     private static func title(from messages: [AgentMessage]) -> String {
-        let first = messages.first { $0.role == .user }?.text
+        let first =
+            messages.first { $0.role == .user }?.text
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         guard !first.isEmpty else { return "New chat" }
         return String(first.prefix(40))

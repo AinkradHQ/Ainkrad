@@ -1,8 +1,8 @@
-import SwiftUI
 import AVKit
 import AinkradAppKit
 import AinkradHostRuntime
 import AppKit
+import SwiftUI
 
 /// A generated image rendered inline in the transcript with hover / right-click
 /// actions: open full-screen, copy, download. Decodes the `data:` URL once and
@@ -37,8 +37,10 @@ struct GeneratedImageView: View {
                 .onTapGesture { onOpen?(d.image) }
                 // HUD menu, not the AppKit one — see BlockView's note.
                 .ainkradContextMenu([
-                    AinkradMenuItem(title: "Open Full Screen",
-                                    systemName: "arrow.up.left.and.arrow.down.right") { onOpen?(d.image) },
+                    AinkradMenuItem(
+                        title: "Open Full Screen",
+                        systemName: "arrow.up.left.and.arrow.down.right"
+                    ) { onOpen?(d.image) },
                     AinkradMenuItem(title: "Copy Image", systemName: "doc.on.doc") { copy(d.image) },
                     AinkradMenuItem(title: "Download…", systemName: "square.and.arrow.down") {
                         download(d.data, ext: d.ext)
@@ -50,9 +52,15 @@ struct GeneratedImageView: View {
 
     private func actionBar(_ d: (image: NSImage, data: Data, ext: String)) -> some View {
         HStack(spacing: 2) {
-            AinkradIconButton(systemName: "arrow.up.left.and.arrow.down.right", size: 22, tooltip: "Open full screen") { onOpen?(d.image) }
-            AinkradIconButton(systemName: copied ? "checkmark" : "doc.on.doc", size: 22, tooltip: "Copy image") { copy(d.image) }
-            AinkradIconButton(systemName: "square.and.arrow.down", size: 22, tooltip: "Download") { download(d.data, ext: d.ext) }
+            AinkradIconButton(systemName: "arrow.up.left.and.arrow.down.right", size: 22, tooltip: "Open full screen") {
+                onOpen?(d.image)
+            }
+            AinkradIconButton(systemName: copied ? "checkmark" : "doc.on.doc", size: 22, tooltip: "Copy image") {
+                copy(d.image)
+            }
+            AinkradIconButton(systemName: "square.and.arrow.down", size: 22, tooltip: "Download") {
+                download(d.data, ext: d.ext)
+            }
         }
         .padding(3)
         .background(ChamferShape(cut: AinkradRadius.sm).fill(tokens.background.opacity(0.7)))
@@ -76,7 +84,9 @@ struct GeneratedImageView: View {
             do {
                 try data.write(to: url)
             } catch {
-                Log.app.error("Failed to write \(data.count, privacy: .public) bytes to \(url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+                Log.app.error(
+                    "Failed to write \(data.count, privacy: .public) bytes to \(url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
+                )
             }
         }
     }
@@ -115,32 +125,36 @@ struct GeneratedVideoView: View {
                     Color.clear
                 }
             }
-                .aspectRatio(16.0 / 9.0, contentMode: .fit)
-                .frame(maxWidth: 360, maxHeight: 240, alignment: .leading)
-                .clipShape(ChamferShape(cut: AinkradRadius.md))
-                .overlay(ChamferShape(cut: AinkradRadius.md).stroke(tokens.accentSecondary.opacity(0.22), lineWidth: 1))
-                .overlay(alignment: .topTrailing) { actionBar(url).padding(6) }
-                .onHover { isHovering = $0 }
-                .ainkradContextMenu([
-                    AinkradMenuItem(title: "Open Full Screen",
-                                    systemName: "arrow.up.left.and.arrow.down.right") { onOpen?(url) },
-                    AinkradMenuItem(title: "Copy File", systemName: "doc.on.doc") { copy(url) },
-                    AinkradMenuItem(title: "Download…", systemName: "square.and.arrow.down") { download(url) },
-                ])
-                // Keyed on the URL so the player is built once per clip, not on
-                // every hover / body re-evaluation (that used to abort the app
-                // before AVKit was linked, and afterwards churned a fresh
-                // AVPlayer + CoreMedia XPC connection per frame).
-                .task(id: urlString) {
-                    current = MediaPlayerOwnership.resolve(current: current, url: url, make: { AVPlayer(url: $0) })
-                }
-                .onDisappear { player?.pause() }
+            .aspectRatio(16.0 / 9.0, contentMode: .fit)
+            .frame(maxWidth: 360, maxHeight: 240, alignment: .leading)
+            .clipShape(ChamferShape(cut: AinkradRadius.md))
+            .overlay(ChamferShape(cut: AinkradRadius.md).stroke(tokens.accentSecondary.opacity(0.22), lineWidth: 1))
+            .overlay(alignment: .topTrailing) { actionBar(url).padding(6) }
+            .onHover { isHovering = $0 }
+            .ainkradContextMenu([
+                AinkradMenuItem(
+                    title: "Open Full Screen",
+                    systemName: "arrow.up.left.and.arrow.down.right"
+                ) { onOpen?(url) },
+                AinkradMenuItem(title: "Copy File", systemName: "doc.on.doc") { copy(url) },
+                AinkradMenuItem(title: "Download…", systemName: "square.and.arrow.down") { download(url) },
+            ])
+            // Keyed on the URL so the player is built once per clip, not on
+            // every hover / body re-evaluation (that used to abort the app
+            // before AVKit was linked, and afterwards churned a fresh
+            // AVPlayer + CoreMedia XPC connection per frame).
+            .task(id: urlString) {
+                current = MediaPlayerOwnership.resolve(current: current, url: url, make: { AVPlayer(url: $0) })
+            }
+            .onDisappear { player?.pause() }
         }
     }
 
     private func actionBar(_ url: URL) -> some View {
         HStack(spacing: 2) {
-            AinkradIconButton(systemName: "arrow.up.left.and.arrow.down.right", size: 22, tooltip: "Open full screen") { onOpen?(url) }
+            AinkradIconButton(systemName: "arrow.up.left.and.arrow.down.right", size: 22, tooltip: "Open full screen") {
+                onOpen?(url)
+            }
             AinkradIconButton(systemName: "square.and.arrow.down", size: 22, tooltip: "Download") { download(url) }
         }
         .padding(3)
@@ -163,7 +177,9 @@ struct GeneratedVideoView: View {
             do {
                 try FileManager.default.copyItem(at: url, to: dest)
             } catch {
-                Log.app.error("Failed to copy \(url.lastPathComponent, privacy: .public) to \(dest.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+                Log.app.error(
+                    "Failed to copy \(url.lastPathComponent, privacy: .public) to \(dest.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
+                )
             }
         }
     }
@@ -191,13 +207,19 @@ struct GeneratedAudioView: View {
         if let url {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 8) {
-                    AinkradIconButton(systemName: isPlaying ? "pause.fill" : "play.fill", size: 26,
-                                      tooltip: isPlaying ? "Pause" : "Play") { toggle(url) }
+                    AinkradIconButton(
+                        systemName: isPlaying ? "pause.fill" : "play.fill", size: 26,
+                        tooltip: isPlaying ? "Pause" : "Play"
+                    ) { toggle(url) }
                     Text(timeString(current)).font(AinkradFont.mono(10))
                         .foregroundStyle(tokens.foreground.opacity(0.6)).monospacedDigit()
-                    AinkradSlider(value: Binding(
-                        get: { current },
-                        set: { current = $0; player?.currentTime = $0 }), in: 0...max(duration, 0.01))
+                    AinkradSlider(
+                        value: Binding(
+                            get: { current },
+                            set: {
+                                current = $0
+                                player?.currentTime = $0
+                            }), in: 0...max(duration, 0.01))
                     Text(timeString(duration)).font(AinkradFont.mono(10))
                         .foregroundStyle(tokens.foreground.opacity(0.6)).monospacedDigit()
                 }
@@ -209,7 +231,9 @@ struct GeneratedAudioView: View {
                     AinkradIconButton(systemName: "speedometer", size: 20, tooltip: "Playback speed") { cycleRate() }
                     Text("\(speedLabel)").font(AinkradFont.mono(10))
                         .foregroundStyle(tokens.foreground.opacity(0.7)).monospacedDigit()
-                    AinkradIconButton(systemName: "square.and.arrow.down", size: 20, tooltip: "Download") { download(url) }
+                    AinkradIconButton(systemName: "square.and.arrow.down", size: 20, tooltip: "Download") {
+                        download(url)
+                    }
                 }
             }
             .padding(.horizontal, 10).padding(.vertical, 8)
@@ -220,7 +244,10 @@ struct GeneratedAudioView: View {
             .onReceive(ticker) { _ in
                 guard isPlaying, let p = player else { return }
                 current = p.currentTime
-                if !p.isPlaying { isPlaying = false; current = 0 }
+                if !p.isPlaying {
+                    isPlaying = false
+                    current = 0
+                }
             }
         }
     }
@@ -241,8 +268,14 @@ struct GeneratedAudioView: View {
     private func toggle(_ url: URL) {
         ensurePlayer(url)
         guard let p = player else { return }
-        if isPlaying { p.pause(); isPlaying = false }
-        else { p.rate = rates[rateIndex]; p.play(); isPlaying = true }
+        if isPlaying {
+            p.pause()
+            isPlaying = false
+        } else {
+            p.rate = rates[rateIndex]
+            p.play()
+            isPlaying = true
+        }
     }
 
     private func cycleRate() {
@@ -265,7 +298,9 @@ struct GeneratedAudioView: View {
             do {
                 try FileManager.default.copyItem(at: url, to: dest)
             } catch {
-                Log.app.error("Failed to copy \(url.lastPathComponent, privacy: .public) to \(dest.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+                Log.app.error(
+                    "Failed to copy \(url.lastPathComponent, privacy: .public) to \(dest.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
+                )
             }
         }
     }
@@ -291,12 +326,12 @@ struct VideoLightboxView: View {
                     Color.clear
                 }
             }
-                .aspectRatio(16.0 / 9.0, contentMode: .fit)
-                .padding(40)
-                .overlay(alignment: .topTrailing) {
-                    AinkradIconButton(systemName: "xmark", size: 26, tooltip: "Close") { onDismiss() }
-                        .padding(20)
-                }
+            .aspectRatio(16.0 / 9.0, contentMode: .fit)
+            .padding(40)
+            .overlay(alignment: .topTrailing) {
+                AinkradIconButton(systemName: "xmark", size: 26, tooltip: "Close") { onDismiss() }
+                    .padding(20)
+            }
         }
         .onExitCommand { onDismiss() }
         .transition(.opacity)
@@ -330,7 +365,7 @@ struct ImageLightboxView: View {
                         .padding(20)
                 }
         }
-        .onExitCommand { onDismiss() } // Esc
+        .onExitCommand { onDismiss() }  // Esc
         .transition(.opacity)
     }
 }

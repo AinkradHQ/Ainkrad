@@ -1,27 +1,34 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("Autonomy 3b wiring")
 @MainActor
 struct Autonomy3bWiringTests {
     final class InstantRunner: AgentRunRunner {
-        func execute(prompt: String, posture: SavedExecutionPosture?, appendLog: @escaping (String) -> Void) async -> AgentRunOutcome { .success("ok") }
+        func execute(prompt: String, posture: SavedExecutionPosture?, appendLog: @escaping (String) -> Void) async
+            -> AgentRunOutcome
+        { .success("ok") }
     }
 
     @Test func nlScheduleCompilesAndFires() {
         let store = ScheduleStore(persistence: InMemoryPersistenceStore())
         let runs = RunManager(persistence: InMemoryPersistenceStore(), runner: InstantRunner())
-        var utc = Calendar(identifier: .gregorian); utc.timeZone = TimeZone(identifier: "UTC")!
+        var utc = Calendar(identifier: .gregorian)
+        utc.timeZone = TimeZone(identifier: "UTC")!
         let runner = ScheduleRunner(store: store, runs: runs, calendar: utc)
 
         let cron = NaturalLanguageCronCompiler.compile("every weekday at 9am")!
-        store.upsert(AgentSchedule(name: "brief",
-            trigger: .time(cron: cron), prompt: "brief me",
-            posture: SavedExecutionPosture(permissionMode: "ask", sandboxProfileID: nil)))
+        store.upsert(
+            AgentSchedule(
+                name: "brief",
+                trigger: .time(cron: cron), prompt: "brief me",
+                posture: SavedExecutionPosture(permissionMode: "ask", sandboxProfileID: nil)))
 
-        let f = ISO8601DateFormatter(); f.timeZone = TimeZone(identifier: "UTC")!
+        let f = ISO8601DateFormatter()
+        f.timeZone = TimeZone(identifier: "UTC")!
         // 2026-07-20 is a Monday.
         _ = runner.tick(now: f.date(from: "2026-07-20T09:05:00Z")!)
         #expect(runs.runs.contains { $0.origin == .schedule && $0.prompt == "brief me" })
@@ -48,9 +55,10 @@ struct Autonomy3bWiringTests {
         // (empty), and the tool registry gained the scripted-batch tool wired
         // to the REAL Slice 6 `ExecutionRouter` (not a nil placeholder).
         #expect(environment.scheduleStore.schedules.isEmpty)
-        environment.scheduleStore.upsert(AgentSchedule(
-            name: "smoke", trigger: .time(cron: NaturalLanguageCronCompiler.compile("daily at 9am")!),
-            prompt: "smoke test", posture: SavedExecutionPosture(permissionMode: "ask")))
+        environment.scheduleStore.upsert(
+            AgentSchedule(
+                name: "smoke", trigger: .time(cron: NaturalLanguageCronCompiler.compile("daily at 9am")!),
+                prompt: "smoke test", posture: SavedExecutionPosture(permissionMode: "ask")))
         #expect(environment.scheduleStore.schedules.count == 1)
     }
 }

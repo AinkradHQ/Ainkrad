@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Stability AI (Stable Diffusion) image backend. Key in the Keychain via
 /// SecretStore, never a document. Uses the v1 SDXL text-to-image endpoint,

@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// A portable bundle of the user's documents. Secrets are intentionally not
 /// included — they live in the Keychain, never in the documents directory.
@@ -28,12 +28,14 @@ final class UserDataPorter {
     }
 
     func export() throws -> Data {
-        let entries = (try? fileManager.contentsOfDirectory(
-            at: rootURL, includingPropertiesForKeys: nil)) ?? []
+        let entries =
+            (try? fileManager.contentsOfDirectory(
+                at: rootURL, includingPropertiesForKeys: nil)) ?? []
         var documents: [String: JSONValue] = [:]
         for url in entries where url.pathExtension == "json" {
             guard let data = try? Data(contentsOf: url),
-                  let value = try? PersistenceCoding.decoder.decode(JSONValue.self, from: data) else {
+                let value = try? PersistenceCoding.decoder.decode(JSONValue.self, from: data)
+            else {
                 continue  // skip anything unreadable rather than fail the whole export
             }
             documents[url.deletingPathExtension().lastPathComponent] = value

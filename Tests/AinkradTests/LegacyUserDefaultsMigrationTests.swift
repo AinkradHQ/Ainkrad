@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-@testable import Ainkrad
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 @Suite("LegacyUserDefaultsMigration")
 final class LegacyUserDefaultsMigrationTests {
@@ -11,8 +12,9 @@ final class LegacyUserDefaultsMigrationTests {
     deinit { defaults.removePersistentDomain(forName: suiteName) }
 
     private func seedLegacy() {
-        defaults.set(try! JSONEncoder().encode(GlobalSettings(theme: .cyberPurple)),
-                     forKey: "global-settings")
+        defaults.set(
+            try! JSONEncoder().encode(GlobalSettings(theme: .cyberPurple)),
+            forKey: "global-settings")
         defaults.set(try! JSONEncoder().encode(["terminal": false]), forKey: "registry-enabled-state")
         // Terminal's settings type no longer lives in the host, so the
         // legacy blob is an arbitrary JSON object rather than a concrete type.

@@ -5,12 +5,12 @@ enum AppStoreRowKind: Equatable { case builtIn, plugin, mcpServer }
 
 /// A plain, SILGen-safe projection of one row in the App Store grid.
 struct AppStoreRow: Identifiable, Equatable {
-    let id: String                  // appID
+    let id: String  // appID
     let displayName: String
-    let icon: String                // SF Symbol
+    let icon: String  // SF Symbol
     let description: String
-    let catalogVersion: String?     // nil if not in catalog
-    let installedVersion: String?   // nil if not installed
+    let catalogVersion: String?  // nil if not in catalog
+    let installedVersion: String?  // nil if not installed
     let status: AppStoreRowStatus
     let isEnabled: Bool
     let kind: AppStoreRowKind
@@ -42,7 +42,8 @@ extension AppStoreRow {
         case .installed:
             return installedVersion.map { "v\(AppStoreRow.normalizeVersion($0)) · installed" } ?? "installed"
         case .updateAvailable:
-            return "v\(AppStoreRow.normalizeVersion(installedVersion ?? "—")) → v\(AppStoreRow.normalizeVersion(catalogVersion ?? "—"))"
+            return
+                "v\(AppStoreRow.normalizeVersion(installedVersion ?? "—")) → v\(AppStoreRow.normalizeVersion(catalogVersion ?? "—"))"
         }
     }
 }

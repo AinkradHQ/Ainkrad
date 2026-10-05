@@ -53,7 +53,7 @@ final class SkillWatcher {
     /// nothing — never crashes — matching the rest of the Skills subsystem's
     /// degrade-don't-crash posture.
     func start() {
-        guard source == nil else { return }   // already running
+        guard source == nil else { return }  // already running
         try? FileManager.default.createDirectory(at: paths.root, withIntermediateDirectories: true)
 
         let opened = open(paths.root.path, O_EVTONLY)

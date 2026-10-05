@@ -1,5 +1,5 @@
-import SwiftUI
 import AinkradAppKitUI
+import SwiftUI
 
 /// Semantic color tokens for one theme. Views read these — never a raw hex
 /// literal — so a view is automatically correct in both themes.
@@ -15,9 +15,11 @@ public struct DesignTokens: Equatable, Sendable {
     public let warning: Color
     public let danger: Color
 
-    public init(background: Color, surface: Color, surfaceElevated: Color,
-                accentPrimary: Color, accentSecondary: Color, accentTertiary: Color,
-                foreground: Color, success: Color, warning: Color, danger: Color) {
+    public init(
+        background: Color, surface: Color, surfaceElevated: Color,
+        accentPrimary: Color, accentSecondary: Color, accentTertiary: Color,
+        foreground: Color, success: Color, warning: Color, danger: Color
+    ) {
         self.background = background
         self.surface = surface
         self.surfaceElevated = surfaceElevated

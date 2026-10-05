@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Wraps a `WebSearchBackend` as a read-class `AgentTool`. Falls back to a
 /// graceful (non-error) "not configured" message rather than throwing, since
@@ -15,10 +15,14 @@ struct WebSearchTool: AgentTool {
         .object([
             "type": .string("object"),
             "properties": .object([
-                "query": .object(["type": .string("string"),
-                                  "description": .string("Search query.")]),
-                "count": .object(["type": .string("number"),
-                                  "description": .string("Max results (1–10, default 5).")]),
+                "query": .object([
+                    "type": .string("string"),
+                    "description": .string("Search query."),
+                ]),
+                "count": .object([
+                    "type": .string("number"),
+                    "description": .string("Max results (1–10, default 5)."),
+                ]),
             ]),
             "required": .array([.string("query")]),
         ])

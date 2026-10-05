@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// The single window's content: every workspace's tile layout stays
 /// mounted (hidden when inactive) so running sessions survive switching;
@@ -10,8 +10,11 @@ struct RootView: View {
     @Environment(\.ainkradReduceMotion) private var reduceMotion
 
     private var isOverlayPresented: Bool {
-        var presented = environment.isSetupPresented || environment.isLauncherPresented || environment.isWorkspaceOverviewPresented || environment.isSettingsPresented
-            || environment.isAppStorePresented || environment.isQuickAskPresented || environment.quitCoordinator.isConfirming
+        var presented =
+            environment.isSetupPresented || environment.isLauncherPresented || environment.isWorkspaceOverviewPresented
+            || environment.isSettingsPresented
+            || environment.isAppStorePresented || environment.isQuickAskPresented
+            || environment.quitCoordinator.isConfirming
             || environment.presentedOverlayAppID != nil
         #if DEBUG
         presented = presented || environment.isComponentGalleryPresented
@@ -51,11 +54,14 @@ struct RootView: View {
     @ViewBuilder
     private var pluginOverlay: some View {
         if let id = environment.presentedOverlayAppID,
-           let app = environment.registry.allApps.first(where: { $0.id == id }) {
+            let app = environment.registry.allApps.first(where: { $0.id == id })
+        {
             let mode = environment.appAppearanceStore.effectiveMode(for: app)
             let size = environment.appAppearanceStore.effectiveOverlaySize(app.id)
-            PluginOverlayView(app: app, tokens: environment.themeManager.tokens,
-                              mode: mode, size: size) {
+            PluginOverlayView(
+                app: app, tokens: environment.themeManager.tokens,
+                mode: mode, size: size
+            ) {
                 environment.presentedOverlayAppID = nil
             }
             .transition(.opacity)
@@ -164,7 +170,9 @@ struct RootView: View {
         }
         .animation(reduceMotion ? nil : .easeOut(duration: 0.16), value: isOverlayPresented)
         .animation(reduceMotion ? nil : AinkradMotion.present, value: signalOverlayDepth)
-        .background(KeyboardShortcutMonitor(environment: environment, pushToTalkController: environment.voiceService.pushToTalk))
+        .background(
+            KeyboardShortcutMonitor(environment: environment, pushToTalkController: environment.voiceService.pushToTalk)
+        )
         // Each HUD overlay plays `.overlayOpen`/`.overlayClose` as it's
         // summoned/dismissed (AIN-108) — centralized here rather than in each
         // overlay view, since presentation is already driven by these four
@@ -234,8 +242,9 @@ struct RootView: View {
         // dismissible overlay: a permission prompt floating over the gate
         // would be the one surface the scrim cannot cover.
         if let appID = environment.pendingSubscriptionApprovals.first,
-           let subscriptions = environment.signalSubscriptions,
-           let app = environment.registry.allApps.first(where: { $0.id == appID }) {
+            let subscriptions = environment.signalSubscriptions,
+            let app = environment.registry.allApps.first(where: { $0.id == appID })
+        {
             SubscriptionApprovalView(
                 appName: app.displayName,
                 subscriptions: subscriptions.declared(for: appID),
@@ -262,9 +271,10 @@ struct RootView: View {
                     // approval already expresses.
                     subscriptions.revoke(appID: appID)
                     environment.pendingSubscriptionApprovals.removeFirst()
-                })
-                .transition(.opacity)
-                .zIndex(70)
+                }
+            )
+            .transition(.opacity)
+            .zIndex(70)
         }
 
         if environment.isSignalFeedPresented, let center = environment.signalCenter {
@@ -279,13 +289,15 @@ struct RootView: View {
                 onConfigureSource: { _ in
                     environment.isSignalFeedPresented = false
                     environment.isSettingsPresented = true
-                })
+                }
+            )
             // Scale from just under, like every other summoned HUD panel,
             // rather than the bare cross-fade it had: a fade alone reads as a
             // web modal, and the feed is the largest surface in the family.
-            .transition(reduceMotion
-                        ? .opacity
-                        : .scale(scale: 0.97).combined(with: .opacity))
+            .transition(
+                reduceMotion
+                    ? .opacity
+                    : .scale(scale: 0.97).combined(with: .opacity))
         }
     }
 
@@ -300,9 +312,10 @@ struct RootView: View {
     /// app installed or renamed shows up on the next notification.
     private var signalIdentities: SignalIdentityResolver {
         SignalIdentityResolver(
-            apps: Dictionary(environment.registry.allApps.map {
-                ($0.id, SignalSourceIdentity(name: $0.displayName, symbol: $0.icon))
-            }, uniquingKeysWith: { first, _ in first }),
+            apps: Dictionary(
+                environment.registry.allApps.map {
+                    ($0.id, SignalSourceIdentity(name: $0.displayName, symbol: $0.icon))
+                }, uniquingKeysWith: { first, _ in first }),
             host: SignalSourceIdentity(name: "Ainkrad", symbol: "sparkle"))
     }
 
@@ -333,7 +346,8 @@ struct RootView: View {
                 }
                 SignalActionRouter(hub: hub).dispatch(event, action)
                 environment.signalToasts.dismiss(id: event.id)
-            })
+            }
+        )
         .environment(\.ainkradSignalIdentity, signalIdentities)
         // Clear of the 30pt top bar, so a toast never covers the clock or the
         // bell whose count it corresponds to.
@@ -378,7 +392,8 @@ private struct WorkspaceStack: View {
                 // fixing it. Hidden while the gate is up so the wizard it
                 // summons is not shouted at from behind.
                 if environment.deferredSetupSteps.contains(.providers),
-                   !environment.isSetupPresented {
+                    !environment.isSetupPresented
+                {
                     SetupDeferredProvidersBanner()
                 }
 

@@ -1,3 +1,5 @@
+import AinkradHostRuntime
+import Foundation
 // Tests/AinkradTests/AgentSessionCheckpointTests.swift
 //
 // Checkpoint & Rewind Task 5: proves the pre-tool interception point in
@@ -5,16 +7,16 @@
 // `edit_file` call runs, and that `restoreCheckpoint(_:mode:)` rewinds both the
 // on-disk file and the transcript back to the checkpoint's turn boundary.
 import Testing
-import Foundation
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("AgentSession checkpoints", .timeLimit(.minutes(1)))
 @MainActor
 struct AgentSessionCheckpointTests {
     private func hostRouter() -> ExecutionRouter {
-        ExecutionRouter(profiles: SandboxProfileStore(persistence: InMemoryPersistenceStore()),
-                        backends: [.host: HostBackend()])
+        ExecutionRouter(
+            profiles: SandboxProfileStore(persistence: InMemoryPersistenceStore()),
+            backends: [.host: HostBackend()])
     }
 
     @Test func editCapturesACheckpointAndRestoreRewindsFileAndTranscript() async throws {
@@ -23,7 +25,8 @@ struct AgentSessionCheckpointTests {
         defer { try? FileManager.default.removeItem(atPath: path) }
 
         let journal = EditJournal()
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent("cpr-\(UUID().uuidString)", isDirectory: true)
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(
+            "cpr-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
         let session = TestSessionFactory.makeWithCheckpoints(
             provider: MultiEditStubProvider(path: path, edits: [("v1", "v2")]),
@@ -44,8 +47,12 @@ struct AgentSessionCheckpointTests {
         // (Fix #3 — branch review finding). The restored transcript must instead
         // land on a clean boundary at or before that index.
         #expect(session.messages.count <= cp.transcriptIndex)
-        let endsWithDanglingToolUse = session.messages.last?.role == .assistant &&
-            (session.messages.last?.content.contains { if case .toolUse = $0 { return true }; return false } ?? false)
+        let endsWithDanglingToolUse =
+            session.messages.last?.role == .assistant
+            && (session.messages.last?.content.contains {
+                if case .toolUse = $0 { return true }
+                return false
+            } ?? false)
         #expect(!endsWithDanglingToolUse)
         #expect(session.messages.last?.text == "update the file")
     }

@@ -1,7 +1,7 @@
-import AppKit
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import AppKit
+import SwiftUI
 
 /// Share flow for `SageRootView` — mirrors `SageRootView+Export.swift`.
 /// Renders a self-contained HTML artifact to disk, reveals it in Finder, and

@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 import AppKit
 import Observation
-import AinkradHostRuntime
 
 /// Owns the Settings → General section: the full-screen status bar toggle
 /// (AIN-109) and the sound effects toggle/volume (AIN-108). Loads from
@@ -119,7 +119,8 @@ final class GeneralSettingsStore: SoundSettingsProviding {
 
     func effect(for event: UISound) -> UISound {
         guard let raw = soundEventEffects[event.rawValue],
-              let chosen = UISound(rawValue: raw) else { return event }
+            let chosen = UISound(rawValue: raw)
+        else { return event }
         return chosen
     }
 

@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("WorkspaceSnapshotStore")
@@ -9,7 +10,8 @@ struct WorkspaceSnapshotStoreTests {
     }
 
     @Test func snapshotsAndRestoresExistingFileBytes() throws {
-        let root = tempRoot(); defer { try? FileManager.default.removeItem(at: root) }
+        let root = tempRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
         let store = WorkspaceSnapshotStore(root: root)
         let file = FileManager.default.temporaryDirectory.appendingPathComponent("s-\(UUID().uuidString).txt")
         try "original".write(to: file, atomically: true, encoding: .utf8)
@@ -26,12 +28,13 @@ struct WorkspaceSnapshotStoreTests {
     }
 
     @Test func restoreOfNonExistentFileSnapshotDeletesRecreatedFile() throws {
-        let root = tempRoot(); defer { try? FileManager.default.removeItem(at: root) }
+        let root = tempRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
         let store = WorkspaceSnapshotStore(root: root)
         let file = FileManager.default.temporaryDirectory.appendingPathComponent("n-\(UUID().uuidString).txt")
 
         let id = UUID()
-        let snap = store.snapshotFile(file.path, into: id)   // file does not exist yet
+        let snap = store.snapshotFile(file.path, into: id)  // file does not exist yet
         #expect(!snap.existedBefore)
         #expect(snap.blobName == nil)
 

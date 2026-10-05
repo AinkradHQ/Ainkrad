@@ -61,10 +61,10 @@ struct HoardKeyMonitor: NSViewRepresentable {
                     // EXACTLY option — ⌘F (global palette) and every other
                     // chord must keep passing through untouched.
                     guard flags == .option,
-                          let chord = self.chords.first(where: { $0.keyCode == event.keyCode })
+                        let chord = self.chords.first(where: { $0.keyCode == event.keyCode })
                     else { return event }
                     chord.action()
-                    return nil   // swallow, so it doesn't also beep
+                    return nil  // swallow, so it doesn't also beep
                 }
             } else {
                 teardown()

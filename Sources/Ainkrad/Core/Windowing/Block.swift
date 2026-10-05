@@ -1,6 +1,6 @@
+import AinkradAppKit
 import Foundation
 import Observation
-import AinkradAppKit
 
 /// One open Built-in App instance living in a tile. See
 /// Window & Tile Management Architecture.md. Multiple simultaneous Blocks

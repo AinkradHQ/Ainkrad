@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitUI
+import SwiftUI
 
 /// The Hoard pane: sidebar beside a column of tab strip, breadcrumb, list and
 /// status bar. Composition only — no behaviour lives here.
@@ -72,8 +72,9 @@ struct HoardRootView: View {
             VStack(spacing: 0) {
                 if mode != .basic { HoardTabStrip(store: store) }
                 HStack(spacing: AinkradSpacing.sm) {
-                    HoardBreadcrumbBar(tab: store.activeTab, fileSystem: fileSystem,
-                                       isEditing: $isEditingPath)
+                    HoardBreadcrumbBar(
+                        tab: store.activeTab, fileSystem: fileSystem,
+                        isEditing: $isEditingPath)
                     if mode == .basic {
                         Spacer(minLength: AinkradSpacing.sm)
                         // The way out. Hoard's header is its breadcrumb, so the
@@ -104,9 +105,11 @@ struct HoardRootView: View {
                     repoStatus: git.status(forDirectory: store.activeTab.currentDirectory))
             }
             if settings.showPreview && mode != .basic {
-                PreviewPane(entry: store.activeTab.cursorEntry,
-                            itemCount: store.activeTab.visibleEntries.count)
-                    .transition(.move(edge: .trailing).combined(with: .opacity))
+                PreviewPane(
+                    entry: store.activeTab.cursorEntry,
+                    itemCount: store.activeTab.visibleEntries.count
+                )
+                .transition(.move(edge: .trailing).combined(with: .opacity))
             }
         }
         .animation(.easeOut(duration: 0.18), value: settings.showPreview)
@@ -114,11 +117,13 @@ struct HoardRootView: View {
             store: store, actions: actions, undoStack: environment.filesUndoStack,
             onUndo: {
                 if let refusal = engine.undo() {
-                    toast = HoardToastMessage(kind: .warning, text: "Can't undo that",
-                                              detail: refusal.message)
+                    toast = HoardToastMessage(
+                        kind: .warning, text: "Can't undo that",
+                        detail: refusal.message)
                 } else {
-                    toast = HoardToastMessage(kind: .undone, text: "Undone",
-                                              detail: "⌘⇧Z to redo")
+                    toast = HoardToastMessage(
+                        kind: .undone, text: "Undone",
+                        detail: "⌘⇧Z to redo")
                 }
             },
             onRedo: {
@@ -150,16 +155,18 @@ struct HoardRootView: View {
             isFinderOpen: search?.isActive ?? false,
             vimKeys: settings.vimKeys,
             focus: $focus,
-            isEditingPath: $isEditingPath)
+            isEditingPath: $isEditingPath
+        )
         .overlay(alignment: .top) {
             if let search, search.isActive {
                 HoardFinderBar(
                     search: search,
                     iconSize: CGFloat(settings.iconSize),
                     onSubmit: { hit in accept(hit, store: store) },
-                    onClose: { search.close() })
-                    .padding(.top, AinkradSpacing.lg)
-                    .transition(.move(edge: .top).combined(with: .opacity))
+                    onClose: { search.close() }
+                )
+                .padding(.top, AinkradSpacing.lg)
+                .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
         .background(
@@ -183,7 +190,7 @@ struct HoardRootView: View {
                 },
                 HoardOptionChord(keyCode: HoardOptionChord.e) {
                     Task { await actions.extractSelection() }
-                }
+                },
             ])
             .frame(width: 0, height: 0)
         )
@@ -195,17 +202,18 @@ struct HoardRootView: View {
                 HoardToast(
                     message: toast,
                     onDismiss: { self.toast = nil },
-                    onShowDetails: { failureDetails = toast.failures })
-                    .padding(.bottom, AinkradSpacing.lg)
-                    .task(id: toast.id) {
-                        // Auto-dismiss successes; a confirmation that lingers
-                        // becomes clutter you learn to ignore. FAILURES stay
-                        // until dismissed — auto-hiding them would take the
-                        // only route to the per-item reasons with it.
-                        guard !toast.kind.isProblem else { return }
-                        try? await Task.sleep(for: .seconds(3))
-                        if self.toast?.id == toast.id { self.toast = nil }
-                    }
+                    onShowDetails: { failureDetails = toast.failures }
+                )
+                .padding(.bottom, AinkradSpacing.lg)
+                .task(id: toast.id) {
+                    // Auto-dismiss successes; a confirmation that lingers
+                    // becomes clutter you learn to ignore. FAILURES stay
+                    // until dismissed — auto-hiding them would take the
+                    // only route to the per-item reasons with it.
+                    guard !toast.kind.isProblem else { return }
+                    try? await Task.sleep(for: .seconds(3))
+                    if self.toast?.id == toast.id { self.toast = nil }
+                }
             }
         }
         // One watcher, always pointed at whatever the active tab is showing.
@@ -225,22 +233,31 @@ struct HoardRootView: View {
             if let paneToken { environment.filesPaneCoordinator.noteFocus(paneToken) }
         }
         .onChange(of: actions.lastToast) { _, message in
-            if let message { toast = message; actions.clearMessage() }
+            if let message {
+                toast = message
+                actions.clearMessage()
+            }
         }
         // The scoped search follows the pane as it navigates.
         .onChange(of: store.activeTab.currentDirectory, initial: true) { _, directory in
             search?.scopedRoot = directory
         }
-        .sheet(item: Binding(get: { actions.prompt },
-                             set: { if $0 == nil { actions.present(nil) } })) { prompt in
+        .sheet(
+            item: Binding(
+                get: { actions.prompt },
+                set: { if $0 == nil { actions.present(nil) } })
+        ) { prompt in
             HoardPromptSheet(
                 prompt: prompt,
                 onCancel: { actions.present(nil) },
                 onRename: { entry, name in Task { await actions.commitRename(entry, to: name) } },
                 onNewFolder: { name in Task { await actions.commitNewFolder(named: name) } })
         }
-        .sheet(isPresented: Binding(get: { actions.batchRenameTargets != nil },
-                                    set: { if !$0 { actions.cancelBatchRename() } })) {
+        .sheet(
+            isPresented: Binding(
+                get: { actions.batchRenameTargets != nil },
+                set: { if !$0 { actions.cancelBatchRename() } })
+        ) {
             if let targets = actions.batchRenameTargets {
                 BatchRenameSheet(
                     entries: targets,
@@ -249,12 +266,18 @@ struct HoardRootView: View {
                     onApply: { plan in Task { await actions.commitBatchRename(plan) } })
             }
         }
-        .sheet(isPresented: Binding(get: { !failureDetails.isEmpty },
-                                    set: { if !$0 { failureDetails = [] } })) {
+        .sheet(
+            isPresented: Binding(
+                get: { !failureDetails.isEmpty },
+                set: { if !$0 { failureDetails = [] } })
+        ) {
             HoardFailureSheet(failures: failureDetails) { failureDetails = [] }
         }
-        .sheet(isPresented: Binding(get: { resolver.pending != nil },
-                                    set: { if !$0 { resolver.cancel() } })) {
+        .sheet(
+            isPresented: Binding(
+                get: { resolver.pending != nil },
+                set: { if !$0 { resolver.cancel() } })
+        ) {
             if let question = resolver.pending {
                 ConflictSheet(question: question) { resolver.answer($0) }
             }
@@ -295,7 +318,8 @@ struct HoardRootView: View {
         // ⌘F is GLOBAL: rooted at home, not at whatever folder the pane is
         // showing. ⌘P jumps within the current tree, where "nearby" is the
         // point.
-        let root = mode == .globalSearch
+        let root =
+            mode == .globalSearch
             ? fileSystem.homeDirectory
             : store.activeTab.currentDirectory
         ensureSearch().open(mode, root: root)

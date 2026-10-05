@@ -5,7 +5,10 @@ struct ScryRect: Codable, Equatable, Sendable {
     static let defaultCard = ScryRect(x: 40, y: 40, width: 360, height: 240)
 
     init(x: Double, y: Double, width: Double, height: Double) {
-        self.x = x; self.y = y; self.width = width; self.height = height
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
     }
 
     // Forward-compatible decode (wave-1 idiom): every field tolerates absence.
@@ -38,11 +41,12 @@ enum ScrySizeHint: String, Codable, Sendable, CaseIterable {
     /// The hint used when the agent gives none.
     static func `default`(for kind: ScryElementKind) -> ScrySizeHint {
         switch kind {
-        case .status:                        return .small
-        case .table:                         return .full
-        case .diagram, .chart, .video:       return .large
+        case .status: return .small
+        case .table: return .full
+        case .diagram, .chart, .video: return .large
         case .text, .markdown, .code,
-             .image, .audio, .card, .unknown: return .medium
+            .image, .audio, .card, .unknown:
+            return .medium
         }
     }
 }
@@ -56,11 +60,17 @@ struct ScryElement: Codable, Equatable, Identifiable, Sendable {
     var pinned: Bool
     var sizeHint: ScrySizeHint
 
-    init(id: String, kind: ScryElementKind, title: String? = nil, body: String,
-         language: String? = nil,
-         pinned: Bool = false, sizeHint: ScrySizeHint? = nil) {
-        self.id = id; self.kind = kind; self.title = title; self.body = body
-        self.language = language; self.pinned = pinned
+    init(
+        id: String, kind: ScryElementKind, title: String? = nil, body: String,
+        language: String? = nil,
+        pinned: Bool = false, sizeHint: ScrySizeHint? = nil
+    ) {
+        self.id = id
+        self.kind = kind
+        self.title = title
+        self.body = body
+        self.language = language
+        self.pinned = pinned
         self.sizeHint = sizeHint ?? .default(for: kind)
     }
 
@@ -75,7 +85,8 @@ struct ScryElement: Codable, Equatable, Identifiable, Sendable {
         body = try c.decodeIfPresent(String.self, forKey: .body) ?? ""
         language = try c.decodeIfPresent(String.self, forKey: .language)
         pinned = try c.decodeIfPresent(Bool.self, forKey: .pinned) ?? false
-        sizeHint = (try? c.decodeIfPresent(ScrySizeHint.self, forKey: .sizeHint))
+        sizeHint =
+            (try? c.decodeIfPresent(ScrySizeHint.self, forKey: .sizeHint))
             .flatMap { $0 } ?? .default(for: kind)
     }
 }

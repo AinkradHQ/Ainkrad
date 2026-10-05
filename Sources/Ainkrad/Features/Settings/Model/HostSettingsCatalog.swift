@@ -1,7 +1,7 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitContract
 import AinkradHostRuntime
+import SwiftUI
 
 /// Assembles the host's own settings pages into descriptors. Each field
 /// binds straight through to the existing store — the catalog describes
@@ -14,14 +14,15 @@ import AinkradHostRuntime
 @MainActor
 enum HostSettingsCatalog {
     static func build(environment: AppEnvironment) -> SettingsCatalog {
-        SettingsCatalog(pages: [
-            general(environment),
-            you(environment),
-            appearance(environment),
-            soundAndVoice(environment),
-            keyboard(environment)
-        ] + notificationsPages(environment) + IntelligenceSettingsCatalog.pages(environment: environment)
-          + AppSettingsCatalog.pages(environment: environment))
+        SettingsCatalog(
+            pages: [
+                general(environment),
+                you(environment),
+                appearance(environment),
+                soundAndVoice(environment),
+                keyboard(environment),
+            ] + notificationsPages(environment) + IntelligenceSettingsCatalog.pages(environment: environment)
+                + AppSettingsCatalog.pages(environment: environment))
     }
 
     // MARK: - Notifications
@@ -41,10 +42,12 @@ enum HostSettingsCatalog {
     private static func notificationsPages(_ environment: AppEnvironment) -> [SettingsPage] {
         guard let center = environment.signalCenter else { return [] }
         let page = SettingsPath(["workspace", "notifications"])
-        return [SettingsPage(
-            path: page, title: "Notifications", icon: "bell",
-            group: .workspace, order: 5,
-            groups: notificationGroups(environment, center: center, page: page))]
+        return [
+            SettingsPage(
+                path: page, title: "Notifications", icon: "bell",
+                group: .workspace, order: 5,
+                groups: notificationGroups(environment, center: center, page: page))
+        ]
     }
 
     // MARK: - General
@@ -58,65 +61,72 @@ enum HostSettingsCatalog {
             path: page, title: "General", icon: "gearshape",
             group: .workspace, order: 0,
             groups: [
-                SettingsGroup(path: startup, title: "Workspace", fields: [
-                    SettingsField(
-                        path: startup.appending("restoreLayout"),
-                        label: "Restore layout on launch",
-                        help: "Reopen the apps that were tiled in each workspace when you "
-                            + "last quit. Off, workspaces come back empty and nothing "
-                            + "starts until you open it.",
-                        keywords: ["restore", "reopen", "launch", "startup", "session",
-                                   "layout", "tabs", "panes"],
-                        kind: .toggle(Binding(
-                            get: { store.restoreLayoutOnLaunch },
-                            set: { store.setRestoreLayoutOnLaunch($0) })),
-                        defaultDescription: "Off",
-                        isModified: { store.restoreLayoutOnLaunch != false },
-                        reset: { store.setRestoreLayoutOnLaunch(false) }),
-                    SettingsField(
-                        path: startup.appending("fullScreenStatusBar"),
-                        label: "Show status bar in full-screen",
-                        help: "Clock, network, and battery in the title strip while full-screen.",
-                        keywords: ["clock", "battery", "network", "menu bar"],
-                        kind: .toggle(Binding(
-                            get: { store.showFullScreenStatusBar },
-                            set: { store.setShowFullScreenStatusBar($0) })),
-                        defaultDescription: "On",
-                        isModified: { store.showFullScreenStatusBar != true },
-                        reset: { store.setShowFullScreenStatusBar(true) }),
-                    SettingsField(
-                        path: startup.appending("launcherLayout"),
-                        label: "Launcher layout",
-                        help: "Show apps in the ⌘K launcher as a list or a grid of icons.",
-                        keywords: ["grid", "list", "command k", "apps"],
-                        kind: .select(
-                            options: LauncherViewMode.allCases.map {
-                                SettingsOption(id: $0.rawValue, title: $0.label)
-                            },
-                            selection: Binding(
-                                get: { store.launcherViewMode.rawValue },
-                                set: { raw in
-                                    guard let mode = LauncherViewMode(rawValue: raw) else { return }
-                                    store.setLauncherViewMode(mode)
-                                })),
-                        defaultDescription: LauncherViewMode.allCases[0].label,
-                        isModified: { store.launcherViewMode != LauncherViewMode.allCases[0] },
-                        reset: { store.setLauncherViewMode(LauncherViewMode.allCases[0]) })
-                ]),
-                SettingsGroup(path: page.appending("home"), title: "Home",
-                              fields: homeFields(environment, group: page.appending("home")) + [
-                    SettingsField(
-                        path: page.appending("home").appending("rerunSetup"),
-                        label: "Re-run setup",
-                        help: "Walk through the first-run wizard again. Your Home folder is "
-                            + "not re-asked, and nothing is reset until you change it.",
-                        keywords: ["wizard", "setup", "first run", "onboarding", "welcome"],
-                        kind: .action(title: "Re-run setup") {
-                            environment.isSettingsPresented = false
-                            environment.isSetupReplay = true
-                            environment.isSetupPresented = true
-                        })
-                ])
+                SettingsGroup(
+                    path: startup, title: "Workspace",
+                    fields: [
+                        SettingsField(
+                            path: startup.appending("restoreLayout"),
+                            label: "Restore layout on launch",
+                            help: "Reopen the apps that were tiled in each workspace when you "
+                                + "last quit. Off, workspaces come back empty and nothing "
+                                + "starts until you open it.",
+                            keywords: [
+                                "restore", "reopen", "launch", "startup", "session",
+                                "layout", "tabs", "panes",
+                            ],
+                            kind: .toggle(
+                                Binding(
+                                    get: { store.restoreLayoutOnLaunch },
+                                    set: { store.setRestoreLayoutOnLaunch($0) })),
+                            defaultDescription: "Off",
+                            isModified: { store.restoreLayoutOnLaunch != false },
+                            reset: { store.setRestoreLayoutOnLaunch(false) }),
+                        SettingsField(
+                            path: startup.appending("fullScreenStatusBar"),
+                            label: "Show status bar in full-screen",
+                            help: "Clock, network, and battery in the title strip while full-screen.",
+                            keywords: ["clock", "battery", "network", "menu bar"],
+                            kind: .toggle(
+                                Binding(
+                                    get: { store.showFullScreenStatusBar },
+                                    set: { store.setShowFullScreenStatusBar($0) })),
+                            defaultDescription: "On",
+                            isModified: { store.showFullScreenStatusBar != true },
+                            reset: { store.setShowFullScreenStatusBar(true) }),
+                        SettingsField(
+                            path: startup.appending("launcherLayout"),
+                            label: "Launcher layout",
+                            help: "Show apps in the ⌘K launcher as a list or a grid of icons.",
+                            keywords: ["grid", "list", "command k", "apps"],
+                            kind: .select(
+                                options: LauncherViewMode.allCases.map {
+                                    SettingsOption(id: $0.rawValue, title: $0.label)
+                                },
+                                selection: Binding(
+                                    get: { store.launcherViewMode.rawValue },
+                                    set: { raw in
+                                        guard let mode = LauncherViewMode(rawValue: raw) else { return }
+                                        store.setLauncherViewMode(mode)
+                                    })),
+                            defaultDescription: LauncherViewMode.allCases[0].label,
+                            isModified: { store.launcherViewMode != LauncherViewMode.allCases[0] },
+                            reset: { store.setLauncherViewMode(LauncherViewMode.allCases[0]) }),
+                    ]),
+                SettingsGroup(
+                    path: page.appending("home"), title: "Home",
+                    fields: homeFields(environment, group: page.appending("home")) + [
+                        SettingsField(
+                            path: page.appending("home").appending("rerunSetup"),
+                            label: "Re-run setup",
+                            help: "Walk through the first-run wizard again. Your Home folder is "
+                                + "not re-asked, and nothing is reset until you change it.",
+                            keywords: ["wizard", "setup", "first run", "onboarding", "welcome"],
+                            kind: .action(title: "Re-run setup") {
+                                environment.isSettingsPresented = false
+                                environment.isSetupReplay = true
+                                environment.isSetupPresented = true
+                            })
+                    ]),
             ])
     }
 
@@ -145,15 +155,19 @@ enum HostSettingsCatalog {
             path: page, title: "Appearance", icon: "paintbrush",
             group: .workspace, order: 2,
             groups: [
-                SettingsGroup(path: page.appending("theme"), title: "Theme",
-                              fields: themeFields(environment, group: page.appending("theme"))),
-                SettingsGroup(path: page.appending("overlays"), title: "Overlays",
-                              fields: overlayFields(environment, group: page.appending("overlays"))),
-                SettingsGroup(path: page.appending("livingSky"), title: "Living Sky",
-                              footerNote: "The island artwork itself is never animated.",
-                              fields: livingSkyFields(environment, group: page.appending("livingSky"))),
-                SettingsGroup(path: page.appending("appIcon"), title: "App Icon",
-                              fields: appIconFields(environment, group: page.appending("appIcon")))
+                SettingsGroup(
+                    path: page.appending("theme"), title: "Theme",
+                    fields: themeFields(environment, group: page.appending("theme"))),
+                SettingsGroup(
+                    path: page.appending("overlays"), title: "Overlays",
+                    fields: overlayFields(environment, group: page.appending("overlays"))),
+                SettingsGroup(
+                    path: page.appending("livingSky"), title: "Living Sky",
+                    footerNote: "The island artwork itself is never animated.",
+                    fields: livingSkyFields(environment, group: page.appending("livingSky"))),
+                SettingsGroup(
+                    path: page.appending("appIcon"), title: "App Icon",
+                    fields: appIconFields(environment, group: page.appending("appIcon"))),
             ])
     }
 
@@ -174,11 +188,13 @@ enum HostSettingsCatalog {
                 // pane. A correct conversion needs a COMPOSITE row kind the SDK
                 // does not have yet; until then this is the right use of the
                 // escape hatch. Voice, directly below, decomposed cleanly.
-                SettingsGroup(path: page.appending("sound"), title: "Sound",
-                              fields: soundFields(environment, group: page.appending("sound"))),
+                SettingsGroup(
+                    path: page.appending("sound"), title: "Sound",
+                    fields: soundFields(environment, group: page.appending("sound"))),
                 voiceGroup(environment, page: page),
-                SettingsGroup(path: page.appending("speech"), title: "Speech",
-                              fields: speechFields(environment, group: page.appending("speech")))
+                SettingsGroup(
+                    path: page.appending("speech"), title: "Speech",
+                    fields: speechFields(environment, group: page.appending("speech"))),
             ])
     }
 
@@ -193,114 +209,122 @@ enum HostSettingsCatalog {
             kind == .onDevice ? "On-device (private)" : "Provider (Whisper)"
         }
 
-        return SettingsGroup(path: voice, title: "Voice", fields: [
-            SettingsField(
-                path: voice.appending("backend"),
-                label: "Backend",
-                help: "On-device keeps audio private; Provider sends it to a configured connection.",
-                keywords: ["transcription", "whisper", "on-device", "offline", "stt", "engine"],
-                kind: .select(
-                    options: TranscriptionBackendKind.allCases.map {
-                        SettingsOption(id: $0.rawValue, title: backendTitle($0))
-                    },
-                    selection: Binding(
-                        get: { settings.document.backend.rawValue },
-                        set: { raw in
-                            guard let kind = TranscriptionBackendKind(rawValue: raw) else { return }
-                            settings.setBackend(kind)
-                        })),
-                defaultDescription: backendTitle(.onDevice),
-                isModified: { settings.document.backend != .onDevice },
-                reset: { settings.setBackend(.onDevice) }),
-            SettingsField(
-                path: voice.appending("mode"),
-                label: "Push-to-talk mode",
-                help: "Hold records while the hotkey is down; Toggle starts and stops on separate presses.",
-                keywords: ["hold", "toggle", "ptt", "dictation", "microphone"],
-                kind: .select(
-                    options: PushToTalkMode.allCases.map {
-                        SettingsOption(id: $0.rawValue, title: $0 == .hold ? "Hold" : "Toggle")
-                    },
-                    selection: Binding(
-                        get: { settings.document.mode.rawValue },
-                        set: { raw in
-                            guard let mode = PushToTalkMode(rawValue: raw) else { return }
-                            settings.setMode(mode)
-                        })),
-                defaultDescription: "Hold",
-                isModified: { settings.document.mode != .hold },
-                reset: { settings.setMode(.hold) }),
-            SettingsField(
-                path: voice.appending("autoSend"),
-                label: "Auto-send after dictation",
-                help: "Sends the transcript to the assistant as soon as dictation ends.",
-                keywords: ["send", "submit", "dictation", "automatic", "enter"],
-                kind: .toggle(Binding(
-                    get: { settings.document.autoSend },
-                    set: { settings.setAutoSend($0) })),
-                // Reads as an affirmative label but the store default is false.
-                defaultDescription: "Off",
-                isModified: { settings.document.autoSend != false },
-                reset: { settings.setAutoSend(false) }),
-            SettingsField(
-                path: voice.appending("providerOptIn"),
-                label: "Upload audio to provider",
-                help: "Opt in to sending dictated audio to the selected connection for transcription.",
-                keywords: ["upload", "opt-in", "privacy", "cloud", "consent"],
-                kind: .toggle(Binding(
-                    get: { settings.document.providerOptIn },
-                    set: { settings.setProviderOptIn($0) })),
-                defaultDescription: "Off",
-                isModified: { settings.document.providerOptIn != false },
-                reset: { settings.setProviderOptIn(false) }),
-            SettingsField(
-                path: voice.appending("connection"),
-                label: "Connection",
-                help: "Which configured connection transcribes uploaded audio.",
-                keywords: ["provider", "endpoint", "openai", "server", "account"],
-                kind: .select(
-                    options: connections.connections.map {
-                        SettingsOption(id: $0.id.uuidString, title: $0.displayName)
-                    },
-                    selection: Binding(
-                        get: { settings.document.providerConnectionID?.uuidString
-                            ?? connections.connections.first?.id.uuidString ?? "" },
-                        set: { settings.setProviderConnection(UUID(uuidString: $0)) })),
-                defaultDescription: "None",
-                isModified: { settings.document.providerConnectionID != nil },
-                reset: { settings.setProviderConnection(nil) }),
-            // Not `.secure`: this is a MODEL NAME ("whisper-1"), not a
-            // credential. Marking it secure would hide it from search for no
-            // security gain. The TTS API key (Speech group) is the page's only
-            // real secret.
-            SettingsField(
-                path: voice.appending("providerModel"),
-                label: "Model",
-                help: "Transcription model requested from the provider.",
-                keywords: ["whisper", "model", "engine", "name"],
-                kind: .text(Binding(
-                    get: { settings.document.providerModel },
-                    set: { settings.setProviderModel($0) })),
-                defaultDescription: "whisper-1",
-                isModified: { settings.document.providerModel != "whisper-1" },
-                reset: { settings.setProviderModel("whisper-1") }),
-            SettingsField(
-                path: voice.appending("locale"),
-                label: "Locale",
-                help: "Language hint for speech recognition, as a BCP-47 tag.",
-                keywords: ["language", "region", "bcp-47", "en-US", "accent"],
-                kind: .text(Binding(
-                    get: { settings.document.localeIdentifier },
-                    set: { settings.setLocale($0) })),
-                defaultDescription: "en-US",
-                isModified: { settings.document.localeIdentifier != "en-US" },
-                reset: { settings.setLocale("en-US") }),
-            // The one deliberate `.custom` here: a READ-ONLY display of the
-            // current chord. It is rebound in Settings → Keyboard, so there is
-            // nothing to edit; the kit has no informational field kind and one
-            // is not worth adding for a single row.
-            hotkeyField(environment, path: voice.appending("hotkey"))
-        ])
+        return SettingsGroup(
+            path: voice, title: "Voice",
+            fields: [
+                SettingsField(
+                    path: voice.appending("backend"),
+                    label: "Backend",
+                    help: "On-device keeps audio private; Provider sends it to a configured connection.",
+                    keywords: ["transcription", "whisper", "on-device", "offline", "stt", "engine"],
+                    kind: .select(
+                        options: TranscriptionBackendKind.allCases.map {
+                            SettingsOption(id: $0.rawValue, title: backendTitle($0))
+                        },
+                        selection: Binding(
+                            get: { settings.document.backend.rawValue },
+                            set: { raw in
+                                guard let kind = TranscriptionBackendKind(rawValue: raw) else { return }
+                                settings.setBackend(kind)
+                            })),
+                    defaultDescription: backendTitle(.onDevice),
+                    isModified: { settings.document.backend != .onDevice },
+                    reset: { settings.setBackend(.onDevice) }),
+                SettingsField(
+                    path: voice.appending("mode"),
+                    label: "Push-to-talk mode",
+                    help: "Hold records while the hotkey is down; Toggle starts and stops on separate presses.",
+                    keywords: ["hold", "toggle", "ptt", "dictation", "microphone"],
+                    kind: .select(
+                        options: PushToTalkMode.allCases.map {
+                            SettingsOption(id: $0.rawValue, title: $0 == .hold ? "Hold" : "Toggle")
+                        },
+                        selection: Binding(
+                            get: { settings.document.mode.rawValue },
+                            set: { raw in
+                                guard let mode = PushToTalkMode(rawValue: raw) else { return }
+                                settings.setMode(mode)
+                            })),
+                    defaultDescription: "Hold",
+                    isModified: { settings.document.mode != .hold },
+                    reset: { settings.setMode(.hold) }),
+                SettingsField(
+                    path: voice.appending("autoSend"),
+                    label: "Auto-send after dictation",
+                    help: "Sends the transcript to the assistant as soon as dictation ends.",
+                    keywords: ["send", "submit", "dictation", "automatic", "enter"],
+                    kind: .toggle(
+                        Binding(
+                            get: { settings.document.autoSend },
+                            set: { settings.setAutoSend($0) })),
+                    // Reads as an affirmative label but the store default is false.
+                    defaultDescription: "Off",
+                    isModified: { settings.document.autoSend != false },
+                    reset: { settings.setAutoSend(false) }),
+                SettingsField(
+                    path: voice.appending("providerOptIn"),
+                    label: "Upload audio to provider",
+                    help: "Opt in to sending dictated audio to the selected connection for transcription.",
+                    keywords: ["upload", "opt-in", "privacy", "cloud", "consent"],
+                    kind: .toggle(
+                        Binding(
+                            get: { settings.document.providerOptIn },
+                            set: { settings.setProviderOptIn($0) })),
+                    defaultDescription: "Off",
+                    isModified: { settings.document.providerOptIn != false },
+                    reset: { settings.setProviderOptIn(false) }),
+                SettingsField(
+                    path: voice.appending("connection"),
+                    label: "Connection",
+                    help: "Which configured connection transcribes uploaded audio.",
+                    keywords: ["provider", "endpoint", "openai", "server", "account"],
+                    kind: .select(
+                        options: connections.connections.map {
+                            SettingsOption(id: $0.id.uuidString, title: $0.displayName)
+                        },
+                        selection: Binding(
+                            get: {
+                                settings.document.providerConnectionID?.uuidString
+                                    ?? connections.connections.first?.id.uuidString ?? ""
+                            },
+                            set: { settings.setProviderConnection(UUID(uuidString: $0)) })),
+                    defaultDescription: "None",
+                    isModified: { settings.document.providerConnectionID != nil },
+                    reset: { settings.setProviderConnection(nil) }),
+                // Not `.secure`: this is a MODEL NAME ("whisper-1"), not a
+                // credential. Marking it secure would hide it from search for no
+                // security gain. The TTS API key (Speech group) is the page's only
+                // real secret.
+                SettingsField(
+                    path: voice.appending("providerModel"),
+                    label: "Model",
+                    help: "Transcription model requested from the provider.",
+                    keywords: ["whisper", "model", "engine", "name"],
+                    kind: .text(
+                        Binding(
+                            get: { settings.document.providerModel },
+                            set: { settings.setProviderModel($0) })),
+                    defaultDescription: "whisper-1",
+                    isModified: { settings.document.providerModel != "whisper-1" },
+                    reset: { settings.setProviderModel("whisper-1") }),
+                SettingsField(
+                    path: voice.appending("locale"),
+                    label: "Locale",
+                    help: "Language hint for speech recognition, as a BCP-47 tag.",
+                    keywords: ["language", "region", "bcp-47", "en-US", "accent"],
+                    kind: .text(
+                        Binding(
+                            get: { settings.document.localeIdentifier },
+                            set: { settings.setLocale($0) })),
+                    defaultDescription: "en-US",
+                    isModified: { settings.document.localeIdentifier != "en-US" },
+                    reset: { settings.setLocale("en-US") }),
+                // The one deliberate `.custom` here: a READ-ONLY display of the
+                // current chord. It is rebound in Settings → Keyboard, so there is
+                // nothing to edit; the kit has no informational field kind and one
+                // is not worth adding for a single row.
+                hotkeyField(environment, path: voice.appending("hotkey")),
+            ])
     }
 
     // MARK: - Keyboard

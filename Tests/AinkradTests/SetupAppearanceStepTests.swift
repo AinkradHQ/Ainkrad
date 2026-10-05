@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("Setup appearance step")
 @MainActor
@@ -11,10 +12,11 @@ struct SetupAppearanceStepTests {
         defer { t.cleanup() }
         let env = AppEnvironment.bootstrap(home: t.home, defaults: t.defaults)
 
-        SetupAppearance.apply(theme: .tokyoNight, accentHex: "FF8800",
-                              family: .jetBrainsMono, scale: .large,
-                              icon: .purple, iconAppearance: .dark,
-                              themeManager: env.themeManager, iconStore: env.appIconStore)
+        SetupAppearance.apply(
+            theme: .tokyoNight, accentHex: "FF8800",
+            family: .jetBrainsMono, scale: .large,
+            icon: .purple, iconAppearance: .dark,
+            themeManager: env.themeManager, iconStore: env.appIconStore)
 
         #expect(env.themeManager.currentTheme == .tokyoNight)
         #expect(env.themeManager.uiFontFamily == .jetBrainsMono)
@@ -29,10 +31,11 @@ struct SetupAppearanceStepTests {
         defer { t.cleanup() }
         let env = AppEnvironment.bootstrap(home: t.home, defaults: t.defaults)
 
-        SetupAppearance.apply(theme: .nord, accentHex: "00FFAA",
-                              family: .exo2, scale: .medium,
-                              icon: .auto, iconAppearance: .system,
-                              themeManager: env.themeManager, iconStore: env.appIconStore)
+        SetupAppearance.apply(
+            theme: .nord, accentHex: "00FFAA",
+            family: .exo2, scale: .medium,
+            icon: .auto, iconAppearance: .system,
+            themeManager: env.themeManager, iconStore: env.appIconStore)
 
         #expect(env.themeManager.accentColorHex == "00FFAA")
     }

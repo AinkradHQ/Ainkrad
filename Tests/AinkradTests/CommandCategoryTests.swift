@@ -1,4 +1,5 @@
 import Testing
+
 @testable import Ainkrad
 
 @Suite("CommandCategory")
@@ -37,7 +38,9 @@ struct CommandCategoryTests {
     }
 
     private func namedCmd(_ name: String, _ cat: CommandCategory) -> SlashCommand {
-        SlashCommand(name: name, summary: "\(name) does things", usage: "/\(name)", category: cat) { _, _ in .handled(note: nil) }
+        SlashCommand(name: name, summary: "\(name) does things", usage: "/\(name)", category: cat) { _, _ in
+            .handled(note: nil)
+        }
     }
 
     @Test func groupedOrdersSectionsAndOmitsEmpty() {

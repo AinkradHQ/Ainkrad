@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("MenuBarPresence")
@@ -14,8 +15,10 @@ struct MenuBarPresenceTests {
     @Test func toggleFlipsPopoverState() {
         let p = MenuBarPresence(runs: EmptyMenuBarRunSource())
         #expect(p.isPopoverOpen == false)
-        p.toggle(); #expect(p.isPopoverOpen == true)
-        p.toggle(); #expect(p.isPopoverOpen == false)
+        p.toggle()
+        #expect(p.isPopoverOpen == true)
+        p.toggle()
+        #expect(p.isPopoverOpen == false)
     }
 
     @Test func summaryWhenNoRuns() {

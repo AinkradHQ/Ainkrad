@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 import Foundation
 import Observation
-import AinkradHostRuntime
 
 struct AgentPermissionDocument: PersistableDocument {
     static let documentID = "agent-permissions"
@@ -14,13 +14,15 @@ struct AgentPermissionDocument: PersistableDocument {
     static let migrators: [DocumentMigrator] = [
         DocumentMigrator(from: 1) { payload in
             guard case .object(var root) = payload,
-                  case .array(let list)? = root["allowlist"] else { return payload }
-            root["allowlist"] = .array(list.map { entry in
-                guard case .string(let name) = entry else { return entry }
-                return .string(AppIDRenames.renamedToolName(name))
-            })
+                case .array(let list)? = root["allowlist"]
+            else { return payload }
+            root["allowlist"] = .array(
+                list.map { entry in
+                    guard case .string(let name) = entry else { return entry }
+                    return .string(AppIDRenames.renamedToolName(name))
+                })
             return .object(root)
-        },
+        }
     ]
 
     var defaultMode: AgentPermissionMode = .ask
@@ -30,10 +32,12 @@ struct AgentPermissionDocument: PersistableDocument {
     /// `Ask`/`Auto-approve` modes too (unless explicitly allowlisted).
     var gateReads: Bool = true
 
-    init(defaultMode: AgentPermissionMode = .ask,
-         allowlist: [String] = [],
-         perWorkspace: [String: AgentPermissionMode] = [:],
-         gateReads: Bool = true) {
+    init(
+        defaultMode: AgentPermissionMode = .ask,
+        allowlist: [String] = [],
+        perWorkspace: [String: AgentPermissionMode] = [:],
+        gateReads: Bool = true
+    ) {
         self.defaultMode = defaultMode
         self.allowlist = allowlist
         self.perWorkspace = perWorkspace

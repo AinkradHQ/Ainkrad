@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradSignal
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @MainActor
@@ -10,8 +11,9 @@ final class SageSignalContextTests {
         func deliver(_ event: SignalEvent, to channels: Set<DeliveryChannel>) {}
     }
     private struct Ctx: SignalContextProviding {
-        var deliveryContext = DeliveryContext(hostIsFrontmost: true, visibleAppIDs: [],
-                                              systemDoNotDisturb: false, hostFocusMode: false)
+        var deliveryContext = DeliveryContext(
+            hostIsFrontmost: true, visibleAppIDs: [],
+            systemDoNotDisturb: false, hostFocusMode: false)
     }
 
     private let deliverer = NullDeliverer()
@@ -19,8 +21,11 @@ final class SageSignalContextTests {
     private func makeCenter() throws -> (SignalCenter, URL) {
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("signal-\(UUID().uuidString).sqlite")
-        return (SignalCenter(store: try SignalStore(url: url),
-                             deliverer: deliverer, contextProvider: Ctx()), url)
+        return (
+            SignalCenter(
+                store: try SignalStore(url: url),
+                deliverer: deliverer, contextProvider: Ctx()), url
+        )
     }
 
     @Test("the context summarizes recent failures first and stays bounded")
@@ -28,11 +33,13 @@ final class SageSignalContextTests {
         let (center, url) = try makeCenter()
         defer { try? FileManager.default.removeItem(at: url) }
         for i in 0..<40 {
-            center.emit(SignalDraft(kind: "test.event", severity: .info, title: "noise \(i)"),
-                        from: .host)
+            center.emit(
+                SignalDraft(kind: "test.event", severity: .info, title: "noise \(i)"),
+                from: .host)
         }
-        center.emit(SignalDraft(kind: "build.failed", severity: .failure, title: "THE FAILURE"),
-                    from: .app(appID: "raven"))
+        center.emit(
+            SignalDraft(kind: "build.failed", severity: .failure, title: "THE FAILURE"),
+            from: .app(appID: "raven"))
 
         let summary = SageSignalContext(center: center).summary()
         #expect(summary.contains("THE FAILURE"))
@@ -50,8 +57,10 @@ final class SageSignalContextTests {
     func searchTool() throws {
         let (center, url) = try makeCenter()
         defer { try? FileManager.default.removeItem(at: url) }
-        center.emit(SignalDraft(kind: "build.failed", severity: .failure,
-                                title: "Build failed", body: "linker error"), from: .host)
+        center.emit(
+            SignalDraft(
+                kind: "build.failed", severity: .failure,
+                title: "Build failed", body: "linker error"), from: .host)
         let result = SageSignalContext(center: center).search("linker")
         #expect(result.contains("Build failed"))
     }
@@ -64,11 +73,13 @@ final class SageSignalContextTests {
         // wrongly exactly when there is most to say.
         let (center, url) = try makeCenter()
         defer { try? FileManager.default.removeItem(at: url) }
-        center.emit(SignalDraft(kind: "build.failed", severity: .failure, title: "EARLY FAILURE"),
-                    from: .app(appID: "raven"))
+        center.emit(
+            SignalDraft(kind: "build.failed", severity: .failure, title: "EARLY FAILURE"),
+            from: .app(appID: "raven"))
         for i in 0..<100 {
-            center.emit(SignalDraft(kind: "test.event", severity: .info, title: "noise \(i)"),
-                        from: .host)
+            center.emit(
+                SignalDraft(kind: "test.event", severity: .info, title: "noise \(i)"),
+                from: .host)
         }
         #expect(SageSignalContext(center: center).summary().contains("EARLY FAILURE"))
     }
@@ -79,8 +90,9 @@ final class SageSignalContextTests {
         // anything actionable — "Build failed" alone does not say whose build.
         let (center, url) = try makeCenter()
         defer { try? FileManager.default.removeItem(at: url) }
-        center.emit(SignalDraft(kind: "sync.failed", severity: .failure, title: "Sync failed"),
-                    from: .app(appID: "raven"))
+        center.emit(
+            SignalDraft(kind: "sync.failed", severity: .failure, title: "Sync failed"),
+            from: .app(appID: "raven"))
         let summary = SageSignalContext(center: center).summary()
         #expect(summary.lowercased().contains("raven"))
     }
@@ -101,8 +113,10 @@ final class SageSignalContextTests {
         let (center, url) = try makeCenter()
         defer { try? FileManager.default.removeItem(at: url) }
         for i in 0..<200 {
-            center.emit(SignalDraft(kind: "test.event", severity: .info,
-                                    title: "linker noise \(i)"), from: .host)
+            center.emit(
+                SignalDraft(
+                    kind: "test.event", severity: .info,
+                    title: "linker noise \(i)"), from: .host)
         }
         #expect(SageSignalContext(center: center).search("linker").count < 8000)
     }
@@ -123,8 +137,10 @@ final class SageSignalContextTests {
     func toolAfterAttach() async throws {
         let (center, url) = try makeCenter()
         defer { try? FileManager.default.removeItem(at: url) }
-        center.emit(SignalDraft(kind: "build.failed", severity: .failure,
-                                title: "Build failed", body: "linker error"), from: .host)
+        center.emit(
+            SignalDraft(
+                kind: "build.failed", severity: .failure,
+                title: "Build failed", body: "linker error"), from: .host)
 
         let access = SignalReadAccess()
         access.attach(center)
@@ -163,11 +179,13 @@ final class SageSignalContextTests {
         let (center, url) = try makeCenter()
         defer { try? FileManager.default.removeItem(at: url) }
         for i in 0..<17 {
-            center.emit(SignalDraft(kind: "sync.failed", severity: .warning,
-                                    title: "Could not sync",
-                                    body: "attempt \(i)",
-                                    dedupeKey: "attempt-\(i)"),
-                        from: .app(appID: "raven"))
+            center.emit(
+                SignalDraft(
+                    kind: "sync.failed", severity: .warning,
+                    title: "Could not sync",
+                    body: "attempt \(i)",
+                    dedupeKey: "attempt-\(i)"),
+                from: .app(appID: "raven"))
         }
         let summary = SageSignalContext(center: center).summary()
         let syncLines = summary.split(separator: "\n").filter { $0.contains("Could not sync") }
@@ -180,12 +198,16 @@ final class SageSignalContextTests {
         let (center, url) = try makeCenter()
         defer { try? FileManager.default.removeItem(at: url) }
         for i in 0..<40 {
-            center.emit(SignalDraft(kind: "sync.failed", severity: .warning,
-                                    title: "Could not sync", dedupeKey: "a-\(i)"),
-                        from: .app(appID: "raven"))
+            center.emit(
+                SignalDraft(
+                    kind: "sync.failed", severity: .warning,
+                    title: "Could not sync", dedupeKey: "a-\(i)"),
+                from: .app(appID: "raven"))
         }
-        center.emit(SignalDraft(kind: "build.failed", severity: .failure,
-                                title: "QUEST BUILD BROKE"), from: .app(appID: "quest"))
+        center.emit(
+            SignalDraft(
+                kind: "build.failed", severity: .failure,
+                title: "QUEST BUILD BROKE"), from: .app(appID: "quest"))
         #expect(SageSignalContext(center: center).summary().contains("QUEST BUILD BROKE"))
     }
 
@@ -197,8 +219,10 @@ final class SageSignalContextTests {
         // would search for.
         let (center, url) = try makeCenter()
         defer { try? FileManager.default.removeItem(at: url) }
-        center.emit(SignalDraft(kind: "sync.failed", severity: .warning,
-                                title: "Could not sync mail"), from: .app(appID: "raven"))
+        center.emit(
+            SignalDraft(
+                kind: "sync.failed", severity: .warning,
+                title: "Could not sync mail"), from: .app(appID: "raven"))
         let result = SageSignalContext(center: center).search("failed")
         #expect(result.contains("Could not sync mail"))
     }
@@ -207,8 +231,10 @@ final class SageSignalContextTests {
     func kindAndTextMatchDeduplicate() throws {
         let (center, url) = try makeCenter()
         defer { try? FileManager.default.removeItem(at: url) }
-        center.emit(SignalDraft(kind: "build.failed", severity: .failure,
-                                title: "Build failed"), from: .host)
+        center.emit(
+            SignalDraft(
+                kind: "build.failed", severity: .failure,
+                title: "Build failed"), from: .host)
         let lines = SageSignalContext(center: center).search("failed")
             .split(separator: "\n").filter { $0.contains("Build failed") }
         #expect(lines.count == 1)
@@ -219,8 +245,9 @@ final class SageSignalContextTests {
         let (center, url) = try makeCenter()
         defer { try? FileManager.default.removeItem(at: url) }
         for i in 0..<4 {
-            center.emit(SignalDraft(kind: "k\(i)", severity: .info, title: "t\(i)"),
-                        from: .app(appID: "raven"))
+            center.emit(
+                SignalDraft(kind: "k\(i)", severity: .info, title: "t\(i)"),
+                from: .app(appID: "raven"))
         }
         // Same floor as the Settings readout, so the two never disagree about
         // whether there is enough history to talk about.
@@ -232,9 +259,11 @@ final class SageSignalContextTests {
         let (center, url) = try makeCenter()
         defer { try? FileManager.default.removeItem(at: url) }
         for i in 0..<6 {
-            center.emit(SignalDraft(kind: "sync.failed", severity: .warning,
-                                    title: "Sync failed \(i)"),
-                        from: .app(appID: "raven"))
+            center.emit(
+                SignalDraft(
+                    kind: "sync.failed", severity: .warning,
+                    title: "Sync failed \(i)"),
+                from: .app(appID: "raven"))
         }
         let line = SageSignalContext(center: center).healthLine()
         #expect(line.contains("Last 7 days"))
@@ -251,9 +280,11 @@ final class SageSignalContextTests {
         let (center, url) = try makeCenter()
         defer { try? FileManager.default.removeItem(at: url) }
         for i in 0..<20 {
-            center.emit(SignalDraft(kind: "some.rather.long.kind.name",
-                                    severity: .warning, title: "t\(i)"),
-                        from: .app(appID: "raven"))
+            center.emit(
+                SignalDraft(
+                    kind: "some.rather.long.kind.name",
+                    severity: .warning, title: "t\(i)"),
+                from: .app(appID: "raven"))
         }
         let line = SageSignalContext(center: center).healthLine()
         // Around eighty characters out of three thousand. If this ever grows
@@ -266,17 +297,20 @@ final class SageSignalContextTests {
         let (center, url) = try makeCenter()
         defer { try? FileManager.default.removeItem(at: url) }
         for i in 0..<200 {
-            center.emit(SignalDraft(kind: "build.failed", severity: .failure,
-                                    title: String(repeating: "x", count: 60),
-                                    body: String(repeating: "y", count: 200),
-                                    dedupeKey: "d\(i)"),
-                        from: .app(appID: "raven"))
+            center.emit(
+                SignalDraft(
+                    kind: "build.failed", severity: .failure,
+                    title: String(repeating: "x", count: 60),
+                    body: String(repeating: "y", count: 200),
+                    dedupeKey: "d\(i)"),
+                from: .app(appID: "raven"))
         }
         let summary = SageSignalContext(center: center).summary()
         // The line is counted against the SAME budget, not added on top — an
         // uncounted line is a budget that quietly is not one.
-        #expect(summary.count <= SageSignalContext.summaryBudget,
-                "summary is \(summary.count) characters")
+        #expect(
+            summary.count <= SageSignalContext.summaryBudget,
+            "summary is \(summary.count) characters")
     }
 
     @Test("events win the budget when it is tight")
@@ -284,10 +318,12 @@ final class SageSignalContextTests {
         let (center, url) = try makeCenter()
         defer { try? FileManager.default.removeItem(at: url) }
         for i in 0..<200 {
-            center.emit(SignalDraft(kind: "build.failed", severity: .failure,
-                                    title: String(repeating: "x", count: 60),
-                                    dedupeKey: "d\(i)"),
-                        from: .app(appID: "raven"))
+            center.emit(
+                SignalDraft(
+                    kind: "build.failed", severity: .failure,
+                    title: String(repeating: "x", count: 60),
+                    dedupeKey: "d\(i)"),
+                from: .app(appID: "raven"))
         }
         let summary = SageSignalContext(center: center).summary()
         // A readout that pushed two failures out of the context would be worse

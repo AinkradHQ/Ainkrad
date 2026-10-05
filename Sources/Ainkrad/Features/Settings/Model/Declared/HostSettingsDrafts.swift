@@ -1,6 +1,6 @@
-import SwiftUI
-import AppKit
 import AinkradHostRuntime
+import AppKit
+import SwiftUI
 
 /// What a declared host page must remember between rebuilds (the settings
 /// overlay rebuilds its catalog on every render): text being typed that is
@@ -37,8 +37,9 @@ final class HostSettingsDrafts {
 
     func skills(_ environment: AppEnvironment) -> SkillsManagerViewModel {
         if let skillsModel { return skillsModel }
-        let made = SkillsManagerViewModel(registry: environment.skillRegistry, store: environment.skillCommandStore,
-                                          resyncCommands: { [weak environment] in environment?.resyncSkillCommands() })
+        let made = SkillsManagerViewModel(
+            registry: environment.skillRegistry, store: environment.skillCommandStore,
+            resyncCommands: { [weak environment] in environment?.resyncSkillCommands() })
         skillsModel = made
         return made
     }
@@ -105,7 +106,10 @@ final class HostSettingsDrafts {
     /// Forget the per-provider speech drafts, so switching provider shows that
     /// provider's saved values.
     func resetSpeechDrafts() {
-        speechAPIKey = nil; speechVoice = nil; speechModel = nil; speechBaseURL = nil
+        speechAPIKey = nil
+        speechVoice = nil
+        speechModel = nil
+        speechBaseURL = nil
     }
 }
 

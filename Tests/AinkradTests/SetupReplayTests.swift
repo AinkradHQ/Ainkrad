@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 @testable import AinkradHostRuntime
 
@@ -10,9 +11,11 @@ struct SetupReplayTests {
     /// nothing owed — the state every existing user is in.
     private func completedPersistence() -> InMemoryPersistenceStore {
         let store = InMemoryPersistenceStore()
-        store.save(SetupDocument(completedAt: Date(timeIntervalSince1970: 0),
-                                 setupVersion: SetupCoordinator.currentSetupVersion,
-                                 deferredSteps: []))
+        store.save(
+            SetupDocument(
+                completedAt: Date(timeIntervalSince1970: 0),
+                setupVersion: SetupCoordinator.currentSetupVersion,
+                deferredSteps: []))
         return store
     }
 
@@ -20,16 +23,18 @@ struct SetupReplayTests {
     /// completed vault shows the Ready screen and nothing else.
     @Test("a completed vault re-raises to Done alone without replay")
     func withoutReplay() {
-        let coordinator = SetupCoordinator(persistence: completedPersistence(),
-                                           isProvisionalHome: false)
+        let coordinator = SetupCoordinator(
+            persistence: completedPersistence(),
+            isProvisionalHome: false)
         #expect(coordinator.steps == [.done])
     }
 
     @Test("replay walks every step")
     func replayWalksSteps() {
-        let coordinator = SetupCoordinator(persistence: completedPersistence(),
-                                           isProvisionalHome: false,
-                                           isReplay: true)
+        let coordinator = SetupCoordinator(
+            persistence: completedPersistence(),
+            isProvisionalHome: false,
+            isReplay: true)
         #expect(coordinator.steps.contains(.appearance))
         #expect(coordinator.steps.contains(.you))
         #expect(coordinator.steps.contains(.providers))
@@ -41,17 +46,19 @@ struct SetupReplayTests {
     /// read-only.
     @Test("replay never re-asks for the Home folder")
     func replaySkipsHome() {
-        let coordinator = SetupCoordinator(persistence: completedPersistence(),
-                                           isProvisionalHome: false,
-                                           isReplay: true)
+        let coordinator = SetupCoordinator(
+            persistence: completedPersistence(),
+            isProvisionalHome: false,
+            isReplay: true)
         #expect(!coordinator.steps.contains(.home))
     }
 
     @Test("replay starts at the first step, not at Done")
     func replayStartsAtFirstStep() {
-        let coordinator = SetupCoordinator(persistence: completedPersistence(),
-                                           isProvisionalHome: false,
-                                           isReplay: true)
+        let coordinator = SetupCoordinator(
+            persistence: completedPersistence(),
+            isProvisionalHome: false,
+            isReplay: true)
         #expect(coordinator.step == .welcome)
     }
 }

@@ -1,8 +1,9 @@
+import AinkradHostRuntime
 // Tests/AinkradTests/CloudRoutingTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("Cloud routing")
 @MainActor
@@ -11,16 +12,21 @@ struct CloudRoutingTests {
         let creds = CloudCredentialsStore(secrets: InMemorySecretStore())
         creds.setCredential("tok", for: .modal)
         let store = SandboxProfileStore(persistence: InMemoryPersistenceStore())
-        store.upsert(SandboxProfile(id: "cloud-p", name: "Cloud", backend: .cloud,
-            fsPolicy: FilesystemPolicy(readablePaths: [], writablePaths: []),
-            networkPolicy: .on, resourceLimits: ResourceLimits(timeoutSeconds: 60), toolAllowList: []))
-        let router = ExecutionRouter(profiles: store, backends: [
-            .seatbelt: SeatbeltBackend(),
-            .cloud: ModalCloudBackend(credentials: creds),
-        ])
+        store.upsert(
+            SandboxProfile(
+                id: "cloud-p", name: "Cloud", backend: .cloud,
+                fsPolicy: FilesystemPolicy(readablePaths: [], writablePaths: []),
+                networkPolicy: .on, resourceLimits: ResourceLimits(timeoutSeconds: 60), toolAllowList: []))
+        let router = ExecutionRouter(
+            profiles: store,
+            backends: [
+                .seatbelt: SeatbeltBackend(),
+                .cloud: ModalCloudBackend(credentials: creds),
+            ])
         // No per-Agent opt-in → cloudNotOptedIn, even though creds exist.
         await #expect(throws: ExecutionRouterError.self) {
-            _ = try await router.route(tier: .background,
+            _ = try await router.route(
+                tier: .background,
                 policy: AgentExecutionPolicy(sandboxProfileID: "cloud-p", allowCloud: false, toolAllowList: nil))
         }
     }
@@ -29,16 +35,21 @@ struct CloudRoutingTests {
         let creds = CloudCredentialsStore(secrets: InMemorySecretStore())
         creds.setCredential("tok", for: .modal)
         let store = SandboxProfileStore(persistence: InMemoryPersistenceStore())
-        store.upsert(SandboxProfile(id: "cloud-p", name: "Cloud", backend: .cloud,
-            fsPolicy: FilesystemPolicy(readablePaths: [], writablePaths: []),
-            networkPolicy: .on, resourceLimits: ResourceLimits(timeoutSeconds: 60), toolAllowList: []))
+        store.upsert(
+            SandboxProfile(
+                id: "cloud-p", name: "Cloud", backend: .cloud,
+                fsPolicy: FilesystemPolicy(readablePaths: [], writablePaths: []),
+                networkPolicy: .on, resourceLimits: ResourceLimits(timeoutSeconds: 60), toolAllowList: []))
         let modal = ModalCloudBackend(credentials: creds)
-        let router = ExecutionRouter(profiles: store, backends: [
-            .seatbelt: SeatbeltBackend(),
-            .cloud: modal,
-        ])
+        let router = ExecutionRouter(
+            profiles: store,
+            backends: [
+                .seatbelt: SeatbeltBackend(),
+                .cloud: modal,
+            ])
 
-        let (backend, profile) = try await router.route(tier: .background,
+        let (backend, profile) = try await router.route(
+            tier: .background,
             policy: AgentExecutionPolicy(sandboxProfileID: "cloud-p", allowCloud: true, toolAllowList: nil))
         #expect(backend.kind == .cloud)
         #expect(profile.id == "cloud-p")
@@ -55,10 +66,12 @@ struct CloudRoutingTests {
         let creds = CloudCredentialsStore(secrets: InMemorySecretStore())
         creds.setCredential("tok", for: .modal)
         let store = SandboxProfileStore(persistence: InMemoryPersistenceStore())
-        let router = ExecutionRouter(profiles: store, backends: [
-            .seatbelt: SeatbeltBackend(),
-            .cloud: ModalCloudBackend(credentials: creds),
-        ])
+        let router = ExecutionRouter(
+            profiles: store,
+            backends: [
+                .seatbelt: SeatbeltBackend(),
+                .cloud: ModalCloudBackend(credentials: creds),
+            ])
         // No policy at all (nil) → falls back to the tier's restrictive
         // default, never cloud, regardless of configured credentials.
         let (backend, _) = try await router.route(tier: .background, policy: nil)

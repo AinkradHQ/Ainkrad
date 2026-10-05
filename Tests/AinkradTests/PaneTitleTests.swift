@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("Pane tab names")
@@ -79,7 +80,8 @@ struct PaneTitleTests {
 
     @Test("a layout written before renaming existed still decodes, with no names")
     func decodesLegacySnapshotWithoutTitles() throws {
-        let json = Data(#"{"axis":"h","fractions":[0.5,0.5],"children":[{"appID":"terminal"},{"appID":"settings"}]}"#.utf8)
+        let json = Data(
+            #"{"axis":"h","fractions":[0.5,0.5],"children":[{"appID":"terminal"},{"appID":"settings"}]}"#.utf8)
         let decoded = try JSONDecoder().decode(PaneSnapshot.self, from: json)
 
         let restored = TileLayout()

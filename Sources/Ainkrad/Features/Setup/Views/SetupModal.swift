@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// A decision the wizard has to stop for, raised by a step and presented by
 /// `SetupOverlayView` above the whole gate.
@@ -138,7 +138,7 @@ struct SetupModalView: View {
     private var tint: Color {
         switch modal.tone {
         case .informational: return tokens.accentSecondary
-        case .caution:       return tokens.accentTertiary
+        case .caution: return tokens.accentTertiary
         }
     }
 }

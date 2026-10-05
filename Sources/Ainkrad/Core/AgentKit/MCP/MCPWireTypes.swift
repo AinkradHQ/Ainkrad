@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 enum MCPError: Error, Equatable {
     case transport(String)
@@ -39,9 +39,11 @@ struct MCPToolDescriptor: Equatable {
     /// and nothing about a remote tool could need a local app window anyway.
     let requiresLiveApp: Bool
 
-    init(name: String, description: String, inputSchema: JSONValue,
-         destructive: Bool = false, readOnly: Bool = false,
-         requiresLiveApp: Bool = false) {
+    init(
+        name: String, description: String, inputSchema: JSONValue,
+        destructive: Bool = false, readOnly: Bool = false,
+        requiresLiveApp: Bool = false
+    ) {
         self.name = name
         self.description = description
         self.inputSchema = inputSchema
@@ -64,8 +66,10 @@ struct MCPResourceDescriptor: Equatable {
     /// See `MCPToolDescriptor.requiresLiveApp` — same key, same default.
     let requiresLiveApp: Bool
 
-    init(uri: String, name: String, mimeType: String, description: String = "",
-         requiresLiveApp: Bool = false) {
+    init(
+        uri: String, name: String, mimeType: String, description: String = "",
+        requiresLiveApp: Bool = false
+    ) {
         self.uri = uri
         self.name = name
         self.mimeType = mimeType
@@ -78,8 +82,10 @@ struct MCPResourceDescriptor: Equatable {
 /// keep correlation simple and match `JSONValue.stringValue`.
 enum MCPRPC {
     static func request(id: String, method: String, params: JSONValue) -> JSONValue {
-        .object(["jsonrpc": .string("2.0"), "id": .string(id),
-                 "method": .string(method), "params": params])
+        .object([
+            "jsonrpc": .string("2.0"), "id": .string(id),
+            "method": .string(method), "params": params,
+        ])
     }
 
     static func notification(method: String, params: JSONValue) -> JSONValue {

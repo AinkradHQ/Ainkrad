@@ -1,5 +1,5 @@
-import Foundation
 import AinkradSignal
+import Foundation
 
 /// How the user last left the feed.
 ///
@@ -17,11 +17,13 @@ struct SignalViewState: Codable, Equatable {
     var unreadOnly: Bool
     var collapsedSources: Set<String>
 
-    init(grouping: Grouping = .byTime,
-         selectedSource: SignalSource? = nil,
-         severities: Set<SignalSeverity> = [],
-         unreadOnly: Bool = false,
-         collapsedSources: Set<String> = []) {
+    init(
+        grouping: Grouping = .byTime,
+        selectedSource: SignalSource? = nil,
+        severities: Set<SignalSeverity> = [],
+        unreadOnly: Bool = false,
+        collapsedSources: Set<String> = []
+    ) {
         self.grouping = grouping
         self.selectedSource = selectedSource
         self.severities = severities
@@ -37,8 +39,9 @@ struct SignalViewState: Codable, Equatable {
         selectedSource = try c.decodeIfPresent(SignalSource.self, forKey: .selectedSource)
         severities = try c.decodeIfPresent(Set<SignalSeverity>.self, forKey: .severities) ?? []
         unreadOnly = try c.decodeIfPresent(Bool.self, forKey: .unreadOnly) ?? false
-        collapsedSources = try c.decodeIfPresent(
-            Set<String>.self, forKey: .collapsedSources) ?? []
+        collapsedSources =
+            try c.decodeIfPresent(
+                Set<String>.self, forKey: .collapsedSources) ?? []
     }
 
     /// The two views the user would otherwise rebuild by hand every time. Two,
@@ -73,9 +76,10 @@ struct SignalViewState: Codable, Equatable {
     /// The store filter this view describes. Grouping and collapse are
     /// presentation only and deliberately absent.
     var filter: SignalFilter {
-        SignalFilter(sources: selectedSource.map { [$0] },
-                     severities: severities.isEmpty ? nil : severities,
-                     unreadOnly: unreadOnly)
+        SignalFilter(
+            sources: selectedSource.map { [$0] },
+            severities: severities.isEmpty ? nil : severities,
+            unreadOnly: unreadOnly)
     }
 }
 
@@ -87,7 +91,7 @@ struct SignalViewStateStore {
 
     func load() -> SignalViewState {
         guard let data = try? Data(contentsOf: url),
-              let state = try? JSONDecoder().decode(SignalViewState.self, from: data)
+            let state = try? JSONDecoder().decode(SignalViewState.self, from: data)
         else { return SignalViewState() }
         return state
     }
@@ -99,7 +103,9 @@ struct SignalViewStateStore {
         do {
             try data.write(to: url, options: .atomic)
         } catch {
-            Log.persistence.error("Failed to write \(data.count, privacy: .public) bytes to \(url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            Log.persistence.error(
+                "Failed to write \(data.count, privacy: .public) bytes to \(url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
+            )
         }
     }
 }

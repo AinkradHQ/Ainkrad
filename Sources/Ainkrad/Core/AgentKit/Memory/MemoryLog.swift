@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// The reviewable audit trail of every write to the host-internal memory
 /// files (USER.md, MEMORY.md, AGENTS.md): who/what triggered the write, what
@@ -7,7 +7,7 @@ import AinkradHostRuntime
 struct MemoryLogEntry: Codable, Equatable, Identifiable {
     let id: UUID
     let date: Date
-    let file: String            // MemoryFile.rawValue
+    let file: String  // MemoryFile.rawValue
     let provenance: MemoryProvenance
     let addedText: String
     let priorSnapshot: String
@@ -41,17 +41,21 @@ final class MemoryLogStore {
 
     func entries() -> [MemoryLogEntry] { doc.entries.sorted { $0.date > $1.date } }
 
-    func record(file: MemoryFile, provenance: MemoryProvenance,
-                addedText: String, priorSnapshot: String) {
-        doc.entries.append(MemoryLogEntry(
-            id: UUID(), date: Date(), file: file.rawValue,
-            provenance: provenance, addedText: addedText, priorSnapshot: priorSnapshot))
+    func record(
+        file: MemoryFile, provenance: MemoryProvenance,
+        addedText: String, priorSnapshot: String
+    ) {
+        doc.entries.append(
+            MemoryLogEntry(
+                id: UUID(), date: Date(), file: file.rawValue,
+                provenance: provenance, addedText: addedText, priorSnapshot: priorSnapshot))
         persistence.save(doc)
     }
 
     func undo(_ id: UUID) {
         guard let entry = doc.entries.first(where: { $0.id == id }),
-              let file = MemoryFile(rawValue: entry.file) else { return }
+            let file = MemoryFile(rawValue: entry.file)
+        else { return }
         memory.write(entry.priorSnapshot, to: file)
         doc.entries.removeAll { $0.id == id }
         persistence.save(doc)

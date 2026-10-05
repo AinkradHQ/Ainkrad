@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Resolves the Home at launch.
 ///
@@ -61,19 +61,21 @@ enum LaunchHomeResolver {
                 // Never migrate (and so never rename) the real machine's legacy container
                 // into a fixture — `legacyContainerURL()` is already nil in fixture mode;
                 // passing nil here makes it independent of what a caller injected.
-                let home = try adopt(roots.defaultVaultRoot,
-                                     pointerDirectory: pointerDirectory,
-                                     cacheRoot: cacheRoot,
-                                     legacyContainer: nil)
+                let home = try adopt(
+                    roots.defaultVaultRoot,
+                    pointerDirectory: pointerDirectory,
+                    cacheRoot: cacheRoot,
+                    legacyContainer: nil)
                 seedDebugFixtureIfNeeded(home: home)
                 return home
             }
             #endif
             guard let chosen = chooseVault() else { throw Failure.setupCancelled }
-            return try adopt(chosen,
-                             pointerDirectory: pointerDirectory,
-                             cacheRoot: cacheRoot,
-                             legacyContainer: legacyContainer)
+            return try adopt(
+                chosen,
+                pointerDirectory: pointerDirectory,
+                cacheRoot: cacheRoot,
+                legacyContainer: legacyContainer)
 
         @unknown default:
             throw Failure.unrecognizedResolution
@@ -117,14 +119,16 @@ enum LaunchHomeResolver {
         // to a half-populated vault that never gets migrated again.
         var migration: (container: URL, report: VaultMigration.Report)?
         if let container = legacyContainer,
-           VaultMigration.needsMigration(container: container) {
+            VaultMigration.needsMigration(container: container)
+        {
             migration = (container, try VaultMigration.migrate(fromContainer: container, into: home))
         }
 
         // `adopt` writes the marker and pointer; it returns an equivalent Home.
-        let adopted = try AinkradHome.adopt(chosen,
-                                            pointerDirectory: pointerDirectory,
-                                            cacheRoot: cacheRoot)
+        let adopted = try AinkradHome.adopt(
+            chosen,
+            pointerDirectory: pointerDirectory,
+            cacheRoot: cacheRoot)
 
         // ONLY NOW rename the legacy tree. Between a verified copy and a durable
         // pointer there is a window in which `adopt` can still throw — the pointer
@@ -144,11 +148,13 @@ enum LaunchHomeResolver {
         // failure alert in front of a setup that actually succeeded.
         if let migration {
             do {
-                try VaultMigration.markMigrated(container: migration.container,
-                                                report: migration.report)
+                try VaultMigration.markMigrated(
+                    container: migration.container,
+                    report: migration.report)
             } catch {
                 Log.persistence.error(
-                    "Migration completed but the legacy tree could not be marked: \(error.localizedDescription, privacy: .public)")
+                    "Migration completed but the legacy tree could not be marked: \(error.localizedDescription, privacy: .public)"
+                )
             }
         }
         return adopted
@@ -188,13 +194,15 @@ enum LaunchHomeResolver {
             do {
                 if let chosen = recoveryChoice {
                     recoveryChoice = nil
-                    return try adopt(chosen, pointerDirectory: pointerDirectory,
-                                     cacheRoot: cacheRoot, legacyContainer: legacyContainer)
+                    return try adopt(
+                        chosen, pointerDirectory: pointerDirectory,
+                        cacheRoot: cacheRoot, legacyContainer: legacyContainer)
                 }
-                return try resolveOrAdopt(chooseVault: chooseVault,
-                                          pointerDirectory: pointerDirectory,
-                                          cacheRoot: cacheRoot,
-                                          legacyContainer: legacyContainer)
+                return try resolveOrAdopt(
+                    chooseVault: chooseVault,
+                    pointerDirectory: pointerDirectory,
+                    cacheRoot: cacheRoot,
+                    legacyContainer: legacyContainer)
             } catch Failure.setupCancelled {
                 throw Failure.setupCancelled
             } catch {
@@ -251,8 +259,9 @@ enum LaunchHomeResolver {
         let base = FileManager.default.temporaryDirectory
             .appendingPathComponent("ainkrad-provisional-\(UUID().uuidString)", isDirectory: true)
         try? FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
-        return Home(vaultRoot: base.appendingPathComponent("vault", isDirectory: true),
-                    cacheRoot: base.appendingPathComponent("cache", isDirectory: true))
+        return Home(
+            vaultRoot: base.appendingPathComponent("vault", isDirectory: true),
+            cacheRoot: base.appendingPathComponent("cache", isDirectory: true))
     }
 
     /// The first-run folder chooser.
@@ -273,7 +282,8 @@ enum LaunchHomeResolver {
         panel.canCreateDirectories = true
         panel.allowsMultipleSelection = false
         panel.prompt = "Choose"
-        panel.message = "Choose a folder for your Ainkrad Home. "
+        panel.message =
+            "Choose a folder for your Ainkrad Home. "
             + "Pick an empty folder, or create a new one — Ainkrad will not take over "
             + "a folder that already has files in it."
         panel.directoryURL = FileManager.default.homeDirectoryForCurrentUser

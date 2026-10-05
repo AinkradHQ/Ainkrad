@@ -48,8 +48,10 @@ final class PaneCoordinator {
     var contextSummary: String? {
         guard let pane = frontmostPane else { return nil }
         let tab = pane.activeTab
-        var lines = ["Directory: \(tab.currentDirectory.path)",
-                     "Items: \(tab.visibleEntries.count)"]
+        var lines = [
+            "Directory: \(tab.currentDirectory.path)",
+            "Items: \(tab.visibleEntries.count)",
+        ]
         if !tab.selection.isEmpty {
             let names = tab.visibleEntries
                 .filter { tab.selection.contains($0.url) }

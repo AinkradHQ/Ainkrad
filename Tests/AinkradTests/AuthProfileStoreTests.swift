@@ -1,15 +1,17 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("AuthProfileStore")
 @MainActor
 struct AuthProfileStoreTests {
     @Test func fallsBackToPrimarySecretWhenNoAliases() {
         let secrets = InMemorySecretStore()
-        let c = Connection(id: UUID(), presetID: "openai", kind: .openAICompatible,
-                           displayName: "OpenAI", baseURL: "x", createdAt: Date())
+        let c = Connection(
+            id: UUID(), presetID: "openai", kind: .openAICompatible,
+            displayName: "OpenAI", baseURL: "x", createdAt: Date())
         secrets.setSecret("primary", for: c.secretID)
         let store = AuthProfileStore(persistence: InMemoryPersistenceStore(), secrets: secrets)
         #expect(store.keys(for: c) == ["primary"])
@@ -17,8 +19,9 @@ struct AuthProfileStoreTests {
 
     @Test func returnsAliasesInOrder() {
         let secrets = InMemorySecretStore()
-        let c = Connection(id: UUID(), presetID: "openai", kind: .openAICompatible,
-                           displayName: "OpenAI", baseURL: "x", createdAt: Date())
+        let c = Connection(
+            id: UUID(), presetID: "openai", kind: .openAICompatible,
+            displayName: "OpenAI", baseURL: "x", createdAt: Date())
         let store = AuthProfileStore(persistence: InMemoryPersistenceStore(), secrets: secrets)
         store.addKey("k1", alias: "a", for: c)
         store.addKey("k2", alias: "b", for: c)
@@ -27,8 +30,9 @@ struct AuthProfileStoreTests {
 
     @Test func removeKeyDropsAliasAndSecret() {
         let secrets = InMemorySecretStore()
-        let c = Connection(id: UUID(), presetID: "openai", kind: .openAICompatible,
-                           displayName: "OpenAI", baseURL: "x", createdAt: Date())
+        let c = Connection(
+            id: UUID(), presetID: "openai", kind: .openAICompatible,
+            displayName: "OpenAI", baseURL: "x", createdAt: Date())
         let store = AuthProfileStore(persistence: InMemoryPersistenceStore(), secrets: secrets)
         store.addKey("k1", alias: "a", for: c)
         store.addKey("k2", alias: "b", for: c)
@@ -40,8 +44,9 @@ struct AuthProfileStoreTests {
     @Test func metadataRoundTripsThroughPersistenceWithoutKeyMaterial() {
         let persistence = InMemoryPersistenceStore()
         let secrets = InMemorySecretStore()
-        let c = Connection(id: UUID(), presetID: "openai", kind: .openAICompatible,
-                           displayName: "OpenAI", baseURL: "x", createdAt: Date())
+        let c = Connection(
+            id: UUID(), presetID: "openai", kind: .openAICompatible,
+            displayName: "OpenAI", baseURL: "x", createdAt: Date())
         let store = AuthProfileStore(persistence: persistence, secrets: secrets)
         store.addKey("super-secret-key", alias: "a", for: c)
 

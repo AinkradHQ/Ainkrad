@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Persisted enable/disable overrides for Built-in Apps, keyed by app id.
 /// A wrapper so the registry's `[String: Bool]` can be a versioned document.
@@ -12,10 +12,11 @@ struct RegistryStateDocument: PersistableDocument {
     static let migrators: [DocumentMigrator] = [
         DocumentMigrator(from: 1) { payload in
             guard case .object(var root) = payload,
-                  case .object(let enabled)? = root["enabled"] else { return payload }
+                case .object(let enabled)? = root["enabled"]
+            else { return payload }
             root["enabled"] = .object(AppIDRenames.rekeyed(enabled))
             return .object(root)
-        },
+        }
     ]
 
     var enabled: [String: Bool] = [:]

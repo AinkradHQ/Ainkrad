@@ -1,5 +1,5 @@
-import Foundation
 import AinkradSignal
+import Foundation
 
 /// A late-filled handle to the feed's read side.
 ///

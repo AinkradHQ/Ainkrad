@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Keyless `web_search` backend that scrapes DuckDuckGo's no-JS HTML endpoint
 /// (`https://html.duckduckgo.com/html/`). No API key, no account, no payment
@@ -18,9 +18,10 @@ struct DuckDuckGoSearchBackend: WebSearchBackend {
         comps.queryItems = [.init(name: "q", value: query)]
         var request = URLRequest(url: comps.url!, timeoutInterval: 20)
         // DuckDuckGo serves an empty page to clients without a browser UA.
-        request.setValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                         + "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
-                         forHTTPHeaderField: "User-Agent")
+        request.setValue(
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                + "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
+            forHTTPHeaderField: "User-Agent")
         request.setValue("text/html", forHTTPHeaderField: "Accept")
         let (data, response) = try await http.data(for: request)
         guard (200..<300).contains(response.statusCode) else {
@@ -56,12 +57,14 @@ struct DuckDuckGoSearchBackend: WebSearchBackend {
     /// Returns (group1, group2) for each match; group2 is empty when the pattern
     /// has a single capture group.
     private static func matches(_ pattern: String, in text: String) -> [(String, String)] {
-        guard let re = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators, .caseInsensitive])
+        guard
+            let re = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators, .caseInsensitive])
         else { return [] }
         let ns = text as NSString
         return re.matches(in: text, range: NSRange(location: 0, length: ns.length)).map { m in
             let g1 = m.range(at: 1).location != NSNotFound ? ns.substring(with: m.range(at: 1)) : ""
-            let g2 = m.numberOfRanges > 2 && m.range(at: 2).location != NSNotFound ? ns.substring(with: m.range(at: 2)) : ""
+            let g2 =
+                m.numberOfRanges > 2 && m.range(at: 2).location != NSNotFound ? ns.substring(with: m.range(at: 2)) : ""
             return (g1, g2)
         }
     }
@@ -72,7 +75,7 @@ struct DuckDuckGoSearchBackend: WebSearchBackend {
         var h = href
         if h.hasPrefix("//") { h = "https:" + h }
         guard let comps = URLComponents(string: h),
-              let uddg = comps.queryItems?.first(where: { $0.name == "uddg" })?.value
+            let uddg = comps.queryItems?.first(where: { $0.name == "uddg" })?.value
         else { return decodeEntities(href.hasPrefix("//") ? "https:" + href : href) }
         return uddg
     }

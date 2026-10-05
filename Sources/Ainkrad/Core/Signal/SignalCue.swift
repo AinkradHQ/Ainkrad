@@ -1,5 +1,5 @@
-import Foundation
 import AinkradSignal
+import Foundation
 
 /// Which cue an event plays, and whether it plays at all.
 ///
@@ -71,7 +71,8 @@ struct SignalBurstGate {
     /// arrival may displace.
     mutating func admits(_ now: Date, rank: Int = Int.min) -> Bool {
         if let last = lastAdmitted, now.timeIntervalSince(last) < Self.window,
-           rank <= lastRank {
+            rank <= lastRank
+        {
             return false
         }
         lastAdmitted = now

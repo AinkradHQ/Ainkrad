@@ -1,13 +1,17 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 private final class FakeDataHTTPClient: DataHTTPClient, @unchecked Sendable {
     var captured: URLRequest?
     var responseData: Data
     var status: Int
-    init(responseData: Data, status: Int = 200) { self.responseData = responseData; self.status = status }
+    init(responseData: Data, status: Int = 200) {
+        self.responseData = responseData
+        self.status = status
+    }
     func data(for request: URLRequest) async throws -> (Data, HTTPURLResponse) {
         captured = request
         let http = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!
@@ -41,7 +45,8 @@ struct ProviderTranscriptionBackendTests {
     @Test func missingConnectionThrows() async {
         let (store, _) = connections()
         let http = FakeDataHTTPClient(responseData: Data())
-        let backend = ProviderTranscriptionBackend(http: http, connections: store, connectionID: UUID(), model: "whisper-1")
+        let backend = ProviderTranscriptionBackend(
+            http: http, connections: store, connectionID: UUID(), model: "whisper-1")
         await #expect(throws: TranscriptionError.self) {
             _ = try await backend.transcribe(audio: Data(), fileName: "m.m4a", localeIdentifier: nil)
         }

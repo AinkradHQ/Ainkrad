@@ -1,7 +1,7 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitUI
 import AinkradHostRuntime
+import SwiftUI
 
 /// Rename many files at once, with the result visible before anything happens.
 ///
@@ -31,8 +31,9 @@ struct BatchRenameSheet: View {
     private var tokens: DesignTokens { environment.themeManager.tokens }
 
     private var plan: [BatchRenamePlanItem] {
-        batchRenamePlan(entries: entries, mode: mode, find: find, replace: replace,
-                        existingNames: siblings, startNumber: startNumber)
+        batchRenamePlan(
+            entries: entries, mode: mode, find: find, replace: replace,
+            existingNames: siblings, startNumber: startNumber)
     }
 
     var body: some View {
@@ -89,9 +90,11 @@ struct BatchRenameSheet: View {
                     // where the last one stopped.
                     AinkradStepper(value: $startNumber, in: 0...9999)
                 } else {
-                    AinkradTextField(text: $replace,
-                                     placeholder: mode == .addPrefix ? "Prefix" : "Suffix")
-                        .focused($fieldFocused)
+                    AinkradTextField(
+                        text: $replace,
+                        placeholder: mode == .addPrefix ? "Prefix" : "Suffix"
+                    )
+                    .focused($fieldFocused)
                 }
             }
         }
@@ -120,11 +123,13 @@ struct BatchRenameSheet: View {
                 .foregroundStyle(tokens.foreground.opacity(0.3))
 
             Text(item.problem == nil ? item.newName : (item.problem.map(label) ?? ""))
-                .foregroundStyle(item.problem == nil
-                                 ? tokens.foreground
-                                 : (item.problem == .unchanged
-                                    ? tokens.foreground.opacity(0.35)
-                                    : statusColors.warning))
+                .foregroundStyle(
+                    item.problem == nil
+                        ? tokens.foreground
+                        : (item.problem == .unchanged
+                            ? tokens.foreground.opacity(0.35)
+                            : statusColors.warning)
+                )
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .font(AinkradFontResolver.font(.caption, typography: typo))
@@ -148,9 +153,10 @@ struct BatchRenameSheet: View {
         return HStack(spacing: AinkradSpacing.sm) {
             Text(summaryText(summary))
                 .font(AinkradFontResolver.font(.caption, typography: typo))
-                .foregroundStyle(summary.blocked > 0
-                                 ? statusColors.warning
-                                 : tokens.foreground.opacity(0.55))
+                .foregroundStyle(
+                    summary.blocked > 0
+                        ? statusColors.warning
+                        : tokens.foreground.opacity(0.55))
             Spacer()
             AinkradButton(title: "Cancel", style: .ghost, action: onCancel)
             AinkradButton(title: "Rename", style: .primary) { onApply(plan) }

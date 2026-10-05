@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 struct UnzipperTests {
@@ -16,7 +17,8 @@ struct UnzipperTests {
         let make = Process()
         make.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
         make.arguments = ["-c", "-k", src.path, zip.path]
-        try make.run(); make.waitUntilExit()
+        try make.run()
+        make.waitUntilExit()
         #expect(make.terminationStatus == 0)
 
         let dest = tmp.appendingPathComponent("dest")
@@ -32,8 +34,11 @@ struct UnzipperTests {
         let zip = root.appendingPathComponent("evil.zip")
         // Craft a zip whose single entry name is "../escape.txt" via python3.
         let py = "import zipfile;z=zipfile.ZipFile(r'\(zip.path)','w');z.writestr('../escape.txt','pwned');z.close()"
-        let p = Process(); p.executableURL = URL(fileURLWithPath: "/usr/bin/env"); p.arguments = ["python3", "-c", py]
-        try p.run(); p.waitUntilExit()
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        p.arguments = ["python3", "-c", py]
+        try p.run()
+        p.waitUntilExit()
         let dest = root.appendingPathComponent("out")
         #expect(throws: UnzipError.self) { try DittoUnzipper().unzip(zip, to: dest) }
         #expect(!FileManager.default.fileExists(atPath: root.appendingPathComponent("escape.txt").path))
@@ -42,11 +47,16 @@ struct UnzipperTests {
     @Test("a zip containing a symlink is rejected")
     func rejectsSymlink() throws {
         let root = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
-        let payload = root.appendingPathComponent("payload"); try FileManager.default.createDirectory(at: payload, withIntermediateDirectories: true)
-        try FileManager.default.createSymbolicLink(atPath: payload.appendingPathComponent("link").path, withDestinationPath: "/etc/hosts")
+        let payload = root.appendingPathComponent("payload")
+        try FileManager.default.createDirectory(at: payload, withIntermediateDirectories: true)
+        try FileManager.default.createSymbolicLink(
+            atPath: payload.appendingPathComponent("link").path, withDestinationPath: "/etc/hosts")
         let zip = root.appendingPathComponent("sym.zip")
-        let c = Process(); c.executableURL = URL(fileURLWithPath: "/usr/bin/ditto"); c.arguments = ["-c", "-k", "--keepParent", payload.path, zip.path]
-        try c.run(); c.waitUntilExit()
+        let c = Process()
+        c.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
+        c.arguments = ["-c", "-k", "--keepParent", payload.path, zip.path]
+        try c.run()
+        c.waitUntilExit()
         let dest = root.appendingPathComponent("out")
         #expect(throws: UnzipError.self) { try DittoUnzipper().unzip(zip, to: dest) }
         #expect(!FileManager.default.fileExists(atPath: dest.path))
@@ -55,11 +65,15 @@ struct UnzipperTests {
     @Test("a normal bundle zip still extracts")
     func extractsNormal() throws {
         let root = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
-        let payload = root.appendingPathComponent("payload"); try FileManager.default.createDirectory(at: payload, withIntermediateDirectories: true)
+        let payload = root.appendingPathComponent("payload")
+        try FileManager.default.createDirectory(at: payload, withIntermediateDirectories: true)
         try Data("ok".utf8).write(to: payload.appendingPathComponent("file.txt"))
         let zip = root.appendingPathComponent("ok.zip")
-        let c = Process(); c.executableURL = URL(fileURLWithPath: "/usr/bin/ditto"); c.arguments = ["-c", "-k", "--keepParent", payload.path, zip.path]
-        try c.run(); c.waitUntilExit()
+        let c = Process()
+        c.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
+        c.arguments = ["-c", "-k", "--keepParent", payload.path, zip.path]
+        try c.run()
+        c.waitUntilExit()
         let dest = root.appendingPathComponent("out")
         try DittoUnzipper().unzip(zip, to: dest)
         #expect(FileManager.default.fileExists(atPath: dest.appendingPathComponent("payload/file.txt").path))

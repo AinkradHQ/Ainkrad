@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AppKit
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @MainActor
@@ -58,9 +59,10 @@ struct HoardClipboardTests {
         let (clipboard, pasteboard) = makeClipboard()
         clipboard.copy([url("/a/one.txt")])
 
-        let read = pasteboard.readObjects(
-            forClasses: [NSURL.self],
-            options: [.urlReadingFileURLsOnly: true]) as? [URL]
+        let read =
+            pasteboard.readObjects(
+                forClasses: [NSURL.self],
+                options: [.urlReadingFileURLsOnly: true]) as? [URL]
         #expect(read?.first?.path == "/a/one.txt")
     }
 

@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("WorkspaceManager")
@@ -230,7 +231,7 @@ struct WorkspaceManagerTests {
         let manager = WorkspaceManager()
         let ws = manager.createWorkspace()
         _ = ws.tileLayout.openApp("terminal")
-        _ = ws.tileLayout.openApp("settings")   // no longer a registered app
+        _ = ws.tileLayout.openApp("settings")  // no longer a registered app
         _ = ws.tileLayout.openApp("terminal")
 
         manager.pruneApps(keeping: ["terminal"])

@@ -1,6 +1,7 @@
 // Tests/AinkradTests/WorkspaceFileIndexTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("WorkspaceFileIndex")
@@ -18,21 +19,27 @@ struct WorkspaceFileIndexTests {
     }
 
     @Test func fuzzyFindsFile() {
-        let root = tree(); defer { try? FileManager.default.removeItem(at: root) }
-        let idx = WorkspaceFileIndex(root: root); idx.refreshSynchronously()
+        let root = tree()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let idx = WorkspaceFileIndex(root: root)
+        idx.refreshSynchronously()
         let hits = idx.search("agsess")
         #expect(hits.first?.name == "AgentSession.swift")
     }
 
     @Test func skipsGitDirectory() {
-        let root = tree(); defer { try? FileManager.default.removeItem(at: root) }
-        let idx = WorkspaceFileIndex(root: root); idx.refreshSynchronously()
+        let root = tree()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let idx = WorkspaceFileIndex(root: root)
+        idx.refreshSynchronously()
         #expect(idx.search("config").isEmpty)
     }
 
     @Test func emptyQueryReturnsNothing() {
-        let root = tree(); defer { try? FileManager.default.removeItem(at: root) }
-        let idx = WorkspaceFileIndex(root: root); idx.refreshSynchronously()
+        let root = tree()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let idx = WorkspaceFileIndex(root: root)
+        idx.refreshSynchronously()
         #expect(idx.search("").isEmpty)
     }
 }

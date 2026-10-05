@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 import Foundation
 import Observation
-import AinkradHostRuntime
 
 struct AgentConfigDocument: PersistableDocument {
     static let documentID = "agent-config"
@@ -41,13 +41,23 @@ final class AgentConfigStore {
         self.current = AgentModelConfig(model: document.model, effort: document.effort)
     }
 
-    func setActiveConnectionID(_ id: UUID?) { activeConnectionID = id; save() }
-    func setModel(_ model: String) { current.model = model; save() }
-    func setEffort(_ effort: String) { current.effort = effort; save() }
+    func setActiveConnectionID(_ id: UUID?) {
+        activeConnectionID = id
+        save()
+    }
+    func setModel(_ model: String) {
+        current.model = model
+        save()
+    }
+    func setEffort(_ effort: String) {
+        current.effort = effort
+        save()
+    }
 
     private func save() {
-        persistence.save(AgentConfigDocument(
-            activeConnectionID: activeConnectionID, model: current.model, effort: current.effort))
+        persistence.save(
+            AgentConfigDocument(
+                activeConnectionID: activeConnectionID, model: current.model, effort: current.effort))
     }
 }
 
@@ -64,8 +74,10 @@ struct SageRuntimeOptions: PersistableDocument {
     var pinnedModel: String? = nil
     var routerPolicy: RouterPolicy = .saveMoney
 
-    init(verbose: Bool = false, trace: Bool = false, thinkLevel: String = "medium",
-         pinnedModel: String? = nil, routerPolicy: RouterPolicy = .saveMoney) {
+    init(
+        verbose: Bool = false, trace: Bool = false, thinkLevel: String = "medium",
+        pinnedModel: String? = nil, routerPolicy: RouterPolicy = .saveMoney
+    ) {
         self.verbose = verbose
         self.trace = trace
         self.thinkLevel = thinkLevel
@@ -97,15 +109,33 @@ final class RuntimeOptionsStore {
         self.options = persistence.load(SageRuntimeOptions.self) ?? SageRuntimeOptions()
     }
 
-    func setVerbose(_ v: Bool) { options.verbose = v; save() }
-    func setTrace(_ v: Bool) { options.trace = v; save() }
-    func setThinkLevel(_ v: String) { options.thinkLevel = v; save() }
-    func pinModel(_ id: String?) { options.pinnedModel = id; save() }
-    func setPolicy(_ p: RouterPolicy) { options.routerPolicy = p; save() }
+    func setVerbose(_ v: Bool) {
+        options.verbose = v
+        save()
+    }
+    func setTrace(_ v: Bool) {
+        options.trace = v
+        save()
+    }
+    func setThinkLevel(_ v: String) {
+        options.thinkLevel = v
+        save()
+    }
+    func pinModel(_ id: String?) {
+        options.pinnedModel = id
+        save()
+    }
+    func setPolicy(_ p: RouterPolicy) {
+        options.routerPolicy = p
+        save()
+    }
 
     /// `/new` / `/reset` clears only the session-scoped model pin — verbose/trace/
     /// thinkLevel/routerPolicy are standing preferences, not per-session state.
-    func resetForNewSession() { options.pinnedModel = nil; save() }
+    func resetForNewSession() {
+        options.pinnedModel = nil
+        save()
+    }
 
     private func save() { persistence.save(options) }
 }

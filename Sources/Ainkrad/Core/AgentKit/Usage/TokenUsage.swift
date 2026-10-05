@@ -19,7 +19,8 @@ struct TokenUsage: Codable, Equatable, Sendable {
     static let zero = TokenUsage()
 
     static func + (l: TokenUsage, r: TokenUsage) -> TokenUsage {
-        TokenUsage(input: l.input + r.input, output: l.output + r.output,
-                   cacheRead: l.cacheRead + r.cacheRead, cacheWrite: l.cacheWrite + r.cacheWrite)
+        TokenUsage(
+            input: l.input + r.input, output: l.output + r.output,
+            cacheRead: l.cacheRead + r.cacheRead, cacheWrite: l.cacheWrite + r.cacheWrite)
     }
 }

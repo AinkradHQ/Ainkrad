@@ -36,9 +36,11 @@ final class HoardActions {
     /// Last operation's user-facing result, surfaced as a toast.
     private(set) var lastToast: HoardToastMessage?
 
-    init(engine: FileOperationEngine, coordinator: PaneCoordinator,
-         resolver: ConflictResolver, clipboard: HoardClipboard,
-         store: HoardPaneStore, paneToken: UUID) {
+    init(
+        engine: FileOperationEngine, coordinator: PaneCoordinator,
+        resolver: ConflictResolver, clipboard: HoardClipboard,
+        store: HoardPaneStore, paneToken: UUID
+    ) {
         self.engine = engine
         self.coordinator = coordinator
         self.resolver = resolver
@@ -153,9 +155,13 @@ final class HoardActions {
 
     func commitRename(_ entry: FileEntry, to newName: String) async {
         let trimmed = newName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, trimmed != entry.name else { prompt = nil; return }
-        let result = await engine.submit(FileOperation(
-            kind: .rename(newName: trimmed), sources: [entry.url], destinationDirectory: nil))
+        guard !trimmed.isEmpty, trimmed != entry.name else {
+            prompt = nil
+            return
+        }
+        let result = await engine.submit(
+            FileOperation(
+                kind: .rename(newName: trimmed), sources: [entry.url], destinationDirectory: nil))
         prompt = nil
         report(result, verb: "Renamed")
         tab.reload()
@@ -165,10 +171,14 @@ final class HoardActions {
 
     func commitNewFolder(named name: String) async {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { prompt = nil; return }
-        let result = await engine.submit(FileOperation(
-            kind: .createFolder(name: trimmed), sources: [],
-            destinationDirectory: tab.currentDirectory))
+        guard !trimmed.isEmpty else {
+            prompt = nil
+            return
+        }
+        let result = await engine.submit(
+            FileOperation(
+                kind: .createFolder(name: trimmed), sources: [],
+                destinationDirectory: tab.currentDirectory))
         prompt = nil
         report(result, verb: "Created")
         tab.reload()
@@ -184,9 +194,10 @@ final class HoardActions {
         let sources = operands
         guard !sources.isEmpty else { return }
         let directory = tab.currentDirectory
-        let result = await engine.submit(FileOperation(
-            kind: .archive(name: defaultArchiveName(for: sources, in: directory)),
-            sources: sources, destinationDirectory: directory))
+        let result = await engine.submit(
+            FileOperation(
+                kind: .archive(name: defaultArchiveName(for: sources, in: directory)),
+                sources: sources, destinationDirectory: directory))
         report(result, verb: "Compressed")
         tab.reload()
     }
@@ -195,16 +206,19 @@ final class HoardActions {
     /// are not archives are skipped rather than failed — selecting a folder
     /// and its zip and hitting extract should extract the zip.
     func extractSelection(using archiver: any Archiving = SystemArchiveService()) async {
-        let archives = selectedEntries
+        let archives =
+            selectedEntries
             .filter { !$0.isDirectory && archiver.canExtract($0.url) }
             .map(\.url)
         guard !archives.isEmpty else {
-            lastToast = HoardToastMessage(kind: .warning, text: "Nothing to extract",
-                                          detail: "Select a .zip or .tar archive")
+            lastToast = HoardToastMessage(
+                kind: .warning, text: "Nothing to extract",
+                detail: "Select a .zip or .tar archive")
             return
         }
-        let result = await engine.submit(FileOperation(
-            kind: .extract, sources: archives, destinationDirectory: tab.currentDirectory))
+        let result = await engine.submit(
+            FileOperation(
+                kind: .extract, sources: archives, destinationDirectory: tab.currentDirectory))
         report(result, verb: "Extracted")
         tab.reload()
     }
@@ -221,8 +235,9 @@ final class HoardActions {
     func beginBatchRename() {
         let targets = selectedEntries
         guard !targets.isEmpty else {
-            lastToast = HoardToastMessage(kind: .warning, text: "Nothing selected",
-                                          detail: "Select the files to rename first")
+            lastToast = HoardToastMessage(
+                kind: .warning, text: "Nothing selected",
+                detail: "Select the files to rename first")
             return
         }
         batchRenameSiblings = Set(tab.entries.map(\.name))
@@ -242,10 +257,11 @@ final class HoardActions {
         let applicable = plan.filter { $0.problem == nil }
         guard !applicable.isEmpty else { return }
 
-        var result = await engine.submit(FileOperation(
-            kind: .batchRename(newNames: applicable.map(\.newName)),
-            sources: applicable.map(\.entry.url),
-            destinationDirectory: nil))
+        var result = await engine.submit(
+            FileOperation(
+                kind: .batchRename(newNames: applicable.map(\.newName)),
+                sources: applicable.map(\.entry.url),
+                destinationDirectory: nil))
         // Blocked rows were shown as blocked; count them as skipped so the
         // toast reports the batch honestly rather than only its clean half.
         result.skipped = plan.count - applicable.count
@@ -257,8 +273,9 @@ final class HoardActions {
     func trashSelection() async {
         let sources = operands
         guard !sources.isEmpty else { return }
-        let result = await engine.submit(FileOperation(
-            kind: .trash, sources: sources, destinationDirectory: nil))
+        let result = await engine.submit(
+            FileOperation(
+                kind: .trash, sources: sources, destinationDirectory: nil))
         report(result, verb: "Moved to Trash")
         tab.reload()
     }
@@ -308,8 +325,8 @@ final class HoardActions {
     }
 }
 
-private extension String {
-    var capitalizedFirst: String {
+extension String {
+    fileprivate var capitalizedFirst: String {
         guard let first else { return self }
         return first.uppercased() + dropFirst()
     }

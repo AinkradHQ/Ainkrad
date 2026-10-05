@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Installs / uninstalls skill catalog items. Skills are markdown assets: fetch
 /// the SKILL.md, validate it, write it to Skills/<appID>/, and record installed
@@ -42,24 +42,27 @@ final class SkillInstaller {
         }
 
         let data: Data
-        do { data = try await http.get(descriptor.contentURL) }
-        catch { throw AppStoreError.download(String(describing: error)) }
+        do { data = try await http.get(descriptor.contentURL) } catch {
+            throw AppStoreError.download(String(describing: error))
+        }
 
         let text = String(decoding: data, as: UTF8.self)
 
         // Validate before writing so a malformed/malicious asset never lands on
         // disk, even transiently.
         let parsed: Skill
-        do { parsed = try SkillParser.parse(text, source: .marketplace) }
-        catch { throw AppStoreError.invalidBundle("malformed SKILL.md for \(entry.appID): \(error)") }
+        do { parsed = try SkillParser.parse(text, source: .marketplace) } catch {
+            throw AppStoreError.invalidBundle("malformed SKILL.md for \(entry.appID): \(error)")
+        }
         let issues = SkillValidator.validate(parsed)
         guard issues.isEmpty else {
             throw AppStoreError.invalidBundle("invalid SKILL.md for \(entry.appID): \(issues)")
         }
 
         let url = paths.skillFile(entry.appID)
-        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
-                                                withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true)
         try text.write(to: url, atomically: true, encoding: .utf8)
 
         var doc = persistence.load(InstalledPluginsDocument.self) ?? InstalledPluginsDocument()

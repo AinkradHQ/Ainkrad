@@ -1,7 +1,8 @@
-import Testing
 import AinkradAppKit
-@testable import Ainkrad
 import AinkradHostRuntime
+import Testing
+
+@testable import Ainkrad
 
 @Suite("Status color bridge")
 struct StatusColorBridgeTests {

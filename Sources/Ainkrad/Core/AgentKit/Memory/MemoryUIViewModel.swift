@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// View-model for `MemoryUIView`: owns the three files' in-progress drafts
 /// and the save/undo actions, kept separate from the view body so the
@@ -39,7 +39,7 @@ final class MemoryUIViewModel {
         let prior = service.store.read(file)
         let text = draft(for: file)
         guard text != prior else { return }
-        service.store.write(text, to: file)   // onChange reindexes
+        service.store.write(text, to: file)  // onChange reindexes
         service.log.record(file: file, provenance: .edit, addedText: text, priorSnapshot: prior)
     }
 

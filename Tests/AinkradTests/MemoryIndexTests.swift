@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("MemoryIndex")
@@ -11,7 +12,8 @@ struct MemoryIndexTests {
     }
 
     @Test func indexesAndFinds() throws {
-        let (idx, url) = try index(); defer { try? FileManager.default.removeItem(at: url) }
+        let (idx, url) = try index()
+        defer { try? FileManager.default.removeItem(at: url) }
         idx.upsert(source: "MEMORY.md", title: "Memory", body: "the user prefers tabs over spaces")
         let hits = idx.search("tabs")
         #expect(hits.count == 1)
@@ -19,7 +21,8 @@ struct MemoryIndexTests {
     }
 
     @Test func upsertReplacesPriorRowsForSource() throws {
-        let (idx, url) = try index(); defer { try? FileManager.default.removeItem(at: url) }
+        let (idx, url) = try index()
+        defer { try? FileManager.default.removeItem(at: url) }
         idx.upsert(source: "MEMORY.md", title: "Memory", body: "likes tabs")
         idx.upsert(source: "MEMORY.md", title: "Memory", body: "likes spaces")
         #expect(idx.search("tabs").isEmpty)
@@ -27,7 +30,8 @@ struct MemoryIndexTests {
     }
 
     @Test func clearEmptiesIndex() throws {
-        let (idx, url) = try index(); defer { try? FileManager.default.removeItem(at: url) }
+        let (idx, url) = try index()
+        defer { try? FileManager.default.removeItem(at: url) }
         idx.upsert(source: "s", title: "t", body: "findme")
         idx.clear()
         #expect(idx.search("findme").isEmpty)

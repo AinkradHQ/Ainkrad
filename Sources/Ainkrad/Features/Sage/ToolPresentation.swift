@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Token-free tint selector so the mapping stays pure and unit-testable; the
 /// view resolves it to a real `DesignTokens` color.
@@ -61,8 +61,11 @@ struct ToolPresentation: Equatable {
     /// back to the raw URI rather than render an empty label.
     private static func uriDerivedLabel(_ uri: String) -> String? {
         let afterScheme = uri.range(of: "://").map { String(uri[$0.upperBound...]) } ?? uri
-        guard let segment = afterScheme
-            .split(separator: "/", omittingEmptySubsequences: true).last else { return nil }
+        guard
+            let segment =
+                afterScheme
+                .split(separator: "/", omittingEmptySubsequences: true).last
+        else { return nil }
         let normalized = segment.replacingOccurrences(of: "-", with: "_")
         guard !normalized.isEmpty else { return nil }
         return titleCase(normalized)
@@ -103,18 +106,18 @@ struct ToolPresentation: Equatable {
             return ("puzzlepiece.extension", .secondary)
         }
         switch name {
-        case "run_terminal":      return ("terminal", .secondary)
-        case "run_tool_script":   return ("curlybraces", .secondary)
+        case "run_terminal": return ("terminal", .secondary)
+        case "run_tool_script": return ("curlybraces", .secondary)
         case "workspace_control": return ("macwindow", .secondary)
-        case "edit_file":         return ("pencil", .primary)
-        case "read_file":         return ("doc.text", .secondary)
-        case "memory_write":      return ("brain", .primary)
-        case "memory_search":     return ("brain.head.profile", .secondary)
-        case "scry_render":     return ("paintpalette", .secondary)
-        case "spawn_subagent":    return ("person.2", .secondary)
-        case "use_skill":         return ("wand.and.stars", .secondary)
-        case "propose_skill":     return ("lightbulb", .secondary)
-        default:                  return ("wrench.and.screwdriver", .secondary)
+        case "edit_file": return ("pencil", .primary)
+        case "read_file": return ("doc.text", .secondary)
+        case "memory_write": return ("brain", .primary)
+        case "memory_search": return ("brain.head.profile", .secondary)
+        case "scry_render": return ("paintpalette", .secondary)
+        case "spawn_subagent": return ("person.2", .secondary)
+        case "use_skill": return ("wand.and.stars", .secondary)
+        case "propose_skill": return ("lightbulb", .secondary)
+        default: return ("wrench.and.screwdriver", .secondary)
         }
     }
 }

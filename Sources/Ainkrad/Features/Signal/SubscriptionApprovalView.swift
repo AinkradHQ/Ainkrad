@@ -1,7 +1,7 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
 import AinkradSignal
+import SwiftUI
 
 /// Asks the user whether one app may read another's notifications.
 ///
@@ -60,12 +60,14 @@ struct SubscriptionApprovalView: View {
                 Spacer()
                 AinkradBadge(text: "\(subscriptions.count)", tint: theme.accentSecondary)
             }
-            Text(isReapproval
-                 ? "\(appName) has asked for more notification access than you approved before."
-                 : "\(appName) wants to read notifications from other apps.")
-                .font(AinkradFont.display(12))
-                .foregroundStyle(theme.foreground.opacity(0.85))
-                .fixedSize(horizontal: false, vertical: true)
+            Text(
+                isReapproval
+                    ? "\(appName) has asked for more notification access than you approved before."
+                    : "\(appName) wants to read notifications from other apps."
+            )
+            .font(AinkradFont.display(12))
+            .foregroundStyle(theme.foreground.opacity(0.85))
+            .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, 16)
         .padding(.top, 14)
@@ -135,8 +137,10 @@ struct SubscriptionApprovalView: View {
                         .foregroundStyle(theme.foreground.opacity(0.75))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 7)
-                        .background(ChamferShape(cut: AinkradRadius.sm)
-                            .fill(theme.surfaceElevated.opacity(0.6)))
+                        .background(
+                            ChamferShape(cut: AinkradRadius.sm)
+                                .fill(theme.surfaceElevated.opacity(0.6))
+                        )
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -147,8 +151,10 @@ struct SubscriptionApprovalView: View {
                         .foregroundStyle(theme.background)
                         .padding(.horizontal, 18)
                         .padding(.vertical, 7)
-                        .background(ChamferShape(cut: AinkradRadius.sm)
-                            .fill(theme.accentPrimary))
+                        .background(
+                            ChamferShape(cut: AinkradRadius.sm)
+                                .fill(theme.accentPrimary)
+                        )
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)

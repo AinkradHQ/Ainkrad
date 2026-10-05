@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// One catalog/app card: icon, name, version line, description, and a trailing
 /// action area driven by `row.status` + whether it is busy. Tapping the
@@ -38,9 +38,13 @@ struct AppStoreCard: View {
                                 .foregroundStyle(tokens.foreground.opacity(0.5))
                         }
                         Spacer()
-                        if row.status == .updateAvailable { AinkradBadge(text: "UPDATE", status: .warning) }
-                        else if row.kind == .mcpServer { AinkradBadge(text: "MCP", status: .success) }
-                        else if isDevPlugin { AinkradBadge(text: "DEV", status: .neutral) }
+                        if row.status == .updateAvailable {
+                            AinkradBadge(text: "UPDATE", status: .warning)
+                        } else if row.kind == .mcpServer {
+                            AinkradBadge(text: "MCP", status: .success)
+                        } else if isDevPlugin {
+                            AinkradBadge(text: "DEV", status: .neutral)
+                        }
                     }
 
                     // Reserve two lines so every card is the same height
@@ -54,11 +58,12 @@ struct AppStoreCard: View {
                 .contentShape(Rectangle())
                 .onTapGesture(perform: onOpen)
 
-                Spacer(minLength: 0)   // pin the action row to the card bottom
+                Spacer(minLength: 0)  // pin the action row to the card bottom
 
                 AppStoreActionControls(
                     row: row, tokens: tokens, isBusy: isBusy,
-                    onInstall: onInstall, onUpdate: onUpdate, onUninstall: onUninstall, onToggleEnabled: onToggleEnabled)
+                    onInstall: onInstall, onUpdate: onUpdate, onUninstall: onUninstall, onToggleEnabled: onToggleEnabled
+                )
             }
             .frame(maxHeight: .infinity, alignment: .top)
         }

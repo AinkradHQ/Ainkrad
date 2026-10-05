@@ -1,5 +1,6 @@
-import Testing
 import CoreGraphics
+import Testing
+
 @testable import Ainkrad
 
 /// The Workspace Overview panel hugs its content, which only works while every
@@ -62,7 +63,8 @@ struct WorkspaceOverviewLayoutTests {
 
     @Test("the ceiling tracks the window but never exceeds the panel's maximum")
     func ceilingTracksWindow() {
-        #expect(WorkspaceOverviewView.ceiling(forWindowHeight: 2000)
+        #expect(
+            WorkspaceOverviewView.ceiling(forWindowHeight: 2000)
                 == WorkspaceOverviewView.maximumPanelHeight)
         let mid = WorkspaceOverviewView.ceiling(forWindowHeight: 800)
         #expect(mid > 420)
@@ -77,7 +79,8 @@ struct WorkspaceOverviewLayoutTests {
         let tiny = WorkspaceOverviewView.ceiling(forWindowHeight: 300)
         #expect(tiny == 420)
 
-        let content = WorkspaceOverviewView.panelChromeHeight
+        let content =
+            WorkspaceOverviewView.panelChromeHeight
             + WorkspaceOverviewView.detailHeight
         #expect(min(content, tiny) == tiny)
     }
@@ -90,7 +93,8 @@ struct WorkspaceOverviewLayoutTests {
     /// an empty workspace was shorter.
     @Test("an empty workspace occupies exactly the same column height as a filled one")
     func emptyAndFilledAreTheSameHeight() {
-        let empty = WorkspaceOverviewView.detailHeaderHeight
+        let empty =
+            WorkspaceOverviewView.detailHeaderHeight
             + WorkspaceOverviewView.emptyWorkspaceHeight + 16
         #expect(empty == WorkspaceOverviewView.detailHeight)
     }
@@ -98,13 +102,15 @@ struct WorkspaceOverviewLayoutTests {
     @Test("no pane count changes the column height")
     func paneCountNeverChangesHeight() {
         for count in [1, 2, 3, 4, 6, 9, 12, 40, 200] {
-            let column = WorkspaceOverviewView.detailHeaderHeight
+            let column =
+                WorkspaceOverviewView.detailHeaderHeight
                 + WorkspaceOverviewView.previewBottomPadding
                 + WorkspaceOverviewView.previewHeight(forAppCount: count)
                 + WorkspaceOverviewView.appSectionHeaderHeight
                 + WorkspaceOverviewView.appGridHeight(count: count)
-            #expect(column == WorkspaceOverviewView.detailHeight,
-                    "\(count) panes changed the column height")
+            #expect(
+                column == WorkspaceOverviewView.detailHeight,
+                "\(count) panes changed the column height")
         }
     }
 
@@ -134,11 +140,13 @@ struct WorkspaceOverviewLayoutTests {
     /// resizing again — so the floor has to be reachable but not breached.
     @Test("even the largest app grid leaves the preview above its floor")
     func largestGridStillClearsThePreviewFloor() {
-        let fixed = WorkspaceOverviewView.detailHeaderHeight
+        let fixed =
+            WorkspaceOverviewView.detailHeaderHeight
             + WorkspaceOverviewView.previewBottomPadding
             + WorkspaceOverviewView.appSectionHeaderHeight
             + WorkspaceOverviewView.appGridHeight(count: 200)
-        #expect(WorkspaceOverviewView.detailHeight - fixed
+        #expect(
+            WorkspaceOverviewView.detailHeight - fixed
                 >= WorkspaceOverviewView.minimumPreviewHeight)
     }
 }

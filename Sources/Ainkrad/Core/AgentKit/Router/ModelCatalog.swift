@@ -13,9 +13,10 @@ final class ModelCatalog {
 
     init(bundle: Bundle = .main) {
         if let url = bundle.url(forResource: "models", withExtension: "json"),
-           let data = try? Data(contentsOf: url),
-           let list = try? JSONDecoder().decode([ModelDescriptor].self, from: data),
-           !list.isEmpty {
+            let data = try? Data(contentsOf: url),
+            let list = try? JSONDecoder().decode([ModelDescriptor].self, from: data),
+            !list.isEmpty
+        {
             all = list
         } else {
             all = ModelCatalog.compiledDefaults
@@ -26,30 +27,40 @@ final class ModelCatalog {
     /// longest matching `matchPrefixes` entry across all descriptors.
     func descriptor(for modelID: String) -> ModelDescriptor? {
         if let exact = all.first(where: { $0.id == modelID }) { return exact }
-        return all
+        return
+            all
             .flatMap { descriptor in descriptor.matchPrefixes.map { (descriptor, $0) } }
             .filter { modelID.hasPrefix($0.1) }
             .max { $0.1.count < $1.1.count }?.0
     }
 
     static let compiledDefaults: [ModelDescriptor] = [
-        .init(id: "claude-opus-4-8", tier: .premium, contextWindow: 200_000,
-              capabilities: [.vision, .toolUse, .reasoningEffort], matchPrefixes: ["claude-opus"]),
-        .init(id: "claude-sonnet-4-8", tier: .cheapPaid, contextWindow: 200_000,
-              capabilities: [.vision, .toolUse, .reasoningEffort], matchPrefixes: ["claude-sonnet"]),
-        .init(id: "claude-haiku-4-8", tier: .cheapPaid, contextWindow: 200_000,
-              capabilities: [.vision, .toolUse], matchPrefixes: ["claude-haiku"]),
-        .init(id: "gpt-5", tier: .premium, contextWindow: 400_000,
-              capabilities: [.vision, .toolUse, .reasoningEffort], matchPrefixes: ["gpt-5"]),
-        .init(id: "gpt-5-mini", tier: .cheapPaid, contextWindow: 400_000,
-              capabilities: [.vision, .toolUse], matchPrefixes: ["gpt-5-mini"]),
-        .init(id: "gemini-2.5-flash", tier: .cheapPaid, contextWindow: 1_000_000,
-              capabilities: [.vision, .toolUse], matchPrefixes: ["gemini-2.5-flash"]),
-        .init(id: "deepseek-chat", tier: .free, contextWindow: 64_000,
-              capabilities: [.toolUse], matchPrefixes: ["deepseek"]),
-        .init(id: "llama3.2", tier: .local, contextWindow: 128_000,
-              capabilities: [.toolUse], matchPrefixes: ["llama"]),
-        .init(id: "qwen2.5-coder", tier: .local, contextWindow: 32_000,
-              capabilities: [.toolUse], matchPrefixes: ["qwen"]),
+        .init(
+            id: "claude-opus-4-8", tier: .premium, contextWindow: 200_000,
+            capabilities: [.vision, .toolUse, .reasoningEffort], matchPrefixes: ["claude-opus"]),
+        .init(
+            id: "claude-sonnet-4-8", tier: .cheapPaid, contextWindow: 200_000,
+            capabilities: [.vision, .toolUse, .reasoningEffort], matchPrefixes: ["claude-sonnet"]),
+        .init(
+            id: "claude-haiku-4-8", tier: .cheapPaid, contextWindow: 200_000,
+            capabilities: [.vision, .toolUse], matchPrefixes: ["claude-haiku"]),
+        .init(
+            id: "gpt-5", tier: .premium, contextWindow: 400_000,
+            capabilities: [.vision, .toolUse, .reasoningEffort], matchPrefixes: ["gpt-5"]),
+        .init(
+            id: "gpt-5-mini", tier: .cheapPaid, contextWindow: 400_000,
+            capabilities: [.vision, .toolUse], matchPrefixes: ["gpt-5-mini"]),
+        .init(
+            id: "gemini-2.5-flash", tier: .cheapPaid, contextWindow: 1_000_000,
+            capabilities: [.vision, .toolUse], matchPrefixes: ["gemini-2.5-flash"]),
+        .init(
+            id: "deepseek-chat", tier: .free, contextWindow: 64_000,
+            capabilities: [.toolUse], matchPrefixes: ["deepseek"]),
+        .init(
+            id: "llama3.2", tier: .local, contextWindow: 128_000,
+            capabilities: [.toolUse], matchPrefixes: ["llama"]),
+        .init(
+            id: "qwen2.5-coder", tier: .local, contextWindow: 32_000,
+            capabilities: [.toolUse], matchPrefixes: ["qwen"]),
     ]
 }

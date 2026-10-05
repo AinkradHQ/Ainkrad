@@ -1,7 +1,8 @@
+import AinkradAppKit
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradAppKit
 
 /// Guards the seam that keeps the test suite out of the developer's real Keychain.
 ///
@@ -40,8 +41,9 @@ struct HomeKeychainServiceTests {
         ]
         #expect(!arbitrary.isEmpty)
         for vault in arbitrary {
-            #expect(home(vault: vault).keychainServiceName == Home.canonicalKeychainService,
-                    "a user-chosen vault at \(vault.path) must keep the canonical service")
+            #expect(
+                home(vault: vault).keychainServiceName == Home.canonicalKeychainService,
+                "a user-chosen vault at \(vault.path) must keep the canonical service")
         }
     }
 
@@ -55,9 +57,11 @@ struct HomeKeychainServiceTests {
             .appendingPathComponent("Ainkrad", isDirectory: true)
         #expect(home(vault: defaultVault).keychainServiceName == Home.canonicalKeychainService)
 
-        let support = try #require(FileManager.default
-            .urls(for: .applicationSupportDirectory, in: .userDomainMask).first)
-        let container = support
+        let support = try #require(
+            FileManager.default
+                .urls(for: .applicationSupportDirectory, in: .userDomainMask).first)
+        let container =
+            support
             .appendingPathComponent(Home.canonicalKeychainService, isDirectory: true)
         #expect(home(vault: container).keychainServiceName == Home.canonicalKeychainService)
     }
@@ -85,14 +89,16 @@ struct HomeKeychainServiceTests {
     /// same real directory by different strings. A miss here means a "hermetic" test
     /// quietly writing to the real service.
     @Test func everySpellingOfTheTempDirectoryIsThrowaway() {
-        var bases = [FileManager.default.temporaryDirectory,
-                     URL(fileURLWithPath: NSTemporaryDirectory()),
-                     URL(fileURLWithPath: "/tmp"),
-                     // `/private/tmp` is the spelling the first implementation of this
-                     // check missed: Foundation standardizes it down to `/tmp`, but
-                     // leaves `/private/tmp/<vault>` alone, so the two sides never met.
-                     URL(fileURLWithPath: "/private/tmp"),
-                     URL(fileURLWithPath: "/private/var/folders/z5/x/T")]
+        var bases = [
+            FileManager.default.temporaryDirectory,
+            URL(fileURLWithPath: NSTemporaryDirectory()),
+            URL(fileURLWithPath: "/tmp"),
+            // `/private/tmp` is the spelling the first implementation of this
+            // check missed: Foundation standardizes it down to `/tmp`, but
+            // leaves `/private/tmp/<vault>` alone, so the two sides never met.
+            URL(fileURLWithPath: "/private/tmp"),
+            URL(fileURLWithPath: "/private/var/folders/z5/x/T"),
+        ]
         if let tmpdir = ProcessInfo.processInfo.environment["TMPDIR"], !tmpdir.isEmpty {
             bases.append(URL(fileURLWithPath: tmpdir))
         }
@@ -100,8 +106,9 @@ struct HomeKeychainServiceTests {
         for base in bases {
             let vault = base.appendingPathComponent("vault-\(UUID().uuidString)", isDirectory: true)
             #expect(Home.isThrowawayLocation(vault), "\(vault.path) should be throwaway")
-            #expect(home(vault: vault).keychainServiceName != Home.canonicalKeychainService,
-                    "\(vault.path) should not use the canonical service")
+            #expect(
+                home(vault: vault).keychainServiceName != Home.canonicalKeychainService,
+                "\(vault.path) should not use the canonical service")
         }
     }
 

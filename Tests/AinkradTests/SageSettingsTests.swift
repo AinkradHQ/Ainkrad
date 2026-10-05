@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 // `SageSettingsTabTests` lived here. The Sage's pill bar is gone —
 // its sections are top-level INTELLIGENCE pages now — so the partition
@@ -46,20 +47,23 @@ struct AppAppearanceFontTests {
 @Suite("Sage typography resolver")
 struct SageTypographyTests {
     @Test("nil override inherits global family and scale") func inherits() {
-        let t = SageTypography.resolve(family: nil, scale: nil,
-                                            globalFamily: .exo2, globalScale: .medium)
+        let t = SageTypography.resolve(
+            family: nil, scale: nil,
+            globalFamily: .exo2, globalScale: .medium)
         #expect(t.family == .exo2)
         #expect(t.scale == UIFontScale.medium.multiplier)
     }
     @Test("override wins over global") func overrides() {
-        let t = SageTypography.resolve(family: .jetBrainsMono, scale: .large,
-                                            globalFamily: .exo2, globalScale: .small)
+        let t = SageTypography.resolve(
+            family: .jetBrainsMono, scale: .large,
+            globalFamily: .exo2, globalScale: .small)
         #expect(t.family == .jetBrainsMono)
         #expect(t.scale == UIFontScale.large.multiplier)
     }
     @Test("partial override: family only, scale inherits") func partial() {
-        let t = SageTypography.resolve(family: .system, scale: nil,
-                                            globalFamily: .exo2, globalScale: .large)
+        let t = SageTypography.resolve(
+            family: .system, scale: nil,
+            globalFamily: .exo2, globalScale: .large)
         #expect(t.family == .system)
         #expect(t.scale == UIFontScale.large.multiplier)
     }

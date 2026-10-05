@@ -1,6 +1,7 @@
-import Testing
-@testable import Ainkrad
 import AinkradAppKitContract
+import Testing
+
+@testable import Ainkrad
 
 /// The information-architecture invariant for Settings: everything is at most
 /// two levels deep, and every section that used to live behind the Sage's
@@ -12,14 +13,15 @@ struct SettingsIATests {
 
     @Test("the INTELLIGENCE group holds the six agent pages in order")
     func intelligencePages() {
-        #expect(catalog.pages(in: .intelligence).map(\.title) == [
-            "Model & Connections",
-            "Permissions & Sandbox",
-            "Memory",
-            "Skills",
-            "Tools",
-            "Privacy & Data"
-        ])
+        #expect(
+            catalog.pages(in: .intelligence).map(\.title) == [
+                "Model & Connections",
+                "Permissions & Sandbox",
+                "Memory",
+                "Skills",
+                "Tools",
+                "Privacy & Data",
+            ])
     }
 
     @Test("every former Sage tab section has a home in INTELLIGENCE")
@@ -28,10 +30,12 @@ struct SettingsIATests {
         // managers (E7) are tabs of rows, not one row named after the section.
         let pages = catalog.pages(in: .intelligence)
         let labels = Set(pages.flatMap { $0.allFields.map(\.label) + $0.groups.map(\.title) })
-        for required in ["Connections", "Model", "Permissions", "Sandbox", "Tool hooks",
-                         "Remote channel", "Context privacy",
-                         // Declared rows now (E7): each tool's provider row.
-                         "Search provider", "Image provider", "Video provider"] {
+        for required in [
+            "Connections", "Model", "Permissions", "Sandbox", "Tool hooks",
+            "Remote channel", "Context privacy",
+            // Declared rows now (E7): each tool's provider row.
+            "Search provider", "Image provider", "Video provider",
+        ] {
             #expect(labels.contains(required), "\(required) has no home")
         }
     }
@@ -59,7 +63,8 @@ struct SettingsIATests {
             fields.first { $0.keywords.contains(keyword) }
         }
         // Connections are declared rows now (E7): "api key" must land there.
-        #expect(field(matching: "api key").map { Array($0.path.segments.prefix(3)) }
+        #expect(
+            field(matching: "api key").map { Array($0.path.segments.prefix(3)) }
                 == ["intelligence", "model", "connections"])
         // MCP servers are declared rows now (E7): "mcp" must land on Tools.
         #expect(field(matching: "mcp").map { Array($0.path.segments.prefix(2)) } == ["intelligence", "tools"])

@@ -1,7 +1,7 @@
-import Foundation
-import Observation
 import AinkradAppKit
 import AinkradHostRuntime
+import Foundation
+import Observation
 
 /// Drives the Dev Host's load-one-bundle contract: validate the bundle
 /// through the SAME shared validation the real host and store review use,
@@ -74,7 +74,8 @@ final class DevHostModel {
     static func makeHostServices(appID: String, presentation: PluginPresentation) -> HostServices {
         HostServicesImpl(
             appID: appID,
-            dataRootURL: URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("AinkradDevHost", isDirectory: true),
+            dataRootURL: URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(
+                "AinkradDevHost", isDirectory: true),
             secretStore: InMemorySecretStore(),
             themeManager: ThemeManager(persistence: InMemoryPersistenceStore()),
             hub: contextHub,
@@ -120,7 +121,8 @@ final class DevHostModel {
         // the floor by hand to exercise a rejection locally.
         let minSupportedAPIVersion = args.generation ?? GenerationSupport.minSupported
         if case .failure(let rejection) = PluginValidator.validate(
-            metadata, infoDictionary: info, minSupportedAPIVersion: minSupportedAPIVersion) {
+            metadata, infoDictionary: info, minSupportedAPIVersion: minSupportedAPIVersion)
+        {
             state = .invalid(rejection.reason)
             return
         }

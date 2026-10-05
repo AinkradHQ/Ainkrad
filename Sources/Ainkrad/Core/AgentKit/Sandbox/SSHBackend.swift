@@ -56,13 +56,13 @@ struct SSHBackend: ExecutionBackend {
         guard let resolveConnection else {
             throw BackendError.unavailable(
                 "No SSH connection provider is wired for this run — blocked, not executed "
-                + "locally. Install the Leyline app to run commands on a saved host.")
+                    + "locally. Install the Leyline app to run commands on a saved host.")
         }
         let requested = (request.remote ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         guard !requested.isEmpty else {
             throw BackendError.unavailable(
                 "This run targets SSH but names no connection — blocked, not executed "
-                + "locally. Pass the id of a saved Leyline connection.")
+                    + "locally. Pass the id of a saved Leyline connection.")
         }
         let conn: SSHConnectionInfo
         switch await resolveConnection(requested) {
@@ -82,9 +82,10 @@ struct SSHBackend: ExecutionBackend {
         // never hangs waiting on a password prompt, and never falls through
         // to any local execution path. SandboxProcessRunner's own timeout is
         // a second, independent bound on top of that.
-        return await runner.run(executable: sshPath, arguments: args,
-                                workingDir: nil,
-                                timeout: TimeInterval(request.profile.resourceLimits.timeoutSeconds),
-                                onOutput: request.onOutput, controller: request.processController)
+        return await runner.run(
+            executable: sshPath, arguments: args,
+            workingDir: nil,
+            timeout: TimeInterval(request.profile.resourceLimits.timeoutSeconds),
+            onOutput: request.onOutput, controller: request.processController)
     }
 }

@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Cloud text-to-speech provider: turns text into audio bytes (mp3). Distinct
 /// from `SpeechSynthesizing` (the fire-and-forget `speak` seam) — this fetches
@@ -65,7 +65,8 @@ struct ElevenLabsTTSBackend: SpeechSynthesisBackend {
 
     /// Default voice ("Rachel") when none configured.
     init(secrets: SecretStore, http: DataHTTPClient, voiceID: String = "") {
-        self.secrets = secrets; self.http = http
+        self.secrets = secrets
+        self.http = http
         self.voiceID = voiceID.isEmpty ? "21m00Tcm4TlvDq8ikWAM" : voiceID
     }
 

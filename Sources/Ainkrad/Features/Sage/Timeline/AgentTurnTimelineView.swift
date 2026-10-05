@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Chooses the text a tool card shows: while the step is running (pending) and a
 /// live buffer exists for its id, prefer the incremental stream; otherwise use
@@ -70,10 +70,15 @@ struct AgentTurnTimelineView: View {
     private func stepBody(_ step: TurnStep) -> some View {
         switch step.kind {
         case .thinking(let text):
-            TimelineThinkingRow(text: text, isExpanded: expandedThinking.contains(step.id),
-                                tokens: tokens, reduceMotion: reduceMotion) {
-                if expandedThinking.contains(step.id) { expandedThinking.remove(step.id) }
-                else { expandedThinking.insert(step.id) }
+            TimelineThinkingRow(
+                text: text, isExpanded: expandedThinking.contains(step.id),
+                tokens: tokens, reduceMotion: reduceMotion
+            ) {
+                if expandedThinking.contains(step.id) {
+                    expandedThinking.remove(step.id)
+                } else {
+                    expandedThinking.insert(step.id)
+                }
             }
         case .text(let text):
             SageMarkdownText(text: text, tokens: tokens, typography: typography)
@@ -87,13 +92,18 @@ struct AgentTurnTimelineView: View {
                 }
         case .tool(let payload):
             let liveText = TimelineLiveOutput.summary(for: step, store: toolStream)
-            let imageDataURL: String? = (payload.name == "image_generate")
-                ? scryStore.flatMap { ToolCallImageLookup.canvasImageDataURL(resultText: payload.result.text, store: $0) }
+            let imageDataURL: String? =
+                (payload.name == "image_generate")
+                ? scryStore.flatMap {
+                    ToolCallImageLookup.canvasImageDataURL(resultText: payload.result.text, store: $0)
+                }
                 : nil
-            let videoURL: String? = (payload.name == "video_generate")
+            let videoURL: String? =
+                (payload.name == "video_generate")
                 ? scryStore.flatMap { ToolCallImageLookup.canvasVideoURL(resultText: payload.result.text, store: $0) }
                 : nil
-            let audioURL: String? = (payload.name == "speak")
+            let audioURL: String? =
+                (payload.name == "speak")
                 ? scryStore.flatMap { ToolCallImageLookup.canvasAudioURL(resultText: payload.result.text, store: $0) }
                 : nil
             ToolCallCardView(
@@ -138,8 +148,10 @@ struct LiveStepView: View {
             TimelineRailGutter(status: .running, tokens: tokens, reduceMotion: reduceMotion)
             VStack(alignment: .leading, spacing: 8) {
                 if !streamingThinking.isEmpty {
-                    TimelineThinkingRow(text: streamingThinking, isExpanded: thinkingExpanded,
-                                        tokens: tokens, reduceMotion: reduceMotion) { thinkingExpanded.toggle() }
+                    TimelineThinkingRow(
+                        text: streamingThinking, isExpanded: thinkingExpanded,
+                        tokens: tokens, reduceMotion: reduceMotion
+                    ) { thinkingExpanded.toggle() }
                 }
                 if isStreaming || !streamingText.isEmpty {
                     VStack(alignment: .leading, spacing: 2) {

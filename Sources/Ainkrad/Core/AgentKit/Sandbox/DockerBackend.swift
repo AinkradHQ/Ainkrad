@@ -27,8 +27,9 @@ struct DockerBackend: ExecutionBackend {
     /// Docker daemon can't hang this check or the caller.
     func isAvailable() async -> Bool {
         guard let resolved = resolveDocker() else { return false }
-        let result = await runner.run(executable: resolved, arguments: ["info"],
-                                      workingDir: nil, timeout: 8)
+        let result = await runner.run(
+            executable: resolved, arguments: ["info"],
+            workingDir: nil, timeout: 8)
         return !result.timedOut && !result.unresponsive && result.exitCode == 0
     }
 
@@ -37,14 +38,15 @@ struct DockerBackend: ExecutionBackend {
         // blocks the command outright — never silently runs on the host.
         guard let resolved = resolveDocker(), await isAvailable() else {
             throw BackendError.unavailable(
-                "Docker isn't available (CLI not found or daemon not running). " +
-                "Install/start Docker Desktop (or colima), or choose a seatbelt " +
-                "profile instead — this run was blocked, not executed on the host.")
+                "Docker isn't available (CLI not found or daemon not running). "
+                    + "Install/start Docker Desktop (or colima), or choose a seatbelt "
+                    + "profile instead — this run was blocked, not executed on the host.")
         }
 
         let workspace = request.workingDir ?? NSHomeDirectory()
-        let args = DockerArgsBuilder.runArgs(command: request.command, profile: request.profile,
-                                             workspacePath: workspace, image: image)
+        let args = DockerArgsBuilder.runArgs(
+            command: request.command, profile: request.profile,
+            workspacePath: workspace, image: image)
         return await runner.run(
             executable: resolved,
             arguments: args,

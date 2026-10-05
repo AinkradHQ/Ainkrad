@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// How Ainkrad talks to a configured MCP server.
 enum MCPTransportKind: String, Codable, Equatable {
@@ -42,10 +42,12 @@ struct MCPServerConfig: Codable, Equatable, Identifiable {
     /// For `.inProcess`: the owning app's id. Nil for every other transport.
     var appID: String?
 
-    init(id: String, displayName: String, transport: MCPTransportKind,
-         command: String? = nil, args: [String] = [], url: URL? = nil,
-         envKeys: [String] = [], headerKeys: [String] = [],
-         enabled: Bool = false, trusted: Bool = false, appID: String? = nil) {
+    init(
+        id: String, displayName: String, transport: MCPTransportKind,
+        command: String? = nil, args: [String] = [], url: URL? = nil,
+        envKeys: [String] = [], headerKeys: [String] = [],
+        enabled: Bool = false, trusted: Bool = false, appID: String? = nil
+    ) {
         self.id = id
         self.displayName = displayName
         self.transport = transport

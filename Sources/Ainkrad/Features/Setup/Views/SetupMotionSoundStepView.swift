@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Applies the Motion & Sound step's choices to the live stores.
 ///
@@ -9,9 +9,11 @@ import AinkradHostRuntime
 /// offer a value outside 0...1.
 @MainActor
 enum SetupMotionSound {
-    static func apply(reduceMotion: Bool, skyMotion: Bool, skySpeed: Double,
-                      soundEnabled: Bool, volume: Double,
-                      general: GeneralSettingsStore, sky: SkySettingsStore) {
+    static func apply(
+        reduceMotion: Bool, skyMotion: Bool, skySpeed: Double,
+        soundEnabled: Bool, volume: Double,
+        general: GeneralSettingsStore, sky: SkySettingsStore
+    ) {
         general.setUiReduceMotion(reduceMotion)
         sky.setMotionEnabled(skyMotion)
         sky.setMotionSpeed(skySpeed)
@@ -124,31 +126,40 @@ struct SetupMotionSoundStepView: View {
                     Text("Reduce motion")
                         .font(AinkradFont.display(16, weight: .medium))
                         .foregroundStyle(tokens.foreground.opacity(0.95))
-                    Text("Ainkrad drifts, parallaxes and springs by default. If that kind of "
-                         + "movement makes you queasy, turn this on — the rest of this setup "
-                         + "will stop animating on the very next screen, so you can see it "
-                         + "worked. This is the only time Ainkrad asks; it lives in "
-                         + "Settings → Appearance afterwards.")
-                        .font(AinkradFont.display(13))
-                        .foregroundStyle(tokens.foreground.opacity(0.72))
-                        .lineSpacing(4)
-                        .fixedSize(horizontal: false, vertical: true)
-                        // Prose is capped even though the column fills — see the
-                        // column's own comment.
-                        .frame(maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth),
-                               alignment: .leading)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Text(
+                        "Ainkrad drifts, parallaxes and springs by default. If that kind of "
+                            + "movement makes you queasy, turn this on — the rest of this setup "
+                            + "will stop animating on the very next screen, so you can see it "
+                            + "worked. This is the only time Ainkrad asks; it lives in "
+                            + "Settings → Appearance afterwards."
+                    )
+                    .font(AinkradFont.display(13))
+                    .foregroundStyle(tokens.foreground.opacity(0.72))
+                    .lineSpacing(4)
+                    .fixedSize(horizontal: false, vertical: true)
+                    // Prose is capped even though the column fills — see the
+                    // column's own comment.
+                    .frame(
+                        maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth),
+                        alignment: .leading
+                    )
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                AinkradToggle(isOn: Binding(get: { store.uiReduceMotion },
-                                            set: { store.setUiReduceMotion($0) }))
-                    .accessibilityLabel("Reduce motion")
+                AinkradToggle(
+                    isOn: Binding(
+                        get: { store.uiReduceMotion },
+                        set: { store.setUiReduceMotion($0) })
+                )
+                .accessibilityLabel("Reduce motion")
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
             // Tint, no border and no rule — the emphasis is the surface itself,
             // per the no-separator design language.
-            .background(ChamferShape(cut: AinkradRadius.md)
-                .fill(tokens.accentPrimary.opacity(0.10)))
+            .background(
+                ChamferShape(cut: AinkradRadius.md)
+                    .fill(tokens.accentPrimary.opacity(0.10))
+            )
             .accessibilityIdentifier("setup.motion.reduceMotion")
         }
     }
@@ -162,10 +173,11 @@ struct SetupMotionSoundStepView: View {
                 // Points at the window, not at the switch. The sentence is the
                 // only place the sky gets described, and it describes where to
                 // look rather than what it does.
-                sectionIntro(title: "The sky behind this",
-                             hint: "That is it, live, right now. Switch it off and the scene "
-                                 + "stays exactly where it is — everything in it just stops.",
-                             tokens: tokens)
+                sectionIntro(
+                    title: "The sky behind this",
+                    hint: "That is it, live, right now. Switch it off and the scene "
+                        + "stays exactly where it is — everything in it just stops.",
+                    tokens: tokens)
                 toggleRow(
                     tokens: tokens,
                     title: "Animate the sky",
@@ -207,10 +219,11 @@ struct SetupMotionSoundStepView: View {
         let store = environment.generalSettingsStore
         return staged(index: 2) {
             VStack(alignment: .leading, spacing: 12) {
-                sectionIntro(title: "Sound",
-                             hint: "Short cues when something opens, closes, or finishes. "
-                                 + "Nothing that plays while you are reading.",
-                             tokens: tokens)
+                sectionIntro(
+                    title: "Sound",
+                    hint: "Short cues when something opens, closes, or finishes. "
+                        + "Nothing that plays while you are reading.",
+                    tokens: tokens)
                 toggleRow(
                     tokens: tokens,
                     title: "Sound effects",
@@ -274,8 +287,10 @@ struct SetupMotionSoundStepView: View {
 
     /// The switch rows carry a title only. Their explanation is in the intro
     /// above them, and — for the sky — in the window behind them.
-    private func toggleRow(tokens: DesignTokens, title: String,
-                           isOn: Bool, action: @escaping (Bool) -> Void) -> some View {
+    private func toggleRow(
+        tokens: DesignTokens, title: String,
+        isOn: Bool, action: @escaping (Bool) -> Void
+    ) -> some View {
         HStack(alignment: .center, spacing: 12) {
             Text(title)
                 .font(AinkradFont.display(13, weight: .medium))
@@ -294,11 +309,14 @@ struct SetupMotionSoundStepView: View {
     /// than anywhere else in the wizard: a user who turns reduce-motion on and
     /// then walks Back to this screen must not be met by the thing they just
     /// switched off.
-    private func staged<Content: View>(index: Int,
-                                       @ViewBuilder _ content: () -> Content) -> some View {
-        let geometry = SetupStageMotion.layerGeometry(.content,
-                                                      reduceMotion: reduceMotion,
-                                                      isForward: true)
+    private func staged<Content: View>(
+        index: Int,
+        @ViewBuilder _ content: () -> Content
+    ) -> some View {
+        let geometry = SetupStageMotion.layerGeometry(
+            .content,
+            reduceMotion: reduceMotion,
+            isForward: true)
         let lift = geometry.map { $0.lift * 0.6 } ?? 0
         // ONLY the per-index stagger. `SetupStageMotion.animation(layer:)`
         // already carries the layer's own delay (0.11s for `.content`), so
@@ -311,8 +329,10 @@ struct SetupMotionSoundStepView: View {
         return content()
             .opacity(hasSettled ? 1 : 0)
             .offset(y: hasSettled ? 0 : lift)
-            .animation(SetupStageMotion.animation(reduceMotion: reduceMotion,
-                                                  layer: .content)?.delay(delay),
-                       value: hasSettled)
+            .animation(
+                SetupStageMotion.animation(
+                    reduceMotion: reduceMotion,
+                    layer: .content)?.delay(delay),
+                value: hasSettled)
     }
 }

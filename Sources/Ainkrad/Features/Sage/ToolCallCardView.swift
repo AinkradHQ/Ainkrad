@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// A tool call in the transcript timeline. Collapsed, it is a lightweight row —
 /// icon + name only (no card chrome), with a chevron that reveals on hover.
@@ -140,8 +140,10 @@ struct ToolCallCardView: View {
         .background(ChamferShape(cut: AinkradRadius.sm).fill(tokens.background.opacity(0.45)))
         .overlay {
             ChamferShape(cut: AinkradRadius.sm)
-                .stroke((isError ? tokens.danger : (pendingApproval ? tokens.accentPrimary : tint)).opacity(pendingApproval ? 0.5 : 0.22),
-                        lineWidth: 1)
+                .stroke(
+                    (isError ? tokens.danger : (pendingApproval ? tokens.accentPrimary : tint)).opacity(
+                        pendingApproval ? 0.5 : 0.22),
+                    lineWidth: 1)
         }
         .transition(reduceMotion ? .identity : .opacity.combined(with: .offset(y: -4)))
     }
@@ -151,10 +153,15 @@ struct ToolCallCardView: View {
         for (i, line) in diff.components(separatedBy: "\n").enumerated() {
             let sign = line.first
             let gutter = sign == "+" ? "+ " : (sign == "-" ? "- " : "  ")
-            var seg = AttributedString((i == 0 ? "" : "\n") + gutter + line.dropFirst(sign == "+" || sign == "-" ? 1 : 0))
-            if sign == "+" { seg.foregroundColor = tokens.success }
-            else if sign == "-" { seg.foregroundColor = tokens.danger }
-            else { seg.foregroundColor = tokens.foreground.opacity(0.6) }
+            var seg = AttributedString(
+                (i == 0 ? "" : "\n") + gutter + line.dropFirst(sign == "+" || sign == "-" ? 1 : 0))
+            if sign == "+" {
+                seg.foregroundColor = tokens.success
+            } else if sign == "-" {
+                seg.foregroundColor = tokens.danger
+            } else {
+                seg.foregroundColor = tokens.foreground.opacity(0.6)
+            }
             out += seg
         }
         return out

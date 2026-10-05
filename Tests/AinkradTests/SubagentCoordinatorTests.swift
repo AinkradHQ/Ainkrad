@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("SubagentCoordinator", .timeLimit(.minutes(1)))
@@ -28,12 +29,16 @@ struct SubagentCoordinatorTests {
         private(set) var peak = 0
         private var conts: [CheckedContinuation<Void, Never>] = []
         func run(_ spec: SubagentSpec) async -> SubagentOutcome {
-            inFlight += 1; peak = max(peak, inFlight)
+            inFlight += 1
+            peak = max(peak, inFlight)
             await withCheckedContinuation { conts.append($0) }
             inFlight -= 1
             return SubagentOutcome(id: spec.id, status: .succeeded, resultText: "ok")
         }
-        func releaseAll() { conts.forEach { $0.resume() }; conts.removeAll() }
+        func releaseAll() {
+            conts.forEach { $0.resume() }
+            conts.removeAll()
+        }
     }
 
     @Test func aggregatesInInputOrder() async {
@@ -54,7 +59,8 @@ struct SubagentCoordinatorTests {
         let runner = PeakRunner()
         let c = SubagentCoordinator(runner: runner, maxConcurrent: 2)
         let task = Task { await c.spawn((0..<5).map { spec("t\($0)") }) }
-        await Task.yield(); try? await Task.sleep(nanoseconds: 10_000_000)
+        await Task.yield()
+        try? await Task.sleep(nanoseconds: 10_000_000)
         #expect(runner.peak <= 2)
         // 5 specs over a cap of 2 need multiple release waves: each
         // `releaseAll()` only resumes continuations already in flight, and

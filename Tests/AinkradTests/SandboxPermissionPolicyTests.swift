@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("SandboxPermissionPolicy")
@@ -14,7 +15,7 @@ struct SandboxPermissionPolicyTests {
         let e = SandboxPermissionPolicy.compose(
             gate: .requireApproval, agentAllowList: ["run_terminal"],
             sandboxAllowList: ["run_terminal"], toolName: "run_terminal")
-        #expect(e.effective == .requireApproval)   // sandbox/agent allow can't upgrade to auto
+        #expect(e.effective == .requireApproval)  // sandbox/agent allow can't upgrade to auto
     }
 
     @Test func agentAllowListExclusionDenies() {

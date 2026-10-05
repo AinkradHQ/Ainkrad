@@ -48,7 +48,8 @@ func uniqueDestinationName(for name: String, existing: Set<String>) -> String {
 
     var index = 2
     while true {
-        let candidate = ext.isEmpty
+        let candidate =
+            ext.isEmpty
             ? "\(prefix)\(stem) \(index)"
             : "\(prefix)\(stem) \(index).\(ext)"
         if !existing.contains(candidate) { return candidate }

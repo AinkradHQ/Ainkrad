@@ -5,7 +5,7 @@ import Foundation
 struct LocalFileSystemService: FileSystemServing {
     private static let keys: [URLResourceKey] = [
         .isDirectoryKey, .isSymbolicLinkKey, .isHiddenKey,
-        .fileSizeKey, .contentModificationDateKey, .nameKey
+        .fileSizeKey, .contentModificationDateKey, .nameKey,
     ]
 
     var homeDirectory: URL { FileManager.default.homeDirectoryForCurrentUser }

@@ -1,8 +1,9 @@
-import Testing
-import Foundation
 import AinkradAppKit
-@testable import Ainkrad
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 /// Wave 1-A / Blocker 4: `.mainInteractive` is the only tier that reaches
 /// `HostBackend` — an unsandboxed `/bin/zsh -lc` with the user's full

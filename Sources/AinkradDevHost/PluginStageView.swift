@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Renders the current `DevHostModel.State`. `.loaded` renders the plugin's
 /// own root view via its `makeRootView` factory, honoring the bundle's

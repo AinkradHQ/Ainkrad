@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// One structured block of a turn. Tool use requires structured content, so a
 /// message is a sequence of these rather than a bare string. A `tool_result`

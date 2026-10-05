@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/Auth/OAuthCredentialStore.swift
 import Foundation
-import AinkradHostRuntime
 
 /// `@MainActor` façade for subscription OAuth: persists token VALUES in the
 /// Keychain (via `SecretStore`, JSON-encoded blob under `oauthSecretID`), tracks
@@ -15,8 +15,10 @@ final class OAuthCredentialStore {
     private var doc: OAuthAccountsDocument
     private var inFlight: [String: Task<OAuthToken, Error>] = [:]
 
-    init(persistence: PersistenceStore, secrets: SecretStore,
-         flow: ClaudeOAuthFlow, now: @escaping () -> Date = Date.init) {
+    init(
+        persistence: PersistenceStore, secrets: SecretStore,
+        flow: ClaudeOAuthFlow, now: @escaping () -> Date = Date.init
+    ) {
         self.persistence = persistence
         self.secrets = secrets
         self.flow = flow
@@ -51,7 +53,7 @@ final class OAuthCredentialStore {
 
     private func validToken(for connectionID: UUID) async throws -> OAuthToken {
         guard let token = readToken(for: connectionID) else {
-            throw ClaudeOAuthError.malformedResponse   // no stored token → treat as needs-login
+            throw ClaudeOAuthError.malformedResponse  // no stored token → treat as needs-login
         }
         guard token.isExpiring(now: now()) else { return token }
 
@@ -80,13 +82,15 @@ final class OAuthCredentialStore {
 
     private func writeToken(_ token: OAuthToken, for connectionID: UUID) {
         guard let data = try? JSONEncoder().encode(token),
-              let json = String(data: data, encoding: .utf8) else { return }
+            let json = String(data: data, encoding: .utf8)
+        else { return }
         secrets.setSecret(json, for: oauthSecretID(connectionID))
     }
 
     private func readToken(for connectionID: UUID) -> OAuthToken? {
         guard let json = secrets.secret(for: oauthSecretID(connectionID)),
-              let data = json.data(using: .utf8) else { return nil }
+            let data = json.data(using: .utf8)
+        else { return nil }
         return try? JSONDecoder().decode(OAuthToken.self, from: data)
     }
 }

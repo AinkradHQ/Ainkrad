@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 import Foundation
 import Observation
-import AinkradHostRuntime
 
 /// The tool-use agent loop: owns the transcript, in-flight streaming buffers,
 /// the tool registry, and the per-turn approval gate. Runs
@@ -23,16 +23,16 @@ final class AgentSession {
     }
 
     static let defaultPrompt = """
-    You are Ainkrad's built-in assistant, embedded in a native macOS \
-    developer workspace. You can read and edit files using the provided tools. \
-    Answer concisely and precisely. For structured or comparative output — \
-    tables, diagrams, charts, code, status boards, or several related cards — \
-    prefer the `scry_render` tool over inline chat; it persists as movable \
-    HUD cards you can update in place for live progress. Keep short \
-    conversational answers and one-off inline snippets in chat. Don't invoke \
-    tools or skills for greetings, small talk, or when no concrete task is \
-    requested — just reply.
-    """
+        You are Ainkrad's built-in assistant, embedded in a native macOS \
+        developer workspace. You can read and edit files using the provided tools. \
+        Answer concisely and precisely. For structured or comparative output — \
+        tables, diagrams, charts, code, status boards, or several related cards — \
+        prefer the `scry_render` tool over inline chat; it persists as movable \
+        HUD cards you can update in place for live progress. Keep short \
+        conversational answers and one-off inline snippets in chat. Don't invoke \
+        tools or skills for greetings, small talk, or when no concrete task is \
+        requested — just reply.
+        """
 
     private(set) var messages: [AgentMessage] = []
     private(set) var state: State = .idle
@@ -220,7 +220,11 @@ final class AgentSession {
     /// byte-identical to before this seam existed.
     private let permissionModeOverride: AgentPermissionMode?
 
-    private enum ApprovalOutcome { case approved, approvedWithReplacement(JSONValue), denied(String) }
+    private enum ApprovalOutcome {
+        case approved
+        case approvedWithReplacement(JSONValue)
+        case denied(String)
+    }
     private var approvalContinuation: CheckedContinuation<ApprovalOutcome, Never>?
 
     init(
@@ -323,9 +327,11 @@ final class AgentSession {
         // re-entrant call while a turn is in flight bailed above too. Captured
         // BEFORE appending the user message so `transcriptCount` marks the turn's
         // first message.
-        turnMarks.append(TurnMark(transcriptCount: messages.count,
-                                  editJournalCount: editJournal?.count ?? 0,
-                                  prompt: text))
+        turnMarks.append(
+            TurnMark(
+                transcriptCount: messages.count,
+                editJournalCount: editJournal?.count ?? 0,
+                prompt: text))
 
         var content: [AgentContentBlock] = images.map { .image(mediaType: $0.mediaType, base64: $0.base64) }
         content.append(.text(text))
@@ -352,8 +358,9 @@ final class AgentSession {
         }
         approvalContinuation = nil
         if case .awaitingApproval(let pending) = state,
-           pending.call.name == "edit_file",
-           let fileDiff = pending.preview.fileDiff, !rejectedHunkIDs.isEmpty {
+            pending.call.name == "edit_file",
+            let fileDiff = pending.preview.fileDiff, !rejectedHunkIDs.isEmpty
+        {
             let newInput = Self.rewriteEditForPartialApproval(
                 input: pending.call.input, fileDiff: fileDiff, rejecting: rejectedHunkIDs)
             cont.resume(returning: .approvedWithReplacement(newInput))
@@ -365,8 +372,10 @@ final class AgentSession {
     /// Rewrites an edit_file call so ONLY accepted hunks apply: `old_string` becomes
     /// the full original file and `new_string` the reconstructed content. Returns the
     /// input unchanged when nothing is rejected (keeps the original find/replace).
-    static func rewriteEditForPartialApproval(input: JSONValue, fileDiff: FileDiff,
-                                              rejecting rejected: Set<Int>) -> JSONValue {
+    static func rewriteEditForPartialApproval(
+        input: JSONValue, fileDiff: FileDiff,
+        rejecting rejected: Set<Int>
+    ) -> JSONValue {
         guard !rejected.isEmpty else { return input }
         let reconstructed = PartialEdit.reconstruct(fileDiff, rejecting: rejected)
         guard case .object(var obj) = input else { return input }
@@ -484,7 +493,9 @@ final class AgentSession {
     /// so callers (`/rewind`) can surface a restore failure instead of silently
     /// swallowing it — see `CheckpointCoordinator.RestoreOutcome`.
     @discardableResult
-    func restoreCheckpoint(_ checkpoint: Checkpoint, mode: CheckpointCoordinator.RestoreMode) async -> CheckpointCoordinator.RestoreOutcome? {
+    func restoreCheckpoint(_ checkpoint: Checkpoint, mode: CheckpointCoordinator.RestoreMode) async
+        -> CheckpointCoordinator.RestoreOutcome?
+    {
         guard let checkpointer else { return nil }
         let outcome = await checkpointer.restore(checkpoint, mode: mode)
         let truncateTo = outcome.transcriptIndex
@@ -509,7 +520,10 @@ final class AgentSession {
         while cut > 0 {
             let last = messages[cut - 1]
             guard last.role == .assistant,
-                  last.content.contains(where: { if case .toolUse = $0 { return true }; return false })
+                last.content.contains(where: {
+                    if case .toolUse = $0 { return true }
+                    return false
+                })
             else { break }
             cut -= 1
         }
@@ -582,9 +596,11 @@ final class AgentSession {
         // actually chose. Uses the same conservative descriptor `candidatesProvider`
         // falls back to for a model the catalog doesn't recognize.
         if let pin, !candidates.contains(where: { $0.model == pin }), let active = activeConnection() {
-            candidates.insert(RouterCandidate(
-                connectionID: active.id, model: pin,
-                descriptor: ModelDescriptor(id: pin, tier: .cheapPaid, contextWindow: 128_000, capabilities: [.toolUse])),
+            candidates.insert(
+                RouterCandidate(
+                    connectionID: active.id, model: pin,
+                    descriptor: ModelDescriptor(
+                        id: pin, tier: .cheapPaid, contextWindow: 128_000, capabilities: [.toolUse])),
                 at: 0)
         }
 
@@ -596,18 +612,22 @@ final class AgentSession {
             // agentic host) — without deeper message-intent analysis, the conservative
             // default is `false`, so a plain/trivial message can still free-first route
             // to a local model even though tools exist in the registry.
-            let signal = TaskSignal(estimatedInputTokens: lastMessage.count / 4,
-                                    needsVision: false, needsTools: false,
-                                    reasoningHeavy: false)
-            let request = RouterRequest(signal: signal, lastMessage: lastMessage, routing: routing,
-                                        candidates: candidates, userPinnedModel: pin, attempt: 0)
+            let signal = TaskSignal(
+                estimatedInputTokens: lastMessage.count / 4,
+                needsVision: false, needsTools: false,
+                reasoningHeavy: false)
+            let request = RouterRequest(
+                signal: signal, lastMessage: lastMessage, routing: routing,
+                candidates: candidates, userPinnedModel: pin, attempt: 0)
             let decision = await router.route(request)
-            let connection = connections.connections.first(where: { $0.id == decision.candidate.connectionID })
+            let connection =
+                connections.connections.first(where: { $0.id == decision.candidate.connectionID })
                 ?? activeConnection()
             let effort = effortString(capabilities: decision.candidate.descriptor.capabilities)
-            return ResolvedTurn(connection: connection,
-                                modelConfig: AgentModelConfig(model: decision.candidate.model, effort: effort),
-                                tier: decision.tier, baselineModel: decision.baselineModel, decision: decision)
+            return ResolvedTurn(
+                connection: connection,
+                modelConfig: AgentModelConfig(model: decision.candidate.model, effort: effort),
+                tier: decision.tier, baselineModel: decision.baselineModel, decision: decision)
         }
 
         // Degraded path (no router, or no candidates to route over): pin, else the
@@ -615,9 +635,10 @@ final class AgentSession {
         // pre-Task-16 behavior when `agents`/`runtime` are also both nil.
         let fallbackModel = pin ?? agents?.active.defaultModel ?? config.current.model
         let connection = activeConnection()
-        return ResolvedTurn(connection: connection,
-                            modelConfig: AgentModelConfig(model: fallbackModel, effort: config.current.effort),
-                            tier: .premium, baselineModel: nil, decision: nil)
+        return ResolvedTurn(
+            connection: connection,
+            modelConfig: AgentModelConfig(model: fallbackModel, effort: config.current.effort),
+            tier: .premium, baselineModel: nil, decision: nil)
     }
 
     /// `/think`'s honest-scope check (and `resolveTurn`'s effort wiring) both need
@@ -662,11 +683,15 @@ final class AgentSession {
     /// `.completed` and `.failed` exits of `runConversation`).
     private func recordSettlement(success: Bool, resolved: ResolvedTurn, usedModel: String) {
         if let decision = resolved.decision {
-            let effective = decision.candidate.model == usedModel ? decision
-                : RouterDecision(candidate: RouterCandidate(connectionID: decision.candidate.connectionID,
-                                                            model: usedModel, descriptor: decision.candidate.descriptor),
-                                 tier: decision.tier, reason: decision.reason,
-                                 escalated: decision.escalated, baselineModel: decision.baselineModel)
+            let effective =
+                decision.candidate.model == usedModel
+                ? decision
+                : RouterDecision(
+                    candidate: RouterCandidate(
+                        connectionID: decision.candidate.connectionID,
+                        model: usedModel, descriptor: decision.candidate.descriptor),
+                    tier: decision.tier, reason: decision.reason,
+                    escalated: decision.escalated, baselineModel: decision.baselineModel)
             router?.recordOutcome(effective, success: success)
         }
         usage?.record(model: usedModel, usage: lastTurnUsage, baselineModel: resolved.baselineModel)
@@ -684,7 +709,8 @@ final class AgentSession {
         }
         let allKeys = authProfiles?.keys(for: connection) ?? (connections.token(for: connection).map { [$0] } ?? [])
         if connection.authMode == .apiKey,
-           ProviderPreset.preset(id: connection.presetID).requiresKey, allKeys.isEmpty {
+            ProviderPreset.preset(id: connection.presetID).requiresKey, allKeys.isEmpty
+        {
             state = .failed("No API key configured for \(connection.displayName)")
             return
         }
@@ -699,8 +725,8 @@ final class AgentSession {
                 credentials = (allKeys.isEmpty ? [""] : allKeys).map { .apiKey($0) }
             }
         } catch {
-            state = .failed("Your Claude subscription needs to be re-authorized. " +
-                            "Open Sage settings and sign in again.")
+            state = .failed(
+                "Your Claude subscription needs to be re-authorized. " + "Open Sage settings and sign in again.")
             return
         }
         // A resolver that yields no credentials would otherwise crash the subscript below.
@@ -735,7 +761,8 @@ final class AgentSession {
                 currentCredential = usedCredential
                 didOpeningFailover = true
             } else {
-                outcome = await runOneTurn(provider: provider, system: system, model: currentModel, credential: currentCredential)
+                outcome = await runOneTurn(
+                    provider: provider, system: system, model: currentModel, credential: currentCredential)
             }
 
             switch outcome {
@@ -758,9 +785,11 @@ final class AgentSession {
             case .toolCalls(let calls, let assistantText, let thinking):
                 iterations += 1
                 if iterations > maxToolIterations {
-                    messages.append(AgentMessage(role: .assistant,
-                        text: (assistantText.isEmpty ? "" : assistantText + "\n\n") +
-                              "Stopped: reached the \(maxToolIterations)-step tool limit."))
+                    messages.append(
+                        AgentMessage(
+                            role: .assistant,
+                            text: (assistantText.isEmpty ? "" : assistantText + "\n\n")
+                                + "Stopped: reached the \(maxToolIterations)-step tool limit."))
                     state = .idle
                     settled()
                     return
@@ -780,13 +809,14 @@ final class AgentSession {
                     // suspended inside `execute`. Bail before recording the
                     // (denied) result so `messages` stays cleared and `.idle` holds.
                     if Task.isCancelled { return }
-                    resultBlocks.append(.toolResult(toolUseID: call.id, content: result.content, isError: result.isError))
+                    resultBlocks.append(
+                        .toolResult(toolUseID: call.id, content: result.content, isError: result.isError))
                 }
                 messages.append(AgentMessage(role: .user, content: resultBlocks))
                 streamingText = ""
                 streamingThinking = ""
                 streamingBlocks = []
-                // loop: re-send with the appended results
+            // loop: re-send with the appended results
             }
         }
     }
@@ -798,10 +828,11 @@ final class AgentSession {
     /// to act on. Any other failure (remote provider, or a local-connection failure
     /// that isn't connectivity-shaped, e.g. an auth error) passes through unchanged.
     /// Pure/testable: no I/O, no actor isolation required.
-    nonisolated static func actionableFailureMessage(_ message: String, connection: Connection, isLocal: Bool) -> String {
+    nonisolated static func actionableFailureMessage(_ message: String, connection: Connection, isLocal: Bool) -> String
+    {
         guard isLocal, message.lowercased().contains("connect") else { return message }
-        return "Can't reach the local model server at \(connection.baseURL). " +
-               "Start Ollama/LM Studio, or switch models (pick a model in the picker or /model <id>)."
+        return "Can't reach the local model server at \(connection.baseURL). "
+            + "Start Ollama/LM Studio, or switch models (pick a model in the picker or /model <id>)."
     }
 
     private enum TurnOutcome {
@@ -810,8 +841,10 @@ final class AgentSession {
         case toolCalls([ToolCall], assistantText: String, thinking: String)
     }
 
-    private func runOneTurn(provider: LLMProvider, system: String,
-                            model: AgentModelConfig, credential: ProviderCredential) async -> TurnOutcome {
+    private func runOneTurn(
+        provider: LLMProvider, system: String,
+        model: AgentModelConfig, credential: ProviderCredential
+    ) async -> TurnOutcome {
         let signpost = AinkradSignposts.begin(AinkradSignposts.agent, "agent-turn")
         defer { AinkradSignposts.end(AinkradSignposts.agent, "agent-turn", signpost) }
         state = .thinking
@@ -827,8 +860,9 @@ final class AgentSession {
         var sawDone = false
         var turnUsage = TokenUsage.zero
 
-        let stream = provider.send(messages: messages, system: system,
-                                   tools: allowedSchemas(), model: model, credential: credential)
+        let stream = provider.send(
+            messages: messages, system: system,
+            tools: allowedSchemas(), model: model, credential: credential)
         do {
             for try await event in stream {
                 switch event {
@@ -880,10 +914,12 @@ final class AgentSession {
 
     /// Publishes to the observable properties only when the coalescing window
     /// has elapsed. Everything between publishes is accumulated, not dropped.
-    private func publishIfDue(_ coalescer: inout StreamCoalescer,
-                              _ parser: inout MarkdownStreamParser,
-                              _ thinking: inout String,
-                              _ pending: inout Bool) {
+    private func publishIfDue(
+        _ coalescer: inout StreamCoalescer,
+        _ parser: inout MarkdownStreamParser,
+        _ thinking: inout String,
+        _ pending: inout Bool
+    ) {
         guard pending, coalescer.shouldPublish(at: ContinuousClock.now) else { return }
         streamingText = parser.text
         streamingBlocks = parser.blocks
@@ -894,8 +930,10 @@ final class AgentSession {
     /// Unconditional publish. Required at stream end (normal or error): the
     /// last window is almost never exactly full, and without this the final
     /// few tokens would never reach the view.
-    private func flushStreaming(_ parser: inout MarkdownStreamParser,
-                                _ thinking: inout String) {
+    private func flushStreaming(
+        _ parser: inout MarkdownStreamParser,
+        _ thinking: inout String
+    ) {
         streamingText = parser.text
         streamingBlocks = parser.blocks
         streamingThinking = thinking
@@ -919,9 +957,11 @@ final class AgentSession {
         models: [String], credentials: [ProviderCredential]
     ) async -> (TurnOutcome, model: String, credential: ProviderCredential) {
         let keys = credentials.map { _ in "" }
-        guard var current = FailoverController.nextAttempt(
-            models: models, keys: keys, failedModel: nil, failedKeyIndex: nil, errorKind: .providerError
-        ) else {
+        guard
+            var current = FailoverController.nextAttempt(
+                models: models, keys: keys, failedModel: nil, failedKeyIndex: nil, errorKind: .providerError
+            )
+        else {
             return (.failed("no candidates configured"), model.model, credentials.first ?? .apiKey(""))
         }
 
@@ -929,16 +969,19 @@ final class AgentSession {
         var lastOutcome: TurnOutcome = .failed("no candidates configured")
         for _ in 0..<maxAttempts {
             let attemptModel = AgentModelConfig(model: current.model, effort: model.effort)
-            let outcome = await runOneTurn(provider: provider, system: system,
-                                           model: attemptModel, credential: credentials[current.keyIndex])
+            let outcome = await runOneTurn(
+                provider: provider, system: system,
+                model: attemptModel, credential: credentials[current.keyIndex])
             guard case .failed(let message) = outcome, let kind = FailoverController.classify(message) else {
                 return (outcome, current.model, credentials[current.keyIndex])
             }
             lastOutcome = outcome
-            guard let next = FailoverController.nextAttempt(
-                models: models, keys: keys,
-                failedModel: current.model, failedKeyIndex: current.keyIndex, errorKind: kind
-            ) else {
+            guard
+                let next = FailoverController.nextAttempt(
+                    models: models, keys: keys,
+                    failedModel: current.model, failedKeyIndex: current.keyIndex, errorKind: kind
+                )
+            else {
                 return (outcome, current.model, credentials[current.keyIndex])
             }
             current = next
@@ -955,7 +998,8 @@ final class AgentSession {
         // ever narrows — it can reject a call the gate would have allowed, but
         // can never approve one the gate would have blocked.
         if let policy = agents?.active.toolPolicy,
-           !policy.allows(toolName: tool.name, permission: tool.permission) {
+            !policy.allows(toolName: tool.name, permission: tool.permission)
+        {
             return ToolResult(
                 content: "The active agent (\(agents?.active.name ?? "")) is not permitted to use \(tool.name).",
                 isError: true)
@@ -1009,7 +1053,7 @@ final class AgentSession {
                     isError: true)
             }
             let preview = tool.approvalPreview(call.input)
-            rejectedHunkIDs = []            // fresh selection per approval
+            rejectedHunkIDs = []  // fresh selection per approval
             state = .awaitingApproval(PendingApproval(call: call, preview: preview))
             let outcome = await withCheckedContinuation { (cont: CheckedContinuation<ApprovalOutcome, Never>) in
                 approvalContinuation = cont
@@ -1043,14 +1087,16 @@ final class AgentSession {
     /// `runConversation` — not `reset()`, which is a discard, not a settle).
     private func settled() {
         if let memory { MemoryConsolidator.consolidate(memory) }
-        updateSkillSuggestion(from: messages, succeeded: { if case .idle = state { return true } else { return false } }())
+        updateSkillSuggestion(
+            from: messages, succeeded: { if case .idle = state { return true } else { return false } }())
         onSettled?()
     }
 
     /// The active connection: the configured one, else the first connection.
     private func activeConnection() -> Connection? {
         if let id = config.activeConnectionID,
-           let match = connections.connections.first(where: { $0.id == id }) {
+            let match = connections.connections.first(where: { $0.id == id })
+        {
             return match
         }
         return connections.connections.first

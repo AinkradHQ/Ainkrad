@@ -1,18 +1,21 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("MCPServerInstaller")
 @MainActor
 struct MCPServerInstallerTests {
     private func entry() -> CatalogEntry {
-        CatalogEntry(appID: "web-search", displayName: "Web Search", icon: "magnifyingglass",
+        CatalogEntry(
+            appID: "web-search", displayName: "Web Search", icon: "magnifyingglass",
             description: "search", version: "1.0", apiVersion: 0,
             downloadURL: URL(string: "https://e/none")!, sha256: "", sourceRepo: "o/r",
             kind: .mcpServer,
-            mcp: MCPCatalogDescriptor(transport: .stdio, command: "npx", args: ["-y", "srv"],
-                                      envKeys: ["API_KEY"]))
+            mcp: MCPCatalogDescriptor(
+                transport: .stdio, command: "npx", args: ["-y", "srv"],
+                envKeys: ["API_KEY"]))
     }
 
     @Test func installRecordsConfigAndInstalledState() throws {
@@ -23,7 +26,7 @@ struct MCPServerInstallerTests {
         let cfg = configs.config(id: "web-search")
         #expect(cfg?.transport == .stdio)
         #expect(cfg?.command == "npx")
-        #expect(cfg?.enabled == false)          // installed disabled until user enables/trusts
+        #expect(cfg?.enabled == false)  // installed disabled until user enables/trusts
         #expect(cfg?.envKeys == ["API_KEY"])
         let installed = persistence.load(InstalledPluginsDocument.self)?.installed["web-search"]
         #expect(installed?.version == "1.0")
@@ -33,7 +36,8 @@ struct MCPServerInstallerTests {
         let persistence = InMemoryPersistenceStore()
         let configs = MCPServerConfigStore(persistence: persistence, secrets: InMemorySecretStore())
         let installer = MCPServerInstaller(configStore: configs, persistence: persistence)
-        let bad = CatalogEntry(appID: "x", displayName: "X", icon: "i", description: "d",
+        let bad = CatalogEntry(
+            appID: "x", displayName: "X", icon: "i", description: "d",
             version: "1", apiVersion: 0, downloadURL: URL(string: "https://e/n")!, sha256: "",
             sourceRepo: "o/r", kind: .mcpServer, mcp: nil)
         #expect(throws: AppStoreError.self) { try installer.install(bad) }

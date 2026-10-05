@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitUI
+import SwiftUI
 
 /// Per-pane tabs. Hidden entirely when there is only one — a lone tab is
 /// chrome that earns nothing.
@@ -56,8 +56,11 @@ private struct TabChip: View {
     var body: some View {
         HStack(spacing: AinkradSpacing.xs) {
             Text(title)
-                .font(AinkradFontResolver.font(.caption, weight: isActive ? .medium : .regular,
-                                               typography: typo))
+                .font(
+                    AinkradFontResolver.font(
+                        .caption, weight: isActive ? .medium : .regular,
+                        typography: typo)
+                )
                 .foregroundStyle(theme.foreground.opacity(isActive ? 0.95 : 0.6))
                 .lineLimit(1)
 

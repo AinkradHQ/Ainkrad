@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradHostRuntime
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("Sidebar sections")
@@ -25,8 +26,9 @@ struct SidebarSectionTests {
 
     @Test("pins become a removable favourites group")
     func favourites() {
-        let sections = sidebarSections(home: home,
-                                       pinned: [URL(fileURLWithPath: "/work/thing")])
+        let sections = sidebarSections(
+            home: home,
+            pinned: [URL(fileURLWithPath: "/work/thing")])
         let favourites = sections.first { $0.title == "Favourites" }
         #expect(favourites?.roots.first?.name == "thing")
         #expect(favourites?.isRemovable == true)
@@ -35,8 +37,9 @@ struct SidebarSectionTests {
     // Repositories are discovered, not pinned, so removing one makes no sense.
     @Test("repositories are not removable")
     func repositoriesAreNotRemovable() {
-        let sections = sidebarSections(home: home,
-                                       repositories: [URL(fileURLWithPath: "/work/repo")])
+        let sections = sidebarSections(
+            home: home,
+            repositories: [URL(fileURLWithPath: "/work/repo")])
         #expect(sections.first { $0.title == "Repositories" }?.isRemovable == false)
     }
 
@@ -49,9 +52,10 @@ struct SidebarSectionTests {
 
     @Test("ids are unique across groups so ForEach stays stable")
     func uniqueIDs() {
-        let sections = sidebarSections(home: home,
-                                       pinned: [URL(fileURLWithPath: "/work/thing")],
-                                       repositories: [URL(fileURLWithPath: "/work/thing")])
+        let sections = sidebarSections(
+            home: home,
+            pinned: [URL(fileURLWithPath: "/work/thing")],
+            repositories: [URL(fileURLWithPath: "/work/thing")])
         let ids = sections.flatMap { $0.roots.map(\.id) }
         #expect(Set(ids).count == ids.count)
     }

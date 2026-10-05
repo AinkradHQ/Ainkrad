@@ -65,32 +65,40 @@ extension FileOperationEngine {
         let operation: FileOperation
         switch spec.kind {
         case .copy:
-            operation = FileOperation(kind: .copy, sources: spec.sources,
-                                      destinationDirectory: spec.destinationDirectory,
-                                      policy: spec.policy)
+            operation = FileOperation(
+                kind: .copy, sources: spec.sources,
+                destinationDirectory: spec.destinationDirectory,
+                policy: spec.policy)
         case .move:
-            operation = FileOperation(kind: .move, sources: spec.sources,
-                                      destinationDirectory: spec.destinationDirectory,
-                                      policy: spec.policy)
+            operation = FileOperation(
+                kind: .move, sources: spec.sources,
+                destinationDirectory: spec.destinationDirectory,
+                policy: spec.policy)
         case .rename:
-            operation = FileOperation(kind: .rename(newName: spec.name ?? ""),
-                                      sources: spec.sources, destinationDirectory: nil)
+            operation = FileOperation(
+                kind: .rename(newName: spec.name ?? ""),
+                sources: spec.sources, destinationDirectory: nil)
         case .createFolder:
-            operation = FileOperation(kind: .createFolder(name: spec.name ?? ""),
-                                      sources: [], destinationDirectory: spec.destinationDirectory)
+            operation = FileOperation(
+                kind: .createFolder(name: spec.name ?? ""),
+                sources: [], destinationDirectory: spec.destinationDirectory)
         case .trash:
-            operation = FileOperation(kind: .trash, sources: spec.sources,
-                                      destinationDirectory: nil)
+            operation = FileOperation(
+                kind: .trash, sources: spec.sources,
+                destinationDirectory: nil)
         case .archive:
-            operation = FileOperation(kind: .archive(name: spec.name ?? ""),
-                                      sources: spec.sources,
-                                      destinationDirectory: spec.destinationDirectory)
+            operation = FileOperation(
+                kind: .archive(name: spec.name ?? ""),
+                sources: spec.sources,
+                destinationDirectory: spec.destinationDirectory)
         case .extract:
-            operation = FileOperation(kind: .extract, sources: spec.sources,
-                                      destinationDirectory: spec.destinationDirectory)
+            operation = FileOperation(
+                kind: .extract, sources: spec.sources,
+                destinationDirectory: spec.destinationDirectory)
         case .batchRename:
-            operation = FileOperation(kind: .batchRename(newNames: spec.names ?? []),
-                                      sources: spec.sources, destinationDirectory: nil)
+            operation = FileOperation(
+                kind: .batchRename(newNames: spec.names ?? []),
+                sources: spec.sources, destinationDirectory: nil)
         }
         _ = await submit(operation)
         return nil

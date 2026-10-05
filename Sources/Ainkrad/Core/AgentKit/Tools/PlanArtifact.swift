@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// One ordered step of an agent-authored plan.
 struct PlanStep: Equatable, Sendable, Identifiable {
@@ -25,11 +25,13 @@ extension PlanArtifact {
         let steps: [PlanStep] = raw.compactMap { entry in
             let rawTitle = entry.stringValue ?? entry["title"]?.stringValue
             guard let title = rawTitle?.trimmingCharacters(in: .whitespacesAndNewlines),
-                  !title.isEmpty else { return nil }
+                !title.isEmpty
+            else { return nil }
             return PlanStep(title: title)
         }
         guard !steps.isEmpty else { return nil }
-        let summary = input["summary"]?.stringValue?
+        let summary =
+            input["summary"]?.stringValue?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         return PlanArtifact(summary: summary, steps: steps)
     }

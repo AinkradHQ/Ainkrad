@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradAppKit
+import Foundation
+import Testing
+
 @testable import Ainkrad
 @testable import AinkradHostRuntime
 
@@ -9,10 +10,13 @@ import AinkradAppKit
 struct MCPInProcessTransportTests {
     func activator(open: Bool = true) -> AppServerActivator {
         let server = MCPAppServer(appID: "demo")
-        server.addTool(.init(name: "ping", description: "Ping.",
-                             schemaJSON: #"{"type":"object"}"#, readOnly: true) { _ in
-            AgentActionResult(text: "pong", isError: false)
-        })
+        server.addTool(
+            .init(
+                name: "ping", description: "Ping.",
+                schemaJSON: #"{"type":"object"}"#, readOnly: true
+            ) { _ in
+                AgentActionResult(text: "pong", isError: false)
+            })
         return AppServerActivator(
             servers: ["demo": server],
             isAppOpen: { _ in open },
@@ -20,8 +24,9 @@ struct MCPInProcessTransportTests {
             availability: { _ in open ? .available : .unknown })
     }
 
-    @Test("a full MCPClient handshake and tool call works over the transport",
-          .timeLimit(.minutes(1)))
+    @Test(
+        "a full MCPClient handshake and tool call works over the transport",
+        .timeLimit(.minutes(1)))
     func clientRoundTrip() async throws {
         let transport = InProcessTransport(appID: "demo", activator: activator())
         let client = MCPClient(transport: transport, requestTimeout: 5)
@@ -40,13 +45,16 @@ struct MCPInProcessTransportTests {
         // If the empty reply were yielded as a message, MCPClient's read loop
         // would log a malformed frame; connect() proves the notification sent
         // during the handshake is swallowed cleanly.
-        try await transport.send(MCPRPC.notification(method: "notifications/initialized",
-                                                     params: .object([:])))
+        try await transport.send(
+            MCPRPC.notification(
+                method: "notifications/initialized",
+                params: .object([:])))
         await transport.stop()
     }
 
-    @Test("a dispatch failure surfaces as a typed transport error",
-          .timeLimit(.minutes(1)))
+    @Test(
+        "a dispatch failure surfaces as a typed transport error",
+        .timeLimit(.minutes(1)))
     func dispatchFailureSurfaces() async throws {
         let transport = InProcessTransport(appID: "ghost", activator: activator(open: false))
         let client = MCPClient(transport: transport, requestTimeout: 5)

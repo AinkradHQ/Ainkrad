@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-import AppKit
 import AinkradHostRuntime
+import AppKit
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 /// `HoardActions` is the seam every keystroke, menu item and (indirectly) the
@@ -36,8 +37,9 @@ struct HoardActionsTests {
         let engine = FileOperationEngine(
             mutator: mutator, trash: InMemoryTrash(),
             undoStack: UndoStack(persistence: InMemoryPersistenceStore()))
-        let store = HoardPaneStore(fileSystem: fileSystem,
-                                   persistence: InMemoryPersistenceStore())
+        let store = HoardPaneStore(
+            fileSystem: fileSystem,
+            persistence: InMemoryPersistenceStore())
         let coordinator = PaneCoordinator()
         let token = coordinator.register(store)
         // A private pasteboard: tests must never touch the user's clipboard.

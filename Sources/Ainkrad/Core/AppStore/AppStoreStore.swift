@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 import Foundation
 import Observation
-import AinkradHostRuntime
 
 /// View-model for the App Store overlay. Owns all UI state and derives a flat
 /// `[AppStoreRow]` from the cached catalog + installed-state + the registry.
@@ -123,35 +123,38 @@ final class AppStoreStore {
             let entry = catalogByID[id]
             let isBuiltIn = reg?.source == .builtIn
             let kind: AppStoreRowKind = entry?.kind == .mcpServer ? .mcpServer : (isBuiltIn ? .builtIn : .plugin)
-            installedRows.append(AppStoreRow(
-                id: id,
-                displayName: reg?.displayName ?? entry?.displayName ?? id,
-                icon: reg?.icon ?? entry?.icon ?? "app",
-                // Built-ins (no catalog entry) carry their own registered
-                // summary; plugins fall back to the catalog description.
-                description: (reg?.summary).flatMap { $0.isEmpty ? nil : $0 } ?? entry?.description ?? "",
-                catalogVersion: entry?.version,
-                installedVersion: installedDoc[id]?.version,
-                status: updates.contains(id) ? .updateAvailable : .installed,
-                isEnabled: registry.isEnabled(id),
-                kind: kind,
-                isManaged: installedDoc[id] != nil,
-                author: entry?.author,
-                needsRestart: needsRestart.contains(id)))
+            installedRows.append(
+                AppStoreRow(
+                    id: id,
+                    displayName: reg?.displayName ?? entry?.displayName ?? id,
+                    icon: reg?.icon ?? entry?.icon ?? "app",
+                    // Built-ins (no catalog entry) carry their own registered
+                    // summary; plugins fall back to the catalog description.
+                    description: (reg?.summary).flatMap { $0.isEmpty ? nil : $0 } ?? entry?.description ?? "",
+                    catalogVersion: entry?.version,
+                    installedVersion: installedDoc[id]?.version,
+                    status: updates.contains(id) ? .updateAvailable : .installed,
+                    isEnabled: registry.isEnabled(id),
+                    kind: kind,
+                    isManaged: installedDoc[id] != nil,
+                    author: entry?.author,
+                    needsRestart: needsRestart.contains(id)))
         }
 
         var availableRows: [AppStoreRow] = []
         for entry in catalog where !installedIDs.contains(entry.appID) {
-            availableRows.append(AppStoreRow(
-                id: entry.appID, displayName: entry.displayName, icon: entry.icon,
-                description: entry.description, catalogVersion: entry.version,
-                installedVersion: nil, status: .available, isEnabled: false,
-                kind: entry.kind == .mcpServer ? .mcpServer : .plugin,
-                isManaged: false, author: entry.author))
+            availableRows.append(
+                AppStoreRow(
+                    id: entry.appID, displayName: entry.displayName, icon: entry.icon,
+                    description: entry.description, catalogVersion: entry.version,
+                    installedVersion: nil, status: .available, isEnabled: false,
+                    kind: entry.kind == .mcpServer ? .mcpServer : .plugin,
+                    isManaged: false, author: entry.author))
         }
 
-        rows = installedRows.sorted { $0.displayName < $1.displayName }
-             + availableRows.sorted { $0.displayName < $1.displayName }
+        rows =
+            installedRows.sorted { $0.displayName < $1.displayName }
+            + availableRows.sorted { $0.displayName < $1.displayName }
     }
 
     /// Fetch the catalog (offline → cache) then recompute rows.
@@ -163,7 +166,10 @@ final class AppStoreStore {
     }
 
     func install(_ id: String) async {
-        if service.hasRetainedData(appID: id) { pendingReinstall = id; return }
+        if service.hasRetainedData(appID: id) {
+            pendingReinstall = id
+            return
+        }
         await run(id, .install) { try await self.service.install(appID: id) }
     }
 
@@ -184,14 +190,14 @@ final class AppStoreStore {
     /// Dismiss the reinstall prompt without installing.
     func cancelReinstall() { pendingReinstall = nil }
 
-    func update(_ id: String) async  {
+    func update(_ id: String) async {
         await run(id, .update) { try await self.service.update(appID: id) }
     }
 
     func uninstall(_ id: String) {
-        do { try service.uninstall(appID: id) }
-        catch let e as AppStoreError { error = e }
-        catch { self.error = .notInstalled(id) }
+        do { try service.uninstall(appID: id) } catch let e as AppStoreError { error = e } catch {
+            self.error = .notInstalled(id)
+        }
         reloadRows()
     }
 
@@ -245,8 +251,10 @@ final class AppStoreStore {
 
     /// Runs an async action for one app id, tracking busy + surfacing errors,
     /// always clearing busy and recomputing rows afterwards.
-    private func run(_ id: String, _ operation: Operation,
-                     _ op: @escaping () async throws -> Void) async {
+    private func run(
+        _ id: String, _ operation: Operation,
+        _ op: @escaping () async throws -> Void
+    ) async {
         busy.insert(id)
         // Read BEFORE the swap: the loaded `Bundle` keeps its URL after the
         // new bundle is moved over it, so this still answers afterwards too —
@@ -256,9 +264,10 @@ final class AppStoreStore {
         do {
             try await op()
             if wasLoaded { needsRestart.insert(id) }
-        }
-        catch let e as AppStoreError { error = e; failure = e }
-        catch {
+        } catch let e as AppStoreError {
+            error = e
+            failure = e
+        } catch {
             self.error = .download(String(describing: error))
             failure = error
         }

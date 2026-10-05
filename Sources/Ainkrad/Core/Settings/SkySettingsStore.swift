@@ -1,5 +1,5 @@
-import Observation
 import AinkradHostRuntime
+import Observation
 
 /// Every live effect of the ambient sky, each individually switchable in
 /// Settings → Living Sky. Raw values are the persistence keys — stable
@@ -46,7 +46,8 @@ enum SkyEffect: String, CaseIterable, Identifiable {
         case .stars: return "A starfield in slow, endless drift — twinkling, with occasional glints."
         case .aurora: return "Two soft ribbons of accent light shimmering high in the sky."
         case .embers: return "Tiny sparks rising gently from below."
-        case .shootingStars: return "Brief streaks across the upper sky, every ten seconds or so — sometimes two together."
+        case .shootingStars:
+            return "Brief streaks across the upper sky, every ten seconds or so — sometimes two together."
         case .skyMoments: return "Rare events: meteor-shower bursts, a slow comet, aurora surges."
         case .breathingSky: return "The horizon glow slowly swells and relaxes, like the sky inhaling."
         case .horizonMist: return "Faint fog bands sliding sideways near the horizon."

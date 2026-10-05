@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// A true miniature of a workspace: its real pane arrangement, drawn from the
 /// layout's unit-space frames, with each pane carrying the app it holds.
@@ -118,9 +118,11 @@ struct WorkspaceLayoutPreview: View {
                 ForEach(layout.blocks) { block in
                     let isActive = block.id == focused.id
                     ChamferShape(cut: style.paneCornerCut)
-                        .fill(isActive
-                              ? tokens.accentPrimary.opacity(0.5)
-                              : tokens.surfaceElevated.opacity(0.7))
+                        .fill(
+                            isActive
+                                ? tokens.accentPrimary.opacity(0.5)
+                                : tokens.surfaceElevated.opacity(0.7)
+                        )
                         .frame(height: stripHeight)
                         .overlay {
                             if style.showsNames, isActive {

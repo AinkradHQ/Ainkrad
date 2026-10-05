@@ -38,8 +38,8 @@ enum AgentPermissionPolicy {
         isTrusted: Bool = false
     ) -> PermissionDecision {
         if isIrreversible { return .requireApproval }
-        if toolPermission == .memory { return .autoApprove }   // memory-only writes are exempt
-        if isTrusted { return .autoApprove }   // per-server MCP trust: bounded by isIrreversible above
+        if toolPermission == .memory { return .autoApprove }  // memory-only writes are exempt
+        if isTrusted { return .autoApprove }  // per-server MCP trust: bounded by isIrreversible above
         switch mode {
         case .fullAuto:
             return .autoApprove

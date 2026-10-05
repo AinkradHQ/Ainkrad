@@ -1,14 +1,16 @@
-import Testing
-import Foundation
-@testable import Ainkrad
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 @MainActor
 @Suite("RemoteChannelSettingsStore")
 struct RemoteChannelSettingsStoreTests {
     @Test func defaultsOffWithNoToken() {
-        let store = RemoteChannelSettingsStore(persistence: InMemoryPersistenceStore(),
-                                               secrets: InMemorySecretStore())
+        let store = RemoteChannelSettingsStore(
+            persistence: InMemoryPersistenceStore(),
+            secrets: InMemorySecretStore())
         #expect(store.settings.enabled == false)
         #expect(store.token == nil)
     }
@@ -27,7 +29,7 @@ struct RemoteChannelSettingsStoreTests {
         let reopened = RemoteChannelSettingsStore(persistence: persistence, secrets: InMemorySecretStore())
         #expect(reopened.settings.enabled)
         #expect(reopened.settings.port == 9191)
-        #expect(reopened.token == nil)   // fresh keychain → no token leaked via JSON
+        #expect(reopened.token == nil)  // fresh keychain → no token leaked via JSON
     }
 
     @Test func clearTokenRemovesIt() {

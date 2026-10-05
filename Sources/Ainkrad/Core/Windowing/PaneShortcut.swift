@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// The ⌥1-9 pane shortcuts, in one place so the key handler
 /// (`WorkspaceChord.paneIndex`), the tab strip's chip and the floating badge all

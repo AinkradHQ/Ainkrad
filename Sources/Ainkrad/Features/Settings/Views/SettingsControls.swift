@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Masked API-key entry with a reveal (eye) toggle. Thin adapter over the kit's
 /// `AinkradSecureField` (which already carries the reveal toggle + chamfer focus
@@ -10,7 +10,7 @@ import AinkradHostRuntime
 struct NeonSecureField: View {
     @Binding var text: String
     let placeholder: String
-    let tokens: DesignTokens // unused adapter param — kit reads \.ainkradTheme
+    let tokens: DesignTokens  // unused adapter param — kit reads \.ainkradTheme
 
     var body: some View {
         AinkradSecureField(text: $text, placeholder: placeholder)
@@ -45,10 +45,12 @@ struct SettingsRowHover: ViewModifier {
         content
             .background(
                 ChamferShape(cut: AinkradRadius.md)
-                    .fill(tokens.surfaceElevated.opacity(shows ? 0.5 : 0)))
+                    .fill(tokens.surfaceElevated.opacity(shows ? 0.5 : 0))
+            )
             .overlay(
                 ChamferShape(cut: AinkradRadius.md)
-                    .strokeBorder(tokens.accentPrimary.opacity(shows ? 0.3 : 0), lineWidth: 1))
+                    .strokeBorder(tokens.accentPrimary.opacity(shows ? 0.3 : 0), lineWidth: 1)
+            )
             .onHover { isHovered = $0 }
             .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: isHovered)
     }

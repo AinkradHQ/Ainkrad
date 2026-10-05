@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Installs / uninstalls MCP-server catalog items. No download and no `dlopen`:
 /// installing records a disabled+untrusted `MCPServerConfig` (secret key names
@@ -27,11 +27,12 @@ final class MCPServerInstaller {
         guard entry.isValidMCPEntry, let mcp = entry.mcp else {
             throw AppStoreError.invalidBundle("invalid MCP catalog entry \(entry.appID)")
         }
-        configStore.upsert(MCPServerConfig(
-            id: entry.appID, displayName: entry.displayName, transport: mcp.transport,
-            command: mcp.command, args: mcp.args, url: mcp.url,
-            envKeys: mcp.envKeys, headerKeys: mcp.headerKeys,
-            enabled: false, trusted: false))
+        configStore.upsert(
+            MCPServerConfig(
+                id: entry.appID, displayName: entry.displayName, transport: mcp.transport,
+                command: mcp.command, args: mcp.args, url: mcp.url,
+                envKeys: mcp.envKeys, headerKeys: mcp.headerKeys,
+                enabled: false, trusted: false))
         var doc = persistence.load(InstalledPluginsDocument.self) ?? InstalledPluginsDocument()
         doc.installed[entry.appID] = .init(version: entry.version, sourceRepo: entry.sourceRepo)
         persistence.save(doc)

@@ -1,7 +1,7 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitContract
 import AinkradHostRuntime
+import SwiftUI
 
 /// The ranked result list that replaces the detail pane while searching.
 /// Each row shows the field, where it lives, and its current value — the

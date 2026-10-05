@@ -1,6 +1,7 @@
+import Foundation
 // Tests/AinkradTests/SandboxProcessStreamTests.swift
 import Testing
-import Foundation
+
 @testable import Ainkrad
 
 @Suite("SandboxProcessRunner streaming", .timeLimit(.minutes(1)))
@@ -9,9 +10,18 @@ struct SandboxProcessStreamTests {
         let runner = SandboxProcessRunner()
         // Serialize snapshots under a lock (the callback fires on a background queue).
         final class Sink: @unchecked Sendable {
-            private let lock = NSLock(); private var snaps: [String] = []
-            func add(_ s: String) { lock.lock(); snaps.append(s); lock.unlock() }
-            func all() -> [String] { lock.lock(); defer { lock.unlock() }; return snaps }
+            private let lock = NSLock()
+            private var snaps: [String] = []
+            func add(_ s: String) {
+                lock.lock()
+                snaps.append(s)
+                lock.unlock()
+            }
+            func all() -> [String] {
+                lock.lock()
+                defer { lock.unlock() }
+                return snaps
+            }
         }
         let sink = Sink()
         let result = await runner.run(
@@ -29,13 +39,23 @@ struct SandboxProcessStreamTests {
 
     @Test func hostBackendForwardsRequestOnOutput() async throws {
         final class Sink: @unchecked Sendable {
-            private let lock = NSLock(); private var got = false
-            func mark() { lock.lock(); got = true; lock.unlock() }
-            func any() -> Bool { lock.lock(); defer { lock.unlock() }; return got }
+            private let lock = NSLock()
+            private var got = false
+            func mark() {
+                lock.lock()
+                got = true
+                lock.unlock()
+            }
+            func any() -> Bool {
+                lock.lock()
+                defer { lock.unlock() }
+                return got
+            }
         }
         let sink = Sink()
-        var request = ExecutionRequest(command: "echo streamed", workingDir: NSHomeDirectory(),
-                                       profile: BuiltInSandboxProfiles.hostTrusted)
+        var request = ExecutionRequest(
+            command: "echo streamed", workingDir: NSHomeDirectory(),
+            profile: BuiltInSandboxProfiles.hostTrusted)
         request.onOutput = { _ in sink.mark() }
         let result = try await HostBackend().run(request)
         #expect(result.output.contains("streamed"))

@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("NetworkModeMapping")
@@ -38,7 +39,7 @@ struct SandboxPolicyExplainerTests {
 
     @Test func sandboxAllowListNarrowsEvenUnderFullAuto() {
         var profile = BuiltInSandboxProfiles.workspaceWrite
-        profile.toolAllowList = ["read_file"]   // run_terminal excluded
+        profile.toolAllowList = ["read_file"]  // run_terminal excluded
         let e = SandboxPolicyExplainer.explain(
             profile: profile, toolName: "run_terminal",
             mode: .fullAuto, allowlist: [], gateReads: true)

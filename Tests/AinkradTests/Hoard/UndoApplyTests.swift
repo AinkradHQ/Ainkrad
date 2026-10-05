@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradHostRuntime
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @MainActor
@@ -9,7 +10,8 @@ struct UndoApplyTests {
     private func url(_ path: String) -> URL { URL(fileURLWithPath: path) }
 
     private func makeEngine(_ mutator: InMemoryFileMutator, trash: InMemoryTrash = InMemoryTrash())
-        -> (FileOperationEngine, UndoStack, InMemoryTrash) {
+        -> (FileOperationEngine, UndoStack, InMemoryTrash)
+    {
         let stack = UndoStack(persistence: InMemoryPersistenceStore())
         return (FileOperationEngine(mutator: mutator, trash: trash, undoStack: stack), stack, trash)
     }
@@ -21,8 +23,9 @@ struct UndoApplyTests {
         mutator.addDirectory("/b")
         let (engine, stack, _) = makeEngine(mutator)
 
-        _ = await engine.submit(FileOperation(
-            kind: .copy, sources: [url("/a/one.txt")], destinationDirectory: url("/b")))
+        _ = await engine.submit(
+            FileOperation(
+                kind: .copy, sources: [url("/a/one.txt")], destinationDirectory: url("/b")))
         #expect(mutator.fileExists(url("/b/one.txt")))
 
         #expect(engine.undo() == nil)
@@ -39,8 +42,9 @@ struct UndoApplyTests {
         mutator.addDirectory("/b")
         let (engine, _, _) = makeEngine(mutator)
 
-        _ = await engine.submit(FileOperation(
-            kind: .move, sources: [url("/a/one.txt")], destinationDirectory: url("/b")))
+        _ = await engine.submit(
+            FileOperation(
+                kind: .move, sources: [url("/a/one.txt")], destinationDirectory: url("/b")))
         #expect(engine.undo() == nil)
 
         #expect(mutator.contents(of: "/a/one.txt") == "data")
@@ -56,9 +60,10 @@ struct UndoApplyTests {
         let trash = InMemoryTrash()
         let (engine, _, _) = makeEngine(mutator, trash: trash)
 
-        _ = await engine.submit(FileOperation(
-            kind: .copy, sources: [url("/a/one.txt")],
-            destinationDirectory: url("/b"), policy: .replace))
+        _ = await engine.submit(
+            FileOperation(
+                kind: .copy, sources: [url("/a/one.txt")],
+                destinationDirectory: url("/b"), policy: .replace))
         #expect(mutator.contents(of: "/b/one.txt") == "new")
 
         #expect(engine.undo() == nil)
@@ -73,8 +78,9 @@ struct UndoApplyTests {
         let trash = InMemoryTrash()
         let (engine, _, _) = makeEngine(mutator, trash: trash)
 
-        _ = await engine.submit(FileOperation(
-            kind: .trash, sources: [url("/a/one.txt")], destinationDirectory: nil))
+        _ = await engine.submit(
+            FileOperation(
+                kind: .trash, sources: [url("/a/one.txt")], destinationDirectory: nil))
         #expect(engine.undo() == nil)
         #expect(trash.restored == [url("/a/one.txt")])
     }
@@ -85,8 +91,9 @@ struct UndoApplyTests {
         mutator.addDirectory("/a")
         let (engine, _, _) = makeEngine(mutator)
 
-        _ = await engine.submit(FileOperation(
-            kind: .createFolder(name: "fresh"), sources: [], destinationDirectory: url("/a")))
+        _ = await engine.submit(
+            FileOperation(
+                kind: .createFolder(name: "fresh"), sources: [], destinationDirectory: url("/a")))
         #expect(mutator.isDirectory(url("/a/fresh")))
         #expect(engine.undo() == nil)
         #expect(!mutator.isDirectory(url("/a/fresh")))
@@ -107,8 +114,9 @@ struct UndoApplyTests {
         mutator.addDirectory("/b")
         let (engine, stack, _) = makeEngine(mutator)
 
-        _ = await engine.submit(FileOperation(
-            kind: .copy, sources: [url("/a/one.txt")], destinationDirectory: url("/b")))
+        _ = await engine.submit(
+            FileOperation(
+                kind: .copy, sources: [url("/a/one.txt")], destinationDirectory: url("/b")))
 
         // Someone else wrote to the copy after we made it.
         mutator.overriddenDates["/b/one.txt"] = Date().addingTimeInterval(600)
@@ -127,8 +135,9 @@ struct UndoApplyTests {
         mutator.addDirectory("/b")
         let (engine, stack, _) = makeEngine(mutator)
 
-        _ = await engine.submit(FileOperation(
-            kind: .copy, sources: [url("/a/one.txt")], destinationDirectory: url("/b")))
+        _ = await engine.submit(
+            FileOperation(
+                kind: .copy, sources: [url("/a/one.txt")], destinationDirectory: url("/b")))
 
         // Simulate an ejected disk properly: the whole DIRECTORY goes away,
         // not just the one file. Marking only the file unavailable modelled
@@ -169,7 +178,8 @@ struct RedoTests {
     private func url(_ path: String) -> URL { URL(fileURLWithPath: path) }
 
     private func makeEngine(_ mutator: InMemoryFileMutator, trash: InMemoryTrash = InMemoryTrash())
-        -> (FileOperationEngine, UndoStack) {
+        -> (FileOperationEngine, UndoStack)
+    {
         let stack = UndoStack(persistence: InMemoryPersistenceStore())
         return (FileOperationEngine(mutator: mutator, trash: trash, undoStack: stack), stack)
     }
@@ -184,8 +194,9 @@ struct RedoTests {
         mutator.addDirectory("/b")
         let (engine, stack) = makeEngine(mutator)
 
-        _ = await engine.submit(FileOperation(
-            kind: .copy, sources: [url("/a/one.txt")], destinationDirectory: url("/b")))
+        _ = await engine.submit(
+            FileOperation(
+                kind: .copy, sources: [url("/a/one.txt")], destinationDirectory: url("/b")))
         #expect(mutator.fileExists(url("/b/one.txt")))
 
         engine.undo()
@@ -203,8 +214,9 @@ struct RedoTests {
         mutator.addDirectory("/b")
         let (engine, _) = makeEngine(mutator)
 
-        _ = await engine.submit(FileOperation(
-            kind: .move, sources: [url("/a/one.txt")], destinationDirectory: url("/b")))
+        _ = await engine.submit(
+            FileOperation(
+                kind: .move, sources: [url("/a/one.txt")], destinationDirectory: url("/b")))
         engine.undo()
         #expect(mutator.fileExists(url("/a/one.txt")))
 
@@ -219,8 +231,9 @@ struct RedoTests {
         mutator.addDirectory("/a")
         let (engine, _) = makeEngine(mutator)
 
-        _ = await engine.submit(FileOperation(
-            kind: .createFolder(name: "fresh"), sources: [], destinationDirectory: url("/a")))
+        _ = await engine.submit(
+            FileOperation(
+                kind: .createFolder(name: "fresh"), sources: [], destinationDirectory: url("/a")))
         engine.undo()
         #expect(!mutator.isDirectory(url("/a/fresh")))
 
@@ -234,9 +247,10 @@ struct RedoTests {
         mutator.addFile("/a/old.txt", contents: "x")
         let (engine, _) = makeEngine(mutator)
 
-        _ = await engine.submit(FileOperation(
-            kind: .rename(newName: "new.txt"), sources: [url("/a/old.txt")],
-            destinationDirectory: nil))
+        _ = await engine.submit(
+            FileOperation(
+                kind: .rename(newName: "new.txt"), sources: [url("/a/old.txt")],
+                destinationDirectory: nil))
         engine.undo()
         #expect(mutator.fileExists(url("/a/old.txt")))
 
@@ -252,8 +266,9 @@ struct RedoTests {
         mutator.addDirectory("/b")
         let (engine, stack) = makeEngine(mutator)
 
-        _ = await engine.submit(FileOperation(
-            kind: .copy, sources: [url("/a/one.txt")], destinationDirectory: url("/b")))
+        _ = await engine.submit(
+            FileOperation(
+                kind: .copy, sources: [url("/a/one.txt")], destinationDirectory: url("/b")))
         engine.undo()
         _ = await engine.redo()
 
@@ -286,11 +301,13 @@ struct UndoRefusalEdgeCaseTests {
         try "payload".write(to: target, atomically: true, encoding: .utf8)
 
         let stack = UndoStack(persistence: InMemoryPersistenceStore())
-        let engine = FileOperationEngine(mutator: LocalFileMutator(),
-                                         trash: SystemTrashService(), undoStack: stack)
+        let engine = FileOperationEngine(
+            mutator: LocalFileMutator(),
+            trash: SystemTrashService(), undoStack: stack)
 
-        _ = await engine.submit(FileOperation(
-            kind: .trash, sources: [target], destinationDirectory: nil))
+        _ = await engine.submit(
+            FileOperation(
+                kind: .trash, sources: [target], destinationDirectory: nil))
         #expect(!FileManager.default.fileExists(atPath: target.path))
 
         let refusal = engine.undo()

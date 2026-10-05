@@ -1,8 +1,9 @@
-import Testing
-import Foundation
 import AinkradAppKit
 import AinkradHostRuntime
 import AinkradSignal
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 /// Runs `scripts/parity-fixture.sh` and decodes what it wrote with the host's own types, so a
@@ -36,7 +37,7 @@ struct ParityFixtureScriptTests {
         let fix = tempDir()
         defer { try? FileManager.default.removeItem(at: fix) }
         #expect(try run(fix) == 0)
-        #expect(try run(fix) == 0)   // idempotent: wipes and reseeds
+        #expect(try run(fix) == 0)  // idempotent: wipes and reseeds
 
         let vault = fix.appendingPathComponent("Vault", isDirectory: true)
         #expect(try HomeMarker.read(in: vault) != nil)
@@ -53,7 +54,7 @@ struct ParityFixtureScriptTests {
         let layout = try #require(store.load(LayoutStateSnapshot.self))
         #expect(layout.workspaces.count == 2)
         let launch = layout.launchState(restoringPanes: true)
-        #expect(launch.workspaces.count == 2)   // the named workspace survives launchState
+        #expect(launch.workspaces.count == 2)  // the named workspace survives launchState
         func leaves(_ n: PaneNode?) -> Int {
             switch n {
             case .leaf?: return 1
@@ -65,11 +66,12 @@ struct ParityFixtureScriptTests {
 
         let pins = try #require(store.load(HoardPinnedRootsDocument.self))
         #expect(pins.paths.count == 1)
-        #expect(pins.paths[0].hasSuffix(fix.lastPathComponent + "/Hoard"))   // script resolves /var -> /private/var
+        #expect(pins.paths[0].hasSuffix(fix.lastPathComponent + "/Hoard"))  // script resolves /var -> /private/var
         #expect(try FileManager.default.contentsOfDirectory(atPath: pins.paths[0]).count >= 3)
         #expect(store.load(HoardPaneDocument.self)?.tabPaths == pins.paths)
 
-        let catalog = try JSONDecoder().decode(RemoteCatalog.self,
+        let catalog = try JSONDecoder().decode(
+            RemoteCatalog.self,
             from: Data(contentsOf: fix.appendingPathComponent("catalog.json")))
         #expect(catalog.apps.count == 3)
 
@@ -97,12 +99,15 @@ struct ParityFixtureScriptTests {
     func catalogURLFollowsFixtureRoot() throws {
         let fix = tempDir()
         defer { try? FileManager.default.removeItem(at: fix) }
-        let roots = try #require(try resolveDebugFixtureRoots { @Sendable key in
-            key == "AinkradFixtureRoot" ? fix.path : nil
-        })
+        let roots = try #require(
+            try resolveDebugFixtureRoots { @Sendable key in
+                key == "AinkradFixtureRoot" ? fix.path : nil
+            })
         #expect(fixtureCatalogURL(in: roots).lastPathComponent == "catalog.json")
-        #expect(fixtureCatalogURL(in: roots).deletingLastPathComponent().standardizedFileURL.path == fix.standardizedFileURL.path)
-        #expect(defaultHostCatalogURL() == remoteCatalogURL)   // the test process has no fixture arg
+        #expect(
+            fixtureCatalogURL(in: roots).deletingLastPathComponent().standardizedFileURL.path
+                == fix.standardizedFileURL.path)
+        #expect(defaultHostCatalogURL() == remoteCatalogURL)  // the test process has no fixture arg
     }
     #endif
 }

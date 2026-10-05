@@ -13,7 +13,7 @@ enum HostRelaunch {
         let task = Process()
         task.executableURL = URL(fileURLWithPath: "/bin/sh")
         task.arguments = ["-c", "while kill -0 \(pid) 2>/dev/null; do sleep 0.2; done; open \"$0\"", app]
-        do { try task.run() } catch { return }   // no relaunch → don't quit either
+        do { try task.run() } catch { return }  // no relaunch → don't quit either
         NSApp.terminate(nil)
     }
 }

@@ -62,7 +62,8 @@ enum RouterOrdering {
     /// ids float to the front, in the order they're listed; unlisted ids keep
     /// their relative (stable) input order as the tie-break — the brief does
     /// not specify one, so this is the deterministic choice made here.
-    static func ordered(_ candidates: [RouterCandidate], policy: RouterPolicy, preferred: [String]) -> [RouterCandidate] {
+    static func ordered(_ candidates: [RouterCandidate], policy: RouterPolicy, preferred: [String]) -> [RouterCandidate]
+    {
         let ascending = candidates.enumerated().sorted { a, b in
             if a.element.descriptor.tier != b.element.descriptor.tier {
                 return a.element.descriptor.tier < b.element.descriptor.tier

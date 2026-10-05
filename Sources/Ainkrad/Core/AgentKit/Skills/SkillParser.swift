@@ -66,8 +66,12 @@ enum SkillParser {
 
             if listKeys.contains(key) {
                 currentListKey = key
-                if value.isEmpty { result[key] = result[key] ?? [] }        // dashed list follows
-                else { result[key] = splitList(value) }
+                if value.isEmpty {
+                    result[key] = result[key] ?? []
+                }  // dashed list follows
+                else {
+                    result[key] = splitList(value)
+                }
             } else {
                 currentListKey = nil
                 result[key] = [unquote(value)]

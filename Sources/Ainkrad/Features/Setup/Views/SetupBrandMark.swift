@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 // MARK: - Shapes
 //
@@ -30,13 +30,13 @@ struct AinkradChevronMark: Shape {
         }
 
         var path = Path()
-        path.move(to: p(0.5, 0))          // apex
-        path.addLine(to: p(1.0, 1.0))     // outer right, straight
-        path.addLine(to: p(0.87, 1.0))    // right wing's bottom edge
-        path.addLine(to: p(0.5, 0.572))   // up the inner right edge to the notch
-        path.addLine(to: p(0.13, 1.0))    // down the inner left edge
-        path.addLine(to: p(0.0, 1.0))     // left wing's bottom edge
-        path.closeSubpath()               // outer left, straight, back to the apex
+        path.move(to: p(0.5, 0))  // apex
+        path.addLine(to: p(1.0, 1.0))  // outer right, straight
+        path.addLine(to: p(0.87, 1.0))  // right wing's bottom edge
+        path.addLine(to: p(0.5, 0.572))  // up the inner right edge to the notch
+        path.addLine(to: p(0.13, 1.0))  // down the inner left edge
+        path.addLine(to: p(0.0, 1.0))  // left wing's bottom edge
+        path.closeSubpath()  // outer left, straight, back to the apex
         return path
     }
 }
@@ -173,13 +173,14 @@ enum SetupOrbitField {
     static let sparks: [Spark] = {
         var random = SeededGenerator(seed: 0x51F0_A2C7)
         return (0..<count).map { _ in
-            Spark(radius: 0.19 + random.next() * 0.29,
-                  tilt: random.next() * .pi,
-                  squash: 0.18 + random.next() * 0.46,
-                  // Slow. These drift; they do not orbit at speed.
-                  speed: (0.10 + random.next() * 0.20) * (random.next() > 0.35 ? 1 : -1),
-                  phase: random.next() * 2 * .pi,
-                  size: 0.9 + random.next() * 1.9)
+            Spark(
+                radius: 0.19 + random.next() * 0.29,
+                tilt: random.next() * .pi,
+                squash: 0.18 + random.next() * 0.46,
+                // Slow. These drift; they do not orbit at speed.
+                speed: (0.10 + random.next() * 0.20) * (random.next() > 0.35 ? 1 : -1),
+                phase: random.next() * 2 * .pi,
+                size: 0.9 + random.next() * 1.9)
         }
     }()
 
@@ -189,9 +190,11 @@ enum SetupOrbitField {
     /// things at once — size, brightness, and whether the spark is drawn in front
     /// of the mark or behind it. One value for all three is what keeps them
     /// agreeing.
-    static func position(_ spark: Spark,
-                         at now: TimeInterval,
-                         in width: CGFloat) -> (point: CGPoint, depth: Double) {
+    static func position(
+        _ spark: Spark,
+        at now: TimeInterval,
+        in width: CGFloat
+    ) -> (point: CGPoint, depth: Double) {
         let angle = spark.phase + now * spark.speed
         let ex = cos(angle) * spark.radius * width
         let ey = sin(angle) * spark.radius * width * spark.squash
@@ -303,8 +306,9 @@ struct SetupBrandMark: View {
                 composition(isStatic: true)
             } else {
                 BudgetedTimelineView { date in
-                    composition(isStatic: false,
-                                now: date.timeIntervalSinceReferenceDate)
+                    composition(
+                        isStatic: false,
+                        now: date.timeIntervalSinceReferenceDate)
                 }
             }
         }
@@ -369,8 +373,9 @@ struct SetupBrandMark: View {
                 // far side of its orbit is small AND dim rather than one or the
                 // other.
                 let radius = spark.size * (0.6 + CGFloat(depth) * 0.7) * scale
-                let rect = CGRect(x: point.x - radius, y: point.y - radius,
-                                  width: radius * 2, height: radius * 2)
+                let rect = CGRect(
+                    x: point.x - radius, y: point.y - radius,
+                    width: radius * 2, height: radius * 2)
 
                 // The bloom is a second, blurred, oversized dot rather than a
                 // shadow: `Scry` has no per-shape shadow, and this is what
@@ -378,8 +383,9 @@ struct SetupBrandMark: View {
                 var bloom = context
                 bloom.addFilter(.blur(radius: radius * 1.5))
                 bloom.opacity = 0.5 * (0.3 + depth * 0.7)
-                bloom.fill(Path(ellipseIn: rect.insetBy(dx: -radius, dy: -radius)),
-                           with: .color(tokens.accentSecondary))
+                bloom.fill(
+                    Path(ellipseIn: rect.insetBy(dx: -radius, dy: -radius)),
+                    with: .color(tokens.accentSecondary))
 
                 var dot = context
                 dot.opacity = 0.30 + depth * 0.65
@@ -394,13 +400,16 @@ struct SetupBrandMark: View {
     /// Every pair is tested — 190 distance checks for twenty sparks, which is
     /// nothing — so a link appears wherever two sparks actually pass, rather
     /// than only along pairings fixed in advance.
-    private func drawLinks(in context: GraphicsContext,
-                           placed: [(point: CGPoint, depth: Double)],
-                           width: CGFloat,
-                           scale: CGFloat) {
+    private func drawLinks(
+        in context: GraphicsContext,
+        placed: [(point: CGPoint, depth: Double)],
+        width: CGFloat,
+        scale: CGFloat
+    ) {
         for i in placed.indices {
             for j in (i + 1)..<placed.count {
-                let a = placed[i], b = placed[j]
+                let a = placed[i]
+                let b = placed[j]
                 let distance = hypot(a.point.x - b.point.x, a.point.y - b.point.y)
                 let strength = SetupOrbitField.linkStrength(distance: distance, width: width)
                 guard strength > 0 else { continue }
@@ -414,9 +423,10 @@ struct SetupBrandMark: View {
                 // between two near ones.
                 var stroked = context
                 stroked.opacity = strength * 0.4 * (0.35 + (a.depth + b.depth) / 2 * 0.65)
-                stroked.stroke(line,
-                               with: .color(tokens.accentPrimary),
-                               lineWidth: 0.9 * scale)
+                stroked.stroke(
+                    line,
+                    with: .color(tokens.accentPrimary),
+                    lineWidth: 0.9 * scale)
             }
         }
     }
@@ -428,9 +438,11 @@ struct SetupBrandMark: View {
         Circle()
             .fill(
                 RadialGradient(
-                    colors: [tokens.accentPrimary.opacity(0.42),
-                             tokens.accentPrimary.opacity(0.10),
-                             .clear],
+                    colors: [
+                        tokens.accentPrimary.opacity(0.42),
+                        tokens.accentPrimary.opacity(0.10),
+                        .clear,
+                    ],
                     center: .center,
                     startRadius: 4,
                     endRadius: diameter * 0.52

@@ -1,8 +1,9 @@
-import Foundation
-import Testing
-@testable import Ainkrad
 import AinkradAppKit
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 @Suite("Setup home step")
 @MainActor
@@ -16,9 +17,11 @@ struct SetupHomeStepTests {
     }
 
     @Test func cancellingLeavesTheStepUnfinished() {
-        let model = SetupHomeStepModel(chooseVault: { nil }, adopt: { _ in
-            Issue.record("adopt must not run when the user cancels")
-        })
+        let model = SetupHomeStepModel(
+            chooseVault: { nil },
+            adopt: { _ in
+                Issue.record("adopt must not run when the user cancels")
+            })
         #expect(model.choose() == .cancelled)
     }
 
@@ -27,10 +30,12 @@ struct SetupHomeStepTests {
     /// default once claimed a live Obsidian vault.
     @Test func aPopulatedFolderIsRejectedWithAReason() {
         let url = URL(fileURLWithPath: "/tmp/populated")
-        let model = SetupHomeStepModel(chooseVault: { url },
-                                       adopt: { _ in throw HomeError.notEmpty(url) })
+        let model = SetupHomeStepModel(
+            chooseVault: { url },
+            adopt: { _ in throw HomeError.notEmpty(url) })
         guard case .rejected(let message) = model.choose() else {
-            Issue.record("expected .rejected"); return
+            Issue.record("expected .rejected")
+            return
         }
         #expect(!message.isEmpty)
         #expect(message.lowercased().contains("empty"))
@@ -76,7 +81,8 @@ struct SetupHomeStepTests {
             inspect: { _ in .init(entryCount: 9) })
 
         guard case .needsConfirmation(let pending, _) = model.choose() else {
-            Issue.record("expected .needsConfirmation"); return
+            Issue.record("expected .needsConfirmation")
+            return
         }
         #expect(model.adoptConfirmed(pending) == .adopted)
         #expect(adopted == url)
@@ -106,7 +112,8 @@ struct SetupHomeStepTests {
             inspect: { _ in nil })
 
         guard case .rejected = model.choose() else {
-            Issue.record("a populated non-vault must be refused, never confirmed"); return
+            Issue.record("a populated non-vault must be refused, never confirmed")
+            return
         }
     }
 
@@ -139,17 +146,21 @@ struct SetupHomeStepTests {
         let presenter = SetupModalPresenter()
         #expect(presenter.modal == nil)
 
-        presenter.present(.init(title: "First", message: "m", icon: "circle",
-                                tone: .informational, primaryTitle: "Yes",
-                                primary: {}, secondaryTitle: "No", secondary: {},
-                                onDismiss: {}))
+        presenter.present(
+            .init(
+                title: "First", message: "m", icon: "circle",
+                tone: .informational, primaryTitle: "Yes",
+                primary: {}, secondaryTitle: "No", secondary: {},
+                onDismiss: {}))
         let first = presenter.modal?.id
         #expect(first != nil)
 
-        presenter.present(.init(title: "Second", message: "m", icon: "circle",
-                                tone: .informational, primaryTitle: "Yes",
-                                primary: {}, secondaryTitle: "No", secondary: {},
-                                onDismiss: {}))
+        presenter.present(
+            .init(
+                title: "Second", message: "m", icon: "circle",
+                tone: .informational, primaryTitle: "Yes",
+                primary: {}, secondaryTitle: "No", secondary: {},
+                onDismiss: {}))
         #expect(presenter.modal?.title == "Second")
         #expect(presenter.modal?.id != first, "a new modal must be a new identity, or it will not animate")
 
@@ -207,8 +218,10 @@ struct SetupHomeStepTests {
     /// legitimate outcome, not a step transition that quietly did nothing.
     @Test func reseatingOntoAnAlreadyConfiguredHomeReportsItRatherThanStalling() {
         let store = InMemoryPersistenceStore()
-        store.save(SetupDocument(completedAt: Date(),
-                                 setupVersion: SetupCoordinator.currentSetupVersion))
+        store.save(
+            SetupDocument(
+                completedAt: Date(),
+                setupVersion: SetupCoordinator.currentSetupVersion))
         let fresh = SetupCoordinator(persistence: store, isProvisionalHome: false)
         #expect(fresh.isComplete)
         #expect(SetupReseat.plan(fresh, toward: .appearance) == .alreadyConfigured)
@@ -238,9 +251,11 @@ struct SetupHomeStepTests {
         // empty store; `.home` is now reachable during an unfinished setup, so
         // that no longer constructs the case.
         let store = InMemoryPersistenceStore()
-        store.save(SetupDocument(completedAt: Date(),
-                                 setupVersion: SetupCoordinator.currentSetupVersion,
-                                 deferredSteps: [SetupStep.providers.rawValue]))
+        store.save(
+            SetupDocument(
+                completedAt: Date(),
+                setupVersion: SetupCoordinator.currentSetupVersion,
+                deferredSteps: [SetupStep.providers.rawValue]))
         let fresh = SetupCoordinator(persistence: store, isProvisionalHome: false)
         let first = try #require(fresh.steps.first)
         #expect(!fresh.steps.contains(.appearance), "the target must genuinely be unreachable")
@@ -259,13 +274,15 @@ struct SetupHomeStepTests {
     @Test func theFolderPreviewNamesRealVaultDirectories() {
         let root = URL(fileURLWithPath: "/tmp/preview-home", isDirectory: true)
         let home = Home(vaultRoot: root, cacheRoot: root)
-        var real = Set(SharedDomain.allCases.compactMap { domain -> String? in
-            home.shared(domain).pathComponents
-                .dropFirst(root.pathComponents.count).first
-        })
+        var real = Set(
+            SharedDomain.allCases.compactMap { domain -> String? in
+                home.shared(domain).pathComponents
+                    .dropFirst(root.pathComponents.count).first
+            })
         // `Apps/` has no `SharedDomain`; it is `Home.vault(app:)`'s root.
-        real.insert(home.vault(app: AppID("probe")).pathComponents
-            .dropFirst(root.pathComponents.count).first ?? "")
+        real.insert(
+            home.vault(app: AppID("probe")).pathComponents
+                .dropFirst(root.pathComponents.count).first ?? "")
 
         #expect(!SetupHomePreview.entries.isEmpty)
         for entry in SetupHomePreview.entries {
@@ -291,9 +308,11 @@ struct SetupHomeStepTests {
         let listed = Set(SetupHomePreview.entries.map(\.name))
 
         for domain in SharedDomain.allCases {
-            let folder = (home.shared(domain).pathComponents
-                .dropFirst(root.pathComponents.count).first ?? "?") + "/"
-            let complaint = "\(domain) creates \(folder) at the vault root, which the "
+            let folder =
+                (home.shared(domain).pathComponents
+                    .dropFirst(root.pathComponents.count).first ?? "?") + "/"
+            let complaint =
+                "\(domain) creates \(folder) at the vault root, which the "
                 + "Home step never tells the user about"
             #expect(listed.contains(folder), Comment(rawValue: complaint))
         }
@@ -315,11 +334,13 @@ struct SetupHomeStepTests {
     /// Nothing to move, nothing said. The overwhelmingly common case: a fresh
     /// install has no legacy container at all.
     @Test func noWarningWhenThereIsNoLegacyContainer() {
-        #expect(SetupHomeMigrationNotice.make(legacyContainer: nil,
-                                              needsMigration: { _ in
-            Issue.record("needsMigration must not be asked without a container")
-            return true
-        }) == nil)
+        #expect(
+            SetupHomeMigrationNotice.make(
+                legacyContainer: nil,
+                needsMigration: { _ in
+                    Issue.record("needsMigration must not be asked without a container")
+                    return true
+                }) == nil)
     }
 
     /// **The distinction this task exists for.**
@@ -341,8 +362,9 @@ struct SetupHomeStepTests {
         let container = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("legacy-\(UUID().uuidString)", isDirectory: true)
         let documents = container.appendingPathComponent("Documents", isDirectory: true)
-        try FileManager.default.createDirectory(at: documents,
-                                                withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: documents,
+            withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: container) }
         try Data("{}".utf8).write(to: documents.appendingPathComponent("settings.json"))
 
@@ -350,8 +372,9 @@ struct SetupHomeStepTests {
         #expect(VaultMigration.needsMigration(container: container))
         let before = try #require(SetupHomeMigrationNotice.make(legacyContainer: container))
         #expect(before.legacyCopyPath.hasSuffix("Documents.migrated"))
-        #expect(before.message.contains(before.legacyCopyPath),
-                "the warning must say where the old copy will end up")
+        #expect(
+            before.message.contains(before.legacyCopyPath),
+            "the warning must say where the old copy will end up")
         #expect(before.message.contains("not deleted"))
 
         // 2 — after: the migration HAS run. A flag set by the migration would be
@@ -369,8 +392,12 @@ struct SetupHomeStepTests {
     @Test func theWarningAsksAboutTheContainerItWasGiven() {
         let container = URL(fileURLWithPath: "/tmp/legacy-probe")
         var asked: [URL] = []
-        _ = SetupHomeMigrationNotice.make(legacyContainer: container,
-                                          needsMigration: { asked.append($0); return true })
+        _ = SetupHomeMigrationNotice.make(
+            legacyContainer: container,
+            needsMigration: {
+                asked.append($0)
+                return true
+            })
         #expect(asked == [container])
     }
 
@@ -381,24 +408,30 @@ struct SetupHomeStepTests {
     /// pinned by asserting the abbreviation the notice applies.
     @Test func theWarningNamesTheLegacyCopyTheSameWayTheDoneScreenDoes() throws {
         let home = FileManager.default.homeDirectoryForCurrentUser
-        let container = home
-            .appendingPathComponent("Library/Application Support/com.ainkrad.test",
-                                    isDirectory: true)
+        let container =
+            home
+            .appendingPathComponent(
+                "Library/Application Support/com.ainkrad.test",
+                isDirectory: true)
         let notice = try #require(
-            SetupHomeMigrationNotice.make(legacyContainer: container,
-                                          needsMigration: { _ in true }))
-        #expect(notice.legacyCopyPath
-            == "~/Library/Application Support/com.ainkrad.test/Documents.migrated")
+            SetupHomeMigrationNotice.make(
+                legacyContainer: container,
+                needsMigration: { _ in true }))
+        #expect(
+            notice.legacyCopyPath
+                == "~/Library/Application Support/com.ainkrad.test/Documents.migrated")
         #expect(!notice.legacyCopyPath.hasPrefix("/Users"))
 
         // A path outside the home directory is left exactly as it is, rather
         // than mangled — which is what an injected temp container gets.
-        #expect(SetupHomeMigrationNotice.abbreviatingHome("/tmp/elsewhere")
-            == "/tmp/elsewhere")
+        #expect(
+            SetupHomeMigrationNotice.abbreviatingHome("/tmp/elsewhere")
+                == "/tmp/elsewhere")
         // And a directory whose name merely STARTS with the home path is not a
         // child of it.
-        #expect(SetupHomeMigrationNotice.abbreviatingHome(home.path + "-sibling")
-            == home.path + "-sibling")
+        #expect(
+            SetupHomeMigrationNotice.abbreviatingHome(home.path + "-sibling")
+                == home.path + "-sibling")
     }
 
     // MARK: - Headline

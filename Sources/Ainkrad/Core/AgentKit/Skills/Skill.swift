@@ -10,8 +10,8 @@ struct Skill: Equatable, Identifiable {
     var id: String { name }
     let name: String
     let description: String
-    let body: String            // markdown instructions (below the front matter)
+    let body: String  // markdown instructions (below the front matter)
     let allowedTools: [String]  // optional tool allow-list (advisory in v1)
-    let triggers: [String]      // optional trigger hints
+    let triggers: [String]  // optional trigger hints
     var source: SkillSource
 }

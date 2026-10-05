@@ -41,18 +41,23 @@ enum MarkdownBlocks {
                 var code: [String] = []
                 i += 1
                 while i < lines.count, !lines[i].trimmingCharacters(in: .whitespaces).hasPrefix("```") {
-                    code.append(lines[i]); i += 1
+                    code.append(lines[i])
+                    i += 1
                 }
-                i += 1 // consume closing fence (or run off the end when unterminated)
-                blocks.append(.codeBlock(language: lang.isEmpty ? nil : lang,
-                                         code: code.joined(separator: "\n")))
+                i += 1  // consume closing fence (or run off the end when unterminated)
+                blocks.append(
+                    .codeBlock(
+                        language: lang.isEmpty ? nil : lang,
+                        code: code.joined(separator: "\n")))
                 continue
             }
 
             // Heading.
             if let h = heading(trimmed) {
                 flushParagraph()
-                blocks.append(h); i += 1; continue
+                blocks.append(h)
+                i += 1
+                continue
             }
 
             // Bullet list.
@@ -60,9 +65,11 @@ enum MarkdownBlocks {
                 flushParagraph()
                 var items: [String] = []
                 while i < lines.count, isBullet(lines[i].trimmingCharacters(in: .whitespaces)) {
-                    items.append(bulletContent(lines[i].trimmingCharacters(in: .whitespaces))); i += 1
+                    items.append(bulletContent(lines[i].trimmingCharacters(in: .whitespaces)))
+                    i += 1
                 }
-                blocks.append(.bulletList(items)); continue
+                blocks.append(.bulletList(items))
+                continue
             }
 
             // Ordered list.
@@ -70,21 +77,30 @@ enum MarkdownBlocks {
                 flushParagraph()
                 var items: [String] = []
                 while i < lines.count, let c = orderedContent(lines[i].trimmingCharacters(in: .whitespaces)) {
-                    items.append(c); i += 1
+                    items.append(c)
+                    i += 1
                 }
-                blocks.append(.orderedList(items)); continue
+                blocks.append(.orderedList(items))
+                continue
             }
 
             // Thematic break: 3+ of the SAME marker char ('-', '*', '_') and nothing else.
             if isThematicBreak(trimmed) {
                 flushParagraph()
-                blocks.append(.thematicBreak); i += 1; continue
+                blocks.append(.thematicBreak)
+                i += 1
+                continue
             }
 
             // Blank line ends a paragraph.
-            if trimmed.isEmpty { flushParagraph(); i += 1; continue }
+            if trimmed.isEmpty {
+                flushParagraph()
+                i += 1
+                continue
+            }
 
-            paragraph.append(line); i += 1
+            paragraph.append(line)
+            i += 1
         }
         flushParagraph()
         return blocks

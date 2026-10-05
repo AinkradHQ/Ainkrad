@@ -1,5 +1,5 @@
-import Foundation
 import AppKit
+import Foundation
 import Observation
 
 /// What a pending paste will do.
@@ -61,9 +61,10 @@ final class HoardClipboard {
 
     /// URLs currently on the pasteboard — ours or another app's.
     func urls() -> [URL] {
-        let objects = pasteboard.readObjects(
-            forClasses: [NSURL.self],
-            options: [.urlReadingFileURLsOnly: true]) as? [URL]
+        let objects =
+            pasteboard.readObjects(
+                forClasses: [NSURL.self],
+                options: [.urlReadingFileURLsOnly: true]) as? [URL]
         return objects ?? []
     }
 

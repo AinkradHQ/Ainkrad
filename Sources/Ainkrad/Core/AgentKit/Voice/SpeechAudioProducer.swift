@@ -1,6 +1,6 @@
-import Foundation
 import AVFoundation
 import AinkradHostRuntime
+import Foundation
 
 /// Produces speech audio as bytes (so it can be saved / downloaded / played),
 /// as opposed to `SpeechSynthesizing` which only plays fire-and-forget. Used by
@@ -33,7 +33,10 @@ struct OnDeviceSpeechAudioProducer: SpeechAudioProducing {
                 let utterance = AVSpeechUtterance(string: text)
                 self.synth.write(utterance) { [self] buffer in
                     guard let pcm = buffer as? AVAudioPCMBuffer else { return }
-                    if pcm.frameLength == 0 { finish(tmp: tmp, cont: cont); return }
+                    if pcm.frameLength == 0 {
+                        finish(tmp: tmp, cont: cont)
+                        return
+                    }
                     do {
                         if file == nil { file = try AVAudioFile(forWriting: tmp, settings: pcm.format.settings) }
                         try file?.write(from: pcm)
@@ -43,7 +46,7 @@ struct OnDeviceSpeechAudioProducer: SpeechAudioProducing {
         }
 
         private func finish(tmp: URL, cont: CheckedContinuation<Data, Error>) {
-            file = nil // flush/close
+            file = nil  // flush/close
             if let data = try? Data(contentsOf: tmp) {
                 try? FileManager.default.removeItem(at: tmp)
                 resume(cont: cont, with: .success(data))

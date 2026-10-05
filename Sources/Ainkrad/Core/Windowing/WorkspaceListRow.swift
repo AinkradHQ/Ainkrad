@@ -1,8 +1,8 @@
-import SwiftUI
-import AppKit
-import UniformTypeIdentifiers
 import AinkradAppKit
 import AinkradHostRuntime
+import AppKit
+import SwiftUI
+import UniformTypeIdentifiers
 
 /// One row in the Workspace Overview's workspace list: layout thumbnail, name,
 /// what's in it, its ⌘N shortcut, and its row actions.
@@ -114,7 +114,10 @@ struct WorkspaceListRow: View {
                 .foregroundStyle(tokens.foreground)
                 .focused(renameFocus, equals: .rename(workspace.id))
                 .onSubmit(onCommitRename)
-                .onKeyPress(.escape) { onCancelRename(); return .handled }
+                .onKeyPress(.escape) {
+                    onCancelRename()
+                    return .handled
+                }
         } else {
             HStack(spacing: 5) {
                 if workspace.isMain {
@@ -203,8 +206,10 @@ struct WorkspaceListRow: View {
         .allowsHitTesting(hovering)
     }
 
-    private func iconButton(_ symbol: String, help: String,
-                            action: @escaping () -> Void) -> some View {
+    private func iconButton(
+        _ symbol: String, help: String,
+        action: @escaping () -> Void
+    ) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
                 .font(.system(size: 9, weight: .semibold))
@@ -222,8 +227,10 @@ struct WorkspaceListRow: View {
             AinkradMenuItem(title: "Rename", systemName: "pencil", action: onBeginRename),
         ]
         if !workspace.isMain {
-            items.append(AinkradMenuItem(title: "Delete", systemName: "xmark",
-                                         isDestructive: true, action: onRequestDeletion))
+            items.append(
+                AinkradMenuItem(
+                    title: "Delete", systemName: "xmark",
+                    isDestructive: true, action: onRequestDeletion))
         }
         return items
     }
@@ -231,9 +238,11 @@ struct WorkspaceListRow: View {
     private var rowBackground: some View {
         ChamferShape(cut: AinkradRadius.md)
             .fill(
-                isSelected ? tokens.accentPrimary.opacity(0.18)
-                    : (hovering ? tokens.foreground.opacity(0.06)
-                       : (isActive ? tokens.accentPrimary.opacity(0.07) : .clear))
+                isSelected
+                    ? tokens.accentPrimary.opacity(0.18)
+                    : (hovering
+                        ? tokens.foreground.opacity(0.06)
+                        : (isActive ? tokens.accentPrimary.opacity(0.07) : .clear))
             )
     }
 

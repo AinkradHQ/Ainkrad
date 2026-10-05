@@ -1,16 +1,19 @@
+import AinkradAppKit
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradAppKit
 
 @Suite("Launch resolution")
 struct LaunchResolutionTests {
     private func sandbox(_ label: String) -> (base: URL, pointer: URL, cache: URL) {
         let base = FileManager.default.temporaryDirectory
             .appendingPathComponent("\(label)-\(UUID().uuidString)", isDirectory: true)
-        return (base,
-                base.appendingPathComponent("pointer"),
-                base.appendingPathComponent("cache"))
+        return (
+            base,
+            base.appendingPathComponent("pointer"),
+            base.appendingPathComponent("cache")
+        )
     }
 
     @Test func firstLaunchAdoptsTheFolderTheUserChose() throws {
@@ -24,8 +27,9 @@ struct LaunchResolutionTests {
             legacyContainer: nil)
 
         #expect(home.vaultRoot.standardizedFileURL == chosen.standardizedFileURL)
-        #expect(FileManager.default.fileExists(
-            atPath: chosen.appendingPathComponent(".ainkrad-home").path))
+        #expect(
+            FileManager.default.fileExists(
+                atPath: chosen.appendingPathComponent(".ainkrad-home").path))
     }
 
     /// Cancelling must not produce a Home. Nothing is chosen on the user's behalf,
@@ -39,7 +43,10 @@ struct LaunchResolutionTests {
                 chooseVault: { nil }, pointerDirectory: s.pointer, cacheRoot: s.cache, legacyContainer: nil)
         }
         guard case .unset = AinkradHome.resolve(pointerDirectory: s.pointer, cacheRoot: s.cache)
-        else { Issue.record("a cancelled setup must leave no pointer"); return }
+        else {
+            Issue.record("a cancelled setup must leave no pointer")
+            return
+        }
     }
 
     /// The folder chooser is never even shown when a Home is already configured —
@@ -53,7 +60,10 @@ struct LaunchResolutionTests {
 
         var chooserCalls = 0
         let home = try LaunchHomeResolver.resolveOrAdopt(
-            chooseVault: { chooserCalls += 1; return nil },
+            chooseVault: {
+                chooserCalls += 1
+                return nil
+            },
             pointerDirectory: s.pointer, cacheRoot: s.cache, legacyContainer: nil)
 
         #expect(chooserCalls == 0)
@@ -112,12 +122,16 @@ struct LaunchResolutionTests {
         }
 
         // Untouched: no marker, no pointer, no new entries.
-        #expect(!FileManager.default.fileExists(
-            atPath: chosen.appendingPathComponent(".ainkrad-home").path))
+        #expect(
+            !FileManager.default.fileExists(
+                atPath: chosen.appendingPathComponent(".ainkrad-home").path))
         let names = Set(try FileManager.default.contentsOfDirectory(atPath: chosen.path))
         #expect(names == [".obsidian", "Note.md"])
         guard case .unset = AinkradHome.resolve(pointerDirectory: s.pointer, cacheRoot: s.cache)
-        else { Issue.record("a refused choice must leave no pointer"); return }
+        else {
+            Issue.record("a refused choice must leave no pointer")
+            return
+        }
     }
 
     /// First-run adoption migrates the legacy container into the chosen vault.
@@ -138,11 +152,13 @@ struct LaunchResolutionTests {
             chooseVault: { chosen }, pointerDirectory: s.pointer, cacheRoot: s.cache,
             legacyContainer: legacy)
 
-        #expect(FileManager.default.fileExists(
-            atPath: home.shared(.agents).appendingPathComponent("agents.json").path))
+        #expect(
+            FileManager.default.fileExists(
+                atPath: home.shared(.agents).appendingPathComponent("agents.json").path))
         // Copy, not move: the legacy file is still there, under the marker rename.
-        #expect(FileManager.default.fileExists(
-            atPath: legacy.appendingPathComponent("Documents.migrated/agents.json").path))
+        #expect(
+            FileManager.default.fileExists(
+                atPath: legacy.appendingPathComponent("Documents.migrated/agents.json").path))
     }
 
     /// The stranding scenario, and the reason the `Documents` rename happens
@@ -181,16 +197,20 @@ struct LaunchResolutionTests {
         }
 
         // The copy DID happen…
-        #expect(FileManager.default.fileExists(
-            atPath: folderA.appendingPathComponent("Config/global-settings.json").path))
+        #expect(
+            FileManager.default.fileExists(
+                atPath: folderA.appendingPathComponent("Config/global-settings.json").path))
         // …but the legacy tree still has its ORIGINAL name, so nothing is stranded.
-        #expect(FileManager.default.fileExists(
-            atPath: documents.appendingPathComponent("global-settings.json").path),
-                "the rename must not have happened")
-        #expect(!FileManager.default.fileExists(
-            atPath: legacy.appendingPathComponent("Documents.migrated").path))
-        #expect(VaultMigration.needsMigration(container: legacy),
-                "the next launch must still see work to do")
+        #expect(
+            FileManager.default.fileExists(
+                atPath: documents.appendingPathComponent("global-settings.json").path),
+            "the rename must not have happened")
+        #expect(
+            !FileManager.default.fileExists(
+                atPath: legacy.appendingPathComponent("Documents.migrated").path))
+        #expect(
+            VaultMigration.needsMigration(container: legacy),
+            "the next launch must still see work to do")
 
         // And the retry — the user picks a DIFFERENT folder, exactly as they would
         // after a blank first launch — actually gets their data.
@@ -201,12 +221,14 @@ struct LaunchResolutionTests {
             legacyContainer: legacy)
 
         #expect(home.vaultRoot.standardizedFileURL == folderB.standardizedFileURL)
-        #expect(FileManager.default.fileExists(
-            atPath: folderB.appendingPathComponent("Config/global-settings.json").path),
-                "folder B must NOT come up empty")
+        #expect(
+            FileManager.default.fileExists(
+                atPath: folderB.appendingPathComponent("Config/global-settings.json").path),
+            "folder B must NOT come up empty")
         // Only now, with a pointer durably written, is the legacy tree marked.
-        #expect(FileManager.default.fileExists(
-            atPath: legacy.appendingPathComponent("Documents.migrated/global-settings.json").path))
+        #expect(
+            FileManager.default.fileExists(
+                atPath: legacy.appendingPathComponent("Documents.migrated/global-settings.json").path))
     }
 
     /// A first run that died part-way through migration leaves a marked but
@@ -221,18 +243,22 @@ struct LaunchResolutionTests {
             at: chosen.appendingPathComponent("Config"), withIntermediateDirectories: true)
         try Data(#"{"a":1}"#.utf8).write(to: chosen.appendingPathComponent("Config/agents.json"))
         let marker = HomeMarker()
-        try marker.write(to: chosen)   // …but no pointer: the run never got that far.
+        try marker.write(to: chosen)  // …but no pointer: the run never got that far.
 
         guard case .unset = AinkradHome.resolve(pointerDirectory: s.pointer, cacheRoot: s.cache)
-        else { Issue.record("no pointer was written, so this must still be a first run"); return }
+        else {
+            Issue.record("no pointer was written, so this must still be a first run")
+            return
+        }
 
         let home = try LaunchHomeResolver.resolveOrAdopt(
             chooseVault: { chosen }, pointerDirectory: s.pointer, cacheRoot: s.cache,
             legacyContainer: nil)
 
         #expect(home.vaultRoot.standardizedFileURL == chosen.standardizedFileURL)
-        #expect(try HomeMarker.read(in: chosen)?.homeID == marker.homeID,
-                "resuming must not mint a new identity")
+        #expect(
+            try HomeMarker.read(in: chosen)?.homeID == marker.homeID,
+            "resuming must not mint a new identity")
     }
 
     /// A second launch resolves the pointer written by the first, rather than
@@ -257,7 +283,9 @@ struct LaunchResolutionTests {
 
     #if DEBUG
     @Test func debugFixtureRootParsing() {
-        #expect(parseDebugFixtureRootArgument { @Sendable key in key == "AinkradFixtureRoot" ? "/tmp/test-fixture" : nil } == URL(fileURLWithPath: "/tmp/test-fixture").standardizedFileURL)
+        #expect(
+            parseDebugFixtureRootArgument { @Sendable key in key == "AinkradFixtureRoot" ? "/tmp/test-fixture" : nil }
+                == URL(fileURLWithPath: "/tmp/test-fixture").standardizedFileURL)
         #expect(parseDebugFixtureRootArgument { @Sendable key in key == "AinkradFixtureRoot" ? "   " : nil } == nil)
         #expect(parseDebugFixtureRootArgument { @Sendable _ in nil } == nil)
     }

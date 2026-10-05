@@ -31,17 +31,17 @@ enum ShortcutAction: String, Codable, CaseIterable {
     var defaultChord: KeyChord {
         switch self {
         case .openLauncher:
-            return KeyChord(keyCode: 40, command: true, shift: false, option: false, control: false)   // ⌘K
+            return KeyChord(keyCode: 40, command: true, shift: false, option: false, control: false)  // ⌘K
         case .toggleSettings:
-            return KeyChord(keyCode: 43, command: true, shift: false, option: false, control: false)   // ⌘,
+            return KeyChord(keyCode: 43, command: true, shift: false, option: false, control: false)  // ⌘,
         case .toggleAppStore:
-            return KeyChord(keyCode: 0, command: true, shift: true, option: false, control: false)     // ⌘⇧A
+            return KeyChord(keyCode: 0, command: true, shift: true, option: false, control: false)  // ⌘⇧A
         case .newWorkspace:
-            return KeyChord(keyCode: 45, command: true, shift: true, option: false, control: false)    // ⌘⇧N
+            return KeyChord(keyCode: 45, command: true, shift: true, option: false, control: false)  // ⌘⇧N
         case .toggleWorkspaceOverview:
-            return KeyChord(keyCode: 48, command: false, shift: false, option: true, control: false)   // ⌥Tab
+            return KeyChord(keyCode: 48, command: false, shift: false, option: true, control: false)  // ⌥Tab
         case .closeBlock:
-            return KeyChord(keyCode: 13, command: true, shift: false, option: false, control: false)   // ⌘W
+            return KeyChord(keyCode: 13, command: true, shift: false, option: false, control: false)  // ⌘W
         case .openQuickAsk:
             return KeyChord(keyCode: 49, command: true, shift: true, option: false, control: false)  // ⌘⇧Space
         case .pushToTalk:

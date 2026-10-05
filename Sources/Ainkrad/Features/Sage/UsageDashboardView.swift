@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// "$x.xxxx" when `cost` is a genuine, known figure; "cost unknown" when it's
 /// non-positive — `UsageTracker.record` only accumulates cost when
@@ -52,15 +52,17 @@ struct UsageDashboardView: View {
                             AinkradStatRow(label: "Input tokens", value: "\(tracker.session.input)")
                             AinkradStatRow(label: "Output tokens", value: "\(tracker.session.output)")
                             AinkradStatRow(label: "Cache read", value: "\(tracker.session.cacheRead)")
-                            AinkradStatRow(label: "Cost", value: formattedUsageCost(tracker.sessionCostUSD),
-                                          status: tracker.sessionCostUSD > 0 ? .neutral : .warning)
+                            AinkradStatRow(
+                                label: "Cost", value: formattedUsageCost(tracker.sessionCostUSD),
+                                status: tracker.sessionCostUSD > 0 ? .neutral : .warning)
                         }
                         sectionPanel(title: "All time") {
                             AinkradStatRow(label: "Input tokens", value: "\(cumulative.0.input)")
                             AinkradStatRow(label: "Output tokens", value: "\(cumulative.0.output)")
                             AinkradStatRow(label: "Cache read", value: "\(cumulative.0.cacheRead)")
-                            AinkradStatRow(label: "Cost", value: formattedUsageCost(cumulative.costUSD),
-                                          status: cumulative.costUSD > 0 ? .neutral : .warning)
+                            AinkradStatRow(
+                                label: "Cost", value: formattedUsageCost(cumulative.costUSD),
+                                status: cumulative.costUSD > 0 ? .neutral : .warning)
                             if let savings = formattedRouterSavings(cumulative.savingsUSD) {
                                 AinkradStatRow(label: "Router savings", value: savings, status: .success)
                             }

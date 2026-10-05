@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-import AinkradSignal
 import AinkradHostRuntime
+import AinkradSignal
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @MainActor
@@ -11,8 +12,9 @@ final class SignalIngressCoordinatorTests {
         func deliver(_ event: SignalEvent, to channels: Set<DeliveryChannel>) {}
     }
     private struct Ctx: SignalContextProviding {
-        var deliveryContext = DeliveryContext(hostIsFrontmost: true, visibleAppIDs: [],
-                                              systemDoNotDisturb: false, hostFocusMode: false)
+        var deliveryContext = DeliveryContext(
+            hostIsFrontmost: true, visibleAppIDs: [],
+            systemDoNotDisturb: false, hostFocusMode: false)
     }
 
     private let url: URL
@@ -24,21 +26,26 @@ final class SignalIngressCoordinatorTests {
     init() throws {
         url = FileManager.default.temporaryDirectory
             .appendingPathComponent("signal-\(UUID().uuidString).sqlite")
-        center = SignalCenter(store: try SignalStore(url: url),
-                              deliverer: NullDeliverer(), contextProvider: Ctx())
+        center = SignalCenter(
+            store: try SignalStore(url: url),
+            deliverer: NullDeliverer(), contextProvider: Ctx())
         registry = SignalTokenRegistry(secrets: InMemorySecretStore())
         token = registry.mint(for: .app(appID: "raven"))
-        coordinator = SignalIngressCoordinator(center: center, tokens: registry,
-                                               limiter: SignalRateLimiter(limit: 20, window: 10))
+        coordinator = SignalIngressCoordinator(
+            center: center, tokens: registry,
+            limiter: SignalRateLimiter(limit: 20, window: 10))
     }
 
     deinit { try? FileManager.default.removeItem(at: url) }
 
-    private func payload(token: String, kind: String = "build.failed",
-                         title: String = "Build failed") -> Data {
-        Data("""
-        {"token":"\(token)","kind":"\(kind)","severity":"failure","title":"\(title)"}
-        """.utf8)
+    private func payload(
+        token: String, kind: String = "build.failed",
+        title: String = "Build failed"
+    ) -> Data {
+        Data(
+            """
+            {"token":"\(token)","kind":"\(kind)","severity":"failure","title":"\(title)"}
+            """.utf8)
     }
 
     @Test("a valid payload is stamped with the token's source and stored")
@@ -68,8 +75,9 @@ final class SignalIngressCoordinatorTests {
     @Test("repeated rejections from one peer coalesce instead of flooding")
     func rejectionsCoalesce() {
         for _ in 0..<5 { _ = coordinator.accept(payload(token: "forged")) }
-        #expect(center.recent.filter { $0.kind == "signal.rejected" }.count == 1,
-                "an attacker must not be able to flood the feed with rejection rows")
+        #expect(
+            center.recent.filter { $0.kind == "signal.rejected" }.count == 1,
+            "an attacker must not be able to flood the feed with rejection rows")
     }
 
     @Test("two different bad peers are reported separately, not merged")
@@ -83,10 +91,12 @@ final class SignalIngressCoordinatorTests {
 
     @Test("an oversized payload is rejected before the token is even consulted")
     func oversizedRejected() {
-        let huge = Data(("{\"token\":\"\(token)\",\"kind\":\"test.event\",\"severity\":\"info\",\"title\":\""
-                         + String(repeating: "x", count: 9000) + "\"}").utf8)
+        let huge = Data(
+            ("{\"token\":\"\(token)\",\"kind\":\"test.event\",\"severity\":\"info\",\"title\":\""
+                + String(repeating: "x", count: 9000) + "\"}").utf8)
         guard case .rejected(let rejection) = coordinator.accept(huge) else {
-            Issue.record("expected rejection"); return
+            Issue.record("expected rejection")
+            return
         }
         if case .tooLarge = rejection {} else { Issue.record("expected .tooLarge, got \(rejection)") }
     }

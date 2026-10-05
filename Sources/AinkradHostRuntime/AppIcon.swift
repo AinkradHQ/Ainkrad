@@ -15,8 +15,8 @@ public enum AppIconColor: String, CaseIterable, Codable, Sendable { case blue, p
 public enum AppIconResolver {
     public static func color(for choice: AppIconChoice, theme: Theme) -> AppIconColor {
         switch choice {
-        case .auto:   return theme.iconColorFamily
-        case .blue:   return .blue
+        case .auto: return theme.iconColorFamily
+        case .blue: return .blue
         case .purple: return .purple
         }
     }
@@ -24,13 +24,15 @@ public enum AppIconResolver {
     public static func isDark(_ appearance: AppIconAppearance, systemDark: Bool) -> Bool {
         switch appearance {
         case .system: return systemDark
-        case .light:  return false
-        case .dark:   return true
+        case .light: return false
+        case .dark: return true
         }
     }
 
-    public static func resourceName(for choice: AppIconChoice, theme: Theme,
-                             appearance: AppIconAppearance, systemDark: Bool) -> String {
+    public static func resourceName(
+        for choice: AppIconChoice, theme: Theme,
+        appearance: AppIconAppearance, systemDark: Bool
+    ) -> String {
         let family = color(for: choice, theme: theme).rawValue
         return "\(family)-\(isDark(appearance, systemDark: systemDark) ? "dark" : "light")"
     }

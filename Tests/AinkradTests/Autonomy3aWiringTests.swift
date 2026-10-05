@@ -1,22 +1,26 @@
+import AinkradHostRuntime
 // Tests/AinkradTests/Autonomy3aWiringTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("Autonomy 3a wiring")
 @MainActor
 struct Autonomy3aWiringTests {
     final class InstantRunner: AgentRunRunner {
-        func execute(prompt: String, posture: SavedExecutionPosture?, appendLog: @escaping (String) -> Void) async -> AgentRunOutcome { .success("ok") }
+        func execute(prompt: String, posture: SavedExecutionPosture?, appendLog: @escaping (String) -> Void) async
+            -> AgentRunOutcome
+        { .success("ok") }
     }
 
     @Test func spawnSubagentToolConstructsInRegistry() {
         let coordinator = SubagentCoordinator(runner: SubagentCoordinatorTests_EchoRunner())
         let registry = AgentToolRegistry(tools: [
             ReadFileTool(),
-            SpawnSubagentTool(coordinator: coordinator,
-                              agents: AgentStore(persistence: InMemoryPersistenceStore())),
+            SpawnSubagentTool(
+                coordinator: coordinator,
+                agents: AgentStore(persistence: InMemoryPersistenceStore())),
         ])
         #expect(registry.tool(named: "spawn_subagent") != nil)
     }
@@ -39,8 +43,9 @@ struct Autonomy3aWiringTests {
         let agentStore = AgentStore(persistence: persistence)
         let agentPermissionStore = AgentPermissionStore(persistence: persistence, currentWorkspaceID: { UUID() })
         let agentConfigStore = AgentConfigStore(persistence: persistence)
-        let agentContextService = AgentContextService(hub: AgentContextRegistryHub(),
-                                                       settings: AgentContextSettingsStore(persistence: persistence))
+        let agentContextService = AgentContextService(
+            hub: AgentContextRegistryHub(),
+            settings: AgentContextSettingsStore(persistence: persistence))
         let registry = AgentToolRegistry(tools: [ReadFileTool()])
         let profile = agentStore.active
 
@@ -59,8 +64,10 @@ struct Autonomy3aWiringTests {
     /// how the child `AgentSession` was constructed.
     @MainActor
     final class StubProvider: LLMProvider {
-        func send(messages: [AgentMessage], system: String, tools: [AgentToolSchema],
-                  model: AgentModelConfig, credential: ProviderCredential) -> AsyncThrowingStream<AgentEvent, Error> {
+        func send(
+            messages: [AgentMessage], system: String, tools: [AgentToolSchema],
+            model: AgentModelConfig, credential: ProviderCredential
+        ) -> AsyncThrowingStream<AgentEvent, Error> {
             AsyncThrowingStream { $0.finish() }
         }
     }

@@ -10,8 +10,10 @@ final class AgentToolRegistry {
     /// without rebuilding the registry (the registry is otherwise immutable).
     private let dynamicTools: @MainActor () -> [any AgentTool]
 
-    init(tools: [any AgentTool],
-         dynamicTools: @escaping @MainActor () -> [any AgentTool] = { [] }) {
+    init(
+        tools: [any AgentTool],
+        dynamicTools: @escaping @MainActor () -> [any AgentTool] = { [] }
+    ) {
         var map: [String: any AgentTool] = [:]
         var order: [String] = []
         for tool in tools where map[tool.name] == nil {

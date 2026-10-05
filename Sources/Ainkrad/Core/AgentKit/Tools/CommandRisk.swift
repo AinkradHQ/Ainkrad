@@ -72,8 +72,15 @@ enum CommandRisk {
 
         while let ch = pending ?? iterator.next() {
             pending = nil
-            if escaped { current.append(ch); escaped = false; continue }
-            if ch == "\\" { escaped = true; continue }
+            if escaped {
+                current.append(ch)
+                escaped = false
+                continue
+            }
+            if ch == "\\" {
+                escaped = true
+                continue
+            }
             if let q = quote {
                 current.append(ch)
                 if ch == q { quote = nil }
@@ -105,15 +112,28 @@ enum CommandRisk {
         var quote: Character? = nil
         var escaped = false
         for ch in segment {
-            if escaped { current.append(ch); escaped = false; continue }
-            if ch == "\\" { escaped = true; continue }
+            if escaped {
+                current.append(ch)
+                escaped = false
+                continue
+            }
+            if ch == "\\" {
+                escaped = true
+                continue
+            }
             if let q = quote {
                 if ch == q { quote = nil } else { current.append(ch) }
                 continue
             }
-            if ch == "'" || ch == "\"" { quote = ch; continue }
+            if ch == "'" || ch == "\"" {
+                quote = ch
+                continue
+            }
             if ch == " " || ch == "\t" {
-                if !current.isEmpty { out.append(current); current = "" }
+                if !current.isEmpty {
+                    out.append(current)
+                    current = ""
+                }
                 continue
             }
             current.append(ch)
@@ -159,7 +179,8 @@ enum CommandRisk {
             // Recursive AND forced is the classic unrecoverable form. Either
             // alone still deletes, but `-f` alone can't take a tree and `-r`
             // alone prompts. Long forms count too.
-            let recursive = flags.contains("r") || flags.contains("R")
+            let recursive =
+                flags.contains("r") || flags.contains("R")
                 || args.contains("--recursive")
             let forced = flags.contains("f") || args.contains("--force")
             if recursive && forced { return "recursively force-deletes files" }
@@ -171,7 +192,8 @@ enum CommandRisk {
             // and the old substring list saw neither.
             if args.contains("-delete") { return "deletes every matched file" }
             if args.contains("-exec") || args.contains("-execdir"),
-               args.contains(where: { basename($0) == "rm" }) {
+                args.contains(where: { basename($0) == "rm" })
+            {
                 return "executes rm on every matched file"
             }
             return nil
@@ -183,14 +205,19 @@ enum CommandRisk {
             return "irrecoverably shreds files"
 
         case "mkfs", "newfs", "diskutil":
-            if command == "diskutil" && !args.contains(where: { ["erasedisk", "erasevolume", "partitiondisk", "reformat"].contains($0.lowercased()) }) {
+            if command == "diskutil"
+                && !args.contains(where: {
+                    ["erasedisk", "erasevolume", "partitiondisk", "reformat"].contains($0.lowercased())
+                })
+            {
                 return nil
             }
             return "formats or erases a volume"
 
         case "chmod", "chown":
             if flags.contains("R") || args.contains("--recursive"),
-               args.contains(where: isSensitivePath) {
+                args.contains(where: isSensitivePath)
+            {
                 return "recursively changes permissions on a sensitive path"
             }
             return nil
@@ -207,7 +234,9 @@ enum CommandRisk {
         let segs = segments(of: command)
         guard segs.count >= 2 else { return false }
         let fetchers: Set<String> = ["curl", "wget", "fetch", "http", "httpie"]
-        let interpreters: Set<String> = ["sh", "bash", "zsh", "ksh", "fish", "python", "python3", "perl", "ruby", "node"]
+        let interpreters: Set<String> = [
+            "sh", "bash", "zsh", "ksh", "fish", "python", "python3", "perl", "ruby", "node",
+        ]
         var sawFetch = false
         for seg in segs {
             guard let head = words(of: seg).first.map(basename) else { continue }

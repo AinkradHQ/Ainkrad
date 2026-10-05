@@ -1,5 +1,6 @@
 // Tests/AinkradTests/Support/ArrayTokenTransport.swift
 import Foundation
+
 @testable import Ainkrad
 
 /// Shared `OAuthTokenTransport` test double that replays a fixed queue of
@@ -16,8 +17,9 @@ final class ArrayTokenTransport: OAuthTokenTransport, @unchecked Sendable {
     func post(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
         requests.append(request)
         let (data, status) = responses.removeFirst()
-        let resp = HTTPURLResponse(url: request.url!, statusCode: status,
-                                   httpVersion: nil, headerFields: nil)!
+        let resp = HTTPURLResponse(
+            url: request.url!, statusCode: status,
+            httpVersion: nil, headerFields: nil)!
         return (data, resp)
     }
 }

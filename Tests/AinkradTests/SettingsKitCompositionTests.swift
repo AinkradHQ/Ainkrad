@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-@testable import Ainkrad
 import AinkradAppKitContract
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 @Suite("Settings composes the kit")
 @MainActor
@@ -9,10 +10,10 @@ struct SettingsKitCompositionTests {
     /// Repo-relative source roots. Resolved from this file's location so the
     /// test works regardless of where the checkout lives.
     private static func sourceText(_ relativePath: String) throws -> String {
-        let here = URL(fileURLWithPath: #filePath)                 // Tests/AinkradTests/…
-        let repo = here.deletingLastPathComponent()                 // AinkradTests
-            .deletingLastPathComponent()                            // Tests
-            .deletingLastPathComponent()                            // repo root
+        let here = URL(fileURLWithPath: #filePath)  // Tests/AinkradTests/…
+        let repo = here.deletingLastPathComponent()  // AinkradTests
+            .deletingLastPathComponent()  // Tests
+            .deletingLastPathComponent()  // repo root
         return try String(contentsOf: repo.appendingPathComponent(relativePath), encoding: .utf8)
     }
 
@@ -21,11 +22,13 @@ struct SettingsKitCompositionTests {
         let banned = ["SettingsSearchField", "SettingsPaletteRow"]
         let overlay = try Self.sourceText("Sources/Ainkrad/Features/Settings/Views/SettingsOverlayView.swift")
         for name in banned {
-            #expect(!overlay.contains("struct \(name)"),
-                    "\(name) is a look-alike of a kit component — compose the kit instead")
+            #expect(
+                !overlay.contains("struct \(name)"),
+                "\(name) is a look-alike of a kit component — compose the kit instead")
         }
-        #expect(overlay.contains("AinkradSearchField"),
-                "the overlay must use the kit's search field")
+        #expect(
+            overlay.contains("AinkradSearchField"),
+            "the overlay must use the kit's search field")
     }
 
     @Test("settings sources declare no private spacing scale")
@@ -38,8 +41,9 @@ struct SettingsKitCompositionTests {
         let overlay = try Self.sourceText("Sources/Ainkrad/Features/Settings/Views/SettingsOverlayView.swift")
         let bannedLiterals = [".padding(14)", ".padding(18)", ".padding(24)", "spacing: 14", "spacing: 18"]
         for literal in bannedLiterals {
-            #expect(!overlay.contains(literal),
-                    "\(literal) is a private spacing constant — use AinkradSpacing")
+            #expect(
+                !overlay.contains(literal),
+                "\(literal) is a private spacing constant — use AinkradSpacing")
         }
     }
 
@@ -96,7 +100,8 @@ struct SettingsKitCompositionTests {
             if case .custom = $0.kind { return true }
             return false
         }.count
-        let message = "\(customCount) .custom fields exceeds the ceiling of \(ceiling); "
+        let message =
+            "\(customCount) .custom fields exceeds the ceiling of \(ceiling); "
             + "wrap-a-view is the decay mode this design warns about"
         #expect(customCount <= ceiling, "\(message)")
     }

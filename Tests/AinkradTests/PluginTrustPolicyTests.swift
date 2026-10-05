@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-@testable import Ainkrad
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 /// Wave 0 / Blocker 1: the plugin trust boundary.
 ///
@@ -32,8 +33,9 @@ struct PluginTrustPolicyTests {
         // Third-party plugins ship under their OWN team, so pinning to ours by
         // default would reject the entire catalog.
         #expect(!DeveloperIDSignaturePolicy().requirementText.contains("subject.OU"))
-        #expect(DeveloperIDSignaturePolicy(teamIdentifier: "PSY67XNHG4")
-            .requirementText.contains("certificate leaf[subject.OU] = \"PSY67XNHG4\""))
+        #expect(
+            DeveloperIDSignaturePolicy(teamIdentifier: "PSY67XNHG4")
+                .requirementText.contains("certificate leaf[subject.OU] = \"PSY67XNHG4\""))
         // An empty string must not produce a requirement that matches an empty OU.
         #expect(!DeveloperIDSignaturePolicy(teamIdentifier: "").requirementText.contains("subject.OU"))
     }
@@ -45,10 +47,12 @@ struct PluginTrustPolicyTests {
         let dir = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent(UUID().uuidString)
             .appendingPathComponent("Fake.bundle")
-        try FileManager.default.createDirectory(at: dir.appendingPathComponent("Contents"),
-                                                withIntermediateDirectories: true)
-        try "not a plist".write(to: dir.appendingPathComponent("Contents/Info.plist"),
-                                atomically: true, encoding: .utf8)
+        try FileManager.default.createDirectory(
+            at: dir.appendingPathComponent("Contents"),
+            withIntermediateDirectories: true)
+        try "not a plist".write(
+            to: dir.appendingPathComponent("Contents/Info.plist"),
+            atomically: true, encoding: .utf8)
         defer { try? FileManager.default.removeItem(at: dir.deletingLastPathComponent()) }
 
         let result = DeveloperIDSignaturePolicy().validate(bundleURL: dir)
@@ -110,9 +114,12 @@ struct PluginLoadFailureSurfacingTests {
 
     @Test("Failure text names the bundle and the reason, not the raw path")
     func failureTextIsReadable() {
-        let text = AppStoreStore.failureText(PluginLoadFailure(
-            url: URL(fileURLWithPath: "/Users/x/Library/Application Support/Plugins/GitMage.bundle"),
-            reason: "was built against a different AinkradAppKit revision than this host embeds — repin the plugin to the host's SDK revision and rebuild it (missing symbol _$s21AinkradAppKitContract15MCPResourceSpecV012requiresLiveB0Sbvs)"))
+        let text = AppStoreStore.failureText(
+            PluginLoadFailure(
+                url: URL(fileURLWithPath: "/Users/x/Library/Application Support/Plugins/GitMage.bundle"),
+                reason:
+                    "was built against a different AinkradAppKit revision than this host embeds — repin the plugin to the host's SDK revision and rebuild it (missing symbol _$s21AinkradAppKitContract15MCPResourceSpecV012requiresLiveB0Sbvs)"
+            ))
         #expect(text.hasPrefix("GitMage — was built against a different AinkradAppKit"))
         #expect(!text.contains("Application Support"))
         // The banner is one line: the loader's short form, never the multi-line

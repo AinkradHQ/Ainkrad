@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// The full-screen title strip's left-side status readouts (AIN-109) — the
 /// region the system traffic lights vacate once the window goes full-screen.
@@ -19,7 +19,8 @@ struct FullScreenStatusBarView: View {
                     .padding(.horizontal, AinkradSpacing.sm)
                     .padding(.vertical, AinkradSpacing.xs)
                     .background(ChamferShape(cut: AinkradRadius.sm).fill(tokens.surfaceElevated.opacity(0.32)))
-                    .overlay(ChamferShape(cut: AinkradRadius.sm).strokeBorder(tokens.surface.opacity(0.4), lineWidth: 1))
+                    .overlay(
+                        ChamferShape(cut: AinkradRadius.sm).strokeBorder(tokens.surface.opacity(0.4), lineWidth: 1))
             }
         }
     }

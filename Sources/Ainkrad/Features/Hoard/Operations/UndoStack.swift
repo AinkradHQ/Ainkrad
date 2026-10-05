@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 import Foundation
 import Observation
-import AinkradHostRuntime
 
 struct UndoStackDocument: PersistableDocument {
     static let documentID = "files-undo"

@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("Setup coordinator")
 @MainActor
@@ -43,8 +44,10 @@ struct SetupCoordinatorTests {
 
     @Test func aCurrentCompletionOwesNothing() {
         let store = InMemoryPersistenceStore()
-        store.save(SetupDocument(completedAt: Date(),
-                                 setupVersion: SetupCoordinator.currentSetupVersion))
+        store.save(
+            SetupDocument(
+                completedAt: Date(),
+                setupVersion: SetupCoordinator.currentSetupVersion))
         let c = SetupCoordinator(persistence: store, isProvisionalHome: false)
         #expect(c.isComplete)
     }
@@ -62,8 +65,9 @@ struct SetupCoordinatorTests {
         let c = SetupCoordinator(persistence: store, isProvisionalHome: false)
         for _ in 0..<20 { c.advance() }
         for _ in 0..<20 { c.back() }
-        #expect(c.steps.contains(.home),
-                "setup is unfinished, so the folder must still be changeable")
+        #expect(
+            c.steps.contains(.home),
+            "setup is unfinished, so the folder must still be changeable")
         #expect(c.step == c.steps.first)
     }
 
@@ -101,8 +105,9 @@ struct SetupCoordinatorTests {
         store.save(doc)
 
         let c = SetupCoordinator(persistence: store, isProvisionalHome: false)
-        #expect(!c.steps.contains(.home),
-                "a vault whose setup is finished must never be re-asked for its folder")
+        #expect(
+            !c.steps.contains(.home),
+            "a vault whose setup is finished must never be re-asked for its folder")
     }
 
     /// The mid-wizard case, stated directly: a vault has been adopted (so the
@@ -111,7 +116,8 @@ struct SetupCoordinatorTests {
         let store = InMemoryPersistenceStore()
         let c = SetupCoordinator(persistence: store, isProvisionalHome: false)
         #expect(c.steps.contains(.home))
-        #expect(c.steps == SetupStep.allCases,
-                "an unfinished setup owes every step, whatever the home's state")
+        #expect(
+            c.steps == SetupStep.allCases,
+            "an unfinished setup owes every step, whatever the home's state")
     }
 }

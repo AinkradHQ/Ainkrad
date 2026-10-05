@@ -14,8 +14,10 @@ struct SubagentSpec: Sendable, Identifiable {
     /// Model CLASS the router resolves to a concrete model.
     let budgetTier: ModelTier
 
-    init(id: UUID = UUID(), prompt: String, profileID: UUID? = nil,
-         toolAllowList: [String] = [], budgetTier: ModelTier) {
+    init(
+        id: UUID = UUID(), prompt: String, profileID: UUID? = nil,
+        toolAllowList: [String] = [], budgetTier: ModelTier
+    ) {
         self.id = id
         self.prompt = prompt
         self.profileID = profileID

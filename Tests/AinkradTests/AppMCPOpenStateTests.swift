@@ -1,7 +1,8 @@
+import AinkradAppKit
 // Tests/AinkradTests/AppMCPOpenStateTests.swift
 import Foundation
 import Testing
-import AinkradAppKit
+
 @testable import Ainkrad
 @testable import AinkradHostRuntime
 
@@ -42,7 +43,7 @@ struct AppMCPOpenStateTests {
         other.tileLayout.openApp("tiled-app")
         environment.workspaceManager.switchTo(environment.workspaceManager.workspaces[0].id)
 
-        #expect(environment.isAppOpen("tiled-app"))   // inactive workspace still counts
+        #expect(environment.isAppOpen("tiled-app"))  // inactive workspace still counts
     }
 
     @Test("an app that is neither tiled nor presented is closed")
@@ -65,16 +66,19 @@ struct AppMCPOpenStateTests {
         }
 
         let server = MCPAppServer(appID: "demo")
-        server.addTool(.init(name: "ping", description: "Ping.",
-                             schemaJSON: #"{"type":"object"}"#, readOnly: true) { _ in
-            AgentActionResult(text: "pong", isError: false)
-        })
+        server.addTool(
+            .init(
+                name: "ping", description: "Ping.",
+                schemaJSON: #"{"type":"object"}"#, readOnly: true
+            ) { _ in
+                AgentActionResult(text: "pong", isError: false)
+            })
         var openRequests: [String] = []
         let activator = AppServerActivator(
             servers: ["demo": server],
             isAppOpen: { hub.isOpen($0) },
-            requestOpen: { openRequests.append($0) },   // never opens it, so a
-            availability: { _ in .available },          // launch would time out
+            requestOpen: { openRequests.append($0) },  // never opens it, so a
+            availability: { _ in .available },  // launch would time out
             launchTimeout: .milliseconds(200))
 
         let reply = try await activator.dispatch(

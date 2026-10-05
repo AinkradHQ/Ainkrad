@@ -1,9 +1,10 @@
-import Testing
+import AinkradAppKit
 import Foundation
 import SwiftUI
-import AinkradAppKit
-@testable import AinkradHostRuntime
+import Testing
+
 @testable import Ainkrad
+@testable import AinkradHostRuntime
 
 /// Generation 11's host half: resolving which mode a pane opens in, and keeping
 /// that resolution honest as the setting and the pane state change.
@@ -50,11 +51,12 @@ struct PluginModeHostTests {
         let store = makeStore()
         store.setModeOverride("fixture", .basic)
         var other = app(mode: .advanced)
-        other = RegisteredApp(id: "other", displayName: other.displayName, icon: other.icon,
-                              isEnabledByDefault: true, source: other.source,
-                              makeRootView: other.makeRootView,
-                              makeSettingsView: other.makeSettingsView,
-                              chromeFill: other.chromeFill)
+        other = RegisteredApp(
+            id: "other", displayName: other.displayName, icon: other.icon,
+            isEnabledByDefault: true, source: other.source,
+            makeRootView: other.makeRootView,
+            makeSettingsView: other.makeSettingsView,
+            chromeFill: other.chromeFill)
         other.makeRootViewForMode = { _ in AnyView(EmptyView()) }
         #expect(store.effectiveMode(for: other) == .advanced)
     }
@@ -65,15 +67,20 @@ struct PluginModeHostTests {
     func fallbackKeepsPreGeneration11AppsWorking() {
         var built: [String] = []
         var registered = app(mode: .advanced, supportsModes: false)
-        registered = RegisteredApp(id: registered.id, displayName: registered.displayName,
-                                   icon: registered.icon, isEnabledByDefault: true,
-                                   source: registered.source,
-                                   makeRootView: { built.append("modeless"); return AnyView(EmptyView()) },
-                                   makeSettingsView: { AnyView(EmptyView()) },
-                                   chromeFill: { nil })
+        registered = RegisteredApp(
+            id: registered.id, displayName: registered.displayName,
+            icon: registered.icon, isEnabledByDefault: true,
+            source: registered.source,
+            makeRootView: {
+                built.append("modeless")
+                return AnyView(EmptyView())
+            },
+            makeSettingsView: { AnyView(EmptyView()) },
+            chromeFill: { nil })
         _ = registered.makeRootView(mode: .basic)
-        #expect(built == ["modeless"],
-                "an app that never opted in must keep using its only factory")
+        #expect(
+            built == ["modeless"],
+            "an app that never opted in must keep using its only factory")
     }
 
     @Test("A conforming app is built FOR the mode, not filtered after the fact")
@@ -154,8 +161,9 @@ struct PluginModeHostTests {
         store.setModeOverride("fixture", .basic)
         store.setPresentationOverride("fixture", .overlay)
         store.setModeOverride("fixture", nil)
-        #expect(store.presentationOverride("fixture") == .overlay,
-                "clearing one override must not clear the other")
+        #expect(
+            store.presentationOverride("fixture") == .overlay,
+            "clearing one override must not clear the other")
     }
 
     // MARK: - The built-in apps
@@ -167,8 +175,9 @@ struct PluginModeHostTests {
         // proof that opting out costs nothing: a HUD canvas the assistant
         // drives has no meaningful basic mode, and it says so by not conforming.
         #expect((HoardApp.self as Any) as? AinkradAppModes.Type != nil)
-        #expect((ScryApp.self as Any) as? AinkradAppModes.Type == nil,
-                "Scry is deliberately excluded from Basic Mode")
+        #expect(
+            (ScryApp.self as Any) as? AinkradAppModes.Type == nil,
+            "Scry is deliberately excluded from Basic Mode")
     }
 
     @Test("A built-in's declared mode reaches its registration")

@@ -1,8 +1,8 @@
-import SwiftUI
-import AppKit
-import UniformTypeIdentifiers
 import AinkradAppKit
 import AinkradHostRuntime
+import AppKit
+import SwiftUI
+import UniformTypeIdentifiers
 
 /// One pane: a floating, rounded panel over the sky holding the hosted app
 /// content edge-to-edge. Deliberately chromeless — no title bar, no app
@@ -81,10 +81,12 @@ struct BlockView: View {
     var body: some View {
         let tokens = environment.themeManager.tokens
 
-        return PaneContent(app: app, topInset: contentTopInset, fallback: tokens.surface,
-                           paneLocator: environment.paneLocators.sink(forBlock: block.id),
-                           launchGeneration: block.launchGeneration)
-            .overlay(alignment: .top) { grabStrip(tokens: tokens) }
+        return PaneContent(
+            app: app, topInset: contentTopInset, fallback: tokens.surface,
+            paneLocator: environment.paneLocators.sink(forBlock: block.id),
+            launchGeneration: block.launchGeneration
+        )
+        .overlay(alignment: .top) { grabStrip(tokens: tokens) }
         // The pane body is clear, so a translucent app (Terminal scheme
         // opacity, Git Mage transparency, Sage opacity) reveals whatever
         // sits behind it: the shared sharp workspace backdrop by default, or —
@@ -103,7 +105,9 @@ struct BlockView: View {
         // touching the app's content or the blurred backdrop) on every frame.
         .overlay(PaneActivationRing(isFocused: isFocused, tokens: tokens))
         .overlay(dropZoneHighlight(tokens: tokens))
-        .shadow(color: isFocused ? tokens.accentPrimary.opacity(0.28) : .black.opacity(0.25), radius: isFocused ? 22 : 12)
+        .shadow(
+            color: isFocused ? tokens.accentPrimary.opacity(0.28) : .black.opacity(0.25), radius: isFocused ? 22 : 12
+        )
         .opacity(paneOpacity)
         .scaleEffect(paneScale)
         .contentShape(Rectangle())
@@ -120,12 +124,15 @@ struct BlockView: View {
         .onChange(of: tileLayout.draggingBlockID) { _, newValue in
             if newValue == nil { dropEdge = nil }
         }
-        .onDrop(of: [.text], delegate: PaneEdgeDropDelegate(
-            targetBlockID: block.id,
-            tileLayout: tileLayout,
-            size: { paneSize },
-            edge: $dropEdge
-        ))
+        .onDrop(
+            of: [.text],
+            delegate: PaneEdgeDropDelegate(
+                targetBlockID: block.id,
+                tileLayout: tileLayout,
+                size: { paneSize },
+                edge: $dropEdge
+            )
+        )
         .animation(.easeOut(duration: 0.15), value: isFocused)
         .animation(.easeOut(duration: 0.1), value: dropEdge)
         .onAppear {
@@ -248,31 +255,36 @@ struct BlockView: View {
         // menu is its only host-owned control surface.
         if app?.supportsModes == true {
             let isBasic = paneMode == .basic
-            items.append(AinkradMenuItem(
-                title: isBasic ? "Show Everything" : "Simplify",
-                systemName: isBasic ? "arrow.down.left.and.arrow.up.right"
-                                    : "arrow.up.right.and.arrow.down.left"
-            ) {
-                setPaneMode(isBasic ? .advanced : .basic)
-            })
+            items.append(
+                AinkradMenuItem(
+                    title: isBasic ? "Show Everything" : "Simplify",
+                    systemName: isBasic
+                        ? "arrow.down.left.and.arrow.up.right"
+                        : "arrow.up.right.and.arrow.down.left"
+                ) {
+                    setPaneMode(isBasic ? .advanced : .basic)
+                })
         }
         if let workspace {
-            items.append(AinkradMenuItem(
-                title: isInFocusMode ? "Back to Split Mode" : "Focus Mode",
-                systemName: isInFocusMode ? "rectangle.split.2x2" : "rectangle.inset.filled"
-            ) {
-                tileLayout.focus(block.id)
-                workspace.viewMode = isInFocusMode ? .split : .focus
-                environment.sounds.play(.focusMode)
-            })
+            items.append(
+                AinkradMenuItem(
+                    title: isInFocusMode ? "Back to Split Mode" : "Focus Mode",
+                    systemName: isInFocusMode ? "rectangle.split.2x2" : "rectangle.inset.filled"
+                ) {
+                    tileLayout.focus(block.id)
+                    workspace.viewMode = isInFocusMode ? .split : .focus
+                    environment.sounds.play(.focusMode)
+                })
         }
-        items.append(AinkradMenuItem(title: "Reset Layout", systemName: "arrow.counterclockwise") {
-            tileLayout.resetLayout()
-        })
-        items.append(AinkradMenuItem(title: "Close", systemName: "xmark", isDestructive: true) {
-            environment.sounds.play(.appClose)
-            tileLayout.close(block.id)
-        })
+        items.append(
+            AinkradMenuItem(title: "Reset Layout", systemName: "arrow.counterclockwise") {
+                tileLayout.resetLayout()
+            })
+        items.append(
+            AinkradMenuItem(title: "Close", systemName: "xmark", isDestructive: true) {
+                environment.sounds.play(.appClose)
+                tileLayout.close(block.id)
+            })
         return items
     }
 
@@ -458,9 +470,11 @@ private struct PaneGlassBackdrop: View {
     }
 
     private func render() -> CGImage? {
-        let renderer = ImageRenderer(content: backdrop
-            .frame(width: PaneGlassImageCache.canvas.width, height: PaneGlassImageCache.canvas.height)
-            .environment(environment))
+        let renderer = ImageRenderer(
+            content:
+                backdrop
+                .frame(width: PaneGlassImageCache.canvas.width, height: PaneGlassImageCache.canvas.height)
+                .environment(environment))
         renderer.scale = PaneGlassImageCache.scale
         return renderer.cgImage
     }

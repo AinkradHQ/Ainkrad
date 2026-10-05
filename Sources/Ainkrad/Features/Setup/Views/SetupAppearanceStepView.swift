@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Applies the Appearance step's choices to the live stores.
 ///
@@ -8,10 +8,12 @@ import AinkradHostRuntime
 /// (ThemeManager.swift:45), so the accent must be set afterwards or it is lost.
 @MainActor
 enum SetupAppearance {
-    static func apply(theme: Theme, accentHex: String?,
-                      family: UIFontFamily, scale: UIFontScale,
-                      icon: AppIconChoice, iconAppearance: AppIconAppearance,
-                      themeManager: ThemeManager, iconStore: AppIconStore) {
+    static func apply(
+        theme: Theme, accentHex: String?,
+        family: UIFontFamily, scale: UIFontScale,
+        icon: AppIconChoice, iconAppearance: AppIconAppearance,
+        themeManager: ThemeManager, iconStore: AppIconStore
+    ) {
         themeManager.setTheme(theme)
         themeManager.setAccentColorHex(accentHex)
         themeManager.setFontFamily(family)
@@ -74,30 +76,38 @@ struct SetupAppearanceStepView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
                     lead(tokens: tokens)
-                    group(index: 1,
-                          title: "Theme",
-                          hint: "The whole workspace re-tints — window, islands, and the sky "
-                              + "behind this screen.") {
+                    group(
+                        index: 1,
+                        title: "Theme",
+                        hint: "The whole workspace re-tints — window, islands, and the sky "
+                            + "behind this screen."
+                    ) {
                         themeGrid(tokens: tokens)
                     }
-                    group(index: 2,
-                          title: "Accent",
-                          hint: "Used for anything live: selection, focus, the things that are "
-                              + "currently doing something.") {
+                    group(
+                        index: 2,
+                        title: "Accent",
+                        hint: "Used for anything live: selection, focus, the things that are "
+                            + "currently doing something."
+                    ) {
                         accentColorRow(tokens: tokens, manager: environment.themeManager)
                     }
                     // "Type" first, which reads as a verb before it reads as a
                     // noun — an instruction to start typing, on a screen whose
                     // best line ("Look at the Dock") IS an instruction. Named
                     // for the two controls under it instead.
-                    group(index: 3,
-                          title: "Typeface and size",
-                          hint: "Every word in the app, including the ones you are reading now.") {
+                    group(
+                        index: 3,
+                        title: "Typeface and size",
+                        hint: "Every word in the app, including the ones you are reading now."
+                    ) {
                         typographyControls(tokens: tokens)
                     }
-                    group(index: 4,
-                          title: "App icon",
-                          hint: "Look at the Dock — it changes as you pick.") {
+                    group(
+                        index: 4,
+                        title: "App icon",
+                        hint: "Look at the Dock — it changes as you pick."
+                    ) {
                         appIconControls(tokens: tokens)
                     }
                 }
@@ -127,16 +137,20 @@ struct SetupAppearanceStepView: View {
     /// thing behind the blur is the real app, already running.
     private func lead(tokens: DesignTokens) -> some View {
         staged(index: 0) {
-            Text("Ainkrad is already running behind this screen — that is your workspace "
-                 + "back there, not a picture of one. Nothing here needs saving: change "
-                 + "something and watch it happen.")
-                .font(AinkradFont.display(15))
-                .foregroundStyle(tokens.foreground.opacity(0.85))
-                .lineSpacing(5)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth),
-                       alignment: .leading)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            Text(
+                "Ainkrad is already running behind this screen — that is your workspace "
+                    + "back there, not a picture of one. Nothing here needs saving: change "
+                    + "something and watch it happen."
+            )
+            .font(AinkradFont.display(15))
+            .foregroundStyle(tokens.foreground.opacity(0.85))
+            .lineSpacing(5)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(
+                maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth),
+                alignment: .leading
+            )
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -235,8 +249,10 @@ struct SetupAppearanceStepView: View {
     /// off that — so on arrival nothing was selected at all, even though the
     /// workspace visibly had an accent. It now shows the theme's own accent as
     /// the current one, which is what the user is actually looking at.
-    private func accentSwatch(_ theme: Theme, tokens: DesignTokens,
-                              manager: ThemeManager) -> some View {
+    private func accentSwatch(
+        _ theme: Theme, tokens: DesignTokens,
+        manager: ThemeManager
+    ) -> some View {
         let color = theme.tokens.accentPrimary
         let hex = color.hexString ?? ""
         let isSelected = AccentSelection.isSelected(
@@ -280,16 +296,18 @@ struct SetupAppearanceStepView: View {
             AinkradCaptionedRow("Typeface") {
                 AinkradSegmentedPicker(
                     items: UIFontFamily.allCases,
-                    selection: Binding(get: { manager.uiFontFamily },
-                                       set: { manager.setFontFamily($0) }),
+                    selection: Binding(
+                        get: { manager.uiFontFamily },
+                        set: { manager.setFontFamily($0) }),
                     label: fontFamilyTitle
                 )
             }
             AinkradCaptionedRow("Size") {
                 AinkradSegmentedPicker(
                     items: UIFontScale.allCases,
-                    selection: Binding(get: { manager.uiFontScale },
-                                       set: { manager.setFontScale($0) }),
+                    selection: Binding(
+                        get: { manager.uiFontScale },
+                        set: { manager.setFontScale($0) }),
                     label: fontScaleTitle
                 )
             }
@@ -313,8 +331,9 @@ struct SetupAppearanceStepView: View {
             AinkradCaptionedRow(AppIconCaptions.appearance) {
                 AinkradSegmentedPicker(
                     items: AppIconAppearance.allCases,
-                    selection: Binding(get: { store.appearance },
-                                       set: { store.selectAppearance($0) }),
+                    selection: Binding(
+                        get: { store.appearance },
+                        set: { store.selectAppearance($0) }),
                     label: iconAppearanceTitle
                 )
             }
@@ -329,8 +348,10 @@ struct SetupAppearanceStepView: View {
     /// change, and the control. No all-caps header, no boxed card and no rule
     /// above it — the groups are separated by space alone, per the design
     /// language's no-separator rule.
-    private func group<Content: View>(index: Int, title: String, hint: String,
-                                      @ViewBuilder _ content: () -> Content) -> some View {
+    private func group<Content: View>(
+        index: Int, title: String, hint: String,
+        @ViewBuilder _ content: () -> Content
+    ) -> some View {
         staged(index: index) {
             AinkradSettingsPanel(title: title, hint: hint, content: content)
         }
@@ -345,11 +366,14 @@ struct SetupAppearanceStepView: View {
     /// directional entry for the step as a whole. It is asked in the forward
     /// orientation purely to take the magnitude and the reduce-motion gate,
     /// the same way `SetupHomeStepView` does for its folder rows.
-    private func staged<Content: View>(index: Int,
-                                       @ViewBuilder _ content: () -> Content) -> some View {
-        let geometry = SetupStageMotion.layerGeometry(.content,
-                                                      reduceMotion: reduceMotion,
-                                                      isForward: true)
+    private func staged<Content: View>(
+        index: Int,
+        @ViewBuilder _ content: () -> Content
+    ) -> some View {
+        let geometry = SetupStageMotion.layerGeometry(
+            .content,
+            reduceMotion: reduceMotion,
+            isForward: true)
         let lift = geometry.map { $0.lift * 0.6 } ?? 0
         // ONLY the per-index stagger — `SetupStageMotion.animation(layer:)`
         // already carries `.content`'s own 0.11s delay, and adding
@@ -361,15 +385,21 @@ struct SetupAppearanceStepView: View {
         return content()
             .opacity(hasSettled ? 1 : 0)
             .offset(y: hasSettled ? 0 : lift)
-            .animation(SetupStageMotion.animation(reduceMotion: reduceMotion,
-                                                  layer: .content)?.delay(delay),
-                       value: hasSettled)
+            .animation(
+                SetupStageMotion.animation(
+                    reduceMotion: reduceMotion,
+                    layer: .content)?.delay(delay),
+                value: hasSettled)
     }
 
     // MARK: - Titles
 
     private func fontScaleTitle(_ scale: UIFontScale) -> String {
-        switch scale { case .small: return "Small"; case .medium: return "Medium"; case .large: return "Large" }
+        switch scale {
+        case .small: return "Small"
+        case .medium: return "Medium"
+        case .large: return "Large"
+        }
     }
 
     private func fontFamilyTitle(_ family: UIFontFamily) -> String {
@@ -381,10 +411,18 @@ struct SetupAppearanceStepView: View {
     }
 
     private func iconColorTitle(_ c: AppIconChoice) -> String {
-        switch c { case .auto: return "Auto"; case .blue: return "Blue"; case .purple: return "Purple" }
+        switch c {
+        case .auto: return "Auto"
+        case .blue: return "Blue"
+        case .purple: return "Purple"
+        }
     }
 
     private func iconAppearanceTitle(_ a: AppIconAppearance) -> String {
-        switch a { case .system: return "System"; case .light: return "Light"; case .dark: return "Dark" }
+        switch a {
+        case .system: return "System"
+        case .light: return "Light"
+        case .dark: return "Dark"
+        }
     }
 }

@@ -27,8 +27,10 @@ enum HoardToolScope {
     ///     qualified path rather than a name resolved against a pane. An
     ///     explicit path is a deliberate act; a resolved name is an inference,
     ///     and inference is what goes wrong.
-    static func decide(target: URL, openRoots: [URL],
-                       wasExplicitlyAbsolute: Bool) -> Decision {
+    static func decide(
+        target: URL, openRoots: [URL],
+        wasExplicitlyAbsolute: Bool
+    ) -> Decision {
         let path = target.standardizedFileURL.path
 
         // `..` that escapes upward is a traversal attempt, not a path.
@@ -50,10 +52,11 @@ enum HoardToolScope {
 
         if wasExplicitlyAbsolute { return .allowed }
 
-        return .refused(reason: """
-            “\(path)” is outside every open Hoard pane. Pass a full absolute path \
-            if you meant to reach outside.
-            """)
+        return .refused(
+            reason: """
+                “\(path)” is outside every open Hoard pane. Pass a full absolute path \
+                if you meant to reach outside.
+                """)
     }
 
     static func isInside(_ path: String, anyOf roots: [URL]) -> Bool {

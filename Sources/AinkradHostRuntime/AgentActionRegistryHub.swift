@@ -1,6 +1,6 @@
+import AinkradAppKit
 import Foundation
 import Observation
-import AinkradAppKit
 
 /// Host-owned aggregator of per-plugin gated action handlers. Each plugin
 /// registers ONLY its own handlers (via its scoped HostServices.actions); the
@@ -18,8 +18,10 @@ public final class AgentActionRegistryHub {
 
     public init() {}
 
-    public func register(appID: String, actionID: String,
-                  handler: @escaping @MainActor (String) async -> AgentActionResult) -> AgentActionToken {
+    public func register(
+        appID: String, actionID: String,
+        handler: @escaping @MainActor (String) async -> AgentActionResult
+    ) -> AgentActionToken {
         let token = AgentActionToken()
         entries[token] = Entry(appID: appID, actionID: actionID, handler: handler)
         return token

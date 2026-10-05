@@ -5,7 +5,7 @@ import Foundation
 /// backend (host/seatbelt/docker/ssh) interprets `command` and `profile`
 /// into a concrete argv and delegates the actual spawn to `SandboxProcessRunner`.
 struct ExecutionRequest: Sendable {
-    let command: String        // shell command line (runner wraps with the backend's argv)
+    let command: String  // shell command line (runner wraps with the backend's argv)
     let workingDir: String?
     let profile: SandboxProfile
     /// Optional live-output sink: invoked (on a background queue) with the
@@ -24,10 +24,12 @@ struct ExecutionRequest: Sendable {
     /// never land on a machine nobody just named.
     var remote: String? = nil
 
-    init(command: String, workingDir: String?, profile: SandboxProfile,
-         onOutput: (@Sendable (String) -> Void)? = nil,
-         processController: TerminalProcessController? = nil,
-         remote: String? = nil) {
+    init(
+        command: String, workingDir: String?, profile: SandboxProfile,
+        onOutput: (@Sendable (String) -> Void)? = nil,
+        processController: TerminalProcessController? = nil,
+        remote: String? = nil
+    ) {
         self.command = command
         self.workingDir = workingDir
         self.profile = profile
@@ -49,9 +51,9 @@ struct ExecutionResult: Sendable, Equatable {
 }
 
 enum BackendError: Error, Equatable {
-    case unavailable(String)         // backend not installed/running — actionable guidance
-    case launch(String)              // process failed to launch
-    case profileGeneration(String)   // seatbelt SBPL could not be generated/written (fail-closed)
+    case unavailable(String)  // backend not installed/running — actionable guidance
+    case launch(String)  // process failed to launch
+    case profileGeneration(String)  // seatbelt SBPL could not be generated/written (fail-closed)
 }
 
 /// A pluggable execution isolation backend. `run` returns a fully-captured result

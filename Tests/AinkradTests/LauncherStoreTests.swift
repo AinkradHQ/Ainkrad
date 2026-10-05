@@ -1,9 +1,10 @@
-import Testing
+import AinkradAppKit
+import AinkradHostRuntime
 import Foundation
 import SwiftUI
-import AinkradAppKit
+import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("LauncherStore")
 @MainActor
@@ -28,7 +29,8 @@ final class LauncherStoreTests {
         registry.install(builtIn: [terminalApp, settingsApp])
         let workspaceManager = WorkspaceManager()
         let appearance = AppAppearanceStore(persistence: InMemoryPersistenceStore())
-        let store = LauncherStore(registry: registry, workspaceManager: workspaceManager, appAppearanceStore: appearance)
+        let store = LauncherStore(
+            registry: registry, workspaceManager: workspaceManager, appAppearanceStore: appearance)
         return (store, registry, workspaceManager, appearance)
     }
 
@@ -80,10 +82,10 @@ final class LauncherStoreTests {
         var overlaid: String? = nil
         store.presentOverlay = { overlaid = $0 }
 
-        appearance.setPresentationOverride("terminal", .overlay)   // terminalApp declares .pane by default
+        appearance.setPresentationOverride("terminal", .overlay)  // terminalApp declares .pane by default
         store.selectApp(terminalApp)
 
         #expect(overlaid == "terminal")
-        #expect(workspaceManager.workspaces.count == 1)            // no new workspace created; it went to overlay
+        #expect(workspaceManager.workspaces.count == 1)  // no new workspace created; it went to overlay
     }
 }

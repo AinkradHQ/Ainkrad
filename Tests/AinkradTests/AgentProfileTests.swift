@@ -1,6 +1,7 @@
 // Tests/AinkradTests/AgentProfileTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("AgentProfile")
@@ -11,12 +12,13 @@ struct AgentProfileTests {
         #expect(a.toolPolicy == .all)
         #expect(a.routing.routerEnabled)
         #expect(a.routing.maxTier == nil)
-        #expect(a.permissionPosture == nil)   // nil = inherit workspace mode
+        #expect(a.permissionPosture == nil)  // nil = inherit workspace mode
     }
 
     @Test func codableRoundTrips() throws {
         var a = AgentProfile.custom(name: "R", instructions: "x")
-        a.routing = AgentRouting(routerEnabled: false, preferredModels: ["m"], allowedModels: ["m"], maxTier: .cheapPaid)
+        a.routing = AgentRouting(
+            routerEnabled: false, preferredModels: ["m"], allowedModels: ["m"], maxTier: .cheapPaid)
         a.defaultModel = "gpt-5-mini"
         a.icon = "wand.and.stars"
         let data = try JSONEncoder().encode(a)
@@ -27,9 +29,10 @@ struct AgentProfileTests {
     /// not throw, so upgrading the app never corrupts/loses existing agent data.
     @Test func decodesOldPayloadWithoutIconToDefault() throws {
         let current = AgentProfile.custom(name: "Legacy", instructions: "do stuff")
-        var json = try JSONSerialization.jsonObject(
-            with: JSONEncoder().encode(current)) as! [String: Any]
-        #expect(json["icon"] != nil)   // sanity: current encode does include it
+        var json =
+            try JSONSerialization.jsonObject(
+                with: JSONEncoder().encode(current)) as! [String: Any]
+        #expect(json["icon"] != nil)  // sanity: current encode does include it
         json.removeValue(forKey: "icon")
 
         let oldData = try JSONSerialization.data(withJSONObject: json)

@@ -1,7 +1,7 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
 import AinkradSignal
+import SwiftUI
 
 /// The feed rendered as collapsible per-app groups.
 ///
@@ -38,12 +38,17 @@ struct SignalFeedGroupedList: View {
                         // than one block appearing, which is the host's motion
                         // rule. Capped, because a stagger across nineteen rows
                         // stops reading as motion and starts reading as lag.
-                        ForEach(Array(group.events.enumerated().prefix(Self.staggerCap)),
-                                id: \.element.id) { index, event in
+                        ForEach(
+                            Array(group.events.enumerated().prefix(Self.staggerCap)),
+                            id: \.element.id
+                        ) { index, event in
                             row(group: group, event: event)
-                                .transition(reduceMotion ? .opacity : .opacity.animation(
-                                    .easeOut(duration: AinkradMotion.durationFast)
-                                        .delay(Double(index) * 0.025)))
+                                .transition(
+                                    reduceMotion
+                                        ? .opacity
+                                        : .opacity.animation(
+                                            .easeOut(duration: AinkradMotion.durationFast)
+                                                .delay(Double(index) * 0.025)))
                         }
                         if group.events.count > Self.staggerCap {
                             ForEach(group.events.dropFirst(Self.staggerCap)) { event in
@@ -53,8 +58,10 @@ struct SignalFeedGroupedList: View {
                     }
                 }
             }
-            .animation(reduceMotion ? nil : .easeOut(duration: AinkradMotion.durationBase),
-                       value: collapsed)
+            .animation(
+                reduceMotion ? nil : .easeOut(duration: AinkradMotion.durationBase),
+                value: collapsed
+            )
             .padding(.vertical, AinkradSpacing.xs + 2)
             .padding(.horizontal, AinkradSpacing.xs + 2)
         }
@@ -91,9 +98,11 @@ struct SignalFeedGroupedList: View {
                     .foregroundStyle(theme.foreground.opacity(0.45))
                     .rotationEffect(.degrees(isCollapsed ? 0 : 90))
                 Circle()
-                    .fill(group.worstUnread.map {
-                        SignalPresentation.status(for: $0).color(in: theme, statusColors: status)
-                    } ?? .clear)
+                    .fill(
+                        group.worstUnread.map {
+                            SignalPresentation.status(for: $0).color(in: theme, statusColors: status)
+                        } ?? .clear
+                    )
                     .frame(width: 5, height: 5)
                 Text(group.name)
                     .font(AinkradFont.display(11.5, weight: .semibold))

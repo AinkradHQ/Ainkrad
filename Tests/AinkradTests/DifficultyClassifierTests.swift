@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("DifficultyClassifier")
@@ -21,12 +22,21 @@ struct DifficultyClassifierTests {
     }
 
     @Test func escalatesOnFailureUntilCap() {
-        #expect(DifficultyClassifier.shouldEscalate(confidence: 0.9, threshold: 0.5, toolFailed: true, selfCritiqueFailed: false, attempt: 1, maxAttempts: 3))
-        #expect(!DifficultyClassifier.shouldEscalate(confidence: 0.9, threshold: 0.5, toolFailed: true, selfCritiqueFailed: false, attempt: 3, maxAttempts: 3))
+        #expect(
+            DifficultyClassifier.shouldEscalate(
+                confidence: 0.9, threshold: 0.5, toolFailed: true, selfCritiqueFailed: false, attempt: 1, maxAttempts: 3
+            ))
+        #expect(
+            !DifficultyClassifier.shouldEscalate(
+                confidence: 0.9, threshold: 0.5, toolFailed: true, selfCritiqueFailed: false, attempt: 3, maxAttempts: 3
+            ))
     }
 
     @Test func escalatesOnLowConfidence() {
-        #expect(DifficultyClassifier.shouldEscalate(confidence: 0.2, threshold: 0.5, toolFailed: false, selfCritiqueFailed: false, attempt: 1, maxAttempts: 3))
+        #expect(
+            DifficultyClassifier.shouldEscalate(
+                confidence: 0.2, threshold: 0.5, toolFailed: false, selfCritiqueFailed: false, attempt: 1,
+                maxAttempts: 3))
     }
 
     @Test func noModelStillReturnsRuleBasedDifficulty() {
@@ -41,6 +51,9 @@ struct DifficultyClassifierTests {
 
     @Test func escalationCapIsHardBound() {
         // Even with maximally bad signals, attempt >= maxAttempts must never escalate further.
-        #expect(!DifficultyClassifier.shouldEscalate(confidence: 0.0, threshold: 1.0, toolFailed: true, selfCritiqueFailed: true, attempt: 5, maxAttempts: 5))
+        #expect(
+            !DifficultyClassifier.shouldEscalate(
+                confidence: 0.0, threshold: 1.0, toolFailed: true, selfCritiqueFailed: true, attempt: 5, maxAttempts: 5)
+        )
     }
 }

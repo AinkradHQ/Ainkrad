@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitUI
+import SwiftUI
 
 /// Floating HUD listing running jobs. Auto-hides when idle — a permanently
 /// visible empty panel is chrome that earns nothing.
@@ -59,11 +59,13 @@ private struct JobRow: View {
 
             // Says "items", not a byte count, because that is what is actually
             // measured — see `OperationProgress`.
-            Text(job.isCancelled
-                 ? "Cancelling…"
-                 : "\(job.completedItems) of \(job.totalItems) items")
-                .font(AinkradFontResolver.font(.caption, typography: typo))
-                .foregroundStyle(theme.foreground.opacity(0.5))
+            Text(
+                job.isCancelled
+                    ? "Cancelling…"
+                    : "\(job.completedItems) of \(job.totalItems) items"
+            )
+            .font(AinkradFontResolver.font(.caption, typography: typo))
+            .foregroundStyle(theme.foreground.opacity(0.5))
 
             if !job.failures.isEmpty {
                 Text("\(job.failures.count) failed")

@@ -61,18 +61,18 @@ enum ConnectionFailure: Equatable, Sendable {
     /// disagreeing about whether the same status is the user's fault.
     static func forHTTP(status: Int) -> ConnectionFailure {
         switch status {
-        case 401, 403:  return .unauthorized(status: status)
-        case 404:       return .notFound(status: status)
-        case 429:       return .rateLimited(status: status)
+        case 401, 403: return .unauthorized(status: status)
+        case 404: return .notFound(status: status)
+        case 429: return .rateLimited(status: status)
         case 500...599: return .serverError(status: status)
-        default:        return .rejected(status: status)
+        default: return .rejected(status: status)
         }
     }
 }
 
 struct ConnectionTestResult: Equatable, Sendable {
     let ok: Bool
-    let message: String   // user-facing; NEVER contains the API key
+    let message: String  // user-facing; NEVER contains the API key
     /// Machine-readable reason, `nil` exactly when `ok`. Callers classify from
     /// this — never from `message`.
     let failure: ConnectionFailure?
@@ -95,8 +95,11 @@ final class ModelCatalogService {
         self.http = http
     }
 
-    func models(kind: ProviderKind, baseURL: String, credential: ProviderCredential, curatedFallback: [String]) async -> [String] {
-        await modelsResult(kind: kind, baseURL: baseURL, credential: credential, curatedFallback: curatedFallback).models
+    func models(kind: ProviderKind, baseURL: String, credential: ProviderCredential, curatedFallback: [String]) async
+        -> [String]
+    {
+        await modelsResult(kind: kind, baseURL: baseURL, credential: credential, curatedFallback: curatedFallback)
+            .models
     }
 
     /// Same as `models(...)`, but also signals whether the returned list was
@@ -104,7 +107,9 @@ final class ModelCatalogService {
     /// returned due to an invalid request, non-2xx response, transport error,
     /// or empty parse (`isLive == false`). Callers should only treat the list
     /// as authoritative (e.g. for reconciling a selected model) when `isLive`.
-    func modelsResult(kind: ProviderKind, baseURL: String, credential: ProviderCredential, curatedFallback: [String]) async -> (models: [String], isLive: Bool) {
+    func modelsResult(kind: ProviderKind, baseURL: String, credential: ProviderCredential, curatedFallback: [String])
+        async -> (models: [String], isLive: Bool)
+    {
         guard let request = Self.listRequest(kind: kind, baseURL: baseURL, credential: credential) else {
             return (curatedFallback, false)
         }
@@ -124,8 +129,9 @@ final class ModelCatalogService {
 
     func test(kind: ProviderKind, baseURL: String, credential: ProviderCredential) async -> ConnectionTestResult {
         guard let request = Self.listRequest(kind: kind, baseURL: baseURL, credential: credential) else {
-            return ConnectionTestResult(ok: false, message: "Invalid base URL",
-                                        failure: .invalidBaseURL)
+            return ConnectionTestResult(
+                ok: false, message: "Invalid base URL",
+                failure: .invalidBaseURL)
         }
         do {
             let (data, response) = try await http.data(for: request)
@@ -143,8 +149,9 @@ final class ModelCatalogService {
             let message = Self.errorMessage(data: data) ?? "HTTP \(response.statusCode)"
             return ConnectionTestResult(ok: false, message: message, failure: failure)
         } catch {
-            return ConnectionTestResult(ok: false, message: "Could not reach endpoint",
-                                        failure: .unreachable)
+            return ConnectionTestResult(
+                ok: false, message: "Could not reach endpoint",
+                failure: .unreachable)
         }
     }
 
@@ -159,7 +166,8 @@ final class ModelCatalogService {
     /// it authenticates with `authorization: Bearer <token>` — the same header the
     /// live `/v1/messages` OAuth path uses — NOT an (empty) `x-api-key`, which would
     /// 401 and silently drop discovery back to the curated fallback.
-    private static func listRequest(kind: ProviderKind, baseURL: String, credential: ProviderCredential) -> URLRequest? {
+    private static func listRequest(kind: ProviderKind, baseURL: String, credential: ProviderCredential) -> URLRequest?
+    {
         let base = trim(baseURL)
         guard let url = URL(string: base + "/models") else { return nil }
         var r = URLRequest(url: url)
@@ -192,11 +200,17 @@ final class ModelCatalogService {
     private static func parseModels(kind: ProviderKind, data: Data) -> [String]? {
         switch kind {
         case .openAICompatible, .claude:
-            struct List: Decodable { struct Item: Decodable { let id: String }; let data: [Item]? }
+            struct List: Decodable {
+                struct Item: Decodable { let id: String }
+                let data: [Item]?
+            }
             guard let list = try? JSONDecoder().decode(List.self, from: data) else { return nil }
             return list.data?.map(\.id) ?? []
         case .gemini:
-            struct List: Decodable { struct Item: Decodable { let name: String }; let models: [Item]? }
+            struct List: Decodable {
+                struct Item: Decodable { let name: String }
+                let models: [Item]?
+            }
             guard let list = try? JSONDecoder().decode(List.self, from: data) else { return nil }
             return list.models?.map {
                 $0.name.hasPrefix("models/") ? String($0.name.dropFirst("models/".count)) : $0.name
@@ -205,7 +219,10 @@ final class ModelCatalogService {
     }
 
     private static func errorMessage(data: Data) -> String? {
-        struct Envelope: Decodable { struct E: Decodable { let message: String? }; let error: E? }
+        struct Envelope: Decodable {
+            struct E: Decodable { let message: String? }
+            let error: E?
+        }
         return (try? JSONDecoder().decode(Envelope.self, from: data))?.error?.message
     }
 }

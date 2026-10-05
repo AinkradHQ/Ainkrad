@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Records that first-run setup finished, at which version, and which steps the
 /// user was allowed to walk past without satisfying.

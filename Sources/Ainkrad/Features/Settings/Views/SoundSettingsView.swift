@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Settings → Sound: the sound-effects master toggle + volume (AIN-108) and
 /// per-event cue configuration. Split out of General into its own section so
@@ -14,10 +14,13 @@ struct SoundSettingsView: View {
         let store = environment.generalSettingsStore
 
         return VStack(alignment: .leading, spacing: 16) {
-            AinkradSettingsPanel(title: "Sound",
-                                 hint: "Workspace interaction sounds.") {
+            AinkradSettingsPanel(
+                title: "Sound",
+                hint: "Workspace interaction sounds."
+            ) {
                 VStack(alignment: .leading, spacing: 16) {
-                    row(tokens: tokens,
+                    row(
+                        tokens: tokens,
                         title: "Sound effects",
                         subtitle: "Plays a short chime on HUD open/close, install, and other key actions.",
                         isOn: store.soundEnabled,
@@ -30,8 +33,11 @@ struct SoundSettingsView: View {
             }
 
             if store.soundEnabled {
-                AinkradSettingsPanel(title: "Sound effects",
-                                     hint: "Enable each cue individually and choose which effect it plays. ▶ previews the selected effect.") {
+                AinkradSettingsPanel(
+                    title: "Sound effects",
+                    hint:
+                        "Enable each cue individually and choose which effect it plays. ▶ previews the selected effect."
+                ) {
                     VStack(alignment: .leading, spacing: 16) {
                         ForEach(UISound.allCases) { event in
                             soundEventRow(tokens: tokens, store: store, event: event)
@@ -128,8 +134,10 @@ struct SoundSettingsView: View {
         .overlay(ChamferShape(cut: AinkradRadius.md).strokeBorder(tokens.accentPrimary.opacity(0.15), lineWidth: 1))
     }
 
-    private func row(tokens: DesignTokens, title: String, subtitle: String,
-                      isOn: Bool, action: @escaping (Bool) -> Void) -> some View {
+    private func row(
+        tokens: DesignTokens, title: String, subtitle: String,
+        isOn: Bool, action: @escaping (Bool) -> Void
+    ) -> some View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)

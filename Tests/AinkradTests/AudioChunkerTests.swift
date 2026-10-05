@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("AudioChunker")
@@ -18,7 +19,8 @@ struct AudioChunkerTests {
     }
 
     @Test func nonPositiveDurationIsSingleWholeFileChunk() {
-        #expect(AudioChunker.plan(totalDuration: 0, maxChunk: 120)
+        #expect(
+            AudioChunker.plan(totalDuration: 0, maxChunk: 120)
                 == [AudioChunker.Chunk(index: 0, start: 0, duration: 0)])
     }
 }

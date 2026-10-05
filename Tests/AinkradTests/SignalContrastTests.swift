@@ -1,8 +1,9 @@
-import Testing
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
 import AinkradSignal
+import SwiftUI
+import Testing
+
 @testable import Ainkrad
 
 /// The severity ramp has to stay legible on the surfaces a feed row actually
@@ -29,24 +30,27 @@ struct SignalContrastTests {
     /// themes a FAILURE glyph is the least legible thing in the feed, which
     /// is the exact inverse of what it should be.
     private let knownShortfalls: Set<String> = [
-        "nord/failure/hover",              // 2.46
-        "solarizedDark/failure/hover",     // 2.12
-        "solarizedDark/failure/surface",   // 2.81
+        "nord/failure/hover",  // 2.46
+        "solarizedDark/failure/hover",  // 2.12
+        "solarizedDark/failure/surface",  // 2.81
     ]
 
     private func check(_ ratio: Double, _ key: String) {
         if knownShortfalls.contains(key) {
             // Guard the ratchet from the other side too: if a token is fixed,
             // this fails and the entry must be removed.
-            #expect(ratio < minimumRatio,
-                    "\(key) now passes at \(ratio) — remove it from knownShortfalls")
+            #expect(
+                ratio < minimumRatio,
+                "\(key) now passes at \(ratio) — remove it from knownShortfalls")
         } else {
             #expect(ratio >= minimumRatio, "\(key) is \(ratio)")
         }
     }
 
-    private func severityColor(_ severity: SignalSeverity,
-                               tokens: DesignTokens) -> Color {
+    private func severityColor(
+        _ severity: SignalSeverity,
+        tokens: DesignTokens
+    ) -> Color {
         switch SignalPresentation.status(for: severity) {
         case .success: return tokens.success
         case .warning: return tokens.warning
@@ -61,9 +65,10 @@ struct SignalContrastTests {
         for theme in Theme.allCases {
             let tokens = theme.tokens
             for severity in SignalSeverity.allCases {
-                check(severityColor(severity, tokens: tokens)
-                    .contrastRatio(against: tokens.surface),
-                      "\(theme.rawValue)/\(severity.rawValue)/surface")
+                check(
+                    severityColor(severity, tokens: tokens)
+                        .contrastRatio(against: tokens.surface),
+                    "\(theme.rawValue)/\(severity.rawValue)/surface")
             }
         }
     }
@@ -76,9 +81,10 @@ struct SignalContrastTests {
         for theme in Theme.allCases {
             let tokens = theme.tokens
             for severity in SignalSeverity.allCases {
-                check(severityColor(severity, tokens: tokens)
-                    .contrastRatio(against: tokens.surfaceElevated),
-                      "\(theme.rawValue)/\(severity.rawValue)/hover")
+                check(
+                    severityColor(severity, tokens: tokens)
+                        .contrastRatio(against: tokens.surfaceElevated),
+                    "\(theme.rawValue)/\(severity.rawValue)/hover")
             }
         }
     }
@@ -90,9 +96,10 @@ struct SignalContrastTests {
         for theme in Theme.allCases {
             let tokens = theme.tokens
             for severity in SignalSeverity.allCases {
-                check(tokens.background
-                    .contrastRatio(against: severityColor(severity, tokens: tokens)),
-                      "\(theme.rawValue)/\(severity.rawValue)/badge")
+                check(
+                    tokens.background
+                        .contrastRatio(against: severityColor(severity, tokens: tokens)),
+                    "\(theme.rawValue)/\(severity.rawValue)/badge")
             }
         }
     }

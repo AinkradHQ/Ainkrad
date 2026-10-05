@@ -1,5 +1,5 @@
-import Foundation
 import AinkradSignal
+import Foundation
 
 /// What an emitter can express. Deliberately has **no `source` field**: the
 /// only way to name a source is `SignalIngest.accept(_:from:)`, whose `from`
@@ -15,14 +15,16 @@ public struct SignalDraft: Sendable, Equatable {
     public var actions: [SignalAction]
     public var dedupeKey: String?
 
-    public init(kind: String,
-                severity: SignalSeverity,
-                title: String,
-                body: String? = nil,
-                importance: SignalImportance = .normal,
-                deepLink: SignalDeepLink? = nil,
-                actions: [SignalAction] = [],
-                dedupeKey: String? = nil) {
+    public init(
+        kind: String,
+        severity: SignalSeverity,
+        title: String,
+        body: String? = nil,
+        importance: SignalImportance = .normal,
+        deepLink: SignalDeepLink? = nil,
+        actions: [SignalAction] = [],
+        dedupeKey: String? = nil
+    ) {
         self.kind = kind
         self.severity = severity
         self.title = title

@@ -7,8 +7,10 @@ import Foundation
 enum RepoInstructionWalker {
     static let filenames = ["CLAUDE.md", "AGENTS.md"]
 
-    static func instructionFiles(startingAt start: URL, fileManager: FileManager = .default,
-                                 maxDepth: Int = 40) -> [URL] {
+    static func instructionFiles(
+        startingAt start: URL, fileManager: FileManager = .default,
+        maxDepth: Int = 40
+    ) -> [URL] {
         var out: [URL] = []
         var dir = start.standardizedFileURL
         var depth = 0
@@ -21,10 +23,10 @@ enum RepoInstructionWalker {
                 }
             }
             if fileManager.fileExists(atPath: dir.appendingPathComponent(".git").path) {
-                break // reached the repo root (inclusive) — never ascend above it
+                break  // reached the repo root (inclusive) — never ascend above it
             }
             let parent = dir.deletingLastPathComponent().standardizedFileURL
-            if parent.path == dir.path { break } // reached filesystem root
+            if parent.path == dir.path { break }  // reached filesystem root
             dir = parent
             depth += 1
         }

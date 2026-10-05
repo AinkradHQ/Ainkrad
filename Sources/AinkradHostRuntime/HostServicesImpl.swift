@@ -1,7 +1,7 @@
-import Foundation
-import Observation
-import OSLog
 import AinkradAppKit
+import Foundation
+import OSLog
+import Observation
 
 /// The host's `HostServices`, scoped to one app id. `theme` is an observable
 /// wrapper kept in sync with the theme manager, so a loaded app follows theme
@@ -33,14 +33,17 @@ public final class HostServicesImpl: HostServices, PluginInstanceIdentity {
     public let signals: PluginSignalEmitter
     private let themeManager: ThemeManager
 
-    public init(appID: String, dataRootURL: URL, secretStore: SecretStore, themeManager: ThemeManager,
-         hub: AgentContextRegistryHub, actionHub: AgentActionRegistryHub,
-         launchHub: PluginLaunchHub,
-         signalHub: SignalEmitterHub,
-         declaredPresentation: PluginPresentation,
-         declaredMode: PluginMode = .advanced,
-         appAppearanceStore: AppAppearanceStore) {
-        self.documents = ScopedPluginDocumentStore(directory: dataRootURL.appendingPathComponent(appID, isDirectory: true))
+    public init(
+        appID: String, dataRootURL: URL, secretStore: SecretStore, themeManager: ThemeManager,
+        hub: AgentContextRegistryHub, actionHub: AgentActionRegistryHub,
+        launchHub: PluginLaunchHub,
+        signalHub: SignalEmitterHub,
+        declaredPresentation: PluginPresentation,
+        declaredMode: PluginMode = .advanced,
+        appAppearanceStore: AppAppearanceStore
+    ) {
+        self.documents = ScopedPluginDocumentStore(
+            directory: dataRootURL.appendingPathComponent(appID, isDirectory: true))
         self.secrets = ScopedPluginSecretStore(appID: appID, backing: secretStore)
         self.log = PluginLoggerImpl(appID: appID)
         self.themeManager = themeManager
@@ -87,7 +90,9 @@ public final class HostPresentationControl: PluginPresentationControl {
     private let declaredDefault: PluginPresentation
     private let store: AppAppearanceStore
     public init(appID: String, declaredDefault: PluginPresentation, store: AppAppearanceStore) {
-        self.appID = appID; self.declaredDefault = declaredDefault; self.store = store
+        self.appID = appID
+        self.declaredDefault = declaredDefault
+        self.store = store
     }
     public var current: PluginPresentation { store.presentationOverride(appID) ?? declaredDefault }
     public func set(_ presentation: PluginPresentation) { store.setPresentationOverride(appID, presentation) }
@@ -108,7 +113,9 @@ public final class HostModeControl: PluginModeControl {
     private let declaredDefault: PluginMode
     private let store: AppAppearanceStore
     public init(appID: String, declaredDefault: PluginMode, store: AppAppearanceStore) {
-        self.appID = appID; self.declaredDefault = declaredDefault; self.store = store
+        self.appID = appID
+        self.declaredDefault = declaredDefault
+        self.store = store
     }
     public var current: PluginMode { store.modeOverride(appID) ?? declaredDefault }
     public func set(_ mode: PluginMode) { store.setModeOverride(appID, mode) }
@@ -123,7 +130,8 @@ public final class HostOverlaySizeControl: PluginOverlaySizeControl {
     private let appID: String
     private let store: AppAppearanceStore
     public init(appID: String, store: AppAppearanceStore) {
-        self.appID = appID; self.store = store
+        self.appID = appID
+        self.store = store
     }
     public var current: PluginOverlaySize { store.effectiveOverlaySize(appID) }
     public func set(_ size: PluginOverlaySize) { store.setOverlaySizeOverride(appID, size) }
@@ -149,11 +157,16 @@ public final class ScopedPluginDocumentStore: PluginDocumentStore {
 
     public func setData(_ data: Data?, forKey key: String) {
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        guard let data else { try? FileManager.default.removeItem(at: fileURL(key)); return }
+        guard let data else {
+            try? FileManager.default.removeItem(at: fileURL(key))
+            return
+        }
         do {
             try data.write(to: fileURL(key), options: .atomic)
         } catch {
-            Log.persistence.error("Failed to write \(data.count, privacy: .public) bytes to \(self.fileURL(key).lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            Log.persistence.error(
+                "Failed to write \(data.count, privacy: .public) bytes to \(self.fileURL(key).lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
+            )
         }
     }
 }
@@ -163,7 +176,10 @@ public final class ScopedPluginDocumentStore: PluginDocumentStore {
 public final class ScopedPluginSecretStore: PluginSecretStore {
     private let appID: String
     private let backing: SecretStore
-    public init(appID: String, backing: SecretStore) { self.appID = appID; self.backing = backing }
+    public init(appID: String, backing: SecretStore) {
+        self.appID = appID
+        self.backing = backing
+    }
 
     // Separator OUTSIDE the appID allowlist ([A-Za-z0-9._-]) so the appID prefix
     // is unambiguous and no two distinct (appID, key) pairs collide.

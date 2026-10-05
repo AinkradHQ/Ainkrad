@@ -1,7 +1,7 @@
-import SwiftUI
-import AppKit
 import AinkradAppKit
 import AinkradHostRuntime
+import AppKit
+import SwiftUI
 
 /// Shared visual language for the summonable HUD overlays — Launcher,
 /// Settings, App Store, Workspace Overview, Quit. Centralizing the backdrop
@@ -72,8 +72,10 @@ private struct HUDPanelChrome: ViewModifier {
                 ChamferShape(cut: OverlayChrome.cornerRadius)
                     .strokeBorder(
                         LinearGradient(
-                            colors: [tokens.accentSecondary.opacity(0.55),
-                                     tokens.accentPrimary.opacity(0.28)],
+                            colors: [
+                                tokens.accentSecondary.opacity(0.55),
+                                tokens.accentPrimary.opacity(0.28),
+                            ],
                             startPoint: .top, endPoint: .bottom),
                         lineWidth: 1)
             )
@@ -85,8 +87,10 @@ extension View {
     /// Applies the shared HUD panel finish (background, clip, border glow,
     /// shadow stack) used by the Launcher, Settings, App Store, Workspace
     /// Overview, and Quit panels.
-    func hudPanelChrome(tokens: DesignTokens,
-                        blending: NSVisualEffectView.BlendingMode = .withinWindow) -> some View {
+    func hudPanelChrome(
+        tokens: DesignTokens,
+        blending: NSVisualEffectView.BlendingMode = .withinWindow
+    ) -> some View {
         modifier(HUDPanelChrome(tokens: tokens, blending: blending))
     }
 }

@@ -1,6 +1,7 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitContract
+import SwiftUI
+
 import protocol AinkradAppKit.AinkradApp
 
 /// Where a registered app comes from.
@@ -73,12 +74,14 @@ public struct RegisteredApp: Identifiable {
     /// to say why.
     public var declaredSignalSubscriptions: [String] = []
 
-    public init(id: String, displayName: String, icon: String, summary: String = "",
-                isEnabledByDefault: Bool, source: AppSource,
-                makeRootView: @escaping @MainActor () -> AnyView,
-                makeSettingsView: @escaping @MainActor () -> AnyView,
-                chromeFill: @escaping @MainActor () -> Color?,
-                presentation: PluginPresentation = .pane) {
+    public init(
+        id: String, displayName: String, icon: String, summary: String = "",
+        isEnabledByDefault: Bool, source: AppSource,
+        makeRootView: @escaping @MainActor () -> AnyView,
+        makeSettingsView: @escaping @MainActor () -> AnyView,
+        chromeFill: @escaping @MainActor () -> Color?,
+        presentation: PluginPresentation = .pane
+    ) {
         self.id = id
         self.displayName = displayName
         self.icon = icon
@@ -102,11 +105,11 @@ public struct PluginLoadFailure: Equatable {
     }
 }
 
-public extension RegisteredApp {
+extension RegisteredApp {
     /// Whether this app offers a basic mode at all. Drives whether the host
     /// shows its "Open in" setting and its mode affordance — an app that never
     /// conformed must not be offered a switch that does nothing.
-    var supportsModes: Bool { makeRootViewForMode != nil }
+    public var supportsModes: Bool { makeRootViewForMode != nil }
 
     /// The root view for `mode`.
     ///
@@ -114,7 +117,7 @@ public extension RegisteredApp {
     /// every caller can pass a mode unconditionally and a non-conforming app
     /// behaves exactly as it did before generation 11.
     @MainActor
-    func makeRootView(mode: PluginMode) -> AnyView {
+    public func makeRootView(mode: PluginMode) -> AnyView {
         guard let makeRootViewForMode else { return makeRootView() }
         return makeRootViewForMode(mode)
     }

@@ -1,7 +1,8 @@
-import Testing
-import Foundation
 import AinkradAppKit
 import AinkradSignal
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @MainActor
@@ -9,17 +10,21 @@ import AinkradSignal
 struct SignalRowMenuTests {
     private let raven = SignalSource.app(appID: "raven")
     private func event(kind: String = "build.failed") -> SignalEvent {
-        SignalEvent(timestamp: Date(timeIntervalSince1970: 0), source: raven,
-                    kind: kind, severity: .failure, title: "Build failed",
-                    body: "3 errors")
+        SignalEvent(
+            timestamp: Date(timeIntervalSince1970: 0), source: raven,
+            kind: kind, severity: .failure, title: "Build failed",
+            body: "3 errors")
     }
-    private func items(_ rules: RoutingRules, isRead: Bool = false,
-                       isPinned: Bool = false) -> [AinkradMenuItem] {
-        SignalRowMenu.items(for: event(), rules: rules, sourceName: "Raven",
-                            isRead: isRead, isPinned: isPinned,
-                            onMuteKind: {}, onUnmuteKind: {}, onMuteSource: {},
-                            onToggleRead: {}, onCopy: {}, onDismiss: {},
-                            onTogglePin: {})
+    private func items(
+        _ rules: RoutingRules, isRead: Bool = false,
+        isPinned: Bool = false
+    ) -> [AinkradMenuItem] {
+        SignalRowMenu.items(
+            for: event(), rules: rules, sourceName: "Raven",
+            isRead: isRead, isPinned: isPinned,
+            onMuteKind: {}, onUnmuteKind: {}, onMuteSource: {},
+            onToggleRead: {}, onCopy: {}, onDismiss: {},
+            onTogglePin: {})
     }
 
     @Test("the mute item names the source and the kind")
@@ -73,8 +78,9 @@ struct SignalRowMenuTests {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm"
         formatter.timeZone = TimeZone(identifier: "UTC")
-        let text = SignalRowMenu.clipboardText(for: event(), sourceName: "Raven",
-                                               formatter: formatter)
+        let text = SignalRowMenu.clipboardText(
+            for: event(), sourceName: "Raven",
+            formatter: formatter)
         // The point is pasting a build error into a chat, so the body must be
         // there in full — the row itself clamps it to two lines.
         #expect(text == "[1970-01-01 00:00] Raven · build.failed\nBuild failed\n3 errors")
@@ -85,8 +91,9 @@ struct SignalRowMenuTests {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy"
         let bare = SignalEvent(source: .host, kind: "k", severity: .info, title: "T")
-        let text = SignalRowMenu.clipboardText(for: bare, sourceName: "Ainkrad",
-                                               formatter: formatter)
+        let text = SignalRowMenu.clipboardText(
+            for: bare, sourceName: "Ainkrad",
+            formatter: formatter)
         #expect(!text.hasSuffix("\n"))
     }
 

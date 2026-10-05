@@ -1,6 +1,7 @@
-import Testing
-@testable import Ainkrad
 import AinkradAppKitContract
+import Testing
+
+@testable import Ainkrad
 
 @Suite("SettingsNavigator")
 @MainActor

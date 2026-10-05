@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/MCP/MCPClient.swift
 import Foundation
-import AinkradHostRuntime
 
 /// One JSON-RPC client per configured MCP server. Owns the transport, performs
 /// the MCP handshake, and correlates requests to responses by id. Malformed
@@ -44,8 +44,10 @@ actor MCPClient {
         do {
             let result = try await request(method: "initialize", params: params)
             serverCapabilities = result["capabilities"] ?? .object([:])
-            try await transport.send(MCPRPC.notification(method: "notifications/initialized",
-                                                         params: .object([:])))
+            try await transport.send(
+                MCPRPC.notification(
+                    method: "notifications/initialized",
+                    params: .object([:])))
             isConnected = true
         } catch {
             // Handshake failed (server error, transport drop, unexpected
@@ -119,7 +121,7 @@ actor MCPClient {
                 lastError = .transport(String(describing: error))
             }
             if attempt < maxAttempts {
-                let backoffMs = min(100 * (1 << attempt), 2_000)   // ceiling: 2s
+                let backoffMs = min(100 * (1 << attempt), 2_000)  // ceiling: 2s
                 try? await Task.sleep(nanoseconds: UInt64(backoffMs) * 1_000_000)
             }
         }
@@ -136,8 +138,9 @@ actor MCPClient {
         let outcome = await withCheckedContinuation { (cont: CheckedContinuation<Result<JSONValue, MCPError>, Never>) in
             pending[id] = cont
             Task {
-                do { try await transport.send(message) }
-                catch { await self.resolve(id: id, .failure(.transport(String(describing: error)))) }
+                do { try await transport.send(message) } catch {
+                    await self.resolve(id: id, .failure(.transport(String(describing: error))))
+                }
             }
             // Bounded round-trip: if no response is correlated within the
             // ceiling, resolve the waiter with a typed error. `resolve` no-ops
@@ -170,12 +173,15 @@ actor MCPClient {
     }
 
     private func handle(_ message: JSONValue) {
-        guard !MCPRPC.isNotification(message) else { return }   // ignore server notifications in v1
+        guard !MCPRPC.isNotification(message) else { return }  // ignore server notifications in v1
         switch MCPRPC.decodeResponse(message) {
         case .success(let (id, result)): resolve(id: id, .success(result))
         case .failure(let error):
-            if let id = message["id"]?.stringValue { resolve(id: id, .failure(error)) }
-            else { Log.mcp.error("dropped malformed MCP message (no id, not a notification)") }
+            if let id = message["id"]?.stringValue {
+                resolve(id: id, .failure(error))
+            } else {
+                Log.mcp.error("dropped malformed MCP message (no id, not a notification)")
+            }
         }
     }
 

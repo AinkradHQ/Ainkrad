@@ -1,8 +1,9 @@
+import AinkradHostRuntime
 // Tests/AinkradTests/SkillsManagerViewModelTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("SkillsManagerViewModel")
 @MainActor
@@ -16,7 +17,7 @@ struct SkillsManagerViewModelTests {
         let registry = SkillRegistry(paths: SkillPaths(root: root))
         let store = SkillCommandStore(persistence: InMemoryPersistenceStore())
         let commandRegistry = CommandRegistry(builtins: [
-            SlashCommand(name: "new", summary: "", usage: "/new") { _, _ in .handled(note: nil) },
+            SlashCommand(name: "new", summary: "", usage: "/new") { _, _ in .handled(note: nil) }
         ])
         return (registry, store, commandRegistry, root)
     }
@@ -31,10 +32,11 @@ struct SkillsManagerViewModelTests {
         // Not registered yet — mirrors the Task 12 gap: bootstrap only ran once.
         #expect(commandRegistry.parse("/ship") == nil)
 
-        let vm = SkillsManagerViewModel(registry: registry, store: store,
-                                        resyncCommands: { [store] in
-                                            for cmd in store.slashCommands(registry: registry) { commandRegistry.register(cmd) }
-                                        })
+        let vm = SkillsManagerViewModel(
+            registry: registry, store: store,
+            resyncCommands: { [store] in
+                for cmd in store.slashCommands(registry: registry) { commandRegistry.register(cmd) }
+            })
         #expect(vm.bind(command: "ship", toSkill: "deploy"))
 
         // The freshly-bound command now resolves through the SAME live registry,
@@ -77,7 +79,7 @@ struct SkillsManagerViewModelTests {
         #expect(vm.bindError != nil)
         #expect(store.all().isEmpty)
         #expect(!resyncCalled)
-        #expect(commandRegistry.parse("/new") != nil)   // builtin untouched
+        #expect(commandRegistry.parse("/new") != nil)  // builtin untouched
     }
 
     @Test func bindRejectsAnUnsafeNameAndSurfacesAnError() throws {
@@ -111,7 +113,10 @@ struct SkillsManagerViewModelTests {
 
         #expect(registry.skill(named: "deploy") == nil)
         let result = commandRegistry.run("/ship", on: TestSessionFactory.make())
-        guard case .handled(let note) = result, let note else { Issue.record("expected a broken-binding note"); return }
+        guard case .handled(let note) = result, let note else {
+            Issue.record("expected a broken-binding note")
+            return
+        }
         #expect(note.contains("deploy"))
     }
 

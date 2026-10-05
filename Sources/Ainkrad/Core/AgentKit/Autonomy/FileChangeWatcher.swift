@@ -1,5 +1,5 @@
-import Foundation
 import CoreServices
+import Foundation
 
 enum GlobMatcher {
     /// nil glob = match any path; else fnmatch the last path component.
@@ -20,14 +20,19 @@ final class FileChangeWatcher {
 
     init(debounceInterval: TimeInterval = 1) { self.debounceInterval = debounceInterval }
 
-    func watch(scheduleID: UUID, path: String, glob: String?,
-               onChange: @escaping @MainActor (TriggerEvent) -> Void) {
+    func watch(
+        scheduleID: UUID, path: String, glob: String?,
+        onChange: @escaping @MainActor (TriggerEvent) -> Void
+    ) {
         let debouncer = Debouncer(interval: debounceInterval)
         debouncers[scheduleID] = debouncer
 
         // The FSEvents C callback hops back to the main actor, filters by glob,
         // and debounces before emitting a single coalesced event.
-        final class Context { let handler: (Set<String>) -> Void; init(_ h: @escaping (Set<String>) -> Void) { handler = h } }
+        final class Context {
+            let handler: (Set<String>) -> Void
+            init(_ h: @escaping (Set<String>) -> Void) { handler = h }
+        }
         let ctxObject = Context { changed in
             let matching = changed.filter { GlobMatcher.matches($0, glob: glob) }
             guard !matching.isEmpty else { return }
@@ -36,13 +41,14 @@ final class FileChangeWatcher {
             }
         }
         let unmanaged = Unmanaged.passRetained(ctxObject)
-        var context = FSEventStreamContext(version: 0, info: unmanaged.toOpaque(),
-                                           retain: nil,
-                                           release: { info in
-                                               guard let info else { return }
-                                               Unmanaged<Context>.fromOpaque(info).release()
-                                           },
-                                           copyDescription: nil)
+        var context = FSEventStreamContext(
+            version: 0, info: unmanaged.toOpaque(),
+            retain: nil,
+            release: { info in
+                guard let info else { return }
+                Unmanaged<Context>.fromOpaque(info).release()
+            },
+            copyDescription: nil)
         let callback: FSEventStreamCallback = { _, info, count, paths, _, _ in
             guard let info else { return }
             let ctx = Unmanaged<Context>.fromOpaque(info).takeUnretainedValue()
@@ -52,11 +58,14 @@ final class FileChangeWatcher {
             let snapshot = changed
             Task { @MainActor in ctx.handler(snapshot) }
         }
-        guard let stream = FSEventStreamCreate(
-            kCFAllocatorDefault, callback, &context, [path] as CFArray,
-            FSEventStreamEventId(kFSEventStreamEventIdSinceNow), 0.5,
-            FSEventStreamCreateFlags(kFSEventStreamCreateFlagFileEvents)) else {
-            unmanaged.release(); return
+        guard
+            let stream = FSEventStreamCreate(
+                kCFAllocatorDefault, callback, &context, [path] as CFArray,
+                FSEventStreamEventId(kFSEventStreamEventIdSinceNow), 0.5,
+                FSEventStreamCreateFlags(kFSEventStreamCreateFlagFileEvents))
+        else {
+            unmanaged.release()
+            return
         }
         FSEventStreamSetDispatchQueue(stream, DispatchQueue.global(qos: .utility))
         FSEventStreamStart(stream)
@@ -67,8 +76,10 @@ final class FileChangeWatcher {
     /// (glob nil) so ref updates (checkout, commit, merge) fire the schedule.
     /// PROVISIONAL: if a native Git Mage change-event seam exists, prefer
     /// subscribing to it instead of polling `.git` via FSEvents.
-    func watchGitChange(scheduleID: UUID, repoPath: String,
-                        onChange: @escaping @MainActor (TriggerEvent) -> Void) {
+    func watchGitChange(
+        scheduleID: UUID, repoPath: String,
+        onChange: @escaping @MainActor (TriggerEvent) -> Void
+    ) {
         watch(scheduleID: scheduleID, path: repoPath + "/.git", glob: nil, onChange: onChange)
     }
 

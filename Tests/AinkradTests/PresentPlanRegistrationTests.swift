@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("PresentPlanRegistration")
 @MainActor
@@ -17,12 +18,12 @@ struct PresentPlanRegistrationTests {
         let plan = BuiltInAgents.plan.toolPolicy
         #expect(plan.allows(toolName: "present_plan", permission: .memory))
         #expect(plan.allows(toolName: "read_file", permission: .read))
-        #expect(!plan.allows(toolName: "edit_file", permission: .write))   // still read-only for edits
+        #expect(!plan.allows(toolName: "edit_file", permission: .write))  // still read-only for edits
     }
 
     @Test func buildPersonaDeniesPresentPlanButKeepsEverythingElse() {
         let build = BuiltInAgents.build.toolPolicy
-        #expect(!build.allows(toolName: "present_plan", permission: .memory))   // Plan-only
+        #expect(!build.allows(toolName: "present_plan", permission: .memory))  // Plan-only
         #expect(build.allows(toolName: "edit_file", permission: .write))
         #expect(build.allows(toolName: "read_file", permission: .read))
         #expect(build.allows(toolName: "memory_write", permission: .memory))

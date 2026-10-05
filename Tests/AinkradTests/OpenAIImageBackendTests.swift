@@ -1,14 +1,19 @@
-import Testing
-import Foundation
 import AinkradHostRuntime
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("OpenAIImageBackend")
 struct OpenAIImageBackendTests {
     private struct StubHTTP: DataHTTPClient {
-        let json: String; let status: Int
+        let json: String
+        let status: Int
         func data(for request: URLRequest) async throws -> (Data, HTTPURLResponse) {
-            (Data(json.utf8), HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!)
+            (
+                Data(json.utf8),
+                HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!
+            )
         }
     }
     @Test func notConfiguredWithoutKey() {
@@ -18,7 +23,8 @@ struct OpenAIImageBackendTests {
     @Test func decodesBase64Image() async throws {
         let secrets = InMemorySecretStore()
         secrets.setSecret("sk-test", for: OpenAIImageBackend.secretID)
-        let backend = OpenAIImageBackend(secrets: secrets,
+        let backend = OpenAIImageBackend(
+            secrets: secrets,
             http: StubHTTP(json: #"{"data":[{"b64_json":"QUJD"}]}"#, status: 200))
         let img = try await backend.generateImage(prompt: "a cat")
         #expect(img.base64 == "QUJD")

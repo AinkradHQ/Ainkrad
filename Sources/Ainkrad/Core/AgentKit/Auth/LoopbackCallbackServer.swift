@@ -1,7 +1,10 @@
 import Foundation
 import Network
 
-struct CallbackResult: Equatable { let code: String; let state: String }
+struct CallbackResult: Equatable {
+    let code: String
+    let state: String
+}
 enum LoopbackError: Error, Equatable { case bindFailed, timedOut, malformedCallback }
 
 /// One-shot loopback HTTP listener on 127.0.0.1:<port>. Captures the OAuth
@@ -104,8 +107,9 @@ actor LoopbackCallbackServer {
 
     private func process(data: Data?, connection: NWConnection) {
         guard let data, let request = String(data: data, encoding: .utf8),
-              let firstLine = request.split(separator: "\r\n").first,
-              let rawPath = firstLine.split(separator: " ").dropFirst().first else {
+            let firstLine = request.split(separator: "\r\n").first,
+            let rawPath = firstLine.split(separator: " ").dropFirst().first
+        else {
             respond(on: connection, status: "400 Bad Request", body: nil)
             return
         }
@@ -145,9 +149,12 @@ actor LoopbackCallbackServer {
 
     private nonisolated func respond(on connection: NWConnection, status: String, body: String?) {
         let html = body ?? ""
-        let response = "HTTP/1.1 \(status)\r\nContent-Type: text/html\r\nContent-Length: \(html.utf8.count)\r\n\r\n" + html
-        connection.send(content: Data(response.utf8), completion: .contentProcessed { _ in
-            connection.cancel()
-        })
+        let response =
+            "HTTP/1.1 \(status)\r\nContent-Type: text/html\r\nContent-Length: \(html.utf8.count)\r\n\r\n" + html
+        connection.send(
+            content: Data(response.utf8),
+            completion: .contentProcessed { _ in
+                connection.cancel()
+            })
     }
 }

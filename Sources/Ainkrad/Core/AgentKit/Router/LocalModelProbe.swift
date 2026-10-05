@@ -24,8 +24,9 @@ final class LocalModelProbe {
     /// Discovered local model ids, or `[]` when the local server is down —
     /// never throws, never hangs.
     func availableModels(for connection: Connection, apiKey: String) async -> [String] {
-        let result = await catalog.modelsResult(kind: connection.kind, baseURL: connection.baseURL,
-                                                credential: .apiKey(apiKey), curatedFallback: [])
+        let result = await catalog.modelsResult(
+            kind: connection.kind, baseURL: connection.baseURL,
+            credential: .apiKey(apiKey), curatedFallback: [])
         // Only trust a live fetch — a curated fallback for a down local server is meaningless.
         return result.isLive ? result.models : []
     }

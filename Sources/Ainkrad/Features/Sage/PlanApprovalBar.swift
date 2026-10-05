@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Pure title helper for the plan approval bar.
 enum PlanApprovalPresentation {
@@ -36,10 +36,12 @@ struct PlanApprovalBar: View {
                     .lineLimit(1)
             }
             Spacer(minLength: 12)
-            PlanBarButton(title: "Keep planning", tint: tokens.accentTertiary, filled: false,
-                          tokens: tokens, action: onKeepPlanning)
-            PlanBarButton(title: "Approve & Build", tint: tokens.accentPrimary, filled: true,
-                          tokens: tokens, action: onApproveBuild)
+            PlanBarButton(
+                title: "Keep planning", tint: tokens.accentTertiary, filled: false,
+                tokens: tokens, action: onKeepPlanning)
+            PlanBarButton(
+                title: "Approve & Build", tint: tokens.accentPrimary, filled: true,
+                tokens: tokens, action: onApproveBuild)
         }
         .padding(.horizontal, 14).padding(.vertical, 9)
         .frame(maxWidth: .infinity, alignment: .leading)

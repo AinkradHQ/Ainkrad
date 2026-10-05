@@ -1,8 +1,8 @@
-import SwiftUI
-import AppKit
 import AinkradAppKit
 import AinkradAppKitUI
 import AinkradHostRuntime
+import AppKit
+import SwiftUI
 
 /// What a row's context menu can do.
 ///
@@ -82,8 +82,7 @@ private struct HoardRightClickCatcher: NSViewRepresentable {
         }
 
         override func mouseDown(with event: NSEvent) {
-            if event.modifierFlags.contains(.control) { onRightClick?() }
-            else { super.mouseDown(with: event) }
+            if event.modifierFlags.contains(.control) { onRightClick?() } else { super.mouseDown(with: event) }
         }
     }
 }
@@ -159,8 +158,10 @@ private struct HoardContextMenuRow: View {
             .foregroundStyle(tint)
             .padding(.horizontal, AinkradSpacing.sm)
             .padding(.vertical, AinkradSpacing.xs)
-            .background(ChamferShape(cut: 4).fill(
-                hovering ? tokens.accentSecondary.opacity(0.14) : .clear))
+            .background(
+                ChamferShape(cut: 4).fill(
+                    hovering ? tokens.accentSecondary.opacity(0.14) : .clear)
+            )
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -179,8 +180,10 @@ extension View {
     /// Until this existed, **every** operation in Hoard was keyboard-only —
     /// rename was F2 and nothing else, which on a Mac laptop means Fn+F2, so
     /// the single most ordinary thing you do to a file was effectively hidden.
-    func fileRowMenu(entry: FileEntry, tab: HoardTab,
-                     actions: FileRowMenuActions) -> some View {
+    func fileRowMenu(
+        entry: FileEntry, tab: HoardTab,
+        actions: FileRowMenuActions
+    ) -> some View {
         modifier(HoardRowMenu(entry: entry, tab: tab, actions: actions))
     }
 }
@@ -207,27 +210,35 @@ private struct HoardRowMenu: ViewModifier {
 
     private var menuActions: [HoardMenuAction] {
         var items: [HoardMenuAction] = [
-            HoardMenuAction(title: "Open",
-                            symbol: entry.isDirectory ? "folder" : "arrow.up.forward.app",
-                            shortcut: "\u{21A9}",
-                            run: targeting { actions.open(entry) }),
-            HoardMenuAction(title: "Rename", symbol: "character.cursor.ibeam",
-                            shortcut: "\u{2318}R",
-                            run: targeting { actions.rename(entry) }),
-            HoardMenuAction(title: "Copy", symbol: "doc.on.doc", shortcut: "\u{2318}C",
-                            run: targeting(actions.copy)),
-            HoardMenuAction(title: "Cut", symbol: "scissors", shortcut: "\u{2318}X",
-                            run: targeting(actions.cut)),
-            HoardMenuAction(title: "Paste", symbol: "doc.on.clipboard", shortcut: "\u{2318}V",
-                            run: actions.paste),
-            HoardMenuAction(title: "Compress", symbol: "archivebox", shortcut: "\u{2325}A",
-                            run: targeting(actions.compress))
+            HoardMenuAction(
+                title: "Open",
+                symbol: entry.isDirectory ? "folder" : "arrow.up.forward.app",
+                shortcut: "\u{21A9}",
+                run: targeting { actions.open(entry) }),
+            HoardMenuAction(
+                title: "Rename", symbol: "character.cursor.ibeam",
+                shortcut: "\u{2318}R",
+                run: targeting { actions.rename(entry) }),
+            HoardMenuAction(
+                title: "Copy", symbol: "doc.on.doc", shortcut: "\u{2318}C",
+                run: targeting(actions.copy)),
+            HoardMenuAction(
+                title: "Cut", symbol: "scissors", shortcut: "\u{2318}X",
+                run: targeting(actions.cut)),
+            HoardMenuAction(
+                title: "Paste", symbol: "doc.on.clipboard", shortcut: "\u{2318}V",
+                run: actions.paste),
+            HoardMenuAction(
+                title: "Compress", symbol: "archivebox", shortcut: "\u{2325}A",
+                run: targeting(actions.compress)),
         ]
 
         if actions.canExtract(entry) {
-            items.append(HoardMenuAction(title: "Extract", symbol: "arrow.up.bin",
-                                         shortcut: "\u{2325}E",
-                                         run: targeting(actions.extractArchives)))
+            items.append(
+                HoardMenuAction(
+                    title: "Extract", symbol: "arrow.up.bin",
+                    shortcut: "\u{2325}E",
+                    run: targeting(actions.extractArchives)))
         }
 
         if entry.isDirectory {
@@ -235,18 +246,21 @@ private struct HoardRowMenu: ViewModifier {
             // target from the folder you right-clicked. Showing ⌘D here would
             // teach a chord that does something else.
             let pinned = actions.isPinned(entry)
-            items.append(HoardMenuAction(
-                title: pinned ? "Remove from Favourites" : "Add to Favourites",
-                symbol: pinned ? "star.slash" : "star",
-                shortcut: nil,
-                run: { actions.togglePin(entry) }))
+            items.append(
+                HoardMenuAction(
+                    title: pinned ? "Remove from Favourites" : "Add to Favourites",
+                    symbol: pinned ? "star.slash" : "star",
+                    shortcut: nil,
+                    run: { actions.togglePin(entry) }))
         }
 
         // Last and danger-tinted. It routes to the Trash like every delete
         // here; nothing in this app deletes permanently.
-        items.append(HoardMenuAction(title: "Move to Trash", symbol: "trash",
-                                     shortcut: "\u{2318}\u{232B}", isDestructive: true,
-                                     run: targeting(actions.trash)))
+        items.append(
+            HoardMenuAction(
+                title: "Move to Trash", symbol: "trash",
+                shortcut: "\u{2318}\u{232B}", isDestructive: true,
+                run: targeting(actions.trash)))
         return items
     }
 
@@ -270,8 +284,10 @@ private struct HoardRowMenu: ViewModifier {
                 // reads `AppEnvironment` for the live opacity/blur settings.
                 // Without this the app crashes the instant the panel measures
                 // its content.
-                HoardContextMenuList(actions: menuActions,
-                                     tokens: environment.themeManager.tokens) {
+                HoardContextMenuList(
+                    actions: menuActions,
+                    tokens: environment.themeManager.tokens
+                ) {
                     isPresented = false
                 }
                 .environment(environment)
@@ -281,8 +297,10 @@ private struct HoardRowMenu: ViewModifier {
 
 extension View {
     /// The sidebar's one-item menu, in the same language as the file rows'.
-    func sidebarRootMenu(root: SidebarRoot,
-                         onRemove: @escaping (SidebarRoot) -> Void) -> some View {
+    func sidebarRootMenu(
+        root: SidebarRoot,
+        onRemove: @escaping (SidebarRoot) -> Void
+    ) -> some View {
         modifier(SidebarRootMenu(root: root, onRemove: onRemove))
     }
 }
@@ -300,12 +318,14 @@ private struct SidebarRootMenu: ViewModifier {
             .ainkradFloatingPanel(isPresented: $isPresented, maxHeight: 120) {
                 HoardContextMenuList(
                     actions: [
-                        HoardMenuAction(title: "Remove from Favourites",
-                                        symbol: "star.slash",
-                                        shortcut: nil,
-                                        run: { onRemove(root) })
+                        HoardMenuAction(
+                            title: "Remove from Favourites",
+                            symbol: "star.slash",
+                            shortcut: nil,
+                            run: { onRemove(root) })
                     ],
-                    tokens: environment.themeManager.tokens) { isPresented = false }
+                    tokens: environment.themeManager.tokens
+                ) { isPresented = false }
                 .environment(environment)
             }
     }

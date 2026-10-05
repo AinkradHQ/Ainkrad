@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Leading history-sidebar toggle with a hover highlight (motion is first-class in the HUD).
 struct HoverSidebarToggle: View {
@@ -39,8 +39,9 @@ struct ErrorRetryButton: View {
             }
             .foregroundStyle(tokens.accentTertiary.opacity(isHovering ? 1 : 0.85))
             .padding(.horizontal, 10).padding(.vertical, 5)
-            .background(ChamferShape(cut: AinkradRadius.sm)
-                .fill(tokens.accentTertiary.opacity(isHovering ? 0.18 : 0.1)))
+            .background(
+                ChamferShape(cut: AinkradRadius.sm)
+                    .fill(tokens.accentTertiary.opacity(isHovering ? 0.18 : 0.1)))
         }
         .buttonStyle(.plain)
         .onHover { isHovering = $0 }

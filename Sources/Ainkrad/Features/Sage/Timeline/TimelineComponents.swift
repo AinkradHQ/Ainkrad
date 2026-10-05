@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// The rail's leading gutter: a full-height tinted spine with a status node
 /// marker at its top. Shared by committed steps, the live tail, and the pending
@@ -17,9 +17,11 @@ struct TimelineRailGutter: View {
                 .fill(tokens.accentPrimary.opacity(0.25))
                 .frame(width: 1)
                 .frame(maxHeight: .infinity)
-            TimelineNodeMarker(status: status, tint: tokens.accentPrimary,
-                               errorColor: tokens.danger, reduceMotion: reduceMotion)
-                .padding(.top, 3)
+            TimelineNodeMarker(
+                status: status, tint: tokens.accentPrimary,
+                errorColor: tokens.danger, reduceMotion: reduceMotion
+            )
+            .padding(.top, 3)
         }
         .frame(width: 10)
     }

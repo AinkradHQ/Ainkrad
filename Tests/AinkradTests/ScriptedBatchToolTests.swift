@@ -1,6 +1,7 @@
 // Tests/AinkradTests/ScriptedBatchToolTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("ScriptedBatchTool")

@@ -1,5 +1,6 @@
-import Testing
 import CoreGraphics
+import Testing
+
 @testable import Ainkrad
 
 @Suite("SkyMath stars")
@@ -72,11 +73,13 @@ struct SkyMathDriftTests {
     func twinkleBounds() {
         var spread = 0.0
         for index in [0, 7, 42, 99] {
-            var low = 2.0, high = -1.0
+            var low = 2.0
+            var high = -1.0
             for step in 0..<600 {
                 let value = SkyMath.twinkle(index: index, time: Double(step) * 0.1)
                 #expect(value >= 0.3 && value <= 1.0)
-                low = min(low, value); high = max(high, value)
+                low = min(low, value)
+                high = max(high, value)
             }
             spread = max(spread, high - low)
         }
@@ -85,10 +88,11 @@ struct SkyMathDriftTests {
 
     @Test("glints are bounded, sparse, and deterministic")
     func glintSparse() {
-        var active = 0, samples = 0
+        var active = 0
+        var samples = 0
         for index in [0, 5, 23, 77, 131] {
             for step in 0..<4000 {
-                let time = Double(step) * 0.25   // 1000 s sweep
+                let time = Double(step) * 0.25  // 1000 s sweep
                 let value = SkyMath.glint(index: index, time: time)
                 #expect(value >= 0 && value <= 1)
                 #expect(value == SkyMath.glint(index: index, time: time))
@@ -97,7 +101,7 @@ struct SkyMathDriftTests {
             }
         }
         #expect(Double(active) / Double(samples) < 0.2)
-        #expect(active > 0)   // they do happen
+        #expect(active > 0)  // they do happen
     }
 }
 
@@ -109,14 +113,14 @@ struct SkyMathAuroraTests {
         for ribbon in 0..<SkyMath.auroraRibbons {
             for segment in 0..<SkyMath.auroraSegments {
                 for step in 0..<240 {
-                    let time = Double(step) * 0.5   // 2-minute sweep
+                    let time = Double(step) * 0.5  // 2-minute sweep
                     let blob = SkyMath.auroraSegment(ribbon: ribbon, segment: segment, time: time)
                     #expect(blob == SkyMath.auroraSegment(ribbon: ribbon, segment: segment, time: time))
                     #expect((0.0...1.0).contains(blob.x))
-                    #expect((0.0...0.5).contains(blob.y))          // upper sky only
+                    #expect((0.0...0.5).contains(blob.y))  // upper sky only
                     #expect(blob.radiusX > 0.03 && blob.radiusX < 0.25)
                     #expect(blob.radiusY > 0.005 && blob.radiusY < 0.12)
-                    #expect(blob.opacity >= 0 && blob.opacity <= 0.14)   // always subtle
+                    #expect(blob.opacity >= 0 && blob.opacity <= 0.14)  // always subtle
                 }
             }
         }
@@ -124,14 +128,20 @@ struct SkyMathAuroraTests {
 
     @Test("ribbons sway and shimmer — never a frozen band")
     func ribbonsMove() {
-        var positionSpread = 0.0, opacitySpread = 0.0
+        var positionSpread = 0.0
+        var opacitySpread = 0.0
         for ribbon in 0..<SkyMath.auroraRibbons {
             let segment = SkyMath.auroraSegments / 2
-            var minX = 2.0, maxX = -1.0, minOpacity = 2.0, maxOpacity = -1.0
+            var minX = 2.0
+            var maxX = -1.0
+            var minOpacity = 2.0
+            var maxOpacity = -1.0
             for step in 0..<600 {
                 let blob = SkyMath.auroraSegment(ribbon: ribbon, segment: segment, time: Double(step) * 0.4)
-                minX = min(minX, blob.x); maxX = max(maxX, blob.x)
-                minOpacity = min(minOpacity, blob.opacity); maxOpacity = max(maxOpacity, blob.opacity)
+                minX = min(minX, blob.x)
+                maxX = max(maxX, blob.x)
+                minOpacity = min(minOpacity, blob.opacity)
+                maxOpacity = max(maxOpacity, blob.opacity)
             }
             positionSpread = max(positionSpread, maxX - minX)
             opacitySpread = max(opacitySpread, maxOpacity - minOpacity)
@@ -160,12 +170,14 @@ struct SkyMathAtmosphereTests {
 
     @Test("breath cycles slowly within 0…1 and never stalls")
     func breathCycles() {
-        var low = 2.0, high = -1.0
+        var low = 2.0
+        var high = -1.0
         for step in 0..<3000 {
-            let value = SkyMath.breath(time: Double(step) * 0.1)   // 5-minute sweep
+            let value = SkyMath.breath(time: Double(step) * 0.1)  // 5-minute sweep
             #expect(value >= 0 && value <= 1)
             #expect(value == SkyMath.breath(time: Double(step) * 0.1))
-            low = min(low, value); high = max(high, value)
+            low = min(low, value)
+            high = max(high, value)
         }
         #expect(high - low > 0.4)
     }
@@ -173,19 +185,21 @@ struct SkyMathAtmosphereTests {
     @Test("mist bands hug the horizon, stay faint, and keep sliding forever")
     func mistBands() {
         for index in 0..<SkyMath.mistBands {
-            var minX = 2.0, maxX = -1.0
+            var minX = 2.0
+            var maxX = -1.0
             for step in 0..<1200 {
                 let time = Double(step) * 0.5
                 let band = SkyMath.mistBand(index: index, time: time)
                 #expect(band == SkyMath.mistBand(index: index, time: time))
                 #expect((0.0...1.0).contains(band.x))
-                #expect((0.7...1.0).contains(band.y))            // horizon region only
+                #expect((0.7...1.0).contains(band.y))  // horizon region only
                 #expect(band.radiusX > 0.1 && band.radiusX < 0.6)
                 #expect(band.radiusY > 0.01 && band.radiusY < 0.15)
-                #expect(band.opacity > 0 && band.opacity <= 0.07)   // always faint
-                minX = min(minX, band.x); maxX = max(maxX, band.x)
+                #expect(band.opacity > 0 && band.opacity <= 0.07)  // always faint
+                minX = min(minX, band.x)
+                maxX = max(maxX, band.x)
             }
-            #expect(maxX - minX > 0.3)   // slides across, wrapping
+            #expect(maxX - minX > 0.3)  // slides across, wrapping
         }
     }
 
@@ -198,7 +212,7 @@ struct SkyMathAtmosphereTests {
                 let time = Double(step) * 0.5
                 let ray = SkyMath.lightRay(index: index, time: time)
                 #expect(ray == SkyMath.lightRay(index: index, time: time))
-                #expect(abs(ray.angle) < 0.8)                    // never horizontal
+                #expect(abs(ray.angle) < 0.8)  // never horizontal
                 #expect(ray.width > 0.02 && ray.width < 0.15)
                 #expect(ray.opacity > 0 && ray.opacity <= 0.08)  // always subtle
                 if abs(ray.angle - first.angle) > 0.01 { swayed = true }
@@ -213,22 +227,25 @@ struct SkyMathForegroundTests {
 
     @Test("fireflies stay in the island's region, pulse, and keep rising")
     func fireflies() {
-        #expect(SkyMath.fireflyCount >= 20)   // a lively swarm, per review
+        #expect(SkyMath.fireflyCount >= 20)  // a lively swarm, per review
         for index in 0..<SkyMath.fireflyCount {
-            var minOpacity = 2.0, maxOpacity = -1.0, positions = Set<Int>()
+            var minOpacity = 2.0
+            var maxOpacity = -1.0
+            var positions = Set<Int>()
             for step in 0..<800 {
                 let time = Double(step) * 0.25
                 let fly = SkyMath.firefly(index: index, time: time)
                 #expect(fly == SkyMath.firefly(index: index, time: time))
-                #expect((0.25...0.75).contains(fly.x))           // island zone
+                #expect((0.25...0.75).contains(fly.x))  // island zone
                 #expect((0.18...0.82).contains(fly.y))
                 #expect(fly.radius > 0.5 && fly.radius < 3.0)
                 #expect(fly.opacity >= 0 && fly.opacity <= 0.7)
-                minOpacity = min(minOpacity, fly.opacity); maxOpacity = max(maxOpacity, fly.opacity)
+                minOpacity = min(minOpacity, fly.opacity)
+                maxOpacity = max(maxOpacity, fly.opacity)
                 positions.insert(Int(fly.y * 1000))
             }
-            #expect(maxOpacity - minOpacity > 0.1)   // visibly pulses
-            #expect(positions.count > 50)            // travels its column
+            #expect(maxOpacity - minOpacity > 0.1)  // visibly pulses
+            #expect(positions.count > 50)  // travels its column
         }
     }
 
@@ -244,7 +261,7 @@ struct SkyMathForegroundTests {
                 #expect((0.0...1.0).contains(orb.x))
                 #expect((0.0...1.0).contains(orb.y))
                 #expect(orb.radius > 0.02 && orb.radius < 0.10)
-                #expect(orb.opacity > 0 && orb.opacity <= 0.06)   // ultra faint
+                #expect(orb.opacity > 0 && orb.opacity <= 0.06)  // ultra faint
                 if hypot(orb.x - origin.x, orb.y - origin.y) > 0.003 { moved = true }
             }
             #expect(moved)
@@ -269,7 +286,7 @@ struct SkyMathEmberTests {
                 #expect(ember.opacity >= 0 && ember.opacity <= 0.55)
                 ys.insert(Int(ember.y * 1000))
             }
-            #expect(ys.count > 40)   // travels its column, wrapping forever
+            #expect(ys.count > 40)  // travels its column, wrapping forever
         }
     }
 
@@ -289,9 +306,11 @@ struct SkyMathMomentTests {
 
     @Test("meteor showers are rare bursts of 3–5 valid streaks")
     func meteorShowers() {
-        var activeSamples = 0, appearances = 0, wasActive = false
+        var activeSamples = 0
+        var appearances = 0
+        var wasActive = false
         for step in 0..<4800 {
-            let time = Double(step) * 0.5   // 40-minute sweep
+            let time = Double(step) * 0.5  // 40-minute sweep
             let streaks = SkyMath.meteorShower(time: time)
             #expect(streaks == SkyMath.meteorShower(time: time))
             if streaks.isEmpty {
@@ -308,16 +327,18 @@ struct SkyMathMomentTests {
                 }
             }
         }
-        #expect(Double(activeSamples) / 4800.0 < 0.05)   // rare
+        #expect(Double(activeSamples) / 4800.0 < 0.05)  // rare
         #expect(appearances >= 1)
         #expect(appearances <= 8)
     }
 
     @Test("the comet is rarer still, slow, and always in the upper sky")
     func comet() {
-        var activeSamples = 0, appearances = 0, wasActive = false
+        var activeSamples = 0
+        var appearances = 0
+        var wasActive = false
         for step in 0..<4800 {
-            let time = Double(step) * 0.5   // 40-minute sweep
+            let time = Double(step) * 0.5  // 40-minute sweep
             let comet = SkyMath.comet(time: time)
             #expect(comet == SkyMath.comet(time: time))
             if let comet {
@@ -339,9 +360,11 @@ struct SkyMathMomentTests {
 
     @Test("aurora surges are occasional, bounded blooms")
     func auroraSurge() {
-        var activeSamples = 0, appearances = 0, wasActive = false
+        var activeSamples = 0
+        var appearances = 0
+        var wasActive = false
         for step in 0..<4800 {
-            let time = Double(step) * 0.5   // 40-minute sweep
+            let time = Double(step) * 0.5  // 40-minute sweep
             let surge = SkyMath.auroraSurge(time: time)
             #expect(surge == SkyMath.auroraSurge(time: time))
             #expect(surge >= 0 && surge <= 1)
@@ -364,17 +387,20 @@ struct SkyMathWeatherTests {
 
     @Test("the mood drifts slowly across its whole range and never jumps")
     func weatherDrifts() {
-        var low = 2.0, high = -1.0, previous: Double?
+        var low = 2.0
+        var high = -1.0
+        var previous: Double?
         for step in 0..<3600 {
-            let time = Double(step) * 0.5   // 30-minute sweep
+            let time = Double(step) * 0.5  // 30-minute sweep
             let value = SkyMath.weather(time: time)
             #expect(value >= 0 && value <= 1)
             #expect(value == SkyMath.weather(time: time))
-            if let previous { #expect(abs(value - previous) < 0.02) }   // never jumps
+            if let previous { #expect(abs(value - previous) < 0.02) }  // never jumps
             previous = value
-            low = min(low, value); high = max(high, value)
+            low = min(low, value)
+            high = max(high, value)
         }
-        #expect(high - low > 0.5)   // actually travels between moods
+        #expect(high - low > 0.5)  // actually travels between moods
     }
 }
 
@@ -383,9 +409,11 @@ struct SkyMathVesselTests {
 
     @Test("vessels cross every few minutes, high in the sky, and always fade at the edges")
     func vesselsRareAndBounded() {
-        var activeSamples = 0, appearances = 0, wasActive = false
+        var activeSamples = 0
+        var appearances = 0
+        var wasActive = false
         for step in 0..<4800 {
-            let time = Double(step) * 0.5   // 40-minute sweep
+            let time = Double(step) * 0.5  // 40-minute sweep
             let vessel = SkyMath.vessel(time: time)
             #expect(vessel == SkyMath.vessel(time: time))
             if let vessel {
@@ -414,8 +442,8 @@ struct SkyMathCelestialTests {
         #expect(midnight.brightness > 0.7)
         let noon = SkyMath.celestial(dayFraction: 0.5)
         #expect(noon.brightness == 0)
-        #expect(SkyMath.celestial(dayFraction: 0.795).brightness < 0.3)   // just after dusk: easing in
-        #expect(SkyMath.celestial(dayFraction: 0.285).brightness < 0.3)   // just before dawn: easing out
+        #expect(SkyMath.celestial(dayFraction: 0.795).brightness < 0.3)  // just after dusk: easing in
+        #expect(SkyMath.celestial(dayFraction: 0.285).brightness < 0.3)  // just before dawn: easing out
     }
 
     @Test("the moon arcs across the upper sky through the night")
@@ -427,7 +455,7 @@ struct SkyMathCelestialTests {
             if moon.brightness > 0 {
                 #expect((0.1...0.9).contains(moon.x))
                 #expect((0.03...0.35).contains(moon.y))
-                if let previousX { #expect(moon.x > previousX) }   // steadily crosses
+                if let previousX { #expect(moon.x > previousX) }  // steadily crosses
                 previousX = moon.x
             }
         }
@@ -453,9 +481,11 @@ struct SkyMathConstellationTests {
 
     @Test("constellations appear rarely, hold a moment, and stay in the upper sky")
     func constellationsRareAndBounded() {
-        var activeSamples = 0, appearances = 0, wasActive = false
+        var activeSamples = 0
+        var appearances = 0
+        var wasActive = false
         for step in 0..<4800 {
-            let time = Double(step) * 0.5   // 40-minute sweep
+            let time = Double(step) * 0.5  // 40-minute sweep
             let constellation = SkyMath.constellation(time: time)
             #expect(constellation == SkyMath.constellation(time: time))
             if let constellation {
@@ -466,7 +496,7 @@ struct SkyMathConstellationTests {
                 #expect(constellation.brightness >= 0 && constellation.brightness <= 1)
                 for point in constellation.points {
                     #expect((0.0...1.0).contains(point.x))
-                    #expect((0.0...0.5).contains(point.y))   // upper sky only
+                    #expect((0.0...0.5).contains(point.y))  // upper sky only
                 }
             } else {
                 wasActive = false
@@ -483,10 +513,12 @@ struct SkyMathShootingStarTests {
 
     @Test("streaks come every ten-or-so seconds, sometimes together, always valid")
     func frequentAndBounded() {
-        var activeSamples = 0, appearances = 0, wasActive = false
+        var activeSamples = 0
+        var appearances = 0
+        var wasActive = false
         var sawConcurrent = false
         for step in 0..<24000 {
-            let time = Double(step) * 0.05   // 1200 s at 20 Hz
+            let time = Double(step) * 0.05  // 1200 s at 20 Hz
             let streaks = SkyMath.shootingStars(time: time)
             #expect(streaks == SkyMath.shootingStars(time: time))
             #expect(streaks.count <= 3)
@@ -501,13 +533,13 @@ struct SkyMathShootingStarTests {
                     #expect((0.0...1.0).contains(streak.progress))
                     #expect(streak.brightness >= 0 && streak.brightness <= 1)
                     #expect((0.0...1.0).contains(streak.startX))
-                    #expect((0.0...0.5).contains(streak.startY))   // upper sky only
+                    #expect((0.0...0.5).contains(streak.startY))  // upper sky only
                 }
             }
         }
-        #expect(Double(activeSamples) / 24000.0 < 0.15)   // frequent, still calm
-        #expect(appearances >= 40)                        // far beyond once a minute
+        #expect(Double(activeSamples) / 24000.0 < 0.15)  // frequent, still calm
+        #expect(appearances >= 40)  // far beyond once a minute
         #expect(appearances <= 130)
-        #expect(sawConcurrent)                            // two sometimes cross together
+        #expect(sawConcurrent)  // two sometimes cross together
     }
 }

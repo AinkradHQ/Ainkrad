@@ -1,8 +1,9 @@
+import AinkradHostRuntime
 // Tests/AinkradTests/LSPFramingTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("LSP framing")
 struct LSPFramingTests {
@@ -24,7 +25,8 @@ struct LSPFramingTests {
         }
         let header = text[text.startIndex..<range.lowerBound]
         guard let lengthString = header.split(separator: " ").last,
-              let declaredLength = Int(lengthString) else {
+            let declaredLength = Int(lengthString)
+        else {
             Issue.record("could not parse Content-Length header")
             return
         }
@@ -80,8 +82,11 @@ struct LSPFramingTests {
         try await t.start()
         defer { Task { await t.stop() } }
         var iterator = t.incoming().makeAsyncIterator()
-        try await t.send(.object(["jsonrpc": .string("2.0"), "id": .string("1"),
-                                  "method": .string("initialize"), "params": .object([:])]))
+        try await t.send(
+            .object([
+                "jsonrpc": .string("2.0"), "id": .string("1"),
+                "method": .string("initialize"), "params": .object([:]),
+            ]))
         let received = try await iterator.next()
         #expect(received?["id"]?.stringValue == "1")
     }
@@ -101,14 +106,17 @@ struct LSPFramingTests {
     @Test func lspDiagnosticDecodesFromWireShape() {
         let wire = JSONValue.object([
             "range": .object([
-                "start": .object(["line": .number(3), "character": .number(7)]),
+                "start": .object(["line": .number(3), "character": .number(7)])
             ]),
             "severity": .number(1),
             "message": .string("unexpected token"),
         ])
         let diagnostic = LSPDiagnostic.decode(wire)
-        #expect(diagnostic == LSPDiagnostic(line: 3, character: 7, severity: 1,
-                                             message: "unexpected token"))
+        #expect(
+            diagnostic
+                == LSPDiagnostic(
+                    line: 3, character: 7, severity: 1,
+                    message: "unexpected token"))
     }
 
     @Test func lspTextEditDecodesFromWireShape() {
@@ -120,7 +128,10 @@ struct LSPFramingTests {
             "newText": .string("hello"),
         ])
         let edit = LSPTextEdit.decode(wire)
-        #expect(edit == LSPTextEdit(startLine: 0, startCharacter: 0, endLine: 0,
-                                     endCharacter: 5, newText: "hello"))
+        #expect(
+            edit
+                == LSPTextEdit(
+                    startLine: 0, startCharacter: 0, endLine: 0,
+                    endCharacter: 5, newText: "hello"))
     }
 }

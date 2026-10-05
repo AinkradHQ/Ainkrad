@@ -14,8 +14,10 @@ let typeAheadTimeout: TimeInterval = 0.8
 /// Search WRAPS from `from`, so repeatedly typing the same prefix cycles
 /// through every match instead of sticking on the first one — the behaviour
 /// that makes type-ahead usable in a folder with twelve `image-*.png`.
-func typeAheadIndex(in names: [String], matching query: String,
-                    from startIndex: Int) -> Int? {
+func typeAheadIndex(
+    in names: [String], matching query: String,
+    from startIndex: Int
+) -> Int? {
     guard !query.isEmpty, !names.isEmpty else { return nil }
     let needle = query.lowercased()
 

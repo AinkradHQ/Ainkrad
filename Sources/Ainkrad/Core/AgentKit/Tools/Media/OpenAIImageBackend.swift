@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// OpenAI image-generation backend. Key lives in the Keychain via SecretStore,
 /// never a document. Mirrors ProviderTranscriptionBackend's request shape.

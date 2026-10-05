@@ -26,28 +26,40 @@ struct SidebarSection: Identifiable, Equatable, Sendable {
 /// Pure, so the composition is testable without a filesystem: empty groups are
 /// dropped rather than rendered as bare headings, and a pinned folder that is
 /// already a standard place is not shown twice.
-func sidebarSections(home: URL, pinned: [URL] = [],
-                     repositories: [URL] = []) -> [SidebarSection] {
+func sidebarSections(
+    home: URL, pinned: [URL] = [],
+    repositories: [URL] = []
+) -> [SidebarSection] {
     let places = standardRoots(home: home)
     let placePaths = Set(places.map(\.url.path))
 
     var sections = [SidebarSection(id: "places", title: nil, roots: places)]
 
-    let favourites = pinned
+    let favourites =
+        pinned
         .filter { !placePaths.contains($0.path) }
-        .map { SidebarRoot(id: "pin-\($0.path)", name: $0.lastPathComponent,
-                           icon: "star.fill", url: $0) }
+        .map {
+            SidebarRoot(
+                id: "pin-\($0.path)", name: $0.lastPathComponent,
+                icon: "star.fill", url: $0)
+        }
     if !favourites.isEmpty {
-        sections.append(SidebarSection(id: "favourites", title: "Favourites",
-                                       roots: favourites, isRemovable: true))
+        sections.append(
+            SidebarSection(
+                id: "favourites", title: "Favourites",
+                roots: favourites, isRemovable: true))
     }
 
     // Repositories the user has actually visited — never a background scan of
     // the home folder, which would be a recursive walk of everything they own.
-    let repos = repositories
+    let repos =
+        repositories
         .filter { !placePaths.contains($0.path) }
-        .map { SidebarRoot(id: "repo-\($0.path)", name: $0.lastPathComponent,
-                           icon: "shippingbox", url: $0) }
+        .map {
+            SidebarRoot(
+                id: "repo-\($0.path)", name: $0.lastPathComponent,
+                icon: "shippingbox", url: $0)
+        }
     if !repos.isEmpty {
         sections.append(SidebarSection(id: "repositories", title: "Repositories", roots: repos))
     }
@@ -63,13 +75,17 @@ func sidebarSections(home: URL, pinned: [URL] = [],
 func standardRoots(home: URL) -> [SidebarRoot] {
     [
         SidebarRoot(id: "home", name: "Home", icon: "house", url: home),
-        SidebarRoot(id: "desktop", name: "Desktop", icon: "menubar.dock.rectangle",
-                    url: home.appendingPathComponent("Desktop")),
-        SidebarRoot(id: "documents", name: "Documents", icon: "doc",
-                    url: home.appendingPathComponent("Documents")),
-        SidebarRoot(id: "downloads", name: "Downloads", icon: "arrow.down.circle",
-                    url: home.appendingPathComponent("Downloads")),
-        SidebarRoot(id: "applications", name: "Applications", icon: "square.grid.2x2",
-                    url: URL(fileURLWithPath: "/Applications"))
+        SidebarRoot(
+            id: "desktop", name: "Desktop", icon: "menubar.dock.rectangle",
+            url: home.appendingPathComponent("Desktop")),
+        SidebarRoot(
+            id: "documents", name: "Documents", icon: "doc",
+            url: home.appendingPathComponent("Documents")),
+        SidebarRoot(
+            id: "downloads", name: "Downloads", icon: "arrow.down.circle",
+            url: home.appendingPathComponent("Downloads")),
+        SidebarRoot(
+            id: "applications", name: "Applications", icon: "square.grid.2x2",
+            url: URL(fileURLWithPath: "/Applications")),
     ]
 }

@@ -84,8 +84,9 @@ func parsePorcelainV2(_ output: String, root: URL) -> GitRepoStatus {
         case "1", "2":
             // "1 XY sub mH mI mW hH hI path"
             // "2 XY sub mH mI mW hH hI X<score> path<TAB>origPath"
-            let fields = text.split(separator: " ", maxSplits: kind == "1" ? 8 : 9,
-                                    omittingEmptySubsequences: false)
+            let fields = text.split(
+                separator: " ", maxSplits: kind == "1" ? 8 : 9,
+                omittingEmptySubsequences: false)
             let expected = kind == "1" ? 9 : 10
             guard fields.count == expected else { continue }
             let xy = String(fields[1])

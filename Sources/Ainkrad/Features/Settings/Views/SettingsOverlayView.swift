@@ -1,7 +1,7 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitContract
 import AinkradHostRuntime
+import SwiftUI
 
 /// The Settings overlay — the third summonable panel (⌘, or the Launcher's
 /// Settings entry), in the same HUD language as the Launcher and Workspace
@@ -142,16 +142,22 @@ struct SettingsOverlayView: View {
             // fires regardless of what — if anything — is focused.
             Button {
                 searchFocused = true
-            } label: { EmptyView() }
-                .keyboardShortcut("f", modifiers: .command)
-                .hidden()
+            } label: {
+                EmptyView()
+            }
+            .keyboardShortcut("f", modifiers: .command)
+            .hidden()
         )
         .onKeyPress(.escape) {
             // Agree with `SettingsSearchMode`'s own notion of "empty" — a
             // whitespace-only query is `.browsing`, so it must dismiss on
             // the first press rather than silently eating the whitespace.
-            if searchMode != .browsing { query = ""; return .handled }
-            onDismiss(); return .handled
+            if searchMode != .browsing {
+                query = ""
+                return .handled
+            }
+            onDismiss()
+            return .handled
         }
         .task {
             if let path = pendingDeepLink {
@@ -222,7 +228,8 @@ struct SettingsOverlayView: View {
 
     private func activatePaletteHighlight() -> KeyPress.Result {
         guard let results = paletteResults, let index = paletteHighlight,
-              results.indices.contains(index) else { return .ignored }
+            results.indices.contains(index)
+        else { return .ignored }
         navigator.navigate(to: results[index].path, in: catalog)
         hasNavigatedWithQuery = true
         return .handled
@@ -282,8 +289,9 @@ struct SettingsOverlayView: View {
             hasNavigatedWithQuery = searchMode.afterSidebarTap().query != nil
         } label: {
             HStack(spacing: 10) {
-                appTile(appID: page.appID, systemIcon: page.icon, size: 22,
-                        isSelected: isSelected, tokens: tokens)
+                appTile(
+                    appID: page.appID, systemIcon: page.icon, size: 22,
+                    isSelected: isSelected, tokens: tokens)
                 Text(page.title)
                     .font(AinkradFont.display(13, weight: .medium))
                     .foregroundStyle(tokens.foreground.opacity(isSelected ? 0.95 : 0.7))
@@ -296,11 +304,15 @@ struct SettingsOverlayView: View {
             }
             .padding(.horizontal, 8)
             .frame(height: 38)
-            .background(ChamferShape(cut: AinkradRadius.md)
-                .fill(isSelected ? tokens.accentPrimary.opacity(0.14) : .clear))
-            .overlay(TargetingBrackets(length: 7)
-                .stroke(isSelected ? tokens.accentSecondary.opacity(0.9) : .clear, lineWidth: 1.3)
-                .padding(1))
+            .background(
+                ChamferShape(cut: AinkradRadius.md)
+                    .fill(isSelected ? tokens.accentPrimary.opacity(0.14) : .clear)
+            )
+            .overlay(
+                TargetingBrackets(length: 7)
+                    .stroke(isSelected ? tokens.accentSecondary.opacity(0.9) : .clear, lineWidth: 1.3)
+                    .padding(1)
+            )
             .settingsRowHover(isActive: isSelected)
             .contentShape(Rectangle())
         }
@@ -312,7 +324,9 @@ struct SettingsOverlayView: View {
     /// a tinted SF Symbol fallback. Used by both sidebar rows and the app
     /// settings identity header.
     @ViewBuilder
-    private func appTile(appID: String?, systemIcon: String, size: CGFloat, isSelected: Bool, tokens: DesignTokens) -> some View {
+    private func appTile(appID: String?, systemIcon: String, size: CGFloat, isSelected: Bool, tokens: DesignTokens)
+        -> some View
+    {
         if appID != nil {
             // A registered app: its live neon tile, following the active theme.
             NeonAppTile(symbol: systemIcon, tokens: tokens, size: size)
@@ -331,8 +345,10 @@ struct SettingsOverlayView: View {
     private func detail(tokens: DesignTokens) -> some View {
         switch searchMode {
         case .palette(let q):
-            SettingsPaletteView(results: index.search(q, currentPage: navigator.selection), query: q,
-                                highlight: $paletteHighlight) { path in
+            SettingsPaletteView(
+                results: index.search(q, currentPage: navigator.selection), query: q,
+                highlight: $paletteHighlight
+            ) { path in
                 navigator.navigate(to: path, in: catalog)
                 hasNavigatedWithQuery = true
             }
@@ -340,14 +356,17 @@ struct SettingsOverlayView: View {
             if let page = displayedPage {
                 VStack(alignment: .leading, spacing: 0) {
                     filterBanner(query: q, tokens: tokens)
-                    SettingsPageView(page: page,
-                                     matchedPaths: index.matchedPaths(q, on: page),
-                                     highlightedPath: displayedHighlight)
-                        .id(page.path)
+                    SettingsPageView(
+                        page: page,
+                        matchedPaths: index.matchedPaths(q, on: page),
+                        highlightedPath: displayedHighlight
+                    )
+                    .id(page.path)
                 }
             } else {
-                AinkradEmptyState(icon: "gearshape", title: "Nothing here",
-                                  message: "That settings page is no longer available.")
+                AinkradEmptyState(
+                    icon: "gearshape", title: "Nothing here",
+                    message: "That settings page is no longer available.")
             }
         case .browsing:
             if let page = displayedPage {
@@ -359,8 +378,9 @@ struct SettingsOverlayView: View {
                 SettingsPageView(page: page, highlightedPath: displayedHighlight)
                     .id(page.path)
             } else {
-                AinkradEmptyState(icon: "gearshape", title: "Nothing here",
-                                  message: "That settings page is no longer available.")
+                AinkradEmptyState(
+                    icon: "gearshape", title: "Nothing here",
+                    message: "That settings page is no longer available.")
             }
         }
     }

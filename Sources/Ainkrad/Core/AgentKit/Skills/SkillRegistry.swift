@@ -44,9 +44,11 @@ final class SkillRegistry {
     private(set) var loadErrors: [(name: String, message: String)] = []
     var onChange: (() -> Void)?
 
-    init(paths: SkillPaths,
-         fileManager: FileManager = .default,
-         marketplaceNames: @escaping () -> Set<String> = { [] }) {
+    init(
+        paths: SkillPaths,
+        fileManager: FileManager = .default,
+        marketplaceNames: @escaping () -> Set<String> = { [] }
+    ) {
         self.paths = paths
         self.fm = fileManager
         self.marketplaceNames = marketplaceNames
@@ -63,7 +65,7 @@ final class SkillRegistry {
     /// deduped set. A malformed/invalid/unreadable skill is skipped and
     /// recorded in `loadErrors` — never fatal to the rest of the load.
     func reload() {
-        var loaded: [String: Skill] = [:]     // keyed by skill.name
+        var loaded: [String: Skill] = [:]  // keyed by skill.name
         var errors: [(name: String, message: String)] = []
         let mp = marketplaceNames()
 
@@ -186,18 +188,21 @@ final class SkillRegistry {
             do {
                 text = try String(contentsOf: url, encoding: .utf8)
             } catch {
-                return SkillProposal(name: name, skill: nil, issues: [],
-                                     error: "unreadable or not valid UTF-8: \(error.localizedDescription)",
-                                     isRevision: self.skill(named: name) != nil)
+                return SkillProposal(
+                    name: name, skill: nil, issues: [],
+                    error: "unreadable or not valid UTF-8: \(error.localizedDescription)",
+                    isRevision: self.skill(named: name) != nil)
             }
             do {
                 let skill = try SkillParser.parse(text, source: .proposed)
-                return SkillProposal(name: name, skill: skill,
-                                     issues: SkillValidator.validate(skill), error: nil,
-                                     isRevision: self.skill(named: name) != nil)
+                return SkillProposal(
+                    name: name, skill: skill,
+                    issues: SkillValidator.validate(skill), error: nil,
+                    isRevision: self.skill(named: name) != nil)
             } catch {
-                return SkillProposal(name: name, skill: nil, issues: [], error: String(describing: error),
-                                     isRevision: self.skill(named: name) != nil)
+                return SkillProposal(
+                    name: name, skill: nil, issues: [], error: String(describing: error),
+                    isRevision: self.skill(named: name) != nil)
             }
         }
     }
@@ -205,8 +210,10 @@ final class SkillRegistry {
     /// Immediate subdirectories of `_proposed/`, sorted for deterministic
     /// ordering regardless of filesystem enumeration order.
     private func proposedDirNames() -> [String] {
-        guard let entries = try? fm.contentsOfDirectory(
-            at: paths.proposedRoot, includingPropertiesForKeys: [.isDirectoryKey]) else { return [] }
+        guard
+            let entries = try? fm.contentsOfDirectory(
+                at: paths.proposedRoot, includingPropertiesForKeys: [.isDirectoryKey])
+        else { return [] }
         return entries.compactMap { url -> String? in
             let isDir = (try? url.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory ?? false
             return isDir ? url.lastPathComponent : nil
@@ -216,8 +223,10 @@ final class SkillRegistry {
     /// Immediate subdirectories of `root`, excluding `_proposed`, sorted for
     /// deterministic dedup regardless of filesystem enumeration order.
     private func installedDirNames() -> [String] {
-        guard let entries = try? fm.contentsOfDirectory(
-            at: paths.root, includingPropertiesForKeys: [.isDirectoryKey]) else { return [] }
+        guard
+            let entries = try? fm.contentsOfDirectory(
+                at: paths.root, includingPropertiesForKeys: [.isDirectoryKey])
+        else { return [] }
         return entries.compactMap { url -> String? in
             let isDir = (try? url.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory ?? false
             let name = url.lastPathComponent

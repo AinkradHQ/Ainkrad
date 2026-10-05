@@ -1,5 +1,5 @@
-import SwiftUI
 import AinkradHostRuntime
+import SwiftUI
 
 /// A thin status strip reflecting `DevHostModel.State`: green on a
 /// successful load, red with the exact rejection message on `.invalid`,

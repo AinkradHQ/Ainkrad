@@ -1,5 +1,5 @@
-import Foundation
 import AinkradAppKitContract
+import Foundation
 
 /// A single hit in a settings search. `valueDescription` shows the live
 /// value inline — often the value is the whole reason someone searched — but

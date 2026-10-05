@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 /// Covers `SkillRegistry.proposals()` — the review-list surface Task 8 adds on
@@ -38,8 +39,9 @@ struct SkillProposalTests {
         let paths = SkillPaths(root: root)
         // Bypass propose()'s validation to simulate a hand-edited/corrupt draft.
         let url = paths.proposedFile("broken")
-        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
-                                                withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true)
         try "no front matter here".write(to: url, atomically: true, encoding: .utf8)
 
         let reg = SkillRegistry(paths: paths)
@@ -56,8 +58,9 @@ struct SkillProposalTests {
         let paths = SkillPaths(root: root)
         // Parses fine (name + description present) but body is empty -> validator flags it.
         let url = paths.proposedFile("empty-body")
-        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
-                                                withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true)
         try md("empty-body", "has no body", body: "").write(to: url, atomically: true, encoding: .utf8)
 
         let reg = SkillRegistry(paths: paths)

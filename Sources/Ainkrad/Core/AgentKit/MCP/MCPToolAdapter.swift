@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/MCP/MCPToolAdapter.swift
 import Foundation
-import AinkradHostRuntime
 
 /// Presents one discovered MCP tool to the LLM as a native `AgentTool`. Names
 /// are namespaced `mcp/<server>/<tool>` to avoid collisions across servers and
@@ -88,8 +88,9 @@ struct MCPToolAdapter: AgentTool {
     /// knows both MCP spellings (`mcp/…` and `mcp__…`) — deliberately not a
     /// second copy of that prefix logic here.
     func approvalPreview(_ input: JSONValue) -> ToolApprovalPreview {
-        ToolApprovalPreview(title: ToolPresentation.humanize(name),
-                            summary: Self.summarize(input), diff: nil)
+        ToolApprovalPreview(
+            title: ToolPresentation.humanize(name),
+            summary: Self.summarize(input), diff: nil)
     }
 
     /// A readable one-line rendering of the call's arguments.

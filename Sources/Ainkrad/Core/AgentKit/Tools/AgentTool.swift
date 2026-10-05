@@ -1,11 +1,11 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/Tools/AgentTool.swift
 import Foundation
-import AinkradHostRuntime
 
 struct AgentToolSchema: Sendable, Equatable {
     let name: String
     let description: String
-    let parameters: JSONValue   // JSON Schema object
+    let parameters: JSONValue  // JSON Schema object
 }
 
 enum ToolPermissionClass: Sendable, Equatable { case read, write, memory }
@@ -59,8 +59,9 @@ extension AgentTool {
     }
 
     func approvalPreview(_ input: JSONValue) -> ToolApprovalPreview {
-        let data = try? JSONSerialization.data(withJSONObject: input.toFoundationObject(),
-                                               options: [.sortedKeys])
+        let data = try? JSONSerialization.data(
+            withJSONObject: input.toFoundationObject(),
+            options: [.sortedKeys])
         let summary = data.map { String(decoding: $0, as: UTF8.self) } ?? ""
         return ToolApprovalPreview(title: name, summary: summary, diff: nil)
     }

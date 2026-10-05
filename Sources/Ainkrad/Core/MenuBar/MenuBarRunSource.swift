@@ -4,7 +4,7 @@ import Foundation
 struct MenuBarRunItem: Equatable, Identifiable {
     let id: UUID
     let title: String
-    let isActive: Bool   // running (true) vs queued/paused (false)
+    let isActive: Bool  // running (true) vs queued/paused (false)
 }
 
 /// Seam over Slice-3 `RunManager`. Keeps the menu-bar subsystem compiling and

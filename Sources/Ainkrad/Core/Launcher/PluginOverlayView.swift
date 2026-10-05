@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Slice 3's floating host overlay for `.overlay`-presentation plugin apps —
 /// summoned from the Launcher instead of tiling into the workspace layout.
@@ -31,13 +31,18 @@ struct PluginOverlayView: View {
                     .onTapGesture { onDismiss() }
 
                 app.makeRootView(mode: mode)
-                    .frame(width: size.resolved(in: geo.size).width,
-                           height: size.resolved(in: geo.size).height)
+                    .frame(
+                        width: size.resolved(in: geo.size).width,
+                        height: size.resolved(in: geo.size).height
+                    )
                     .hudPanelChrome(tokens: tokens)
                     .focusable()
                     .focused($isFocused)
                     .focusEffectDisabled()
-                    .onKeyPress(.escape) { onDismiss(); return .handled }
+                    .onKeyPress(.escape) {
+                        onDismiss()
+                        return .handled
+                    }
                     .offset(y: -28)
             }
         }

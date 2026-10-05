@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 import Foundation
 import Observation
-import AinkradHostRuntime
 
 /// Hoard-specific display settings that have no home in `AppAppearanceStore`
 /// (which owns opacity, blur and font overrides for every app).
@@ -13,8 +13,10 @@ struct HoardSettingsDocument: PersistableDocument {
     var useGrid: Bool = false
     var vimKeys: Bool = false
 
-    init(iconSize: Double = 13, showMetadataColumns: Bool = true, showPreview: Bool = false,
-         useGrid: Bool = false, vimKeys: Bool = false) {
+    init(
+        iconSize: Double = 13, showMetadataColumns: Bool = true, showPreview: Bool = false,
+        useGrid: Bool = false, vimKeys: Bool = false
+    ) {
         self.iconSize = iconSize
         self.showMetadataColumns = showMetadataColumns
         self.showPreview = showPreview
@@ -88,9 +90,10 @@ final class HoardSettingsStore {
     }
 
     private func persist() {
-        persistence.save(HoardSettingsDocument(
-            iconSize: iconSize, showMetadataColumns: showMetadataColumns,
-            showPreview: showPreview, useGrid: useGrid, vimKeys: vimKeys))
+        persistence.save(
+            HoardSettingsDocument(
+                iconSize: iconSize, showMetadataColumns: showMetadataColumns,
+                showPreview: showPreview, useGrid: useGrid, vimKeys: vimKeys))
     }
 
     /// Row vertical padding derived from icon size, so density scales as one

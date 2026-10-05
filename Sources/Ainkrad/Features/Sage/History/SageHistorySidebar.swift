@@ -1,6 +1,6 @@
 import AinkradAppKit
-import SwiftUI
 import AinkradHostRuntime
+import SwiftUI
 
 struct SageHistorySidebar: View {
     let store: SageSessionStore
@@ -53,8 +53,9 @@ struct SageHistorySidebar: View {
                 .font(AinkradFont.display(11, weight: .medium)).kerning(1.5)
                 .foregroundStyle(tokens.foreground.opacity(0.5))
             Spacer()
-            AinkradIconButton(systemName: "square.and.pencil", size: 26,
-                              tooltip: "New chat", action: onNewChat)
+            AinkradIconButton(
+                systemName: "square.and.pencil", size: 26,
+                tooltip: "New chat", action: onNewChat)
         }
     }
 }
@@ -78,10 +79,12 @@ private struct HistoryRow: View {
                 trailing: { EmptyView() })
 
             if isHovering {
-                AinkradIconButton(systemName: "trash", size: 22,
-                                  tooltip: "Delete chat", action: onDelete)
-                    .padding(.trailing, AinkradSpacing.xs)
-                    .transition(reduceMotion ? .identity : .opacity)
+                AinkradIconButton(
+                    systemName: "trash", size: 22,
+                    tooltip: "Delete chat", action: onDelete
+                )
+                .padding(.trailing, AinkradSpacing.xs)
+                .transition(reduceMotion ? .identity : .opacity)
             }
         }
         .onHover { isHovering = $0 }

@@ -26,14 +26,16 @@ final class RedirectValidatingHTTPClient: NSObject, DataHTTPClient, URLSessionTa
         return (data, http)
     }
 
-    func urlSession(_ session: URLSession, task: URLSessionTask,
-                    willPerformHTTPRedirection response: HTTPURLResponse,
-                    newRequest request: URLRequest,
-                    completionHandler: @escaping (URLRequest?) -> Void) {
+    func urlSession(
+        _ session: URLSession, task: URLSessionTask,
+        willPerformHTTPRedirection response: HTTPURLResponse,
+        newRequest request: URLRequest,
+        completionHandler: @escaping (URLRequest?) -> Void
+    ) {
         if let url = request.url, Self.isSafeRedirectTarget(url) {
-            completionHandler(request)   // public http(s) target — follow, re-validated
+            completionHandler(request)  // public http(s) target — follow, re-validated
         } else {
-            completionHandler(nil)       // unsafe target — stop; 3xx flows back, tool rejects non-2xx
+            completionHandler(nil)  // unsafe target — stop; 3xx flows back, tool rejects non-2xx
         }
     }
 

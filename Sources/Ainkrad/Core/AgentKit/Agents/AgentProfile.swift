@@ -8,11 +8,13 @@ enum ModelTierCode: String, Codable, Sendable, CaseIterable {
 struct AgentRouting: Codable, Equatable, Sendable {
     var routerEnabled: Bool
     var preferredModels: [String]
-    var allowedModels: [String]   // empty = unrestricted
-    var maxTier: ModelTierCode?   // nil = no ceiling
+    var allowedModels: [String]  // empty = unrestricted
+    var maxTier: ModelTierCode?  // nil = no ceiling
 
-    init(routerEnabled: Bool = true, preferredModels: [String] = [],
-         allowedModels: [String] = [], maxTier: ModelTierCode? = nil) {
+    init(
+        routerEnabled: Bool = true, preferredModels: [String] = [],
+        allowedModels: [String] = [], maxTier: ModelTierCode? = nil
+    ) {
         self.routerEnabled = routerEnabled
         self.preferredModels = preferredModels
         self.allowedModels = allowedModels
@@ -35,11 +37,13 @@ struct AgentProfile: Codable, Equatable, Identifiable, Sendable {
     /// of agents persisted before this field existed.
     var icon: String
 
-    init(id: UUID = UUID(), name: String, instructions: String,
-         toolPolicy: AgentToolPolicy, defaultModel: String? = nil,
-         permissionPosture: AgentPermissionMode? = nil,
-         routing: AgentRouting = AgentRouting(), builtin: Bool = false,
-         icon: String = "sparkles") {
+    init(
+        id: UUID = UUID(), name: String, instructions: String,
+        toolPolicy: AgentToolPolicy, defaultModel: String? = nil,
+        permissionPosture: AgentPermissionMode? = nil,
+        routing: AgentRouting = AgentRouting(), builtin: Bool = false,
+        icon: String = "sparkles"
+    ) {
         self.id = id
         self.name = name
         self.instructions = instructions

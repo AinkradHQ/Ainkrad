@@ -1,6 +1,6 @@
+import AinkradAppKit
 import Foundation
 import Observation
-import AinkradAppKit
 
 /// Publishes the working repo's own instruction files (`CLAUDE.md` /
 /// `AGENTS.md`, discovered by `RepoInstructionWalker`) as a single
@@ -18,7 +18,10 @@ final class RepoInstructionsLoader {
     private let root: URL
     private let perFileCharCap: Int
     private let fm: FileManager
-    private struct CacheEntry { let mtime: Date?; let text: String }
+    private struct CacheEntry {
+        let mtime: Date?
+        let text: String
+    }
     private var cache: [String: CacheEntry] = [:]
 
     init(root: URL, perFileCharCap: Int = 6000, fileManager: FileManager = .default) {
@@ -35,17 +38,20 @@ final class RepoInstructionsLoader {
             sections.append("### \(url.path)\n\(text)")
         }
         guard !sections.isEmpty else { return nil }
-        return AgentContextSnapshot(kind: Self.kind,
-                                    title: "Repository Instructions",
-                                    text: sections.joined(separator: "\n\n"))
+        return AgentContextSnapshot(
+            kind: Self.kind,
+            title: "Repository Instructions",
+            text: sections.joined(separator: "\n\n"))
     }
 
     private func readCached(_ url: URL) -> String? {
         let mtime = (try? fm.attributesOfItem(atPath: url.path)[.modificationDate] as? Date) ?? nil
         if let hit = cache[url.path], hit.mtime == mtime { return hit.text }
         guard let data = try? Data(contentsOf: url),
-              let raw = String(data: data, encoding: .utf8) else { return nil }
-        let capped = raw.count > perFileCharCap
+            let raw = String(data: data, encoding: .utf8)
+        else { return nil }
+        let capped =
+            raw.count > perFileCharCap
             ? String(raw.prefix(perFileCharCap)) + Self.truncationMarker
             : raw
         cache[url.path] = CacheEntry(mtime: mtime, text: capped)

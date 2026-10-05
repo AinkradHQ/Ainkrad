@@ -1,5 +1,5 @@
-import Testing
 import AinkradAppKitContract
+import Testing
 
 @Suite("SettingsPath")
 struct SettingsPathTests {

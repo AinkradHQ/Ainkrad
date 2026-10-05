@@ -1,8 +1,9 @@
+import AinkradHostRuntime
 // Tests/AinkradTests/LSPClientTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("LSPClient", .timeLimit(.minutes(1)))
 struct LSPClientTests {
@@ -10,29 +11,48 @@ struct LSPClientTests {
     private func stub(initializeFails: Bool = false) -> StubMCPTransport {
         StubMCPTransport { message in
             guard let id = message["id"]?.stringValue,
-                  let method = message["method"]?.stringValue else { return [] }
+                let method = message["method"]?.stringValue
+            else { return [] }
             switch method {
             case "initialize":
                 if initializeFails {
-                    return [.object(["jsonrpc": .string("2.0"), "id": .string(id),
-                        "error": .object(["code": .number(-32000), "message": .string("bad handshake")])])]
+                    return [
+                        .object([
+                            "jsonrpc": .string("2.0"), "id": .string(id),
+                            "error": .object(["code": .number(-32000), "message": .string("bad handshake")]),
+                        ])
+                    ]
                 }
-                return [.object(["jsonrpc": .string("2.0"), "id": .string(id),
-                    "result": .object(["capabilities": .object(["hoverProvider": .bool(true)])])])]
+                return [
+                    .object([
+                        "jsonrpc": .string("2.0"), "id": .string(id),
+                        "result": .object(["capabilities": .object(["hoverProvider": .bool(true)])]),
+                    ])
+                ]
             case "textDocument/formatting":
-                return [.object(["jsonrpc": .string("2.0"), "id": .string(id),
-                    "result": .array([.object([
-                        "range": .object([
-                            "start": .object(["line": .number(0), "character": .number(0)]),
-                            "end": .object(["line": .number(0), "character": .number(4)]),
+                return [
+                    .object([
+                        "jsonrpc": .string("2.0"), "id": .string(id),
+                        "result": .array([
+                            .object([
+                                "range": .object([
+                                    "start": .object(["line": .number(0), "character": .number(0)]),
+                                    "end": .object(["line": .number(0), "character": .number(4)]),
+                                ]),
+                                "newText": .string("    "),
+                            ])
                         ]),
-                        "newText": .string("    "),
-                    ])])])]
+                    ])
+                ]
             case "shutdown":
                 return [.object(["jsonrpc": .string("2.0"), "id": .string(id), "result": .null])]
             default:
-                return [.object(["jsonrpc": .string("2.0"), "id": .string(id),
-                    "error": .object(["code": .number(-32601), "message": .string("nope")])])]
+                return [
+                    .object([
+                        "jsonrpc": .string("2.0"), "id": .string(id),
+                        "error": .object(["code": .number(-32601), "message": .string("nope")]),
+                    ])
+                ]
             }
         }
     }
@@ -68,13 +88,19 @@ struct LSPClientTests {
         let client = LSPClient(transport: stub)
         try await client.initialize(rootURI: "file:///proj")
 
-        await stub.inject(.object([
-            "jsonrpc": .string("2.0"), "method": .string("textDocument/publishDiagnostics"),
-            "params": .object([
-                "uri": .string("file:///proj/a.swift"),
-                "diagnostics": .array([.object([
-                    "range": .object(["start": .object(["line": .number(3), "character": .number(5)])]),
-                    "severity": .number(1), "message": .string("expected ';'")])])])]))
+        await stub.inject(
+            .object([
+                "jsonrpc": .string("2.0"), "method": .string("textDocument/publishDiagnostics"),
+                "params": .object([
+                    "uri": .string("file:///proj/a.swift"),
+                    "diagnostics": .array([
+                        .object([
+                            "range": .object(["start": .object(["line": .number(3), "character": .number(5)])]),
+                            "severity": .number(1), "message": .string("expected ';'"),
+                        ])
+                    ]),
+                ]),
+            ]))
 
         var diags: [LSPDiagnostic] = []
         for _ in 0..<100 {
@@ -105,8 +131,12 @@ struct LSPClientTests {
         let silent = StubMCPTransport { message in
             guard let id = message["id"]?.stringValue else { return [] }
             if message["method"]?.stringValue == "initialize" {
-                return [.object(["jsonrpc": .string("2.0"), "id": .string(id),
-                    "result": .object(["capabilities": .object([:])])])]
+                return [
+                    .object([
+                        "jsonrpc": .string("2.0"), "id": .string(id),
+                        "result": .object(["capabilities": .object([:])]),
+                    ])
+                ]
             }
             return []
         }

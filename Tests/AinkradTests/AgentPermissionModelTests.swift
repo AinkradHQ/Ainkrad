@@ -1,14 +1,18 @@
 import Testing
+
 @testable import Ainkrad
 
 @Suite("AgentPermissionPolicy")
 struct AgentPermissionModelTests {
-    private func decide(_ p: ToolPermissionClass, _ mode: AgentPermissionMode,
-                        name: String = "edit_file", allow: Set<String> = [],
-                        gateReads: Bool, isIrreversible: Bool = false,
-                        isTrusted: Bool = false) -> PermissionDecision {
-        AgentPermissionPolicy.decide(toolPermission: p, toolName: name, mode: mode, allowlist: allow,
-                                     gateReads: gateReads, isIrreversible: isIrreversible, isTrusted: isTrusted)
+    private func decide(
+        _ p: ToolPermissionClass, _ mode: AgentPermissionMode,
+        name: String = "edit_file", allow: Set<String> = [],
+        gateReads: Bool, isIrreversible: Bool = false,
+        isTrusted: Bool = false
+    ) -> PermissionDecision {
+        AgentPermissionPolicy.decide(
+            toolPermission: p, toolName: name, mode: mode, allowlist: allow,
+            gateReads: gateReads, isIrreversible: isIrreversible, isTrusted: isTrusted)
     }
 
     @Test func askAutoApprovesReadsGatesWrites() {
@@ -70,12 +74,18 @@ struct AgentPermissionModelTests {
     func autoApproveAllowlistedIrreversibleStillGated() {
         // This is the bug: "Allow always" allowlists the whole tool NAME, so a later
         // irreversible call (e.g. `rm -rf`) through that same tool must NOT slip through.
-        #expect(decide(.write, .autoApprove, name: "run_terminal", allow: ["run_terminal"], gateReads: false, isIrreversible: true) == .requireApproval)
+        #expect(
+            decide(
+                .write, .autoApprove, name: "run_terminal", allow: ["run_terminal"], gateReads: false,
+                isIrreversible: true) == .requireApproval)
     }
 
     @Test("autoApprove: allowlisted tool + reversible call is unchanged (still auto-approves)")
     func autoApproveAllowlistedReversibleUnchanged() {
-        #expect(decide(.write, .autoApprove, name: "edit_file", allow: ["edit_file"], gateReads: false, isIrreversible: false) == .autoApprove)
+        #expect(
+            decide(
+                .write, .autoApprove, name: "edit_file", allow: ["edit_file"], gateReads: false, isIrreversible: false)
+                == .autoApprove)
     }
 
     @Test func memoryToolIsExemptInAskMode() {

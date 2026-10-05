@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// A "bring-your-own-endpoint" image backend for any OpenAI-images-compatible
 /// API (`POST <baseURL>/images/generations` → `{ data: [{ b64_json }] }`).

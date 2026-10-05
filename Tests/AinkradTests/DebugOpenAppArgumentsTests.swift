@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("DebugOpenAppArguments")
@@ -28,7 +29,7 @@ struct DebugOpenAppArgumentsTests {
     func appIDWithPayload() {
         let args = [
             "AinkradOpenApp": "thrall ",
-            "AinkradOpenAppPayload": " payload-data "
+            "AinkradOpenAppPayload": " payload-data ",
         ]
         let result = parseDebugOpenAppArguments({ args[$0] })
         #expect(result?.appID == "thrall")

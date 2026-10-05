@@ -38,10 +38,11 @@ enum InlineMarkdownCache {
         if let hit = cache.object(forKey: key) { return hit.value }
         // Never throws into the view: an unparseable fragment renders as its
         // raw source, which is what the previous `try?` fallback did.
-        let value = (try? AttributedString(
-            markdown: source,
-            options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
-        )) ?? AttributedString(source)
+        let value =
+            (try? AttributedString(
+                markdown: source,
+                options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
+            )) ?? AttributedString(source)
         cache.setObject(Box(value), forKey: key)
         countLock.withLock { _ = keys.insert(source) }
         return value

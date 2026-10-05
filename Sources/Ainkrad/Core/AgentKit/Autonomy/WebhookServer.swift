@@ -10,8 +10,10 @@ struct WebhookRequest: Sendable, Equatable {
 }
 
 enum WebhookRequestValidator {
-    static func validate(_ request: WebhookRequest, token: String,
-                         knownEndpoints: Set<String>) -> Result<TriggerEvent, WebhookError> {
+    static func validate(
+        _ request: WebhookRequest, token: String,
+        knownEndpoints: Set<String>
+    ) -> Result<TriggerEvent, WebhookError> {
         guard isAuthorized(bearer: request.bearer, token: token) else {
             return .failure(.unauthorized)
         }
@@ -51,9 +53,11 @@ final class WebhookServer {
     private(set) var isRunning = false
     private(set) var resolvedPort: UInt16?
 
-    init(port: UInt16, token: String, dispatcher: TriggerDispatcher,
-         schedulesProviding: @escaping @MainActor () -> Set<String>,
-         resultProviding: (@MainActor (String) -> String)? = nil) {
+    init(
+        port: UInt16, token: String, dispatcher: TriggerDispatcher,
+        schedulesProviding: @escaping @MainActor () -> Set<String>,
+        resultProviding: (@MainActor (String) -> String)? = nil
+    ) {
         self.port = port
         self.token = token
         self.dispatcher = dispatcher
@@ -82,27 +86,36 @@ final class WebhookServer {
         isRunning = true
     }
 
-    func stop() { listener?.cancel(); listener = nil; isRunning = false; resolvedPort = nil }
+    func stop() {
+        listener?.cancel()
+        listener = nil
+        isRunning = false
+        resolvedPort = nil
+    }
 
     private func receive(on connection: NWConnection) {
         connection.receive(minimumIncompleteLength: 1, maximumLength: 64 * 1024) { [weak self] data, _, _, _ in
             guard let self, let data, let raw = String(data: data, encoding: .utf8) else {
-                connection.cancel(); return
+                connection.cancel()
+                return
             }
             Task { @MainActor in
                 if let runID = Self.parseResultLookup(raw), let resultProviding = self.resultProviding {
                     // The reply endpoint requires the SAME bearer token as POST /hook —
                     // loopback + an unguessable runID is not the only boundary.
                     guard WebhookRequestValidator.isAuthorized(bearer: Self.bearer(in: raw), token: self.token) else {
-                        connection.send(content: "HTTP/1.1 401 Unauthorized\r\n\r\n".data(using: .utf8),
-                                        completion: .contentProcessed { _ in connection.cancel() })
+                        connection.send(
+                            content: "HTTP/1.1 401 Unauthorized\r\n\r\n".data(using: .utf8),
+                            completion: .contentProcessed { _ in connection.cancel() })
                         return
                     }
                     let json = resultProviding(runID)
                     let response = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n\(json)"
-                    connection.send(content: response.data(using: .utf8), completion: .contentProcessed { _ in
-                        connection.cancel()
-                    })
+                    connection.send(
+                        content: response.data(using: .utf8),
+                        completion: .contentProcessed { _ in
+                            connection.cancel()
+                        })
                     return
                 }
                 let parsed = Self.parse(raw)
@@ -113,16 +126,19 @@ final class WebhookServer {
                     switch result {
                     case .success(let event):
                         let runID = self.dispatcher.fire(event)
-                        response = "HTTP/1.1 202 Accepted\r\nContent-Type: application/json\r\n\r\n{\"runID\":\"\(runID?.uuidString ?? "")\"}"
+                        response =
+                            "HTTP/1.1 202 Accepted\r\nContent-Type: application/json\r\n\r\n{\"runID\":\"\(runID?.uuidString ?? "")\"}"
                     case .failure(.unauthorized): response = "HTTP/1.1 401 Unauthorized\r\n\r\n"
                     default: response = "HTTP/1.1 404 Not Found\r\n\r\n"
                     }
                 } else {
                     response = "HTTP/1.1 400 Bad Request\r\n\r\n"
                 }
-                connection.send(content: response.data(using: .utf8), completion: .contentProcessed { _ in
-                    connection.cancel()
-                })
+                connection.send(
+                    content: response.data(using: .utf8),
+                    completion: .contentProcessed { _ in
+                        connection.cancel()
+                    })
             }
         }
     }
@@ -133,7 +149,8 @@ final class WebhookServer {
         let requestLine = raw.components(separatedBy: "\r\n").first ?? ""
         let tokens = requestLine.components(separatedBy: " ")
         guard tokens.count >= 2, tokens[0] == "GET",
-              let range = tokens[1].range(of: "/result/") else { return nil }
+            let range = tokens[1].range(of: "/result/")
+        else { return nil }
         return String(tokens[1][range.upperBound...])
     }
 

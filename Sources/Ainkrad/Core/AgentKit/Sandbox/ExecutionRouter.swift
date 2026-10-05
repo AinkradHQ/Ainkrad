@@ -42,7 +42,8 @@ final class ExecutionRouter {
     /// no-silent-escalation guard. Pure/synchronous — does not check backend
     /// availability (that happens in `route`).
     func resolveProfile(tier: TrustTier, policy: AgentExecutionPolicy?) -> SandboxProfile {
-        let workspaceWrite = profiles.profile(id: BuiltInSandboxProfiles.defaultNonMainID)
+        let workspaceWrite =
+            profiles.profile(id: BuiltInSandboxProfiles.defaultNonMainID)
             ?? BuiltInSandboxProfiles.workspaceWrite
 
         // Explicit per-Agent profile takes precedence when it resolves to a
@@ -66,7 +67,8 @@ final class ExecutionRouter {
             // currently writes a broader posture), but closes the ceiling so
             // a future posture author can't silently widen a background run.
             if tier == .background && p.backend != .host && p.backend != .cloud
-                && !p.isNoMorePermissive(than: workspaceWrite) {
+                && !p.isNoMorePermissive(than: workspaceWrite)
+            {
                 return workspaceWrite
             }
             return p
@@ -95,7 +97,8 @@ final class ExecutionRouter {
     /// Omitting `remote` (the default) leaves every existing caller on exactly
     /// the path it had before.
     func route(tier: TrustTier, policy: AgentExecutionPolicy?, remote: String? = nil) async throws
-        -> (any ExecutionBackend, SandboxProfile) {
+        -> (any ExecutionBackend, SandboxProfile)
+    {
         let profile = resolveProfile(tier: tier, policy: policy)
         let targetsRemote = !(remote ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         let kind: SandboxBackendKind = targetsRemote ? .ssh : profile.backend

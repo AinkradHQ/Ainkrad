@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("Scry wiring")
 @MainActor
@@ -14,10 +15,13 @@ struct ScryWiringTests {
     @Test func toolMutatesTheWiredStore() async throws {
         let store = ScryStore(sessionID: "default")
         let registry = AgentToolRegistry(tools: [ScryRenderTool(store: store)])
-        let result = await registry.run(ToolCall(
-            id: "1", name: "scry_render",
-            input: .object(["op": .string("add"), "id": .string("a"),
-                            "kind": .string("text"), "body": .string("hello")])))
+        let result = await registry.run(
+            ToolCall(
+                id: "1", name: "scry_render",
+                input: .object([
+                    "op": .string("add"), "id": .string("a"),
+                    "kind": .string("text"), "body": .string("hello"),
+                ])))
         #expect(!result.isError)
         #expect(store.model.elements.first?.body == "hello")
     }

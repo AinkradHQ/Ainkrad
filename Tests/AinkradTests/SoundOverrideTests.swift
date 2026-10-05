@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 /// Covers `SoundEngine.resolvedURL`, the pure override-resolution rule behind
@@ -54,7 +55,7 @@ final class SoundOverrideResolutionTests {
     @Test("returns nil when neither the override nor the bundled asset exists")
     func neitherExistsReturnsNil() {
         let resolved = SoundEngine.resolvedURL(
-            for: .error,   // not present in `bundleDir`
+            for: .error,  // not present in `bundleDir`
             overrideDirectory: overrideDir,
             bundle: bundle,
             fileExists: { _ in false }
@@ -68,7 +69,7 @@ final class SoundOverrideResolutionTests {
             for: .confirm,
             overrideDirectory: nil,
             bundle: bundle,
-            fileExists: { _ in true }   // must be ignored: there's no override path to check
+            fileExists: { _ in true }  // must be ignored: there's no override path to check
         )
         #expect(resolved == bundleDir.appendingPathComponent("confirm.wav"))
     }

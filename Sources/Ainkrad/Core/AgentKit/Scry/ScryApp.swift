@@ -1,5 +1,5 @@
-import SwiftUI
 import AinkradAppKit
+import SwiftUI
 
 /// The compiled-in Live Scry app — a tiled surface of agent-rendered layered
 /// cards. Host-embedded (reads `AppEnvironment` directly like `SageApp`);

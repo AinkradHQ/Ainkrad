@@ -1,5 +1,5 @@
-import Foundation
 import AinkradSignal
+import Foundation
 
 /// Plumbing only: an `AF_UNIX` listener that moves bytes to a handler and a
 /// reply back. Every policy decision lives in `SignalIngressCoordinator`, so
@@ -43,8 +43,9 @@ final class SignalSocketServer {
             throw StartFailure.pathTooLong(length: path.utf8.count)
         }
 
-        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
-                                                withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true)
         // Unlink whatever is there first. After a crash the previous socket
         // file survives, and `bind` on an existing path fails with EADDRINUSE
         // — which would mean one hard shutdown permanently disables external
@@ -58,8 +59,9 @@ final class SignalSocketServer {
         address.sun_family = sa_family_t(AF_UNIX)
         _ = withUnsafeMutablePointer(to: &address.sun_path) { destination in
             path.withCString { source in
-                strncpy(UnsafeMutableRawPointer(destination).assumingMemoryBound(to: CChar.self),
-                        source, capacity - 1)
+                strncpy(
+                    UnsafeMutableRawPointer(destination).assumingMemoryBound(to: CChar.self),
+                    source, capacity - 1)
             }
         }
 
@@ -151,7 +153,7 @@ final class SignalSocketServer {
 
         while payload.count < limit {
             let read = recv(client, &byte, 1, 0)
-            if read <= 0 { break }              // peer closed, or an error
+            if read <= 0 { break }  // peer closed, or an error
             if byte[0] == UInt8(ascii: "\n") { break }
             payload.append(byte[0])
         }

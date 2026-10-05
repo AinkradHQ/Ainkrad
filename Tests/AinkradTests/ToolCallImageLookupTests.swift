@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradHostRuntime
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("ToolCallImageLookup")
@@ -23,11 +24,13 @@ struct ToolCallImageLookupTests {
     @Test func returnsNilForMissingOrNonImage() {
         let store = ScryStore(sessionID: "s")
         #expect(ToolCallImageLookup.canvasImageDataURL(resultText: nil, store: store) == nil)
-        #expect(ToolCallImageLookup.canvasImageDataURL(
-            resultText: "no uuid", store: store) == nil)
+        #expect(
+            ToolCallImageLookup.canvasImageDataURL(
+                resultText: "no uuid", store: store) == nil)
         // element exists but is not an image kind
         let id = store.add(ScryElement(id: UUID().uuidString, kind: .card, title: "t", body: "hi"))
-        #expect(ToolCallImageLookup.canvasImageDataURL(
-            resultText: "element \(id)", store: store) == nil)
+        #expect(
+            ToolCallImageLookup.canvasImageDataURL(
+                resultText: "element \(id)", store: store) == nil)
     }
 }

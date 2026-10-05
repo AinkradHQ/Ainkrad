@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("MarkdownBlocks")
@@ -37,12 +38,13 @@ struct MarkdownBlocksTests {
 
     @Test func mixedBlocksSeparatedByBlankLines() {
         let src = "intro\n\n- one\n- two\n\n```\ncode\n```\n\noutro"
-        #expect(MarkdownBlocks.parse(src) == [
-            .paragraph("intro"),
-            .bulletList(["one", "two"]),
-            .codeBlock(language: nil, code: "code"),
-            .paragraph("outro"),
-        ])
+        #expect(
+            MarkdownBlocks.parse(src) == [
+                .paragraph("intro"),
+                .bulletList(["one", "two"]),
+                .codeBlock(language: nil, code: "code"),
+                .paragraph("outro"),
+            ])
     }
 
     @Test func consecutiveTextLinesJoinIntoOneParagraph() {

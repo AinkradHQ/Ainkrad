@@ -1,5 +1,5 @@
-import Foundation
 import AppKit
+import Foundation
 
 /// Decodes a `data:` image URL (as produced by `image_generate`) into bytes /
 /// an `NSImage`. `AsyncImage`/`URLSession` do not load the `data:` scheme, so

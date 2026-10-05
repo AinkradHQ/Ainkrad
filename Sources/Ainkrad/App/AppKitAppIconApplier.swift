@@ -1,5 +1,5 @@
-import AppKit
 import AinkradHostRuntime
+import AppKit
 
 /// Real `AppIconApplying`: sets the running app's Dock icon to the composed
 /// `.icns` resolved from the user's color + appearance settings and (for Auto)
@@ -42,12 +42,15 @@ final class AppKitAppIconApplier: NSObject, AppIconApplying {
     }
 
     private func reapply() {
-        let systemDark = NSApplication.shared.effectiveAppearance
+        let systemDark =
+            NSApplication.shared.effectiveAppearance
             .bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        let name = AppIconResolver.resourceName(for: choice, theme: theme,
-                                                appearance: appearance, systemDark: systemDark)
+        let name = AppIconResolver.resourceName(
+            for: choice, theme: theme,
+            appearance: appearance, systemDark: systemDark)
         guard let url = Bundle.main.url(forResource: name, withExtension: "icns"),
-              let image = NSImage(contentsOf: url) else { return }
+            let image = NSImage(contentsOf: url)
+        else { return }
         NSApplication.shared.applicationIconImage = image
         stampBundleIcon(resource: name, iconURL: url)
     }
@@ -82,7 +85,8 @@ final class AppKitAppIconApplier: NSObject, AppIconApplying {
             defaults.removeObject(forKey: Self.stampedBundleVersionKey)
         case .write(let name):
             guard let image = NSImage(contentsOf: iconURL),
-                  NSWorkspace.shared.setIcon(image, forFile: bundleURL.path, options: []) else {
+                NSWorkspace.shared.setIcon(image, forFile: bundleURL.path, options: [])
+            else {
                 Log.app.error("Could not stamp icon \(name, privacy: .public) onto \(bundleURL.path, privacy: .public)")
                 return
             }
@@ -95,8 +99,9 @@ final class AppKitAppIconApplier: NSObject, AppIconApplying {
     /// which case stamping would add signature detritus for no visible change.
     private func shippedIconMatches(_ iconURL: URL) -> Bool {
         guard let shipped = Bundle.main.url(forResource: "AppIcon", withExtension: "icns"),
-              let a = try? Data(contentsOf: shipped),
-              let b = try? Data(contentsOf: iconURL) else { return false }
+            let a = try? Data(contentsOf: shipped),
+            let b = try? Data(contentsOf: iconURL)
+        else { return false }
         return a == b
     }
 }

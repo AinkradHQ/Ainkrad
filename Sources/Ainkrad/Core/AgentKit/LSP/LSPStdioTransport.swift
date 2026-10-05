@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/LSP/LSPStdioTransport.swift
 import Foundation
-import AinkradHostRuntime
 
 /// Spawns a local language-server subprocess and speaks Content-Length-framed
 /// JSON-RPC over its stdio. Structurally a copy of MCP's `StdioTransport` —
@@ -39,7 +39,7 @@ actor LSPStdioTransport: MCPTransport {
         p.environment = merged
         p.standardInput = stdin
         p.standardOutput = stdout
-        p.standardError = Pipe()   // drained to /dev/null implicitly (never read)
+        p.standardError = Pipe()  // drained to /dev/null implicitly (never read)
         do {
             try p.run()
         } catch {
@@ -85,10 +85,13 @@ actor LSPStdioTransport: MCPTransport {
     nonisolated func incoming() -> AsyncThrowingStream<JSONValue, Error> {
         let handle = stdout.fileHandleForReading
         return AsyncThrowingStream { continuation in
-            let parser = LSPFrameParser()   // buffers partial frames across chunks
+            let parser = LSPFrameParser()  // buffers partial frames across chunks
             handle.readabilityHandler = { fh in
                 let chunk = fh.availableData
-                guard !chunk.isEmpty else { continuation.finish(); return } // EOF
+                guard !chunk.isEmpty else {
+                    continuation.finish()
+                    return
+                }  // EOF
                 for value in parser.push(chunk) { continuation.yield(value) }
             }
             continuation.onTermination = { _ in handle.readabilityHandler = nil }

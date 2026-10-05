@@ -60,7 +60,9 @@ struct BatteryInfo: Equatable {
 enum StatusClock {
     /// Formats `date` into a short time string ("10:13 PM") and a short
     /// date string ("Tue, Nov 14"), both localized to `calendar`/`locale`.
-    static func string(from date: Date, calendar: Calendar = .current, locale: Locale = .current) -> (time: String, date: String) {
+    static func string(from date: Date, calendar: Calendar = .current, locale: Locale = .current) -> (
+        time: String, date: String
+    ) {
         let timeFormatter = DateFormatter()
         timeFormatter.calendar = calendar
         timeFormatter.locale = locale

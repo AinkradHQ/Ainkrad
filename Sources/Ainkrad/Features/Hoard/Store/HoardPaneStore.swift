@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 import Foundation
 import Observation
-import AinkradHostRuntime
 
 /// One Hoard pane's state: its tabs, which is active, and the persistence of
 /// both. View preferences (hidden files, sort) are pane-wide — they apply to
@@ -47,14 +47,15 @@ final class HoardPaneStore {
     }
 
     func persist() {
-        persistence.save(HoardPaneDocument(
-            tabPaths: tabs.map(\.currentDirectory.path),
-            activeTabIndex: activeTabIndex,
-            showHidden: activeTab.showHidden,
-            showIgnored: activeTab.showIgnored,
-            sortKey: activeTab.sortKey.rawValue,
-            sortAscending: activeTab.sortAscending
-        ))
+        persistence.save(
+            HoardPaneDocument(
+                tabPaths: tabs.map(\.currentDirectory.path),
+                activeTabIndex: activeTabIndex,
+                showHidden: activeTab.showHidden,
+                showIgnored: activeTab.showIgnored,
+                sortKey: activeTab.sortKey.rawValue,
+                sortAscending: activeTab.sortAscending
+            ))
     }
 
     private func restore() {

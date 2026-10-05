@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// The single entry point the UI (AIN-136) will call: refresh the catalog,
 /// install/uninstall, list what's installed, and detect updates.
@@ -15,8 +15,10 @@ final class AppStoreService: AppStoreServing {
     private let skillInstaller: SkillInstaller?
     private let persistence: PersistenceStore
 
-    init(catalog: CatalogService, installer: PluginInstaller, mcpInstaller: MCPServerInstaller,
-         persistence: PersistenceStore, skillInstaller: SkillInstaller? = nil) {
+    init(
+        catalog: CatalogService, installer: PluginInstaller, mcpInstaller: MCPServerInstaller,
+        persistence: PersistenceStore, skillInstaller: SkillInstaller? = nil
+    ) {
         self.catalog = catalog
         self.installer = installer
         self.mcpInstaller = mcpInstaller
@@ -33,7 +35,7 @@ final class AppStoreService: AppStoreServing {
     /// secret keys via `MCPServerInstaller` — no download, no `dlopen`.
     func install(appID: String) async throws {
         guard let entry = catalog.cached.first(where: { $0.appID == appID }) else {
-            throw AppStoreError.notInstalled(appID)   // not in catalog
+            throw AppStoreError.notInstalled(appID)  // not in catalog
         }
         switch entry.kind {
         case .plugin:

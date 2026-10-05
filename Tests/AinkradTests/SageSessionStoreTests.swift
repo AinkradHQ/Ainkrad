@@ -1,15 +1,22 @@
-import Testing
-import Foundation
-@testable import Ainkrad
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 @MainActor
 @Suite struct SageSessionStoreTests {
-    private func makeStore(_ persistence: PersistenceStore = InMemoryPersistenceStore(),
-                           start: TimeInterval = 0) -> (SageSessionStore, () -> Void) {
+    private func makeStore(
+        _ persistence: PersistenceStore = InMemoryPersistenceStore(),
+        start: TimeInterval = 0
+    ) -> (SageSessionStore, () -> Void) {
         var t = start
-        let store = SageSessionStore(persistence: persistence,
-                                          now: { t += 1; return Date(timeIntervalSince1970: t) })
+        let store = SageSessionStore(
+            persistence: persistence,
+            now: {
+                t += 1
+                return Date(timeIntervalSince1970: t)
+            })
         return (store, { t += 1 })
     }
 
@@ -85,9 +92,11 @@ import AinkradHostRuntime
     @Test func reopenedStoreSurfacesActiveMessagesForRestore() {
         let persistence = InMemoryPersistenceStore()
         let (store, _) = makeStore(persistence)
-        store.syncActive(messages: [AgentMessage(role: .user, text: "restore me"),
-                                    AgentMessage(role: .assistant, text: "ok")])
-        store.flush()   // as quitting does — see the note in persistsAcrossInstances
+        store.syncActive(messages: [
+            AgentMessage(role: .user, text: "restore me"),
+            AgentMessage(role: .assistant, text: "ok"),
+        ])
+        store.flush()  // as quitting does — see the note in persistsAcrossInstances
         let (reopened, _) = makeStore(persistence)
         #expect(reopened.activeMessages.map(\.text) == ["restore me", "ok"])
     }

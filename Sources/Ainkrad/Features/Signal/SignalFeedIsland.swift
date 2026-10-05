@@ -1,7 +1,7 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
 import AinkradSignal
+import SwiftUI
 
 /// The in-window feed: a source rail, severity filters, search, and the list.
 ///
@@ -60,9 +60,10 @@ struct SignalFeedIsland: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
-            SignalSourceRail(items: railItems,
-                             selection: $viewState.selectedSource,
-                             onConfigure: onConfigureSource)
+            SignalSourceRail(
+                items: railItems,
+                selection: $viewState.selectedSource,
+                onConfigure: onConfigureSource)
             VStack(alignment: .leading, spacing: 0) {
                 header
                 if showsFilters || viewState.chipFilterCount > 0 {
@@ -70,9 +71,10 @@ struct SignalFeedIsland: View {
                         // Wipes down from the header it belongs to rather than
                         // fading in place, so the rows below are seen to make
                         // room instead of being covered.
-                        .transition(reduceMotion
-                                    ? .opacity
-                                    : .move(edge: .top).combined(with: .opacity))
+                        .transition(
+                            reduceMotion
+                                ? .opacity
+                                : .move(edge: .top).combined(with: .opacity))
                 }
                 if isDegraded { degradedNotice }
                 content
@@ -86,17 +88,19 @@ struct SignalFeedIsland: View {
             noMatches
         } else if viewState.effectiveGrouping == .bySource {
             SignalFeedGroupedList(
-                groups: SignalPresentation.sourceGroups(filtered, readIDs: readIDs,
-                                                        name: displayName),
+                groups: SignalPresentation.sourceGroups(
+                    filtered, readIDs: readIDs,
+                    name: displayName),
                 collapsed: $viewState.collapsedSources,
                 repeatCounts: repeatCounts, readIDs: readIDs, now: now,
                 onActivate: onActivate, onAction: onAction, menuItems: menuItems,
                 pinnedIDs: pinnedIDs, expandedIDs: expandedIDs)
         } else {
-            SignalFeedList(events: filtered, repeatCounts: repeatCounts, readIDs: readIDs,
-                           now: now, calendar: .current, onActivate: onActivate,
-                           onAction: onAction, menuItems: menuItems,
-                           pinnedIDs: pinnedIDs, expandedIDs: expandedIDs)
+            SignalFeedList(
+                events: filtered, repeatCounts: repeatCounts, readIDs: readIDs,
+                now: now, calendar: .current, onActivate: onActivate,
+                onAction: onAction, menuItems: menuItems,
+                pinnedIDs: pinnedIDs, expandedIDs: expandedIDs)
         }
     }
 
@@ -129,13 +133,15 @@ struct SignalFeedIsland: View {
                     // Names what it will actually do. Under a filter, "Mark all
                     // read" reads as everything and quietly means twelve — so
                     // the user clears rows they cannot see.
-                    Text(viewState.isShowingEverything
-                         ? "Mark all read"
-                         : "Mark \(filtered.filter { !readIDs.contains($0.id) }.count) read")
-                        .font(AinkradFont.display(10.5, weight: .medium))
-                        .foregroundStyle(theme.accentPrimary)
-                        .lineLimit(1)
-                        .fixedSize(horizontal: true, vertical: false)
+                    Text(
+                        viewState.isShowingEverything
+                            ? "Mark all read"
+                            : "Mark \(filtered.filter { !readIDs.contains($0.id) }.count) read"
+                    )
+                    .font(AinkradFont.display(10.5, weight: .medium))
+                    .foregroundStyle(theme.accentPrimary)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
                 }
                 .buttonStyle(.plain)
             }
@@ -162,8 +168,11 @@ struct SignalFeedIsland: View {
                 Text(count > 0 ? "Filters · \(count)" : "Filters")
                     .font(AinkradFont.display(10.5, weight: .medium))
             }
-            .foregroundStyle(count > 0 ? theme.accentSecondary
-                                       : theme.foreground.opacity(0.55))
+            .foregroundStyle(
+                count > 0
+                    ? theme.accentSecondary
+                    : theme.foreground.opacity(0.55)
+            )
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -177,8 +186,10 @@ struct SignalFeedIsland: View {
     private var quietControl: some View {
         let glyph = Image(systemName: isMuted ? "bell.slash.fill" : "bell.slash")
             .font(.system(size: 10.5, weight: .medium))
-            .foregroundStyle(isMuted ? theme.accentSecondary
-                                     : theme.foreground.opacity(0.45))
+            .foregroundStyle(
+                isMuted
+                    ? theme.accentSecondary
+                    : theme.foreground.opacity(0.45))
         if isMuted {
             Button(action: onResume) { glyph }
                 .buttonStyle(.plain)
@@ -189,11 +200,13 @@ struct SignalFeedIsland: View {
             // AppKit menu -- grey slab, system corner radius, system highlight
             // -- which landed in the middle of the HUD looking like it belonged
             // to another application.
-            AinkradMenuButton(items: SignalSnooze.allCases.map { snooze in
-                AinkradMenuItem(title: snooze.label, systemName: "bell.slash") {
-                    onSnooze(snooze)
+            AinkradMenuButton(
+                items: SignalSnooze.allCases.map { snooze in
+                    AinkradMenuItem(title: snooze.label, systemName: "bell.slash") {
+                        onSnooze(snooze)
+                    }
                 }
-            }) {
+            ) {
                 glyph
             }
             .help("Go quiet")
@@ -208,7 +221,8 @@ struct SignalFeedIsland: View {
                     label: severity.rawValue.capitalized,
                     swatch: SignalPresentation.status(for: severity)
                         .color(in: theme, statusColors: status),
-                    isOn: viewState.severities.contains(severity)) {
+                    isOn: viewState.severities.contains(severity)
+                ) {
                     if viewState.severities.contains(severity) {
                         viewState.severities.remove(severity)
                     } else {
@@ -216,8 +230,10 @@ struct SignalFeedIsland: View {
                     }
                 }
             }
-            AinkradSwatchChip(label: "Unread", swatch: theme.accentSecondary,
-                              isOn: viewState.unreadOnly) {
+            AinkradSwatchChip(
+                label: "Unread", swatch: theme.accentSecondary,
+                isOn: viewState.unreadOnly
+            ) {
                 viewState.unreadOnly.toggle()
             }
             Spacer()

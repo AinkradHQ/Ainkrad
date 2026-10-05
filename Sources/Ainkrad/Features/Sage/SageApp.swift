@@ -1,5 +1,5 @@
-import SwiftUI
 import AinkradAppKit
+import SwiftUI
 
 /// The compiled-in Sage app — the tiled AgentKit chat surface. It is
 /// host-embedded rather than a real plugin: its views read `AppEnvironment`

@@ -1,11 +1,13 @@
 import Testing
+
 @testable import Ainkrad
 
 @Suite("HTMLTextExtractor")
 struct HTMLTextExtractorTests {
     @Test func stripsTagsAndScripts() {
-        let html = "<html><head><style>.a{color:red}</style></head>" +
-                   "<body><h1>Hi</h1><script>evil()</script><p>World &amp; peace</p></body></html>"
+        let html =
+            "<html><head><style>.a{color:red}</style></head>"
+            + "<body><h1>Hi</h1><script>evil()</script><p>World &amp; peace</p></body></html>"
         let text = HTMLTextExtractor.plainText(from: html)
         #expect(text.contains("Hi"))
         #expect(text.contains("World & peace"))
