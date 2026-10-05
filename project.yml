@@ -289,7 +289,8 @@ packages:
     # e3aa233: Epic 3 skin token contract: skin model, theme loader, environment bridge (T3.1, T3.2, T3.4a).
     # 28773ab: Epic 3 complete: every AppKit component reads the skin (T3.5.0-T3.5.9, #69-#80);
     #   AppKitUI ABI since ebeeb02: 0 removed, 4639 added (abi-ui-diff). default.theme regenerated.
-    revision: 28773ab758c2671c29a9e850540636fed8fa66ce
+    # 3618e86: Epic 4 promotions: AinkradRailItem, AinkradCornerBrackets, AinkradBrandChevron, .ainkradRowBackground, .ainkradOverlayChrome, AinkradCommandField (#81-#86).
+    revision: 3618e86aba65d9f07e5ad686f3d6822657c76ab3
 
 targets:
   AinkradHostRuntime:

@@ -125,6 +125,7 @@ struct ComponentGalleryView: View {
                         wave3Section.id("wave3")
                         wave4Section.id("wave4")
                         wave5Section.id("wave5")
+                        themeFoundationSection.id("themeFoundation")
                     }
                     .padding(AinkradSpacing.lg)
                 }
@@ -242,6 +243,7 @@ struct ComponentGalleryView: View {
             case "wave3": wave3Section
             case "wave4": wave4Section
             case "wave5": wave5Section
+            case "themeFoundation": themeFoundationSection
             default: EmptyView()
             }
         }
