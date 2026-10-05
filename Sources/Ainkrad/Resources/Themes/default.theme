@@ -180,13 +180,10 @@
       "spinnerSize" : 14,
       "stroke" : {
         "color" : {
-          "hover" : "tint@0.9",
+          "hover" : "tint@0.95",
           "rest" : "tint@0.55"
         },
-        "width" : {
-          "hover" : 1.25,
-          "rest" : 1
-        }
+        "width" : 1.25
       }
     },
     "captionedRow" : {
@@ -215,7 +212,9 @@
           "rest" : 1,
           "selected" : 1.5
         }
-      }
+      },
+      "hoverBracketInset" : -2,
+      "hoverBracketLength" : 10
     },
     "checkbox" : {
       "checkGlyphFont" : {
@@ -253,16 +252,20 @@
           "selected" : "accentSecondary@0.85"
         },
         "width" : {
-          "rest" : 1,
+          "rest" : 1.25,
           "selected" : 1.25
         }
       }
     },
     "chip" : {
-      "fg" : "foreground@0.85",
+      "fg" : {
+        "rest" : "foreground@0.85",
+        "selected" : "foreground"
+      },
       "fill" : {
         "hover" : "surfaceElevated@0.65",
-        "rest" : "surfaceElevated@0.45"
+        "rest" : "surfaceElevated@0.45",
+        "selected" : "surfaceElevated@0.8"
       },
       "hoverScale" : 1.03,
       "iconFont" : {
@@ -283,7 +286,13 @@
           "rest" : "accentSecondary@0.3"
         },
         "width" : 1
-      }
+      },
+      "removeFont" : {
+        "scaled" : false,
+        "size" : 8,
+        "weight" : "bold"
+      },
+      "removePadding" : 3
     },
     "codeBlock" : {
       "codeColor" : "foreground@0.92",
@@ -340,11 +349,15 @@
           "rest" : "accentPrimary@0.35"
         },
         "width" : {
-          "focused" : 1.25,
-          "rest" : 1
+          "focused" : 1.5,
+          "rest" : 1.25
         }
       },
-      "swatchWidth" : 28
+      "swatchWidth" : 28,
+      "channelTickHeight" : 10,
+      "channelTickWidth" : 2,
+      "labelColor" : "foreground@0.8",
+      "valueColor" : "foreground@0.6"
     },
     "combobox" : {
       "fill" : "surfaceElevated@0.5",
@@ -368,8 +381,8 @@
           "rest" : "accentPrimary@0.3"
         },
         "width" : {
-          "focused" : 1.25,
-          "rest" : 1
+          "focused" : 1.5,
+          "rest" : 1.25
         }
       }
     },
@@ -421,7 +434,9 @@
       "valueColor" : "accentSecondary@0.85",
       "valueFont" : {
         "role" : "mono"
-      }
+      },
+      "glyphWidth" : 18,
+      "uppercasedTracking" : 0.6
     },
     "confirmDialog" : {
       "maxWidth" : 360,
@@ -433,7 +448,8 @@
         "role" : "headline",
         "tracking" : 0.6,
         "weight" : "semibold"
-      }
+      },
+      "transitionScale" : 0.94
     },
     "contextMenu" : {
       "bodyFont" : {
@@ -448,7 +464,9 @@
       "rowShape" : {
         "cut" : 4,
         "style" : "chamfer"
-      }
+      },
+      "rowGap" : 2,
+      "tint" : "foreground@0.9"
     },
     "dataTable" : {
       "cellColor" : "foreground@0.9",
@@ -480,7 +498,14 @@
         "scaled" : false,
         "size" : 8,
         "weight" : "bold"
-      }
+      },
+      "edgeGlow" : {
+        "color" : "accentSecondary@0.6",
+        "radius" : 3
+      },
+      "edgeWidth" : 2,
+      "headerCellGap" : 3,
+      "rowGap" : 2
     },
     "disclosureGroup" : {
       "chevronColor" : "foreground@0.5",
@@ -490,7 +515,7 @@
       },
       "headerFill" : {
         "hover" : "surfaceElevated@0.5",
-        "rest" : "surfaceElevated"
+        "rest" : "clear"
       },
       "headerShape" : {
         "cut" : 8,
@@ -501,6 +526,14 @@
         "role" : "caption",
         "tracking" : 1.2,
         "weight" : "semibold"
+      },
+      "expandAnimation" : {
+        "curve" : "easeOut",
+        "duration" : 0.25
+      },
+      "hoverAnimation" : {
+        "curve" : "easeOut",
+        "duration" : 0.15
       }
     },
     "drawer" : {
@@ -550,7 +583,10 @@
       "labelFont" : {
         "role" : "body"
       },
-      "tickColor" : "accentSecondary@0.55"
+      "tickColor" : "accentSecondary@0.55",
+      "hintLeading" : 6,
+      "tickHeight" : 12,
+      "tickWidth" : 2
     },
     "groupedSelectRows" : {
       "detailColor" : {
@@ -582,7 +618,11 @@
       },
       "titleFont" : {
         "role" : "body"
-      }
+      },
+      "headerKerning" : 1,
+      "headerPadBottom" : 2,
+      "panelMaxHeight" : 320,
+      "panelMinWidth" : 340
     },
     "groupedSelectTrigger" : {
       "chevron" : {
@@ -612,7 +652,7 @@
           "selected" : "accentPrimary@0.75"
         },
         "width" : {
-          "rest" : 1,
+          "rest" : 1.25,
           "selected" : 1.25
         }
       }
@@ -661,9 +701,13 @@
       },
       "size" : 16,
       "stroke" : {
-        "color" : "accentSecondary@0.4",
+        "color" : {
+          "rest" : "accentSecondary@0.4",
+          "selected" : "clear"
+        },
         "width" : 1
-      }
+      },
+      "glyphColor" : "accentSecondary"
     },
     "kbd" : {
       "color" : "foreground@0.75",
@@ -679,7 +723,9 @@
       "stroke" : {
         "color" : "foreground@0.2",
         "width" : 1
-      }
+      },
+      "paddingH" : 6,
+      "paddingV" : 2
     },
     "listRow" : {
       "fill" : {
@@ -698,11 +744,27 @@
       "titleFont" : {
         "role" : "body",
         "weight" : "medium"
-      }
+      },
+      "edgeGlow" : {
+        "color" : {
+          "rest" : "clear",
+          "selected" : "accentSecondary@0.6"
+        },
+        "radius" : 3
+      },
+      "edgeWidth" : {
+        "hover" : 2,
+        "rest" : 0,
+        "selected" : 2
+      },
+      "gap" : 2
     },
     "loadingState" : {
       "captionColor" : "foreground@0.6",
-      "spinnerSize" : 28
+      "spinnerSize" : 28,
+      "captionFont" : {
+        "role" : "caption"
+      }
     },
     "logView" : {
       "ansiSlots" : [
@@ -735,7 +797,7 @@
     },
     "meter" : {
       "arcGlow" : {
-        "color" : "accentSecondary@0.55",
+        "color" : "tint@0.55",
         "radius" : 4
       },
       "labelColor" : "foreground@0.55",
@@ -748,12 +810,16 @@
       "valueFont" : {
         "role" : "headline",
         "weight" : "semibold"
-      }
+      },
+      "gap" : 2,
+      "lineMinWidth" : 3,
+      "lineWidthRatio" : 0.07
     },
     "modal" : {
       "contentWidthPadding" : 32,
       "edgeSheetWidth" : 360,
-      "maxWidth" : 480
+      "maxWidth" : 480,
+      "transitionScale" : 0.94
     },
     "modeSwitch" : {
       "fg" : {
@@ -773,6 +839,10 @@
       "shape" : {
         "cut" : 8,
         "style" : "continuous"
+      },
+      "hoverAnimation" : {
+        "curve" : "easeOut",
+        "duration" : 0.12
       }
     },
     "multiSelectCheck" : {
@@ -819,7 +889,7 @@
           "selected" : "accentPrimary@0.75"
         },
         "width" : {
-          "rest" : 1,
+          "rest" : 1.25,
           "selected" : 1.25
         }
       }
@@ -849,15 +919,23 @@
       },
       "shape" : {
         "cut" : 8,
-        "style" : "rounded"
-      }
+        "style" : "continuous"
+      },
+      "glyphWidth" : 16,
+      "tickWidth" : 2
     },
     "pagination" : {
       "currentDotSize" : 8,
       "currentFill" : "accentPrimary",
       "currentGlow" : {
-        "color" : "accentPrimary@0.6",
-        "radius" : 3
+        "color" : {
+          "rest" : "clear",
+          "selected" : "accentPrimary@0.6"
+        },
+        "radius" : {
+          "rest" : 0,
+          "selected" : 3
+        }
       },
       "disabledOpacity" : 0.3,
       "dotFill" : "foreground@0.25",
@@ -899,7 +977,7 @@
           "selected" : "accentSecondary@0.9"
         },
         "width" : {
-          "rest" : 1,
+          "rest" : 1.25,
           "selected" : 1.25
         }
       }
@@ -979,7 +1057,8 @@
         "size" : 12
       },
       "font" : {
-        "role" : "mono"
+        "role" : "mono",
+        "mono" : "family"
       },
       "leadingGlyphColor" : "foreground@0.55",
       "leadingGlyphFont" : {
@@ -1058,7 +1137,7 @@
           "selected" : "accentPrimary@0.75"
         },
         "width" : {
-          "rest" : 1,
+          "rest" : 1.25,
           "selected" : 1.25
         }
       }
@@ -1069,7 +1148,14 @@
         "color" : "accentSecondary@0.9",
         "width" : 1.5
       },
-      "searchDimmedOpacity" : 0.35
+      "searchDimmedOpacity" : 0.35,
+      "captionFont" : {
+        "role" : "caption"
+      },
+      "highlightShape" : {
+        "cut" : 12,
+        "style" : "chamfer"
+      }
     },
     "settingsPage" : {
       "hitsCaptionFont" : {
@@ -1103,7 +1189,9 @@
       "tabInsertAnimation" : {
         "curve" : "easeOut",
         "duration" : 0.12
-      }
+      },
+      "hitsGap" : 6,
+      "itemsGap" : 8
     },
     "settingsPanel" : {
       "fill" : "surfaceElevated@0.32",
@@ -1194,7 +1282,7 @@
       "chevronSize" : 12,
       "fill" : {
         "hover" : "surfaceElevated@0.9",
-        "rest" : "surfaceElevated"
+        "rest" : "clear"
       },
       "focusRingColor" : "accentPrimary@0.9",
       "focusRingWidth" : 1.5,
@@ -1231,7 +1319,14 @@
       "titleFont" : {
         "size" : 12.5
       },
-      "unreadDotSize" : 5
+      "unreadDotSize" : 5,
+      "chevronTopPadding" : 3,
+      "hoverOffsetY" : -1,
+      "titleUnreadFont" : {
+        "size" : 12.5,
+        "weight" : "semibold"
+      },
+      "unreadDotTopPadding" : 6
     },
     "signalFeedRowAction" : {
       "fill" : "tint@0.14",
@@ -1275,13 +1370,20 @@
         "cut" : 8,
         "style" : "chamfer"
       },
-      "width" : 168
+      "width" : 168,
+      "edgePaddingV" : 4,
+      "gap" : 1,
+      "nameSelectedFont" : {
+        "size" : 11.5,
+        "weight" : "semibold"
+      }
     },
     "signalToast" : {
       "actionFill" : "tint@0.14",
       "actionFont" : {
         "size" : 11,
-        "weight" : "semibold"
+        "weight" : "semibold",
+        "scaled" : false
       },
       "actionHeight" : 20,
       "actionShape" : {
@@ -1330,7 +1432,8 @@
       "moreFill" : "foreground@0.08",
       "moreFont" : {
         "size" : 10,
-        "weight" : "bold"
+        "weight" : "bold",
+        "scaled" : false
       },
       "moreHeight" : 20,
       "moreWidth" : 22,
@@ -1347,8 +1450,8 @@
       },
       "stroke" : {
         "color" : {
-          "hover" : "accentSecondary@0.45",
-          "rest" : "accentSecondary@0.28"
+          "hover" : "tint@0.45",
+          "rest" : "tint@0.28"
         },
         "width" : 1
       },
@@ -1365,7 +1468,17 @@
         "size" : 11,
         "weight" : "semibold"
       },
-      "width" : 320
+      "width" : 320,
+      "contentGap" : 3,
+      "dwellBarColor" : "tint@0.7",
+      "failureStrokeColor" : "tint@0.55",
+      "severityEdgeGlow" : {
+        "color" : "tint@0.6",
+        "radius" : 3
+      },
+      "severityEdgePadding" : 8,
+      "stackGap" : 8,
+      "stackPadding" : 16
     },
     "slider" : {
       "containerFill" : "surfaceElevated@0.3",
@@ -1382,19 +1495,22 @@
       "arcTrim" : 0.28,
       "defaultColor" : "accentSecondary",
       "glow" : {
-        "color" : "accentSecondary@0.6",
+        "color" : "tint@0.6",
         "radius" : 3
       },
       "period" : 1,
       "pulseFloor" : 0.35,
       "pulsePeriod" : 1.2,
       "size" : 20,
-      "trackColor" : "foreground@0.12"
+      "trackColor" : "foreground@0.12",
+      "lineMinWidth" : 1.5,
+      "lineWidthRatio" : 0.08
     },
     "stackedStatusBar" : {
       "height" : 4,
       "minRun" : 2,
-      "trackColor" : "foreground@0.12"
+      "trackColor" : "foreground@0.12",
+      "gap" : 1
     },
     "statRow" : {
       "labelColor" : "foreground@0.6",
@@ -1410,8 +1526,14 @@
     "statusBar" : {
       "emptyFill" : "foreground@0.08",
       "glow" : {
-        "color" : "tint@0.5",
-        "radius" : 2
+        "color" : {
+          "rest" : "tint@0",
+          "selected" : "tint@0.5"
+        },
+        "radius" : {
+          "rest" : 0,
+          "selected" : 2
+        }
       },
       "height" : 8,
       "segments" : 12,
@@ -1419,7 +1541,9 @@
         "corners" : "all",
         "cut" : 2,
         "style" : "chamfer"
-      }
+      },
+      "gap" : 2,
+      "gradientFrom" : "tint@0.65"
     },
     "stepper" : {
       "buttonGlyphColor" : {
@@ -1443,8 +1567,23 @@
       "valueFont" : {
         "monospacedDigits" : true,
         "role" : "mono",
-        "weight" : "medium"
-      }
+        "weight" : "medium",
+        "mono" : "family"
+      },
+      "buttonFill" : "surfaceElevated@0.6",
+      "buttonShape" : {
+        "cut" : 4,
+        "style" : "chamfer"
+      },
+      "buttonSize" : 20,
+      "buttonStroke" : {
+        "color" : {
+          "disabled" : "accentSecondary@0.15",
+          "rest" : "accentSecondary@0.5"
+        },
+        "width" : 1
+      },
+      "valueMinWidth" : 28
     },
     "swatchChip" : {
       "glow" : {
@@ -1464,7 +1603,8 @@
       "stroke" : {
         "color" : {
           "rest" : "accentSecondary@0.3",
-          "selected" : "accentPrimary@0.85"
+          "selected" : "accentPrimary@0.85",
+          "hover" : "accentSecondary@0.6"
         },
         "width" : {
           "rest" : 1,
@@ -1502,7 +1642,9 @@
       "shape" : {
         "cut" : 6,
         "style" : "chamfer"
-      }
+      },
+      "labelGap" : 3,
+      "tickHeight" : 2
     },
     "textArea" : {
       "caretColor" : "accentSecondary",
@@ -1533,9 +1675,12 @@
         },
         "width" : {
           "focused" : 1.5,
-          "rest" : 1
+          "rest" : 1.25
         }
-      }
+      },
+      "placeholderPadHAutoGrow" : 17,
+      "placeholderPadHLegacy" : 16,
+      "placeholderPadVLegacy" : 12
     },
     "textField" : {
       "clearGlyphColor" : "foreground@0.45",
@@ -1625,11 +1770,13 @@
           "selected" : "accentSecondary@0.75"
         },
         "width" : {
-          "rest" : 1,
+          "rest" : 1.25,
           "selected" : 1.25
         }
       },
-      "width" : 40
+      "width" : 40,
+      "knobInset" : 3,
+      "knobSelectedShadowColor" : "accentSecondary@0.75"
     },
     "toggleButton" : {
       "fg" : {
@@ -1672,10 +1819,7 @@
           "rest" : "accentSecondary@0.3",
           "selected" : "accentSecondary@0.95"
         },
-        "width" : {
-          "rest" : 1,
-          "selected" : 1.25
-        }
+        "width" : 1.25
       }
     },
     "tooltipPopover" : {
@@ -1686,6 +1830,13 @@
         "role" : "caption"
       },
       "tooltipMaxHeight" : 160
+    },
+    "label" : {
+      "glyphFont" : {
+        "scaled" : false,
+        "size" : 12,
+        "weight" : "medium"
+      }
     }
   },
   "cut" : {
@@ -2038,7 +2189,8 @@
       "stroke" : {
         "color" : "accentPrimary@0.3",
         "width" : 1
-      }
+      },
+      "panelMinWidth" : 200
     },
     "popover" : {
       "fill" : "surfaceElevated@0.97",
@@ -2055,7 +2207,8 @@
       "stroke" : {
         "color" : "accentSecondary@0.55",
         "width" : 1.25
-      }
+      },
+      "minWidth" : 160
     },
     "scrim" : {
       "color" : "black@0.45",
@@ -2069,7 +2222,7 @@
       "fill" : "accentSecondary",
       "glow" : {
         "color" : {
-          "pressed" : "accentSecondary@0.8",
+          "pressed" : "accentSecondary@0.9",
           "rest" : "accentSecondary@0.55"
         },
         "radius" : {
@@ -2114,7 +2267,7 @@
           "selected" : "accentPrimary@0.75"
         },
         "width" : {
-          "rest" : 1,
+          "rest" : 1.25,
           "selected" : 1.25
         }
       }

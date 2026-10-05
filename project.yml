@@ -287,7 +287,9 @@ packages:
     # ccb6606: toast actions fade in place instead of reflowing.
     # ebeeb02: settings tabs switch without cross-fading (#54).
     # e3aa233: Epic 3 skin token contract: skin model, theme loader, environment bridge (T3.1, T3.2, T3.4a).
-    revision: e3aa2337ac79c045cbbb857bf23dd255b7f85591
+    # 28773ab: Epic 3 complete: every AppKit component reads the skin (T3.5.0-T3.5.9, #69-#80);
+    #   AppKitUI ABI since ebeeb02: 0 removed, 4639 added (abi-ui-diff). default.theme regenerated.
+    revision: 28773ab758c2671c29a9e850540636fed8fa66ce
 
 targets:
   AinkradHostRuntime:
