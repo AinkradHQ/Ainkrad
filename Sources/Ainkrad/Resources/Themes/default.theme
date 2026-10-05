@@ -1837,6 +1837,111 @@
         "size" : 12,
         "weight" : "medium"
       }
+    },
+    "commandField" : {
+      "font" : {
+        "size" : 17,
+        "weight" : "regular"
+      },
+      "foreground" : "foreground",
+      "gap" : 12,
+      "height" : 56,
+      "horizontalPadding" : 18,
+      "markColor" : "accentSecondary",
+      "markGlow" : {
+        "color" : "accentSecondary@0.9",
+        "radius" : 6
+      },
+      "markHeight" : 14,
+      "markWidth" : 16,
+      "tint" : "accentSecondary"
+    },
+    "railItem" : {
+      "badgeOffsetX" : 5,
+      "badgeOffsetY" : -5,
+      "badgeOpacity" : {
+        "hover" : 0.45,
+        "rest" : 1,
+        "selected" : 0.45
+      },
+      "badgeScale" : 0.8,
+      "cornerColor" : "foreground@0.7",
+      "cornerFill" : "surfaceElevated",
+      "cornerFont" : {
+        "scaled" : false,
+        "size" : 8,
+        "weight" : "bold"
+      },
+      "cornerOffset" : 4,
+      "cornerPadding" : 3,
+      "edgeColor" : "accentSecondary",
+      "edgeGlow" : {
+        "color" : {
+          "rest" : "clear",
+          "selected" : "accentSecondary@0.7"
+        },
+        "radius" : 3
+      },
+      "edgeHeight" : {
+        "hover" : 10,
+        "rest" : 0,
+        "selected" : 22
+      },
+      "edgeWidth" : 3,
+      "fill" : {
+        "hover" : "surfaceElevated@0.6",
+        "rest" : "clear",
+        "selected" : "accentPrimary@0.18"
+      },
+      "glow" : {
+        "color" : {
+          "hover" : "accentPrimary@0.35",
+          "rest" : "clear",
+          "selected" : "accentPrimary@0.5"
+        },
+        "radius" : {
+          "hover" : 8,
+          "rest" : 0,
+          "selected" : 8
+        }
+      },
+      "glyphColor" : {
+        "hover" : "foreground@0.9",
+        "rest" : "foreground@0.65",
+        "selected" : "accentSecondary"
+      },
+      "glyphDimmedColor" : "foreground@0.45",
+      "glyphFont" : {
+        "scaled" : false,
+        "size" : 17,
+        "weight" : "regular"
+      },
+      "glyphGlow" : {
+        "color" : {
+          "rest" : "clear",
+          "selected" : "accentSecondary@0.5"
+        },
+        "radius" : 4
+      },
+      "glyphSelectedFont" : {
+        "scaled" : false,
+        "size" : 17,
+        "weight" : "semibold"
+      },
+      "hoverScale" : 1.06,
+      "shape" : {
+        "cut" : 7,
+        "style" : "chamfer"
+      },
+      "size" : 42,
+      "stroke" : {
+        "color" : {
+          "hover" : "accentSecondary@0.35",
+          "rest" : "clear",
+          "selected" : "accentSecondary@0.6"
+        },
+        "width" : 1
+      }
     }
   },
   "cut" : {
