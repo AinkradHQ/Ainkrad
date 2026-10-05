@@ -2,16 +2,16 @@ import AinkradAppKitUI
 import Foundation
 
 /// Host representation of a decoded theme file's custom host metadata.
-public struct HostSkinSection: Equatable, Codable, Sendable {
-    public let skyProfile: SkyProfile
-    public let iconColorFamily: AppIconColor
+struct HostSkinSection: Equatable, Codable, Sendable {
+    let skyProfile: SkyProfile
+    let iconColorFamily: AppIconColor
 
-    public init(skyProfile: SkyProfile, iconColorFamily: AppIconColor) {
+    init(skyProfile: SkyProfile, iconColorFamily: AppIconColor) {
         self.skyProfile = skyProfile
         self.iconColorFamily = iconColorFamily
     }
 
-    public init(from decoder: Decoder) throws {
+    init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let profileArray = try container.decode([Double].self, forKey: .skyProfile)
         guard profileArray.count == 5 else {
@@ -29,7 +29,7 @@ public struct HostSkinSection: Equatable, Codable, Sendable {
         self.iconColorFamily = family
     }
 
-    public func encode(to encoder: Encoder) throws {
+    func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         let profileArray = [
             skyProfile.aurora, skyProfile.embers, skyProfile.mist, skyProfile.fireflies, skyProfile.lightRays,

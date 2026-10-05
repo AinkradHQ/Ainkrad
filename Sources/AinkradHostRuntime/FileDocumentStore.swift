@@ -15,6 +15,9 @@ import os
 /// The lock is **recursive** because `load` calls `save` to persist a schema
 /// upgrade while already holding it. A plain `NSLock` would deadlock on the
 /// first document that migrates.
+///
+/// `@unchecked Sendable` invariant: `cache` is the only mutable state and is
+/// touched only while holding `lock`; every other stored property is a `let`.
 public final class FileDocumentStore: PersistenceStore, @unchecked Sendable {
     private let rootURL: URL
     private let fileManager: FileManager

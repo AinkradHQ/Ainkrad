@@ -108,34 +108,34 @@ public final class HostPresentationControl: PluginPresentationControl {
 /// separate. `AppAppearanceStore` is `@Observable`, so a settings edit
 /// propagates without anything extra here.
 @MainActor
-public final class HostModeControl: PluginModeControl {
+final class HostModeControl: PluginModeControl {
     private let appID: String
     private let declaredDefault: PluginMode
     private let store: AppAppearanceStore
-    public init(appID: String, declaredDefault: PluginMode, store: AppAppearanceStore) {
+    init(appID: String, declaredDefault: PluginMode, store: AppAppearanceStore) {
         self.appID = appID
         self.declaredDefault = declaredDefault
         self.store = store
     }
-    public var current: PluginMode { store.modeOverride(appID) ?? declaredDefault }
-    public func set(_ mode: PluginMode) { store.setModeOverride(appID, mode) }
-    public func reset() { store.setModeOverride(appID, nil) }
+    var current: PluginMode { store.modeOverride(appID) ?? declaredDefault }
+    func set(_ mode: PluginMode) { store.setModeOverride(appID, mode) }
+    func reset() { store.setModeOverride(appID, nil) }
 }
 
 /// Host-side `PluginOverlaySizeControl`. No declared default from the bundle:
 /// unlike presentation and mode, the size is not something an app knows better
 /// than the user — it depends on the display, not the app.
 @MainActor
-public final class HostOverlaySizeControl: PluginOverlaySizeControl {
+final class HostOverlaySizeControl: PluginOverlaySizeControl {
     private let appID: String
     private let store: AppAppearanceStore
-    public init(appID: String, store: AppAppearanceStore) {
+    init(appID: String, store: AppAppearanceStore) {
         self.appID = appID
         self.store = store
     }
-    public var current: PluginOverlaySize { store.effectiveOverlaySize(appID) }
-    public func set(_ size: PluginOverlaySize) { store.setOverlaySizeOverride(appID, size) }
-    public func reset() { store.setOverlaySizeOverride(appID, nil) }
+    var current: PluginOverlaySize { store.effectiveOverlaySize(appID) }
+    func set(_ size: PluginOverlaySize) { store.setOverlaySizeOverride(appID, size) }
+    func reset() { store.setOverlaySizeOverride(appID, nil) }
 }
 
 /// Key→data storage confined to a single directory. Keys are sanitized so a
@@ -188,11 +188,11 @@ public final class ScopedPluginSecretStore: PluginSecretStore {
     public func setSecret(_ value: String?, forKey key: String) { backing.setSecret(value, for: scoped(key)) }
 }
 
-public final class PluginLoggerImpl: PluginLogger {
+final class PluginLoggerImpl: PluginLogger {
     private let logger: Logger
-    public init(appID: String) { logger = Logger(subsystem: "com.ainkrad.app.plugin.\(appID)", category: "plugin") }
-    public func info(_ message: String) { logger.info("\(message, privacy: .public)") }
-    public func error(_ message: String) { logger.error("\(message, privacy: .public)") }
+    init(appID: String) { logger = Logger(subsystem: "com.ainkrad.app.plugin.\(appID)", category: "plugin") }
+    func info(_ message: String) { logger.info("\(message, privacy: .public)") }
+    func error(_ message: String) { logger.error("\(message, privacy: .public)") }
 }
 
 extension HostThemeTokens {
