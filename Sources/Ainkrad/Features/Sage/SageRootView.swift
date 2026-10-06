@@ -193,8 +193,8 @@ struct SageRootView: View {
             && environment.agentSession.state == .idle
     }
 
-    private var assistantTypography: SageTypography {
-        SageTypography.resolve(
+    private var assistantTypography: AinkradTypography {
+        SageApp.typography(
             family: environment.appAppearanceStore.fontFamily(SageApp.id),
             scale: environment.appAppearanceStore.fontScale(SageApp.id),
             globalFamily: environment.themeManager.uiFontFamily,

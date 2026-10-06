@@ -22,7 +22,7 @@ enum TimelineLiveOutput {
 struct AgentTurnTimelineView: View {
     let steps: [TurnStep]
     let tokens: DesignTokens
-    let typography: SageTypography
+    let typography: AinkradTypography
     let reduceMotion: Bool
     /// Live streaming buffers for in-flight tool calls (Task 1's store). Optional
     /// and defaulted so existing call sites/previews compile unchanged; wired
@@ -139,7 +139,7 @@ struct LiveStepView: View {
     let streamingThinking: String
     let isStreaming: Bool
     let tokens: DesignTokens
-    let typography: SageTypography
+    let typography: AinkradTypography
     let reduceMotion: Bool
     @State private var thinkingExpanded = true
 

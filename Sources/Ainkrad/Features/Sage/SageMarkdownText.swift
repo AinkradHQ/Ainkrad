@@ -11,18 +11,18 @@ import SwiftUI
 struct SageMarkdownText: View {
     private let blocks: [MarkdownBlock]
     let tokens: DesignTokens
-    var typography: SageTypography
+    var typography: AinkradTypography
 
     /// Primary path for streaming: blocks are already parsed incrementally by
     /// `MarkdownStreamParser`, so this does no parsing at all.
-    init(blocks: [MarkdownBlock], tokens: DesignTokens, typography: SageTypography = .init()) {
+    init(blocks: [MarkdownBlock], tokens: DesignTokens, typography: AinkradTypography = .default) {
         self.blocks = blocks
         self.tokens = tokens
         self.typography = typography
     }
 
     /// Committed transcript messages, which are parsed once and never change.
-    init(text: String, tokens: DesignTokens, typography: SageTypography = .init()) {
+    init(text: String, tokens: DesignTokens, typography: AinkradTypography = .default) {
         self.init(blocks: MarkdownBlocks.parse(text), tokens: tokens, typography: typography)
     }
 
@@ -39,10 +39,10 @@ struct SageMarkdownText: View {
     private func blockView(_ block: MarkdownBlock) -> some View {
         switch block {
         case .paragraph(let src):
-            inline(src).font(typography.display(13)).foregroundStyle(tokens.foreground.opacity(0.9))
+            inline(src).font(AinkradFontResolver.font(size: 13, typography: typography)).foregroundStyle(tokens.foreground.opacity(0.9))
         case .heading(let level, let src):
             inline(src)
-                .font(typography.display(headingSize(level), weight: .semibold))
+                .font(AinkradFontResolver.font(size: headingSize(level), weight: .semibold, typography: typography))
                 .foregroundStyle(tokens.foreground.opacity(0.95))
         case .bulletList(let items):
             VStack(alignment: .leading, spacing: 3) {
@@ -51,7 +51,7 @@ struct SageMarkdownText: View {
                         Text("•").foregroundStyle(tokens.accentSecondary)
                         inline(item).foregroundStyle(tokens.foreground.opacity(0.9))
                     }
-                    .font(typography.display(13))
+                    .font(AinkradFontResolver.font(size: 13, typography: typography))
                 }
             }
         case .orderedList(let items):
@@ -61,7 +61,7 @@ struct SageMarkdownText: View {
                         Text("\(idx + 1).").foregroundStyle(tokens.accentSecondary)
                         inline(item).foregroundStyle(tokens.foreground.opacity(0.9))
                     }
-                    .font(typography.display(13))
+                    .font(AinkradFontResolver.font(size: 13, typography: typography))
                 }
             }
         case .codeBlock(let language, let code):
