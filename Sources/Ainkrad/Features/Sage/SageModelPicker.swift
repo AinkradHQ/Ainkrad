@@ -288,6 +288,7 @@ struct SageConnectionModelPicker: View {
     @Environment(AppEnvironment.self) private var environment
     let model: SageModelPickerModel
     @Environment(\.ainkradTheme) private var theme
+    @Environment(\.ainkradSkin) private var skin
     var onManageConnections: () -> Void
 
     /// The flattened option space: a real connection+model pair, the "Manage
@@ -320,13 +321,15 @@ struct SageConnectionModelPicker: View {
         )
 
         return HStack(spacing: AinkradSpacing.xs) {
-            AinkradGroupedSelect(
-                sections: sections,
-                selection: binding,
-                triggerLabel: label(binding.wrappedValue),
-                searchPlaceholder: "Search connections & models…"
-            )
-            .fixedSize()
+            // Natural width when it fits; otherwise a capped, truncating trigger
+            // (the kit trigger's Spacer is greedy, hence the explicit cap) so a
+            // long "Connection · Model" label can't push the strip past the pane.
+            ViewThatFits(in: .horizontal) {
+                groupedSelect(sections: sections, binding: binding).fixedSize()
+                groupedSelect(sections: sections, binding: binding)
+                    .lineLimit(1)
+                    .frame(minWidth: skin.size.s120, maxWidth: skin.size.s180)
+            }
             // Bordered trigger's own padding (AinkradSpacing.sm vertical) runs
             // taller than the composer's icon buttons; pin the row height so
             // the control cluster reads as one consistent height — see
@@ -338,6 +341,15 @@ struct SageConnectionModelPicker: View {
 
             routingBadge
         }
+    }
+
+    private func groupedSelect(sections: [AinkradGroupedSection<Option>], binding: Binding<Option>) -> some View {
+        AinkradGroupedSelect(
+            sections: sections,
+            selection: binding,
+            triggerLabel: label(binding.wrappedValue),
+            searchPlaceholder: "Search connections & models…"
+        )
     }
 
     /// "AUTO" when the router is resolving the model each turn, "PINNED" when

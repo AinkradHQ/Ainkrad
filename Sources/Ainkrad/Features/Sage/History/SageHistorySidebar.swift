@@ -92,3 +92,15 @@ private struct HistoryRow: View {
         .animation(reduceMotion ? nil : AinkradMotion.hover, value: isHovering)
     }
 }
+
+/// Width rule for Sage's history sidebar. In flow it adds `width` to the chat
+/// column, whose composer strip needs `chatMinWidth`; below the sum the sidebar
+/// overlays the chat column instead, so Sage never exceeds its pane.
+enum SageSidebarLayout {
+    static let width: CGFloat = 240
+    static let chatMinWidth: CGFloat = 475
+
+    static func overlays(paneWidth: CGFloat) -> Bool {
+        paneWidth < width + chatMinWidth
+    }
+}
