@@ -26,20 +26,22 @@ enum RecordingIndicatorState: Equatable {
 /// waveform — no native controls, no plain `Label`/`ProgressView`.
 @MainActor
 struct RecordingIndicatorView: View {
+    @Environment(\.ainkradSkin) private var skin
     let status: PushToTalkController.Status
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
+    @Environment(\.ainkradStatusColors) private var statusColors
     /// `VoiceService.lastNotice` — the on-device→provider fallback disclosure.
     /// Display-only; shown alongside whichever status row is active so the
     /// user learns why transcription switched backends. `nil` renders nothing.
     var notice: String? = nil
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: skin.size.s6) {
             statusRow
             if let notice {
                 Text(notice)
                     .font(AinkradFont.display(10))
-                    .foregroundStyle(tokens.foreground.opacity(0.4))
+                    .foregroundStyle(theme.foreground.opacity(skin.opacity.o40))
                     .lineLimit(1)
             }
         }
@@ -51,27 +53,27 @@ struct RecordingIndicatorView: View {
         case .hidden:
             EmptyView()
         case .recording:
-            HStack(spacing: 6) {
-                WaveformMeter(tint: tokens.accentSecondary)
+            HStack(spacing: skin.size.s6) {
+                WaveformMeter(tint: theme.accentSecondary)
                 Text("Listening…")
                     .font(AinkradFont.display(11, weight: .medium))
-                    .foregroundStyle(tokens.accentSecondary)
+                    .foregroundStyle(theme.accentSecondary)
             }
         case .transcribing:
-            HStack(spacing: 6) {
-                AinkradSpinner(size: 14, tint: tokens.foreground.opacity(0.7))
+            HStack(spacing: skin.size.s6) {
+                AinkradSpinner(size: 14, tint: theme.foreground.opacity(skin.opacity.o70))
                 Text("Transcribing…")
                     .font(AinkradFont.display(11))
-                    .foregroundStyle(tokens.foreground.opacity(0.6))
+                    .foregroundStyle(theme.foreground.opacity(skin.opacity.o60))
             }
         case .error(let message):
-            HStack(spacing: 6) {
+            HStack(spacing: skin.size.s6) {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.system(size: 12))
-                    .foregroundStyle(tokens.danger)
+                    .font(skin.font(AinkradFontToken(sizeKey: "t12", scaled: false)))
+                    .foregroundStyle(statusColors.danger)
                 Text(message)
                     .font(AinkradFont.display(11))
-                    .foregroundStyle(tokens.danger)
+                    .foregroundStyle(statusColors.danger)
                     .lineLimit(1)
             }
         }
@@ -82,6 +84,7 @@ struct RecordingIndicatorView: View {
 /// "no toggle/animation trigger needed" pattern `AinkradSpinner` documents)
 /// so it degrades to a static bar under Reduce Motion instead of looping.
 private struct WaveformMeter: View {
+    @Environment(\.ainkradSkin) private var skin
     let tint: Color
     @Environment(\.ainkradReduceMotion) private var reduceMotion
 
@@ -106,6 +109,6 @@ private struct WaveformMeter: View {
                 }
             }
         }
-        .frame(width: 22, height: 14)
+        .frame(width: skin.size.s22, height: skin.size.s14)
     }
 }

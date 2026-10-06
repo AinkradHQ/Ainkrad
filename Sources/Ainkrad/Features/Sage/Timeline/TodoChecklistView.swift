@@ -23,27 +23,29 @@ enum TodoStepPresentation {
 /// completed rows dim + strike. Updated in place as the agent revises the list
 /// (the builder keeps only the latest `todo_write`).
 struct TodoChecklistView: View {
+    @Environment(\.ainkradSkin) private var skin
     let items: [TodoItem]
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
+    @Environment(\.ainkradStatusColors) private var statusColors
     @Environment(\.ainkradReduceMotion) private var reduceMotion
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 6) {
-                Image(systemName: "checklist").font(.system(size: 11)).foregroundStyle(tokens.accentSecondary)
+        VStack(alignment: .leading, spacing: skin.size.s6) {
+            HStack(spacing: skin.size.s6) {
+                Image(systemName: "checklist").font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false))).foregroundStyle(theme.accentSecondary)
                 Text("Tasks").font(AinkradFont.display(11, weight: .semibold)).kerning(1)
-                    .foregroundStyle(tokens.accentSecondary.opacity(0.85))
+                    .foregroundStyle(theme.accentSecondary.opacity(skin.opacity.o85))
                 Spacer(minLength: 8)
                 Text(TodoStepPresentation.summary(items))
-                    .font(AinkradFont.mono(10)).foregroundStyle(tokens.foreground.opacity(0.5))
+                    .font(AinkradFont.mono(10)).foregroundStyle(theme.foreground.opacity(skin.opacity.o50))
             }
             ForEach(items) { item in row(item) }
         }
-        .padding(.horizontal, 10).padding(.vertical, 8)
+        .padding(.horizontal, skin.size.s10).padding(.vertical, skin.spacing.sm)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: AinkradRadius.sm).fill(tokens.background.opacity(0.45)))
+        .background(ChamferShape(cut: AinkradRadius.sm).fill(theme.background.opacity(skin.opacity.o45)))
         .overlay {
-            ChamferShape(cut: AinkradRadius.sm).stroke(tokens.accentSecondary.opacity(0.22), lineWidth: 1)
+            ChamferShape(cut: AinkradRadius.sm).stroke(theme.accentSecondary.opacity(skin.opacity.o22), lineWidth: 1)
         }
     }
 
@@ -51,24 +53,24 @@ struct TodoChecklistView: View {
     private func row(_ item: TodoItem) -> some View {
         let done = TodoStepPresentation.isDone(item.status)
         let icon = Image(systemName: TodoStepPresentation.glyph(item.status))
-            .font(.system(size: 11))
+            .font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false)))
             .foregroundStyle(
                 done
-                    ? tokens.success
-                    : (item.status == .inProgress ? tokens.accentSecondary : tokens.foreground.opacity(0.4)))
-        HStack(alignment: .firstTextBaseline, spacing: 7) {
+                    ? statusColors.success
+                    : (item.status == .inProgress ? theme.accentSecondary : theme.foreground.opacity(skin.opacity.o40)))
+        HStack(alignment: .firstTextBaseline, spacing: skin.size.s7) {
             if item.status == .inProgress && !reduceMotion {
                 BudgetedTimelineView { date in
                     let wave = 0.5 + 0.5 * sin(date.timeIntervalSinceReferenceDate / AinkradMotion.durationBase)
-                    icon.opacity(0.5 + 0.5 * wave)
+                    icon.opacity(skin.opacity.o50 + skin.opacity.o50 * wave)
                 }
             } else {
                 icon
             }
             Text(item.content)
                 .font(AinkradFont.display(12, weight: done ? .regular : .medium))
-                .strikethrough(done, color: tokens.foreground.opacity(0.4))
-                .foregroundStyle(tokens.foreground.opacity(done ? 0.45 : 0.85))
+                .strikethrough(done, color: theme.foreground.opacity(skin.opacity.o40))
+                .foregroundStyle(theme.foreground.opacity(done ? skin.opacity.o45 : skin.opacity.o85))
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
     }

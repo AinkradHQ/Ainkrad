@@ -2,55 +2,9 @@ import AinkradAppKit
 import AinkradHostRuntime
 import SwiftUI
 
-/// Leading history-sidebar toggle with a hover highlight (motion is first-class in the HUD).
-struct HoverSidebarToggle: View {
-    let tokens: DesignTokens
-    let action: () -> Void
-    @State private var isHovering = false
-    @Environment(\.ainkradReduceMotion) private var reduceMotion
-
-    var body: some View {
-        Button(action: action) {
-            Image(systemName: "sidebar.left")
-                .font(.system(size: 12))
-                .foregroundStyle(tokens.foreground.opacity(isHovering ? 0.9 : 0.6))
-                .padding(6)
-                .background(Circle().fill(tokens.surfaceElevated.opacity(isHovering ? 0.75 : 0.5)))
-        }
-        .buttonStyle(.plain)
-        .help("Toggle history")
-        .onHover { isHovering = $0 }
-        .animation(reduceMotion ? nil : AinkradMotion.hover, value: isHovering)
-    }
-}
-
-/// Retry control for the failed-turn error card. Hover-lit, chamfered — no native button chrome.
-struct ErrorRetryButton: View {
-    let tokens: DesignTokens
-    let action: () -> Void
-    @State private var isHovering = false
-    @Environment(\.ainkradReduceMotion) private var reduceMotion
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 5) {
-                Image(systemName: "arrow.clockwise").font(.system(size: 10, weight: .semibold))
-                Text("Retry").font(AinkradFont.display(11, weight: .medium))
-            }
-            .foregroundStyle(tokens.accentTertiary.opacity(isHovering ? 1 : 0.85))
-            .padding(.horizontal, 10).padding(.vertical, 5)
-            .background(
-                ChamferShape(cut: AinkradRadius.sm)
-                    .fill(tokens.accentTertiary.opacity(isHovering ? 0.18 : 0.1)))
-        }
-        .buttonStyle(.plain)
-        .onHover { isHovering = $0 }
-        .animation(reduceMotion ? nil : AinkradMotion.hover, value: isHovering)
-    }
-}
-
 /// Copy-to-pasteboard for a whole assistant turn, revealed on hover.
 struct SageTurnCopyButton: View {
+    @Environment(\.ainkradSkin) private var skin
     let text: String
     /// Driven by the enclosing turn's hover region, not this button's own frame —
     /// the button sits at `opacity: 0` until the whole turn is hovered, so tying
@@ -65,7 +19,7 @@ struct SageTurnCopyButton: View {
             NSPasteboard.general.setString(text, forType: .string)
             copied = true
         }
-        .opacity(isVisible ? 0.8 : 0)
+        .opacity(isVisible ? skin.opacity.o80 : 0)
         .animation(reduceMotion ? nil : AinkradMotion.hover, value: isVisible)
         // The checkmark reverts after a beat; a structured task, so it is
         // cancelled with the button rather than outliving it.
@@ -79,7 +33,7 @@ struct SageTurnCopyButton: View {
 
 /// Blinking caret shown at the tail of streaming output; steady under reduce-motion.
 struct StreamingCursor: View {
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
     @Environment(\.ainkradReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -94,7 +48,7 @@ struct StreamingCursor: View {
     }
 
     private func caret(opacity: Double) -> some View {
-        Text("▍").font(AinkradFont.display(13)).foregroundStyle(tokens.accentSecondary.opacity(opacity))
+        Text("▍").font(AinkradFont.display(13)).foregroundStyle(theme.accentSecondary.opacity(opacity))
     }
 }
 
@@ -102,16 +56,17 @@ struct StreamingCursor: View {
 /// tool call is spinning up before its card commits. Steady under Reduce Motion
 /// (mirrors `StreamingCursor`).
 struct WorkingIndicator: View {
-    let tokens: DesignTokens
+    @Environment(\.ainkradSkin) private var skin
+    @Environment(\.ainkradTheme) private var theme
     var label: String = "Thinking"
     @Environment(\.ainkradReduceMotion) private var reduceMotion
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: skin.size.s6) {
             dots
             Text("\(label)…")
                 .font(AinkradFont.display(12))
-                .foregroundStyle(tokens.foreground.opacity(0.45))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o45))
         }
     }
 
@@ -120,11 +75,11 @@ struct WorkingIndicator: View {
     // Same idiom as `StreamingCursor` above.
     @ViewBuilder private var dots: some View {
         if reduceMotion {
-            HStack(spacing: 3) { ForEach(0..<3, id: \.self) { _ in dot(0.7) } }
+            HStack(spacing: skin.size.s3) { ForEach(0..<3, id: \.self) { _ in dot(0.7) } }
         } else {
             BudgetedTimelineView { date in
                 let t = date.timeIntervalSinceReferenceDate
-                HStack(spacing: 3) {
+                HStack(spacing: skin.size.s3) {
                     ForEach(0..<3, id: \.self) { i in
                         // ~1.6s breathe (2π·durationBase), 60° per-dot stagger.
                         let phase = t / AinkradMotion.durationBase + Double(i) * .pi / 3
@@ -136,6 +91,6 @@ struct WorkingIndicator: View {
     }
 
     private func dot(_ opacity: Double) -> some View {
-        Circle().fill(tokens.accentSecondary.opacity(opacity)).frame(width: 4, height: 4)
+        Circle().fill(theme.accentSecondary.opacity(opacity)).frame(width: skin.size.s4, height: skin.size.s4)
     }
 }

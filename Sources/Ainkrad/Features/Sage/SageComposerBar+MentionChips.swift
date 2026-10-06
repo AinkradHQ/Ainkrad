@@ -6,7 +6,7 @@ import SwiftUI
 /// embed⇄reference, and a remove ✕ — all Cardinal HUD, no native chrome.
 extension SageComposerBar {
     var mentionChips: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: skin.size.s6) {
             ForEach(Array(mentions.enumerated()), id: \.element.path) { index, mention in
                 AinkradChip(
                     label:

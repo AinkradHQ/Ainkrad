@@ -14,6 +14,11 @@ struct SageRootView: View {
     // uses for its cross-file-read state).
     @Environment(AppEnvironment.self) var environment
     @Environment(\.ainkradReduceMotion) private var reduceMotion
+    // Not `private` — read from the `SageRootView+*.swift` extensions.
+    @Environment(\.ainkradSkin) var skin
+    // Not `private` — read from the `SageRootView+*.swift` extensions.
+    @Environment(\.ainkradTheme) var theme
+    @Environment(\.ainkradStatusColors) private var statusColors
     var showsHeader: Bool = true
     var autoFocusComposer: Bool = false
     /// Whether the transcript should keep pinning to the newest content.
@@ -41,7 +46,6 @@ struct SageRootView: View {
     @State private var timelineCache = TranscriptTimelineCache()
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
         let session = environment.agentSession
         let store = environment.assistantSessionStore
 
@@ -49,7 +53,6 @@ struct SageRootView: View {
             if showsHeader && isSidebarVisible {
                 SageHistorySidebar(
                     store: store,
-                    tokens: tokens,
                     surfaceOpacity: environment.appAppearanceStore.surfaceOpacity("sage"),
                     onNewChat: {
                         store.syncActive(messages: session.messages)
@@ -63,17 +66,17 @@ struct SageRootView: View {
                 )
                 .transition(reduceMotion ? .identity : .move(edge: .leading))
             }
-            chatColumn(session: session, tokens: tokens)
+            chatColumn(session: session)
         }
         .onChange(of: session.messages) { _, newValue in
             environment.assistantSessionStore.syncActive(messages: newValue)
         }
         .overlay {
             if let lightboxImage {
-                ImageLightboxView(image: lightboxImage, tokens: tokens) { self.lightboxImage = nil }
+                ImageLightboxView(image: lightboxImage) { self.lightboxImage = nil }
                     .transition(reduceMotion ? .identity : .opacity)
             } else if let lightboxVideoURL {
-                VideoLightboxView(url: lightboxVideoURL, tokens: tokens) { self.lightboxVideoURL = nil }
+                VideoLightboxView(url: lightboxVideoURL) { self.lightboxVideoURL = nil }
                     .transition(reduceMotion ? .identity : .opacity)
             }
         }
@@ -84,27 +87,26 @@ struct SageRootView: View {
     // MARK: - Chat column
 
     @ViewBuilder
-    private func chatColumn(session: AgentSession, tokens: DesignTokens) -> some View {
+    private func chatColumn(session: AgentSession) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             if showsHeader {
-                header(tokens: tokens)
+                header()
             }
 
-            transcript(session: session, tokens: tokens)
+            transcript(session: session)
 
             if case .awaitingApproval(let pending) = session.state {
                 SageDecisionBar(
                     content: .toolApproval(toolName: pending.call.name, title: pending.preview.title),
                     actions: [
-                        .init(title: "Deny", tint: tokens.accentTertiary, filled: false) {
+                        .init(title: "Deny", style: .ghost) {
                             session.deny(reason: "Denied by user.")
                         },
-                        .init(title: "Allow always", tint: tokens.accentSecondary, filled: false) {
+                        .init(title: "Allow always", style: .secondary) {
                             session.approve(always: true)
                         },
-                        .init(title: "Approve", tint: tokens.accentPrimary, filled: true) { session.approve() },
-                    ],
-                    tokens: tokens
+                        .init(title: "Approve", style: .primary) { session.approve() },
+                    ]
                 )
                 .transition(reduceMotion ? .identity : .move(edge: .bottom).combined(with: .opacity))
             } else if session.state == .idle,
@@ -113,23 +115,21 @@ struct SageRootView: View {
                 SageDecisionBar(
                     content: .plan(plan),
                     actions: [
-                        .init(title: "Keep planning", tint: tokens.accentTertiary, filled: false) {
+                        .init(title: "Keep planning", style: .ghost) {
                             PlanFlow.keepPlanning(plan: plan, session: session)
                         },
-                        .init(title: "Approve & Build", tint: tokens.accentPrimary, filled: true) {
+                        .init(title: "Approve & Build", style: .primary) {
                             PlanFlow.approveBuild(plan: plan, session: session, store: environment.agentStore)
                         },
-                    ],
-                    tokens: tokens
+                    ]
                 )
                 .transition(reduceMotion ? .identity : .move(edge: .bottom).combined(with: .opacity))
             }
 
-            SkillSuggestionChip(session: session, tokens: tokens)
+            SkillSuggestionChip(session: session)
 
             SageComposerBar(
                 session: session,
-                tokens: tokens,
                 modelPicker: modelPicker,
                 draft: $draft,
                 autoFocusOnAppear: autoFocusComposer,
@@ -146,10 +146,10 @@ struct SageRootView: View {
             // host behind the whole pane in `BlockView` — the same path every app
             // uses now — so this view only paints its opacity tint. At opacity 1.0
             // this is identical to the old opaque background.
-            tokens.background.opacity(environment.appAppearanceStore.surfaceOpacity("sage"))
+            theme.background.opacity(environment.appAppearanceStore.surfaceOpacity("sage"))
         }
         .ainkradModal(isPresented: $isUsageDashboardPresented) {
-            UsageDashboardView(tracker: environment.usageTracker, tokens: tokens)
+            UsageDashboardView(tracker: environment.usageTracker)
         }
         .ainkradModal(isPresented: $isExportModalPresented) {
             exportModalContent
@@ -162,28 +162,28 @@ struct SageRootView: View {
         // never a full-height strip. `.ainkradModal` caps width (480); this
         // caps height.
         .ainkradModal(isPresented: $isRunsPanelPresented) {
-            RunsPanelView(manager: environment.runManager, tokens: tokens)
-                .frame(maxHeight: 520)
+            RunsPanelView(manager: environment.runManager)
+                .frame(maxHeight: skin.size.s520)
         }
         .ainkradModal(isPresented: $isSchedulesPresented) {
             ScheduleUIView(store: environment.scheduleStore)
-                .frame(maxHeight: 520)
+                .frame(maxHeight: skin.size.s520)
         }
     }
 
     // MARK: - Header (sidebar toggle)
 
-    private func header(tokens: DesignTokens) -> some View {
-        HStack(spacing: 12) {
-            HoverSidebarToggle(tokens: tokens) {
+    private func header() -> some View {
+        HStack(spacing: skin.spacing.md) {
+            AinkradIconButton(systemName: "sidebar.left", size: skin.size.s24, tooltip: "Toggle history") {
                 withAnimation(reduceMotion ? nil : AinkradMotion.present) {
                     isSidebarVisible.toggle()
                 }
             }
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, 14)
-        .frame(height: 44)
+        .padding(.horizontal, skin.size.s14)
+        .frame(height: skin.size.s44)
     }
 
     // MARK: - Transcript
@@ -193,8 +193,8 @@ struct SageRootView: View {
             && environment.agentSession.state == .idle
     }
 
-    private var assistantTypography: SageTypography {
-        SageTypography.resolve(
+    private var assistantTypography: AinkradTypography {
+        SageApp.typography(
             family: environment.appAppearanceStore.fontFamily(SageApp.id),
             scale: environment.appAppearanceStore.fontScale(SageApp.id),
             globalFamily: environment.themeManager.uiFontFamily,
@@ -224,12 +224,12 @@ struct SageRootView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private func transcript(session: AgentSession, tokens: DesignTokens) -> some View {
+    private func transcript(session: AgentSession) -> some View {
         ScrollViewReader { proxy in
             ScrollView {
                 if transcriptIsEmpty {
                     emptyState()
-                        .padding(.top, 60)
+                        .padding(.top, skin.size.s60)
                 } else {
                     // Lazy: a long chat materialized every row's view on every
                     // body pass, including all the markdown/diff/tool cards
@@ -238,12 +238,12 @@ struct SageRootView: View {
                         ForEach(timelineCache.items(for: session.messages)) { item in
                             switch item {
                             case .userBubble(let index, let message):
-                                bubble(for: message, tokens: tokens)
+                                bubble(for: message)
                                     .id(index)
                                     .transition(reduceMotion ? .identity : .opacity.combined(with: .offset(y: 6)))
                             case .agentTurn(let id, let steps):
                                 AgentTurnTimelineView(
-                                    steps: steps, tokens: tokens,
+                                    steps: steps,
                                     typography: assistantTypography, reduceMotion: reduceMotion,
                                     toolStream: environment.toolStreamStore,
                                     scryStore: environment.scryStore,
@@ -263,7 +263,7 @@ struct SageRootView: View {
                                 streamingBlocks: session.streamingBlocks,
                                 streamingThinking: session.streamingThinking,
                                 isStreaming: session.state == .streaming,
-                                tokens: tokens, typography: assistantTypography,
+                                typography: assistantTypography,
                                 reduceMotion: reduceMotion
                             )
                             .id("streaming")
@@ -275,14 +275,13 @@ struct SageRootView: View {
                             // marker + spine), so an approval reads as the current
                             // step of the timeline. The Approve/Deny/Always buttons
                             // stay in the docked SageDecisionBar below.
-                            HStack(alignment: .top, spacing: 10) {
-                                TimelineRailGutter(status: .running, tokens: tokens, reduceMotion: reduceMotion)
+                            HStack(alignment: .top, spacing: skin.size.s10) {
+                                TimelineRailGutter(status: .running, reduceMotion: reduceMotion)
                                 ToolCallCardView(
                                     toolName: pending.call.name,
                                     title: pending.preview.title,
                                     summary: pending.preview.summary,
                                     diff: pending.preview.diff,
-                                    tokens: tokens,
                                     pendingApproval: true,
                                     fileDiff: pending.preview.fileDiff,
                                     rejectedHunkIDs: Binding(
@@ -295,11 +294,11 @@ struct SageRootView: View {
                         }
 
                         if case .failed(let message) = session.state {
-                            errorBubble(message, session: session, tokens: tokens)
+                            errorBubble(message, session: session)
                                 .transition(reduceMotion ? .identity : .opacity)
                         }
                     }
-                    .padding(14)
+                    .padding(skin.size.s14)
                     // The message array is mutated inside `AgentSession`, outside
                     // any `withAnimation`, so the per-turn `.transition` above has
                     // no transaction to ride. Binding an animation to the count
@@ -330,14 +329,14 @@ struct SageRootView: View {
     /// so this is only ever called for `.userBubble` items — the old assistant
     /// tool-card / hover-copy paths moved to the timeline.
     @ViewBuilder
-    private func bubble(for message: AgentMessage, tokens: DesignTokens) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+    private func bubble(for message: AgentMessage) -> some View {
+        VStack(alignment: .leading, spacing: skin.spacing.sm) {
             if !message.text.isEmpty {
-                textBubble(for: message, tokens: tokens)
+                textBubble(for: message)
             }
             ForEach(Array(message.content.enumerated()), id: \.offset) { _, block in
                 if case .image(let mediaType, let base64) = block {
-                    imageChip(mediaType: mediaType, base64: base64, tokens: tokens)
+                    imageChip(mediaType: mediaType, base64: base64)
                 }
             }
         }
@@ -346,23 +345,23 @@ struct SageRootView: View {
     /// Renders an attached image as a thumbnail, falling back to a `[image]` chip
     /// when the base64 payload can't be decoded (e.g. malformed/truncated data).
     @ViewBuilder
-    private func imageChip(mediaType: String, base64: String, tokens: DesignTokens) -> some View {
+    private func imageChip(mediaType: String, base64: String) -> some View {
         if let data = Data(base64Encoded: base64), let nsImage = NSImage(data: data) {
             Image(nsImage: nsImage)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(maxWidth: 160, maxHeight: 160)
+                .frame(maxWidth: skin.size.s160, maxHeight: skin.size.s160)
                 .clipShape(ChamferShape(cut: AinkradRadius.md))
         } else {
             Text("[image]")
                 .font(AinkradFont.display(12))
-                .foregroundStyle(tokens.foreground.opacity(0.6))
-                .padding(.horizontal, 10).padding(.vertical, 6)
-                .background(ChamferShape(cut: AinkradRadius.md).fill(tokens.surfaceElevated.opacity(0.3)))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o60))
+                .padding(.horizontal, skin.size.s10).padding(.vertical, skin.size.s6)
+                .background(ChamferShape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(skin.opacity.o30)))
         }
     }
 
-    private func textBubble(for message: AgentMessage, tokens: DesignTokens) -> some View {
+    private func textBubble(for message: AgentMessage) -> some View {
         let isUser = message.role == .user
         return HStack {
             if isUser { Spacer(minLength: 40) }
@@ -371,12 +370,12 @@ struct SageRootView: View {
                 if isUser {
                     Text(message.text)
                         .font(AinkradFont.display(13))
-                        .foregroundStyle(tokens.foreground.opacity(0.9))
-                        .padding(.horizontal, 12).padding(.vertical, 9)
-                        .background(ChamferShape(cut: AinkradRadius.md).fill(tokens.accentPrimary.opacity(0.18)))
-                        .shadow(color: tokens.accentPrimary.opacity(0.12), radius: 6)
+                        .foregroundStyle(theme.foreground.opacity(skin.opacity.o90))
+                        .padding(.horizontal, skin.spacing.md).padding(.vertical, skin.size.s9)
+                        .background(ChamferShape(cut: AinkradRadius.md).fill(theme.accentPrimary.opacity(skin.opacity.o18)))
+                        .shadow(color: theme.accentPrimary.opacity(skin.opacity.o12), radius: skin.size.s6)
                 } else {
-                    SageMarkdownText(text: message.text, tokens: tokens, typography: assistantTypography)
+                    SageMarkdownText(text: message.text, typography: assistantTypography)
                 }
             }
 
@@ -384,33 +383,33 @@ struct SageRootView: View {
         }
     }
 
-    private func errorBubble(_ message: String, session: AgentSession, tokens: DesignTokens) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 6) {
+    private func errorBubble(_ message: String, session: AgentSession) -> some View {
+        VStack(alignment: .leading, spacing: skin.spacing.sm) {
+            HStack(spacing: skin.size.s6) {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.system(size: 11))
-                    .foregroundStyle(tokens.danger)
+                    .font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false)))
+                    .foregroundStyle(statusColors.danger)
                 Text("Something went wrong")
                     .font(AinkradFont.display(12, weight: .semibold))
-                    .foregroundStyle(tokens.foreground.opacity(0.85))
+                    .foregroundStyle(theme.foreground.opacity(skin.opacity.o85))
                 Spacer()
             }
             Text(message)
                 .font(AinkradFont.mono(11))
-                .foregroundStyle(tokens.foreground.opacity(0.85))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o85))
                 .textSelection(.enabled)  // never truncated — an unreadable error is useless
             HStack {
                 Spacer()
-                ErrorRetryButton(tokens: tokens) { session.retryLastTurn() }
+                AinkradButton(title: "Retry", style: .ghost, icon: "arrow.clockwise") { session.retryLastTurn() }
             }
         }
-        .padding(.horizontal, 12).padding(.vertical, 9)
+        .padding(.horizontal, skin.spacing.md).padding(.vertical, skin.size.s9)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: AinkradRadius.md).fill(tokens.surfaceElevated.opacity(0.45)))
+        .background(ChamferShape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(skin.opacity.o45)))
         .overlay(alignment: .leading) {
-            Rectangle().fill(tokens.danger).frame(width: 2)
+            Rectangle().fill(statusColors.danger).frame(width: skin.size.s2)
         }
-        .shadow(color: tokens.danger.opacity(0.14), radius: 7)
+        .shadow(color: statusColors.danger.opacity(skin.opacity.o14), radius: skin.size.s7)
     }
 
 }

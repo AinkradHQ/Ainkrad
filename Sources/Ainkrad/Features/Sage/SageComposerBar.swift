@@ -21,8 +21,11 @@ struct SageComposerBar: View {
     // least `internal`).
     @Environment(AppEnvironment.self) var environment
     @Environment(\.ainkradToastCenter) var toastCenter
+    // Not `private` — read from the `SageComposerBar+*.swift` extensions.
+    @Environment(\.ainkradSkin) var skin
     let session: AgentSession
-    let tokens: DesignTokens
+    // Not `private` — read from `SageComposerBar+Overflow.swift`.
+    @Environment(\.ainkradTheme) var theme
     let modelPicker: SageModelPickerModel
     @Binding var draft: String
     var autoFocusOnAppear: Bool = false
@@ -81,15 +84,15 @@ struct SageComposerBar: View {
     @State var isOverflowVisible = false
 
     /// Wave 3e: the ONE uniform height every control in the bottom strip is
-    /// pinned to — icon buttons (`size:`), the model select (`.frame`), and
-    /// `SendButton`'s footprint. Not `private` — read from
+    /// pinned to — icon buttons (`size:`, send included) and the model select
+    /// (`.frame`). Not `private` — read from
     /// `SageComposerBar+Overflow.swift`'s `overflowTrigger`.
     static let controlHeight: CGFloat = 30
 
     var body: some View {
         let isBusy = SageComposerBar.isBusy(session.state)
 
-        return VStack(alignment: .leading, spacing: 8) {
+        return VStack(alignment: .leading, spacing: skin.spacing.sm) {
             if !pendingImages.isEmpty {
                 attachmentChips
             }
@@ -110,7 +113,7 @@ struct SageComposerBar: View {
             // (30) so the icon buttons, the model select, and the send button
             // all read as the same size — see each control's `size`/`.frame`
             // below, all set to `Self.controlHeight`.
-            HStack(spacing: 8) {
+            HStack(spacing: skin.spacing.sm) {
                 // Left cluster (Wave 3c): agent and permission are icon
                 // buttons that cycle on click, matching the right cluster's
                 // `AinkradIconButton` idiom; model is the only real select.
@@ -131,7 +134,6 @@ struct SageComposerBar: View {
 
                 SageConnectionModelPicker(
                     model: modelPicker,
-                    tokens: tokens,
                     onManageConnections: { environment.isSettingsPresented = true }
                 )
 
@@ -148,15 +150,17 @@ struct SageComposerBar: View {
                 micTrigger
 
                 RecordingIndicatorView(
-                    status: environment.voiceService.pushToTalk.status, tokens: tokens,
+                    status: environment.voiceService.pushToTalk.status,
                     notice: environment.voiceService.lastNotice)
 
-                SendButton(enabled: canSend(isBusy: isBusy), tokens: tokens) { send() }
+                AinkradIconButton(systemName: "arrow.up", size: Self.controlHeight, tooltip: "Send") { send() }
+                    .disabled(!canSend(isBusy: isBusy))
+                    .opacity(canSend(isBusy: isBusy) ? 1 : skin.opacity.o40)
             }
             .frame(height: Self.controlHeight)
         }
-        .padding(.horizontal, 12).padding(.vertical, 10)
-        .background(ChamferShape(cut: AinkradRadius.md).fill(tokens.surfaceElevated.opacity(0.45)))
+        .padding(.horizontal, skin.spacing.md).padding(.vertical, skin.size.s10)
+        .background(ChamferShape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(skin.opacity.o45)))
         .background(
             // Tab-cycle affordance (M7 Slice 5a Task 5): swallows a plain Tab
             // keyDown to advance the active agent, but ONLY when the draft is
@@ -188,7 +192,6 @@ struct SageComposerBar: View {
                 commands: environment.commandRegistry.all(),
                 query: paletteQuery,
                 selectedIndex: $paletteSelectedIndex,
-                tokens: tokens,
                 onSelect: insertCommand
             )
         }
@@ -196,7 +199,6 @@ struct SageComposerBar: View {
             MentionOverlayView(
                 matches: mentionMatches,
                 selectedIndex: $mentionSelectedIndex,
-                tokens: tokens,
                 onSelect: insertMention
             )
         }
@@ -207,7 +209,7 @@ struct SageComposerBar: View {
             draft = draft.isEmpty ? new : draft + " " + new
             environment.voiceService.reviewTranscript = nil
         }
-        .padding(14)
+        .padding(skin.size.s14)
     }
 
     /// Opens the `/usage` dashboard (session + cumulative tokens/cost/savings)
@@ -328,41 +330,5 @@ enum ComposerTriggers {
     static func trailingToken(of text: String) -> String {
         guard let idx = text.lastIndex(where: { $0.isWhitespace }) else { return text }
         return String(text[text.index(after: idx)...])
-    }
-}
-
-/// Send affordance: a chamfered Cardinal HUD button (matching the kit's
-/// filled tool-card / `AinkradIconButton` idiom) with hover/press feedback
-/// and an enabled-state glow — square footprint matching the composer's
-/// `SageComposerBar.controlHeight`-sized icon buttons.
-private struct SendButton: View {
-    let enabled: Bool
-    let tokens: DesignTokens
-    let action: () -> Void
-    @State private var isHovering = false
-    @Environment(\.ainkradReduceMotion) private var reduceMotion
-
-    private static let footprint: CGFloat = SageComposerBar.controlHeight
-
-    var body: some View {
-        Button(action: action) {
-            Image(systemName: "arrow.up")
-                .font(.system(size: 15, weight: .bold))
-                .foregroundStyle(enabled ? tokens.accentSecondary.hostContrastingText : tokens.foreground.opacity(0.3))
-                .frame(width: Self.footprint, height: Self.footprint)
-                .background(
-                    ChamferShape(cut: 6).fill(
-                        enabled ? tokens.accentSecondary.opacity(0.9) : tokens.surfaceElevated.opacity(0.5))
-                )
-                .contentShape(ChamferShape(cut: 6))
-                .scaleEffect(isHovering && enabled && !reduceMotion ? 1.06 : 1.0)
-                .shadow(
-                    color: enabled ? tokens.accentSecondary.opacity(isHovering ? 0.55 : 0.3) : .clear,
-                    radius: enabled ? 6 : 0)
-        }
-        .buttonStyle(.plain)
-        .disabled(!enabled)
-        .onHover { isHovering = $0 }
-        .animation(reduceMotion ? nil : AinkradMotion.hover, value: isHovering)
     }
 }

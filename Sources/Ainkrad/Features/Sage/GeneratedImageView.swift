@@ -10,8 +10,9 @@ import SwiftUI
 /// is delegated to the window root via `onOpen` (a card is inside a scroll view
 /// and can't host a window-covering overlay itself).
 struct GeneratedImageView: View {
+    @Environment(\.ainkradSkin) private var skin
     let dataURL: String
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
     var onOpen: ((NSImage) -> Void)? = nil
 
     @State private var isHovering = false
@@ -28,10 +29,10 @@ struct GeneratedImageView: View {
             Image(nsImage: d.image)
                 .resizable()
                 .scaledToFit()
-                .frame(maxWidth: 320, maxHeight: 320, alignment: .leading)
+                .frame(maxWidth: skin.size.s320, maxHeight: skin.size.s320, alignment: .leading)
                 .clipShape(ChamferShape(cut: AinkradRadius.md))
-                .overlay(ChamferShape(cut: AinkradRadius.md).stroke(tokens.accentSecondary.opacity(0.22), lineWidth: 1))
-                .overlay(alignment: .topTrailing) { actionBar(d).padding(6) }
+                .overlay(ChamferShape(cut: AinkradRadius.md).stroke(theme.accentSecondary.opacity(skin.opacity.o22), lineWidth: 1))
+                .overlay(alignment: .topTrailing) { actionBar(d).padding(skin.size.s6) }
                 .contentShape(Rectangle())
                 .onHover { isHovering = $0 }
                 .onTapGesture { onOpen?(d.image) }
@@ -58,7 +59,7 @@ struct GeneratedImageView: View {
     }
 
     private func actionBar(_ d: (image: NSImage, data: Data, ext: String)) -> some View {
-        HStack(spacing: 2) {
+        HStack(spacing: skin.size.s2) {
             AinkradIconButton(systemName: "arrow.up.left.and.arrow.down.right", size: 22, tooltip: "Open full screen") {
                 onOpen?(d.image)
             }
@@ -69,9 +70,9 @@ struct GeneratedImageView: View {
                 download(d.data, ext: d.ext)
             }
         }
-        .padding(3)
-        .background(ChamferShape(cut: AinkradRadius.sm).fill(tokens.background.opacity(0.7)))
-        .opacity(isHovering ? 0.95 : 0)
+        .padding(skin.size.s3)
+        .background(ChamferShape(cut: AinkradRadius.sm).fill(theme.background.opacity(skin.opacity.o70)))
+        .opacity(isHovering ? skin.opacity.o95 : 0)
         .animation(reduceMotion ? nil : AinkradMotion.hover, value: isHovering)
     }
 
@@ -111,8 +112,9 @@ struct GeneratedImageView: View {
 /// hover / right-click actions: open full-screen, download, copy (the file).
 /// Renders nothing if the URL is undecodable.
 struct GeneratedVideoView: View {
+    @Environment(\.ainkradSkin) private var skin
     let urlString: String
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
     var onOpen: ((URL) -> Void)? = nil
 
     @State private var isHovering = false
@@ -132,10 +134,10 @@ struct GeneratedVideoView: View {
                 }
             }
             .aspectRatio(16.0 / 9.0, contentMode: .fit)
-            .frame(maxWidth: 360, maxHeight: 240, alignment: .leading)
+            .frame(maxWidth: skin.size.s360, maxHeight: skin.size.s240, alignment: .leading)
             .clipShape(ChamferShape(cut: AinkradRadius.md))
-            .overlay(ChamferShape(cut: AinkradRadius.md).stroke(tokens.accentSecondary.opacity(0.22), lineWidth: 1))
-            .overlay(alignment: .topTrailing) { actionBar(url).padding(6) }
+            .overlay(ChamferShape(cut: AinkradRadius.md).stroke(theme.accentSecondary.opacity(skin.opacity.o22), lineWidth: 1))
+            .overlay(alignment: .topTrailing) { actionBar(url).padding(skin.size.s6) }
             .onHover { isHovering = $0 }
             .ainkradContextMenu([
                 AinkradMenuItem(
@@ -157,15 +159,15 @@ struct GeneratedVideoView: View {
     }
 
     private func actionBar(_ url: URL) -> some View {
-        HStack(spacing: 2) {
+        HStack(spacing: skin.size.s2) {
             AinkradIconButton(systemName: "arrow.up.left.and.arrow.down.right", size: 22, tooltip: "Open full screen") {
                 onOpen?(url)
             }
             AinkradIconButton(systemName: "square.and.arrow.down", size: 22, tooltip: "Download") { download(url) }
         }
-        .padding(3)
-        .background(ChamferShape(cut: AinkradRadius.sm).fill(tokens.background.opacity(0.7)))
-        .opacity(isHovering ? 0.95 : 0)
+        .padding(skin.size.s3)
+        .background(ChamferShape(cut: AinkradRadius.sm).fill(theme.background.opacity(skin.opacity.o70)))
+        .opacity(isHovering ? skin.opacity.o95 : 0)
         .animation(reduceMotion ? nil : AinkradMotion.hover, value: isHovering)
     }
 
@@ -183,9 +185,10 @@ struct GeneratedVideoView: View {
 /// transport: play/pause, a seek scrubber, elapsed / total time, playback speed,
 /// and download. Renders nothing if the URL is undecodable.
 struct GeneratedAudioView: View {
+    @Environment(\.ainkradSkin) private var skin
     let urlString: String
     let title: String
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
 
     @State private var player: AVAudioPlayer?
     @State private var isPlaying = false
@@ -199,14 +202,14 @@ struct GeneratedAudioView: View {
 
     var body: some View {
         if let url {
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: skin.size.s6) {
+                HStack(spacing: skin.spacing.sm) {
                     AinkradIconButton(
                         systemName: isPlaying ? "pause.fill" : "play.fill", size: 26,
                         tooltip: isPlaying ? "Pause" : "Play"
                     ) { toggle(url) }
                     Text(timeString(current)).font(AinkradFont.mono(10))
-                        .foregroundStyle(tokens.foreground.opacity(0.6)).monospacedDigit()
+                        .foregroundStyle(theme.foreground.opacity(skin.opacity.o60)).monospacedDigit()
                     AinkradSlider(
                         value: Binding(
                             get: { current },
@@ -215,25 +218,25 @@ struct GeneratedAudioView: View {
                                 player?.currentTime = $0
                             }), in: 0...max(duration, 0.01))
                     Text(timeString(duration)).font(AinkradFont.mono(10))
-                        .foregroundStyle(tokens.foreground.opacity(0.6)).monospacedDigit()
+                        .foregroundStyle(theme.foreground.opacity(skin.opacity.o60)).monospacedDigit()
                 }
-                HStack(spacing: 8) {
-                    Image(systemName: "waveform").font(.system(size: 11))
-                        .foregroundStyle(tokens.accentSecondary.opacity(0.7))
-                    Text(title).font(AinkradFont.display(11)).foregroundStyle(tokens.foreground.opacity(0.75))
+                HStack(spacing: skin.spacing.sm) {
+                    Image(systemName: "waveform").font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false)))
+                        .foregroundStyle(theme.accentSecondary.opacity(skin.opacity.o70))
+                    Text(title).font(AinkradFont.display(11)).foregroundStyle(theme.foreground.opacity(skin.opacity.o75))
                     Spacer(minLength: 8)
                     AinkradIconButton(systemName: "speedometer", size: 20, tooltip: "Playback speed") { cycleRate() }
                     Text("\(speedLabel)").font(AinkradFont.mono(10))
-                        .foregroundStyle(tokens.foreground.opacity(0.7)).monospacedDigit()
+                        .foregroundStyle(theme.foreground.opacity(skin.opacity.o70)).monospacedDigit()
                     AinkradIconButton(systemName: "square.and.arrow.down", size: 20, tooltip: "Download") {
                         download(url)
                     }
                 }
             }
-            .padding(.horizontal, 10).padding(.vertical, 8)
-            .frame(maxWidth: 360, alignment: .leading)
-            .background(ChamferShape(cut: AinkradRadius.md).fill(tokens.surfaceElevated.opacity(0.4)))
-            .overlay(ChamferShape(cut: AinkradRadius.md).stroke(tokens.accentSecondary.opacity(0.22), lineWidth: 1))
+            .padding(.horizontal, skin.size.s10).padding(.vertical, skin.spacing.sm)
+            .frame(maxWidth: skin.size.s360, alignment: .leading)
+            .background(ChamferShape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(skin.opacity.o40)))
+            .overlay(ChamferShape(cut: AinkradRadius.md).stroke(theme.accentSecondary.opacity(skin.opacity.o22), lineWidth: 1))
             .onAppear { ensurePlayer(url) }
             .onReceive(ticker) { _ in
                 guard isPlaying, let p = player else { return }
@@ -310,8 +313,9 @@ private func saveCopy(of url: URL, suggestedName: String) {
 /// Full-window lightbox for a generated video: dimmed backdrop, the player scaled
 /// to fit, click-outside or Esc to dismiss.
 struct VideoLightboxView: View {
+    @Environment(\.ainkradSkin) private var skin
     let url: URL
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
     let onDismiss: () -> Void
 
     @State private var current: (url: URL, player: AVPlayer)?
@@ -319,7 +323,7 @@ struct VideoLightboxView: View {
 
     var body: some View {
         ZStack {
-            Rectangle().fill(.black.opacity(0.85)).ignoresSafeArea().onTapGesture { onDismiss() }
+            Rectangle().fill(skin.color(.palette("black", skin.opacity.o85))).ignoresSafeArea().onTapGesture { onDismiss() }
             Group {
                 if let player {
                     VideoPlayer(player: player)
@@ -328,10 +332,10 @@ struct VideoLightboxView: View {
                 }
             }
             .aspectRatio(16.0 / 9.0, contentMode: .fit)
-            .padding(40)
+            .padding(skin.size.s40)
             .overlay(alignment: .topTrailing) {
                 AinkradIconButton(systemName: "xmark", size: 26, tooltip: "Close") { onDismiss() }
-                    .padding(20)
+                    .padding(skin.size.s20)
             }
         }
         .onExitCommand { onDismiss() }
@@ -347,23 +351,24 @@ struct VideoLightboxView: View {
 /// to fit, click-anywhere or Esc to dismiss. Presented by `SageRootView` as
 /// a window-covering overlay.
 struct ImageLightboxView: View {
+    @Environment(\.ainkradSkin) private var skin
     let image: NSImage
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
     let onDismiss: () -> Void
 
     var body: some View {
         ZStack {
             Rectangle()
-                .fill(.black.opacity(0.8))
+                .fill(skin.color(.palette("black", skin.opacity.o80)))
                 .ignoresSafeArea()
                 .onTapGesture { onDismiss() }
             Image(nsImage: image)
                 .resizable()
                 .scaledToFit()
-                .padding(40)
+                .padding(skin.size.s40)
                 .overlay(alignment: .topTrailing) {
                     AinkradIconButton(systemName: "xmark", size: 26, tooltip: "Close") { onDismiss() }
-                        .padding(20)
+                        .padding(skin.size.s20)
                 }
         }
         .onExitCommand { onDismiss() }  // Esc

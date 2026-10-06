@@ -2,7 +2,7 @@ import AinkradHostRuntime
 import Foundation
 
 /// Token-free tint selector so the mapping stays pure and unit-testable; the
-/// view resolves it to a real `DesignTokens` color.
+/// view resolves it to a real theme color.
 enum ToolTint: Equatable { case primary, secondary }
 
 /// Pure `tool name → visual identity` mapping for transcript tool cards.
