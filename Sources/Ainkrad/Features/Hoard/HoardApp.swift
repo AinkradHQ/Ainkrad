@@ -1,5 +1,6 @@
 import AinkradAppKit
 import AinkradAppKitUI
+import AinkradHostRuntime
 import SwiftUI
 
 /// The compiled-in Hoard app — a keyboard-driven, git-aware file browser.
@@ -34,6 +35,22 @@ enum HoardApp: AinkradApp {
     /// without `AppEnvironment`.
     static func surfaceFill(opacity: Double, base: Color) -> Color? {
         opacity < 1 ? base.opacity(opacity) : nil
+    }
+
+    /// The typography Hoard renders with: its own per-app override where the
+    /// user set one, otherwise the global Appearance setting — each half
+    /// independently, so a size override keeps the global face.
+    ///
+    /// Everything in Hoard sizes through the kit's type roles, so this one
+    /// value is what makes the workspace font and the per-app override flow
+    /// through live. Pure, so it is testable without `AppEnvironment`.
+    static func typography(
+        family: UIFontFamily?, scale: UIFontScale?,
+        globalFamily: UIFontFamily, globalScale: UIFontScale
+    ) -> AinkradTypography {
+        AinkradTypography(
+            fontFamilyName: (family ?? globalFamily).fontName,
+            scale: (scale ?? globalScale).multiplier)
     }
 
     /// Hoard' own settings. Declared as real fields rather than a wrapped view:

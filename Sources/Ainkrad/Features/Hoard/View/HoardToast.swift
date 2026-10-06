@@ -58,6 +58,7 @@ struct HoardToast: View {
     @Environment(\.ainkradTypography) private var typo
     @Environment(\.ainkradStatusColors) private var statusColors
     @Environment(\.ainkradReduceMotion) private var reduceMotion
+    @Environment(\.ainkradSkin) private var skin
 
     private var tokens: DesignTokens { environment.themeManager.tokens }
 
@@ -74,63 +75,53 @@ struct HoardToast: View {
             // Glyph in a tinted chamfer chip — the same treatment as
             // `AinkradIconGlyph`, so it reads as part of the kit.
             Image(systemName: message.kind.symbol)
-                .font(.system(size: 11, weight: .semibold))
+                .font(skin.font(AinkradFontToken(sizeKey: "t11", weight: "semibold", scaled: false)))
                 .foregroundStyle(accent)
-                .frame(width: 22, height: 22)
-                .background(ChamferShape(cut: 5).fill(accent.opacity(0.15)))
+                .frame(width: skin.size.s22, height: skin.size.s22)
+                .background(ChamferShape(cut: skin.cut.c5).fill(accent.opacity(skin.opacity.o15)))
 
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: skin.size.s1) {
                 Text(message.text)
                     .font(AinkradFontResolver.font(.body, weight: .medium, typography: typo))
                     .foregroundStyle(tokens.foreground)
                 if let detail = message.detail {
                     Text(detail)
                         .font(AinkradFontResolver.font(.caption, typography: typo))
-                        .foregroundStyle(tokens.foreground.opacity(0.5))
+                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
                 }
             }
 
             if !message.failures.isEmpty, let onShowDetails {
-                Button(action: onShowDetails) {
-                    Text("Details")
-                        .font(AinkradFontResolver.font(.caption, weight: .medium, typography: typo))
-                        .foregroundStyle(accent)
-                }
-                .buttonStyle(.plain)
-                .padding(.leading, AinkradSpacing.xs)
+                AinkradButton(title: "Details", style: .ghost, action: onShowDetails)
+                    .padding(.leading, AinkradSpacing.xs)
             }
 
-            Button(action: onDismiss) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 8, weight: .bold))
-                    .foregroundStyle(tokens.foreground.opacity(0.4))
-            }
-            .buttonStyle(.plain)
-            .padding(.leading, AinkradSpacing.xs)
+            AinkradIconButton(systemName: "xmark", size: skin.size.s16, tooltip: "Dismiss", action: onDismiss)
+                .padding(.leading, AinkradSpacing.xs)
         }
         .padding(.horizontal, AinkradSpacing.md)
         .padding(.vertical, AinkradSpacing.sm)
         .background {
             ZStack {
-                ChamferShape(cut: 8).fill(tokens.surfaceElevated.opacity(0.96))
+                ChamferShape(cut: skin.cut.c8).fill(tokens.surfaceElevated.opacity(skin.opacity.o96))
                 // A leading accent rule rather than a full tinted fill: colour
                 // the meaning, not the whole surface.
                 HStack(spacing: 0) {
-                    Rectangle().fill(accent).frame(width: 2)
+                    Rectangle().fill(accent).frame(width: skin.size.s2)
                     Spacer()
                 }
-                .clipShape(ChamferShape(cut: 8))
+                .clipShape(ChamferShape(cut: skin.cut.c8))
             }
         }
         .overlay(
-            ChamferShape(cut: 8)
-                .strokeBorder(accent.opacity(0.35), lineWidth: 1)
+            ChamferShape(cut: skin.cut.c8)
+                .strokeBorder(accent.opacity(skin.opacity.o35), lineWidth: 1)
         )
         .ainkradPanelGlow()
         .fixedSize()
         .transition(.move(edge: .bottom).combined(with: .opacity))
         .animation(
-            reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.8),
+            reduceMotion ? nil : skin.motion.springs["sp30_80"].map { skin.animation($0) },
             value: message.id)
     }
 }
@@ -148,6 +139,7 @@ struct HoardFailureSheet: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.ainkradTypography) private var typo
     @Environment(\.ainkradStatusColors) private var statusColors
+    @Environment(\.ainkradSkin) private var skin
 
     private var tokens: DesignTokens { environment.themeManager.tokens }
 
@@ -155,10 +147,10 @@ struct HoardFailureSheet: View {
         VStack(alignment: .leading, spacing: AinkradSpacing.lg) {
             HStack(spacing: AinkradSpacing.md) {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(skin.font(AinkradFontToken(sizeKey: "t13", weight: "semibold", scaled: false)))
                     .foregroundStyle(statusColors.warning)
-                    .frame(width: 26, height: 26)
-                    .background(ChamferShape(cut: 5).fill(statusColors.warning.opacity(0.15)))
+                    .frame(width: skin.size.s26, height: skin.size.s26)
+                    .background(ChamferShape(cut: skin.cut.c5).fill(statusColors.warning.opacity(skin.opacity.o15)))
                 Text("\(failures.count) item\(failures.count == 1 ? "" : "s") failed")
                     .font(AinkradFontResolver.font(.headline, weight: .medium, typography: typo))
                     .foregroundStyle(tokens.foreground)
@@ -168,7 +160,7 @@ struct HoardFailureSheet: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: AinkradSpacing.sm) {
                     ForEach(Array(failures.enumerated()), id: \.offset) { _, failure in
-                        VStack(alignment: .leading, spacing: 1) {
+                        VStack(alignment: .leading, spacing: skin.size.s1) {
                             Text(failure.url.lastPathComponent)
                                 .font(
                                     AinkradFontResolver.font(
@@ -178,7 +170,7 @@ struct HoardFailureSheet: View {
                                 .foregroundStyle(tokens.foreground)
                             Text(failure.reason)
                                 .font(AinkradFontResolver.font(.caption, typography: typo))
-                                .foregroundStyle(tokens.foreground.opacity(0.6))
+                                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o60))
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -186,16 +178,13 @@ struct HoardFailureSheet: View {
                 }
                 .padding(AinkradSpacing.sm)
             }
-            .frame(height: 200)
-            .background(ChamferShape(cut: 6).fill(tokens.foreground.opacity(0.05)))
+            .frame(height: skin.size.s200)
+            .background(ChamferShape(cut: skin.cut.c6).fill(tokens.foreground.opacity(skin.opacity.o05)))
 
             HStack {
                 Spacer()
                 AinkradButton(title: "Done", style: .primary, action: onClose)
             }
         }
-        .padding(AinkradSpacing.xl)
-        .frame(width: 520)
-        .hudPanelChrome(tokens: tokens)
     }
 }

@@ -12,6 +12,7 @@ import SwiftUI
 /// cover the island and break that continuity.
 struct HoardRootView: View {
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradSkin) private var skin
 
     @State private var store: HoardPaneStore?
     @State private var actions: HoardActions?
@@ -35,6 +36,15 @@ struct HoardRootView: View {
     private var engine: FileOperationEngine { environment.filesOperationEngine }
     private var git: GitStatusProvider { environment.filesGitStatusProvider }
 
+    /// Hoard's per-app font override over the global Appearance setting.
+    private var typography: AinkradTypography {
+        let appearance = environment.appAppearanceStore
+        let manager = environment.themeManager
+        return HoardApp.typography(
+            family: appearance.fontFamily(HoardApp.id), scale: appearance.fontScale(HoardApp.id),
+            globalFamily: manager.uiFontFamily, globalScale: manager.uiFontScale)
+    }
+
     var body: some View {
         Group {
             if let store, let actions {
@@ -44,7 +54,7 @@ struct HoardRootView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .filesTypography(environment)
+        .environment(\.ainkradTypography, typography)
         .task { activate() }
         .onDisappear(perform: deactivate)
     }
@@ -112,7 +122,7 @@ struct HoardRootView: View {
                 .transition(.move(edge: .trailing).combined(with: .opacity))
             }
         }
-        .animation(.easeOut(duration: 0.18), value: settings.showPreview)
+        .animation(.easeOut(duration: skin.motion.durations.d0_18), value: settings.showPreview)
         .filesKeyboardHandling(
             store: store, actions: actions, undoStack: environment.filesUndoStack,
             onUndo: {
@@ -242,21 +252,30 @@ struct HoardRootView: View {
         .onChange(of: store.activeTab.currentDirectory, initial: true) { _, directory in
             search?.scopedRoot = directory
         }
-        .sheet(
-            item: Binding(
-                get: { actions.prompt },
-                set: { if $0 == nil { actions.present(nil) } })
-        ) { prompt in
-            HoardPromptSheet(
-                prompt: prompt,
-                onCancel: { actions.present(nil) },
-                onRename: { entry, name in Task { await actions.commitRename(entry, to: name) } },
-                onNewFolder: { name in Task { await actions.commitNewFolder(named: name) } })
+        // Kit modals, scoped to the pane, in place of system sheets. Each one's
+        // scrim click or Esc takes the same exit the sheet's dismissal did.
+        .ainkradModal(
+            isPresented: Binding(
+                get: { actions.prompt != nil },
+                set: { if !$0 { actions.present(nil) } }),
+            contentWidth: skin.size.s420
+        ) {
+            if let prompt = actions.prompt {
+                HoardPromptSheet(
+                    prompt: prompt,
+                    onCancel: { actions.present(nil) },
+                    onRename: { entry, name in Task { await actions.commitRename(entry, to: name) } },
+                    onNewFolder: { name in Task { await actions.commitNewFolder(named: name) } }
+                )
+                // A fresh field per prompt, as `.sheet(item:)` gave.
+                .id(prompt.id)
+            }
         }
-        .sheet(
+        .ainkradModal(
             isPresented: Binding(
                 get: { actions.batchRenameTargets != nil },
-                set: { if !$0 { actions.cancelBatchRename() } })
+                set: { if !$0 { actions.cancelBatchRename() } }),
+            contentWidth: skin.size.s640
         ) {
             if let targets = actions.batchRenameTargets {
                 BatchRenameSheet(
@@ -266,23 +285,38 @@ struct HoardRootView: View {
                     onApply: { plan in Task { await actions.commitBatchRename(plan) } })
             }
         }
-        .sheet(
+        .ainkradModal(
             isPresented: Binding(
                 get: { !failureDetails.isEmpty },
-                set: { if !$0 { failureDetails = [] } })
+                set: { if !$0 { failureDetails = [] } }),
+            contentWidth: skin.size.s520
         ) {
             HoardFailureSheet(failures: failureDetails) { failureDetails = [] }
         }
-        .sheet(
+        .ainkradModal(
             isPresented: Binding(
                 get: { resolver.pending != nil },
-                set: { if !$0 { resolver.cancel() } })
+                set: { if !$0 { resolver.cancel() } }),
+            contentWidth: skin.size.s520
         ) {
             if let question = resolver.pending {
                 ConflictSheet(question: question) { resolver.answer($0) }
             }
         }
-        .animation(.easeOut(duration: 0.18), value: toast)
+        // A system sheet was its own window, so the list lost the keyboard
+        // while one was up and got it back after. The kit modal shares the
+        // pane's window: hand focus off and back explicitly, or arrows and
+        // ⌘⌫ would act on the list underneath an open conflict question.
+        .onChange(of: isModalPresented(actions: actions)) { _, isUp in
+            focus = isUp ? nil : .list
+        }
+        .animation(.easeOut(duration: skin.motion.durations.d0_18), value: toast)
+    }
+
+    /// True while any of the pane's modals is up.
+    private func isModalPresented(actions: HoardActions) -> Bool {
+        actions.prompt != nil || actions.batchRenameTargets != nil
+            || !failureDetails.isEmpty || resolver.pending != nil
     }
 
     /// The right-click menu's wiring. Everything here already exists as a

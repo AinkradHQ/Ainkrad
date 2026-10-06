@@ -10,6 +10,7 @@ struct HoardTabStrip: View {
     @Environment(\.ainkradTheme) private var theme
     @Environment(\.ainkradTypography) private var typo
     @Environment(\.ainkradReduceMotion) private var reduceMotion
+    @Environment(\.ainkradSkin) private var skin
     /// Drives the sliding active-tab highlight. A `matchedGeometryEffect`
     /// namespace so the fill MOVES between tabs instead of popping out of one
     /// and into another.
@@ -18,14 +19,14 @@ struct HoardTabStrip: View {
     var body: some View {
         if store.tabs.count > 1 {
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 2) {
+                HStack(spacing: skin.size.s2) {
                     ForEach(Array(store.tabs.enumerated()), id: \.element.id) { index, tab in
                         TabChip(
                             title: tab.title,
                             isActive: index == store.activeTabIndex,
                             namespace: activeTab,
                             onSelect: {
-                                withAnimation(reduceMotion ? nil : .easeOut(duration: 0.18)) {
+                                withAnimation(reduceMotion ? nil : .easeOut(duration: skin.motion.durations.d0_18)) {
                                     store.selectTab(at: index)
                                 }
                             },
@@ -51,6 +52,7 @@ private struct TabChip: View {
     @Environment(\.ainkradTheme) private var theme
     @Environment(\.ainkradTypography) private var typo
     @Environment(\.ainkradReduceMotion) private var reduceMotion
+    @Environment(\.ainkradSkin) private var skin
     @State private var hovering = false
 
     var body: some View {
@@ -61,37 +63,32 @@ private struct TabChip: View {
                         .caption, weight: isActive ? .medium : .regular,
                         typography: typo)
                 )
-                .foregroundStyle(theme.foreground.opacity(isActive ? 0.95 : 0.6))
+                .foregroundStyle(theme.foreground.opacity(isActive ? skin.opacity.o95 : skin.opacity.o60))
                 .lineLimit(1)
 
             // The close button only takes space on the active or hovered tab,
             // so a row of inactive tabs stays legible instead of being half
             // occupied by ✕ glyphs.
             if isActive || hovering {
-                Button(action: onClose) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 7, weight: .bold))
-                        .foregroundStyle(theme.foreground.opacity(0.55))
-                }
-                .buttonStyle(.plain)
-                .transition(.opacity.combined(with: .scale(scale: 0.7)))
+                AinkradIconButton(systemName: "xmark", size: skin.size.s14, tooltip: "Close Tab", action: onClose)
+                    .transition(.opacity.combined(with: .scale(scale: 0.7)))
             }
         }
         .padding(.horizontal, AinkradSpacing.sm)
-        .padding(.vertical, 4)
+        .padding(.vertical, skin.size.s4)
         .background {
             if isActive {
-                ChamferShape(cut: 5)
-                    .fill(theme.accentPrimary.opacity(0.2))
+                ChamferShape(cut: skin.cut.c5)
+                    .fill(theme.accentPrimary.opacity(skin.opacity.o20))
                     .matchedGeometryEffect(id: "activeTabFill", in: namespace)
             } else if hovering {
-                ChamferShape(cut: 5).fill(theme.foreground.opacity(0.06))
+                ChamferShape(cut: skin.cut.c5).fill(theme.foreground.opacity(skin.opacity.o06))
             }
         }
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
         .onTapGesture(perform: onSelect)
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.14), value: hovering)
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: isActive)
+        .animation(reduceMotion ? nil : .easeOut(duration: skin.motion.durations.d0_14), value: hovering)
+        .animation(reduceMotion ? nil : .easeOut(duration: skin.motion.durations.d0_18), value: isActive)
     }
 }

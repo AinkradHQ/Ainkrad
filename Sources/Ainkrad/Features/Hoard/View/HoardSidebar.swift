@@ -16,10 +16,11 @@ struct HoardSidebar: View {
 
     @Environment(\.ainkradTheme) private var theme
     @Environment(\.ainkradTypography) private var typo
+    @Environment(\.ainkradSkin) private var skin
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 1) {
+            LazyVStack(alignment: .leading, spacing: skin.size.s1) {
                 ForEach(sections) { section in
                     if let title = section.title {
                         Text(title.uppercased())
@@ -28,10 +29,10 @@ struct HoardSidebar: View {
                                     .caption, weight: .medium,
                                     typography: typo)
                             )
-                            .foregroundStyle(theme.foreground.opacity(0.4))
+                            .foregroundStyle(theme.foreground.opacity(skin.opacity.o40))
                             .padding(.horizontal, AinkradSpacing.sm)
                             .padding(.top, AinkradSpacing.md)
-                            .padding(.bottom, 2)
+                            .padding(.bottom, skin.size.s2)
                     }
                     ForEach(section.roots) { root in
                         let row = SidebarRootRow(
@@ -55,7 +56,7 @@ struct HoardSidebar: View {
             .padding(.horizontal, AinkradSpacing.sm)
             .padding(.vertical, AinkradSpacing.sm)
         }
-        .frame(width: 164)
+        .frame(width: skin.size.s164)
     }
 }
 
@@ -72,6 +73,7 @@ private struct SidebarRootRow: View {
     @Environment(\.ainkradTheme) private var theme
     @Environment(\.ainkradTypography) private var typo
     @Environment(\.ainkradReduceMotion) private var reduceMotion
+    @Environment(\.ainkradSkin) private var skin
     @State private var hovering = false
 
     var body: some View {
@@ -80,22 +82,22 @@ private struct SidebarRootRow: View {
                 .frame(width: iconSize + 5)
             Text(root.name)
                 .font(AinkradFontResolver.font(.body, typography: typo))
-                .foregroundStyle(theme.foreground.opacity(isSelected ? 1 : 0.8))
+                .foregroundStyle(theme.foreground.opacity(isSelected ? 1 : skin.opacity.o80))
                 .lineLimit(1)
             Spacer(minLength: 0)
         }
         .padding(.horizontal, AinkradSpacing.sm)
         .padding(.vertical, rowPadding)
-        .background(ChamferShape(cut: 4).fill(fill))
+        .background(ChamferShape(cut: skin.cut.c4).fill(fill))
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
         .onTapGesture(perform: onTap)
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.08), value: hovering)
+        .animation(reduceMotion ? nil : .easeOut(duration: skin.motion.durations.d0_08), value: hovering)
     }
 
     private var fill: Color {
-        if isSelected { return theme.accentPrimary.opacity(0.22) }
-        if hovering { return theme.foreground.opacity(0.06) }
+        if isSelected { return theme.accentPrimary.opacity(skin.opacity.o22) }
+        if hovering { return theme.foreground.opacity(skin.opacity.o06) }
         return .clear
     }
 }

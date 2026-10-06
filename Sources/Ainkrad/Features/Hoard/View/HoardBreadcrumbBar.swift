@@ -16,6 +16,7 @@ struct HoardBreadcrumbBar: View {
     @Environment(\.ainkradTheme) private var theme
     @Environment(\.ainkradTypography) private var typo
     @Environment(\.ainkradReduceMotion) private var reduceMotion
+    @Environment(\.ainkradSkin) private var skin
 
     private var components: [(name: String, url: URL)] {
         breadcrumbComponents(for: tab.currentDirectory)
@@ -41,43 +42,29 @@ struct HoardBreadcrumbBar: View {
     /// Back/forward beside the path, where a browser puts them. Disabled
     /// states are dimmed rather than hidden, so the controls don't jump.
     private var historyControls: some View {
-        HStack(spacing: 2) {
-            historyButton("chevron.left", enabled: tab.canGoBack) { tab.goBack() }
-            historyButton("chevron.right", enabled: tab.canGoForward) { tab.goForward() }
+        HStack(spacing: skin.size.s2) {
+            historyButton("chevron.left", tooltip: "Back", enabled: tab.canGoBack) { tab.goBack() }
+            historyButton("chevron.right", tooltip: "Forward", enabled: tab.canGoForward) { tab.goForward() }
         }
     }
 
     private func historyButton(
-        _ symbol: String, enabled: Bool,
+        _ symbol: String, tooltip: String, enabled: Bool,
         action: @escaping () -> Void
     ) -> some View {
-        Button(action: action) {
-            Image(systemName: symbol)
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(theme.foreground.opacity(enabled ? 0.7 : 0.25))
-                .frame(width: 20, height: 20)
-                .background(ChamferShape(cut: 4).fill(theme.foreground.opacity(0.05)))
-        }
-        .buttonStyle(.plain)
+        AinkradIconButton(systemName: symbol, size: skin.size.s20, tooltip: tooltip, action: action)
         .disabled(!enabled)
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: enabled)
+        .opacity(enabled ? 1 : skin.opacity.o35)
+        .animation(reduceMotion ? nil : .easeOut(duration: skin.motion.durations.d0_12), value: enabled)
     }
 
+    /// The kit's trail: the current folder reads as the accent crumb, every
+    /// ancestor navigates.
     private var breadcrumb: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 1) {
-                ForEach(Array(components.enumerated()), id: \.offset) { index, part in
-                    BreadcrumbSegment(
-                        title: part.name,
-                        isLast: index == components.count - 1,
-                        action: { tab.navigate(to: part.url) }
-                    )
-                    if index < components.count - 1 {
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 7, weight: .semibold))
-                            .foregroundStyle(theme.foreground.opacity(0.25))
-                    }
-                }
+        let parts = components
+        return ScrollView(.horizontal, showsIndicators: false) {
+            AinkradBreadcrumb(items: parts.map(\.name)) { index in
+                tab.navigate(to: parts[index].url)
             }
             // Anchored right: with a deep path the TAIL is what matters, and
             // a left-anchored scroll view would show you "/Users/…" forever.
@@ -92,9 +79,9 @@ struct HoardBreadcrumbBar: View {
     private var editor: some View {
         HStack(spacing: AinkradSpacing.xs) {
             Image(systemName: "arrow.turn.down.right")
-                .font(.system(size: 9))
-                .foregroundStyle(theme.foreground.opacity(0.35))
-            TextField("Path", text: $draft)
+                .font(skin.font(AinkradFontToken(sizeKey: "t9", scaled: false)))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o35))
+            TextField("Path", text: $draft)  // design-lint: allow raw-control kit gap, focus binding
                 .textFieldStyle(.plain)
                 .font(AinkradFontResolver.font(.mono, typography: typo))
                 .focused($fieldFocused)
@@ -111,8 +98,8 @@ struct HoardBreadcrumbBar: View {
                 }
         }
         .padding(.horizontal, AinkradSpacing.sm)
-        .padding(.vertical, 4)
-        .background(ChamferShape(cut: 4).fill(theme.foreground.opacity(0.07)))
+        .padding(.vertical, skin.size.s4)
+        .background(ChamferShape(cut: skin.cut.c4).fill(theme.foreground.opacity(skin.opacity.o07)))
     }
 
     private func commit() {
@@ -122,41 +109,5 @@ struct HoardBreadcrumbBar: View {
         // interpretation of pasting a path you copied from somewhere else.
         tab.navigate(to: fileSystem.isDirectory(url) ? url : url.deletingLastPathComponent())
         isEditing = false
-    }
-}
-
-/// One breadcrumb segment. The trailing segment — where you actually are —
-/// reads at full strength; ancestors are dimmed until hovered, so the bar
-/// tells you your location at a glance instead of being a wall of equal text.
-private struct BreadcrumbSegment: View {
-    let title: String
-    let isLast: Bool
-    let action: () -> Void
-
-    @Environment(\.ainkradTheme) private var theme
-    @Environment(\.ainkradTypography) private var typo
-    @Environment(\.ainkradReduceMotion) private var reduceMotion
-    @State private var hovering = false
-
-    var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(
-                    AinkradFontResolver.font(
-                        .caption, weight: isLast ? .medium : .regular,
-                        typography: typo)
-                )
-                .foregroundStyle(theme.foreground.opacity(isLast ? 0.95 : 0.55))
-                .lineLimit(1)
-                .padding(.horizontal, AinkradSpacing.xs)
-                .padding(.vertical, 3)
-                .background(
-                    ChamferShape(cut: 3)
-                        .fill(hovering ? theme.foreground.opacity(0.08) : .clear)
-                )
-        }
-        .buttonStyle(.plain)
-        .onHover { hovering = $0 }
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: hovering)
     }
 }

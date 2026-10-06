@@ -16,9 +16,9 @@ struct HoardPromptSheet: View {
     @State private var text = ""
     @FocusState private var fieldFocused: Bool
 
-    @Environment(AppEnvironment.self) private var environment
     @Environment(\.ainkradTheme) private var theme
     @Environment(\.ainkradTypography) private var typo
+    @Environment(\.ainkradSkin) private var skin
 
     var body: some View {
         VStack(alignment: .leading, spacing: AinkradSpacing.md) {
@@ -28,13 +28,13 @@ struct HoardPromptSheet: View {
 
             switch prompt {
             case .rename, .newFolder:
-                TextField(placeholder, text: $text)
+                TextField(placeholder, text: $text)  // design-lint: allow raw-control kit gap, focus binding
                     .textFieldStyle(.plain)
                     .font(AinkradFontResolver.font(.body, typography: typo))
                     .focused($fieldFocused)
                     .padding(.horizontal, AinkradSpacing.sm)
-                    .padding(.vertical, 6)
-                    .background(ChamferShape(cut: 4).fill(theme.foreground.opacity(0.08)))
+                    .padding(.vertical, skin.size.s6)
+                    .background(ChamferShape(cut: skin.cut.c4).fill(theme.foreground.opacity(skin.opacity.o08)))
                     .onSubmit(commit)
 
             case .noDestination(let isMove):
@@ -46,7 +46,7 @@ struct HoardPromptSheet: View {
                     """
                 )
                 .font(AinkradFontResolver.font(.body, typography: typo))
-                .foregroundStyle(theme.foreground.opacity(0.7))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o70))
                 .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -59,9 +59,6 @@ struct HoardPromptSheet: View {
                 }
             }
         }
-        .padding(AinkradSpacing.xl)
-        .frame(width: 420)
-        .hudPanelChrome(tokens: environment.themeManager.tokens)
         .onAppear {
             if case .rename(let entry) = prompt { text = entry.name }
             fieldFocused = true
@@ -105,9 +102,10 @@ struct HoardPromptSheet: View {
 
 /// Replace / Keep both / Skip / Merge, with apply-to-all.
 ///
-/// Wears the host's `hudPanelChrome` and the kit's own controls. The first cut
-/// used a stock SwiftUI `Toggle` on a plain rounded background, which read as a
-/// system alert dropped into Ainkrad rather than part of it.
+/// Presented in the kit's `ainkradModal`, which owns the panel, and built from
+/// the kit's own controls. The first cut used a stock SwiftUI `Toggle` on a
+/// plain rounded background, which read as a system alert dropped into Ainkrad
+/// rather than part of it.
 struct ConflictSheet: View {
     let question: ConflictQuestion
     let onAnswer: (ConflictAnswer) -> Void
@@ -117,6 +115,7 @@ struct ConflictSheet: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.ainkradTypography) private var typo
     @Environment(\.ainkradStatusColors) private var statusColors
+    @Environment(\.ainkradSkin) private var skin
 
     private var tokens: DesignTokens { environment.themeManager.tokens }
 
@@ -128,20 +127,17 @@ struct ConflictSheet: View {
             AinkradCheckbox(isOn: $applyToAll, label: "Apply to all remaining")
             actions
         }
-        .padding(AinkradSpacing.xl)
-        .frame(width: 520)
-        .hudPanelChrome(tokens: tokens)
     }
 
     private var header: some View {
         HStack(alignment: .top, spacing: AinkradSpacing.md) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 13, weight: .semibold))
+                .font(skin.font(AinkradFontToken(sizeKey: "t13", weight: "semibold", scaled: false)))
                 .foregroundStyle(statusColors.warning)
-                .frame(width: 26, height: 26)
-                .background(ChamferShape(cut: 5).fill(statusColors.warning.opacity(0.15)))
+                .frame(width: skin.size.s26, height: skin.size.s26)
+                .background(ChamferShape(cut: skin.cut.c5).fill(statusColors.warning.opacity(skin.opacity.o15)))
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: skin.size.s3) {
                 Text("\u{201C}\(question.name)\u{201D} already exists")
                     .font(AinkradFontResolver.font(.headline, weight: .medium, typography: typo))
                     .foregroundStyle(tokens.foreground)
@@ -149,7 +145,7 @@ struct ConflictSheet: View {
                     .truncationMode(.middle)
                 Text(question.destination.deletingLastPathComponent().path)
                     .font(AinkradFontResolver.font(.caption, typography: typo))
-                    .foregroundStyle(tokens.foreground.opacity(0.5))
+                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
                     .lineLimit(1)
                     .truncationMode(.head)
             }
