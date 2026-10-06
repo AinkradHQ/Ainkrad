@@ -64,7 +64,14 @@ final class SkillsManagerViewModel {
     func save(_ skill: Skill) {
         let text = draft(for: skill)
         guard text != onDiskText(skill) else { return }
-        try? registry.writeLocal(text, name: skill.name)
+        do {
+            try registry.writeLocal(text, name: skill.name)
+        } catch {
+            // Keep the draft: clearing it after a failed write would lose the user's edit.
+            Log.persistence.error(
+                "Skill \(skill.name, privacy: .public) was not saved: \(String(describing: error), privacy: .public)")
+            return
+        }
         drafts[skill.name] = nil
     }
 
@@ -73,7 +80,12 @@ final class SkillsManagerViewModel {
     /// should immediately read as a broken binding rather than stay wired to
     /// a stale in-memory closure until relaunch.
     func delete(_ skill: Skill) {
-        try? fileManager.removeItem(at: registry.paths.skillDir(skill.name))
+        do {
+            try fileManager.removeItem(at: registry.paths.skillDir(skill.name))
+        } catch {
+            Log.persistence.error(
+                "Skill \(skill.name, privacy: .public) was not deleted: \(String(describing: error), privacy: .public)")
+        }
         drafts[skill.name] = nil
         registry.reload()
         resyncCommands()
@@ -81,8 +93,23 @@ final class SkillsManagerViewModel {
 
     // MARK: - Proposals
 
-    func approve(_ proposal: SkillProposal) { try? registry.approve(name: proposal.name) }
-    func discard(_ proposal: SkillProposal) { try? registry.discard(name: proposal.name) }
+    func approve(_ proposal: SkillProposal) {
+        do {
+            try registry.approve(name: proposal.name)
+        } catch {
+            Log.persistence.error(
+                "Skill proposal \(proposal.name, privacy: .public) was not approved: \(String(describing: error), privacy: .public)")
+        }
+    }
+
+    func discard(_ proposal: SkillProposal) {
+        do {
+            try registry.discard(name: proposal.name)
+        } catch {
+            Log.persistence.error(
+                "Skill proposal \(proposal.name, privacy: .public) was not discarded: \(String(describing: error), privacy: .public)")
+        }
+    }
 
     // MARK: - Commands
 
