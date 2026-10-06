@@ -194,8 +194,5 @@ struct HoardFailureSheet: View {
                 AinkradButton(title: "Done", style: .primary, action: onClose)
             }
         }
-        .padding(AinkradSpacing.xl)
-        .frame(width: 520)
-        .hudPanelChrome(tokens: tokens)
     }
 }

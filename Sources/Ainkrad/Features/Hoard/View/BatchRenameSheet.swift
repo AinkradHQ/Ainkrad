@@ -43,9 +43,6 @@ struct BatchRenameSheet: View {
             preview
             footer
         }
-        .padding(AinkradSpacing.xl)
-        .frame(width: 640)
-        .hudPanelChrome(tokens: tokens)
         .onAppear { fieldFocused = true }
     }
 
