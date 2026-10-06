@@ -91,6 +91,7 @@ struct SignalViewStateStore {
     let url: URL
 
     func load() -> SignalViewState {
+        _ = setAsideIfUndecodable(SignalViewState.self, at: url)
         guard let data = try? Data(contentsOf: url),
             let state = try? JSONDecoder().decode(SignalViewState.self, from: data)
         else { return SignalViewState() }
@@ -98,6 +99,7 @@ struct SignalViewStateStore {
     }
 
     func save(_ state: SignalViewState) {
+        guard setAsideIfUndecodable(SignalViewState.self, at: url) else { return }
         guard let data = try? JSONEncoder().encode(state) else { return }
         do {
             try FileManager.default.createDirectory(
