@@ -217,7 +217,12 @@ struct SettingsOverlayView: View {
 
             sidebarList(tokens: tokens)
         }
-        .frame(width: SettingsMetrics.sidebarWidth, alignment: .topLeading)
+        // Wider than `SettingsMetrics.sidebarWidth` (240): the kit row's title
+        // (body, medium) truncated "Permissions & Sandbox" there. 268 is the
+        // smallest size step that fits every page and app label at every text
+        // size in Exo 2 and System, and up to Medium in JetBrains Mono — all the
+        // combinations the old 13 pt row fitted.
+        .frame(width: skin.size.s268, alignment: .topLeading)
     }
 
     /// The results the palette is currently showing, or `nil` when the palette

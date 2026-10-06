@@ -63,6 +63,8 @@ struct SettingsConfirmTests {
             #expect(skin.chrome.overlay.backdropOpacity == 0.42)
             #expect(skin.motion.durations.d0_12 == 0.12)
             #expect(skin.size.s18 == 18 && skin.size.s52 == 52 && skin.size.s34 == 34)
+            // The sidebar column; narrower truncates "Permissions & Sandbox".
+            #expect(skin.size.s268 == 268)
         }
     }
 }
