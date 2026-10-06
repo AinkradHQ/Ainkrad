@@ -109,6 +109,10 @@ struct ScryMediaCard: View {
 /// desync from it (e.g. when the item plays to the end on its own). All
 /// mutation happens hopped onto the main actor, since AVFoundation's
 /// callbacks are not actor-isolated.
+// `@unchecked Sendable` is safe through main-actor isolation: every stored
+// property is read and written on the main actor, and the AVFoundation
+// callbacks (periodic time observer on `.main`, `timeControlStatus` KVO) only
+// capture `self` weakly and hop to it with `Task { @MainActor in … }`.
 @MainActor
 private final class ScryAudioPlayerObserver: ObservableObject, @unchecked Sendable {
     @Published private(set) var isPlaying = false
