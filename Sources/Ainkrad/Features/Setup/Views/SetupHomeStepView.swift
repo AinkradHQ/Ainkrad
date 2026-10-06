@@ -153,15 +153,6 @@ struct SetupHomeStepView: View {
         .accessibilityIdentifier("setup.home.selected")
     }
 
-    /// The "this folder already holds a vault" decision.
-    ///
-    /// It states the COUNT, because "this folder is already an Ainkrad Home" and
-    /// "this folder has 214 things in it" land very differently, and the second
-    /// is the one that stops someone who picked the wrong folder.
-    ///
-    /// The safe action is the secondary, so dismissing the modal by any route —
-    /// including a stray click on the scrim — picks again rather than claiming
-    /// the vault.
     /// A folder the app will not claim.
     ///
     /// ONE button, and it re-opens the chooser rather than merely closing: the
@@ -181,6 +172,15 @@ struct SetupHomeStepView: View {
             onDismiss: { modals.dismiss() })
     }
 
+    /// The "this folder already holds a vault" decision.
+    ///
+    /// It states the COUNT, because "this folder is already an Ainkrad Home" and
+    /// "this folder has 214 things in it" land very differently, and the second
+    /// is the one that stops someone who picked the wrong folder.
+    ///
+    /// The safe action is the secondary, so dismissing the modal by any route —
+    /// including a stray click on the scrim — picks again rather than claiming
+    /// the vault.
     private func existingVaultModal(url: URL, entryCount: Int) -> SetupModalPresenter.Modal {
         SetupModalPresenter.Modal(
             title: "This folder is already an Ainkrad Home",

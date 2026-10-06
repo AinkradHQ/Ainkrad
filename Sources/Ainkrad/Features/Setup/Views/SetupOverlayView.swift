@@ -177,9 +177,8 @@ struct SetupOverlayView: View {
     // ever draws the steps actually owed.
 }
 
-/// Minimal per-step content: a title and a Continue button. Tasks 4-9 replace
-/// each case with the real step content; the switch itself is the seam they
-/// hook into.
+/// Routes the coordinator's current step to that step's view. Each step view
+/// owns its own content and ends in the shared `SetupStepFooter`.
 struct SetupStepBody: View {
     let step: SetupStep
     let coordinator: SetupCoordinator
