@@ -47,6 +47,13 @@ struct GeneratedImageView: View {
                     },
                 ])
                 .animation(reduceMotion ? nil : AinkradMotion.hover, value: isHovering)
+                // The copy checkmark reverts after a beat; a structured task, so
+                // it is cancelled with the card rather than outliving it.
+                .task(id: copied) {
+                    guard copied else { return }
+                    try? await Task.sleep(for: .seconds(1.2))
+                    copied = false
+                }
         }
     }
 
@@ -72,7 +79,6 @@ struct GeneratedImageView: View {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.writeObjects([image])
         copied = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { copied = false }
     }
 
     private func download(_ data: Data, ext: String) {
@@ -85,7 +91,7 @@ struct GeneratedImageView: View {
                 try data.write(to: url)
             } catch {
                 Log.app.error(
-                    "Failed to write \(data.count, privacy: .public) bytes to \(url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
+                    "Failed to write \(data.count, privacy: .public) bytes to \(url.lastPathComponent): \(error.localizedDescription)"
                 )
             }
         }
@@ -169,19 +175,7 @@ struct GeneratedVideoView: View {
     }
 
     private func download(_ url: URL) {
-        let panel = NSSavePanel()
-        panel.nameFieldStringValue = "generated-video.\(url.pathExtension.isEmpty ? "mp4" : url.pathExtension)"
-        panel.canCreateDirectories = true
-        panel.begin { response in
-            guard response == .OK, let dest = panel.url else { return }
-            do {
-                try FileManager.default.copyItem(at: url, to: dest)
-            } catch {
-                Log.app.error(
-                    "Failed to copy \(url.lastPathComponent, privacy: .public) to \(dest.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
-                )
-            }
-        }
+        saveCopy(of: url, suggestedName: "generated-video.\(url.pathExtension.isEmpty ? "mp4" : url.pathExtension)")
     }
 }
 
@@ -290,18 +284,25 @@ struct GeneratedAudioView: View {
     }
 
     private func download(_ url: URL) {
-        let panel = NSSavePanel()
-        panel.nameFieldStringValue = "speech.\(url.pathExtension.isEmpty ? "caf" : url.pathExtension)"
-        panel.canCreateDirectories = true
-        panel.begin { response in
-            guard response == .OK, let dest = panel.url else { return }
-            do {
-                try FileManager.default.copyItem(at: url, to: dest)
-            } catch {
-                Log.app.error(
-                    "Failed to copy \(url.lastPathComponent, privacy: .public) to \(dest.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
-                )
-            }
+        saveCopy(of: url, suggestedName: "speech.\(url.pathExtension.isEmpty ? "caf" : url.pathExtension)")
+    }
+}
+
+/// Offers a save panel for a generated media file and copies it to the chosen
+/// destination. Shared by the video and speech cards' Download.
+@MainActor
+private func saveCopy(of url: URL, suggestedName: String) {
+    let panel = NSSavePanel()
+    panel.nameFieldStringValue = suggestedName
+    panel.canCreateDirectories = true
+    panel.begin { response in
+        guard response == .OK, let dest = panel.url else { return }
+        do {
+            try FileManager.default.copyItem(at: url, to: dest)
+        } catch {
+            Log.app.error(
+                "Failed to copy \(url.lastPathComponent) to \(dest.lastPathComponent): \(error.localizedDescription)"
+            )
         }
     }
 }

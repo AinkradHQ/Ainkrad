@@ -2,10 +2,8 @@ import AinkradAppKit
 import AinkradHostRuntime
 import SwiftUI
 
-/// Pure diff→row helpers (no SwiftUI) so pairing/tint logic is unit-tested.
+/// Pure diff→row helpers (no SwiftUI) so the pairing logic is unit-tested.
 enum DiffReviewPresentation {
-    static func isTinted(_ line: DiffLine) -> Bool { line.kind != .context }
-
     /// Pair deletions (left) with insertions (right) for side-by-side rendering.
     /// Context lines mirror on both sides; unmatched del/ins get an empty slot.
     static func sideBySideRows(_ hunk: DiffHunk) -> [(left: DiffLine?, right: DiffLine?)] {

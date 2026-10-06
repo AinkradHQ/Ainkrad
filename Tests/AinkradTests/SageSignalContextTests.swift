@@ -193,6 +193,25 @@ final class SageSignalContextTests {
         #expect(summary.contains("17x"), "the count is the useful part")
     }
 
+    @Test("collapsing keeps the newest of a run, in first-seen order, with its count")
+    func collapsingKeepsNewest() {
+        let base = Date(timeIntervalSince1970: 1_000_000)
+        func event(_ kind: String, _ title: String, at offset: TimeInterval) -> SignalEvent {
+            SignalEvent(
+                timestamp: base.addingTimeInterval(offset), source: .app(appID: "raven"),
+                kind: kind, severity: .warning, title: title)
+        }
+        // The older sync event comes first, so the newer one must replace it.
+        let collapsed = SageSignalContext.collapsingRepeats([
+            event("sync.failed", "old sync", at: 0),
+            event("build.failed", "build", at: 5),
+            event("sync.failed", "new sync", at: 10),
+            event("sync.failed", "middle sync", at: 3),
+        ])
+        #expect(collapsed.map { $0.0.title } == ["new sync", "build"])
+        #expect(collapsed.map { $0.1 } == [3, 1])
+    }
+
     @Test("collapsing does not hide a DIFFERENT app's failure behind a flood")
     func floodDoesNotCrowdOutOthers() throws {
         let (center, url) = try makeCenter()

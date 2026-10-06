@@ -341,8 +341,8 @@ struct SageConnectionModelPicker: View {
     }
 
     /// "AUTO" when the router is resolving the model each turn, "PINNED" when
-    /// the user has pinned one — mirrors `AgentSwitcherView`'s neighboring
-    /// pill in NOT using any native control, just a themed `AinkradBadge`.
+    /// the user has pinned one — NOT a native control, just a themed
+    /// `AinkradBadge`.
     /// No badge at all when the router is disabled and nothing is pinned
     /// (today's plain default-model behavior, unchanged).
     @ViewBuilder

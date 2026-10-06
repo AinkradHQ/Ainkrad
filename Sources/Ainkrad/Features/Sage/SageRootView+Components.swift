@@ -64,10 +64,16 @@ struct SageTurnCopyButton: View {
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(text, forType: .string)
             copied = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { copied = false }
         }
         .opacity(isVisible ? 0.8 : 0)
         .animation(reduceMotion ? nil : AinkradMotion.hover, value: isVisible)
+        // The checkmark reverts after a beat; a structured task, so it is
+        // cancelled with the button rather than outliving it.
+        .task(id: copied) {
+            guard copied else { return }
+            try? await Task.sleep(for: .seconds(1.2))
+            copied = false
+        }
     }
 }
 
