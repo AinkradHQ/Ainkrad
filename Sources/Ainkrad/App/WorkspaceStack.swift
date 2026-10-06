@@ -107,6 +107,8 @@ struct WorkspaceStack: View {
     private func popFocusedPane() {
         guard !reduceMotion else { return }
         focusPop = 0.92
+        // `DispatchQueue.main.async` on purpose (S-CON-5): the spring must
+        // start on the next run-loop turn, after the 0.92 frame has rendered.
         DispatchQueue.main.async {
             withAnimation(.spring(response: 0.34, dampingFraction: 0.8)) {
                 focusPop = 1

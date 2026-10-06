@@ -122,12 +122,6 @@ extension RootView {
         }
     }
 
-    /// Transient toasts, top-trailing under the bell that counts them.
-    ///
-    /// Above the workspace and every dismissible overlay, but deliberately
-    /// BELOW the first-run gate (zIndex 100) and the quit confirmation (200): a
-    /// toast floating over the gate would be another surface the scrim cannot
-    /// cover.
     /// Who sent each notification, from the live app registry: the name and
     /// launcher symbol the user knows the app by. Rebuilt with the view, so an
     /// app installed or renamed shows up on the next notification.
@@ -140,6 +134,12 @@ extension RootView {
             host: SignalSourceIdentity(name: "Ainkrad", symbol: "sparkle"))
     }
 
+    /// Transient toasts, top-trailing under the bell that counts them.
+    ///
+    /// Above the workspace and every dismissible overlay, but deliberately
+    /// BELOW the first-run gate (zIndex 100) and the quit confirmation (200): a
+    /// toast floating over the gate would be another surface the scrim cannot
+    /// cover.
     var signalToasts: some View {
         SignalToastStack(
             model: environment.signalToasts,
