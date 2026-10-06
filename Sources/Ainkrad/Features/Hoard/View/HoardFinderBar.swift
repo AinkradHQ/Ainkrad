@@ -18,6 +18,7 @@ struct HoardFinderBar: View {
 
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.ainkradTypography) private var typo
+    @Environment(\.ainkradSkin) private var skin
 
     @FocusState private var fieldFocused: Bool
     @State private var highlighted = 0
@@ -42,30 +43,33 @@ struct HoardFinderBar: View {
         .onChange(of: search.queryText) { _, _ in highlighted = 0 }
     }
 
+    /// The Launcher's command field, so the two palettes read as one family;
+    /// the leading mark says which palette this is.
     private var field: some View {
         HStack(spacing: AinkradSpacing.md) {
-            // The Launcher's chevron mark, so the two palettes read as one
-            // family.
-            Image(systemName: search.mode == .jump ? "arrow.turn.down.right" : "magnifyingglass")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(tokens.accentSecondary)
-
-            TextField(placeholder, text: $search.queryText)
-                .textFieldStyle(.plain)
-                .font(AinkradFontResolver.font(.headline, typography: typo))
-                .foregroundStyle(tokens.foreground)
-                .focused($fieldFocused)
-                .onSubmit(submitHighlighted)
-                .onExitCommand(perform: onClose)
-                .onKeyPress(.downArrow) { moveHighlight(1) }
-                .onKeyPress(.upArrow) { moveHighlight(-1) }
+            AinkradCommandField(
+                placeholder, text: $search.queryText, focus: $fieldFocused,
+                leading: {
+                    Image(systemName: search.mode == .jump ? "arrow.turn.down.right" : "magnifyingglass")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(tokens.accentSecondary)
+                },
+                onArrow: { arrow in
+                    switch arrow {
+                    case .down: return moveHighlight(1)
+                    case .up: return moveHighlight(-1)
+                    default: return false
+                    }
+                },
+                onSubmit: submitHighlighted,
+                onEscape: onClose
+            )
 
             if search.isSearching {
-                ProgressView().controlSize(.small)
+                AinkradSpinner(size: skin.size.s16)
             }
         }
-        .padding(.horizontal, AinkradSpacing.lg)
-        .padding(.vertical, AinkradSpacing.md)
+        .padding(.trailing, AinkradSpacing.lg)
     }
 
     @ViewBuilder
@@ -158,10 +162,11 @@ struct HoardFinderBar: View {
         }
     }
 
-    private func moveHighlight(_ delta: Int) -> KeyPress.Result {
-        guard !hits.isEmpty else { return .ignored }
+    /// `false` with no hits, so the arrow reaches the caret instead.
+    private func moveHighlight(_ delta: Int) -> Bool {
+        guard !hits.isEmpty else { return false }
         highlighted = min(max(0, highlighted + delta), hits.count - 1)
-        return .handled
+        return true
     }
 
     private func submitHighlighted() {
