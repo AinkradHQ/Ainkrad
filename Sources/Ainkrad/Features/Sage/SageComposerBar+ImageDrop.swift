@@ -86,7 +86,7 @@ extension SageComposerBar {
     }
 
     var attachmentChips: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: skin.size.s6) {
             ForEach(Array(pendingImages.enumerated()), id: \.offset) { index, attachment in
                 AinkradChip(label: attachment.mediaType, systemName: "photo") {
                     pendingImages.remove(at: index)

@@ -4,6 +4,7 @@ import SwiftUI
 
 /// Copy-to-pasteboard for a whole assistant turn, revealed on hover.
 struct SageTurnCopyButton: View {
+    @Environment(\.ainkradSkin) private var skin
     let text: String
     /// Driven by the enclosing turn's hover region, not this button's own frame —
     /// the button sits at `opacity: 0` until the whole turn is hovered, so tying
@@ -18,7 +19,7 @@ struct SageTurnCopyButton: View {
             NSPasteboard.general.setString(text, forType: .string)
             copied = true
         }
-        .opacity(isVisible ? 0.8 : 0)
+        .opacity(isVisible ? skin.opacity.o80 : 0)
         .animation(reduceMotion ? nil : AinkradMotion.hover, value: isVisible)
         // The checkmark reverts after a beat; a structured task, so it is
         // cancelled with the button rather than outliving it.
@@ -55,16 +56,17 @@ struct StreamingCursor: View {
 /// tool call is spinning up before its card commits. Steady under Reduce Motion
 /// (mirrors `StreamingCursor`).
 struct WorkingIndicator: View {
+    @Environment(\.ainkradSkin) private var skin
     @Environment(\.ainkradTheme) private var theme
     var label: String = "Thinking"
     @Environment(\.ainkradReduceMotion) private var reduceMotion
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: skin.size.s6) {
             dots
             Text("\(label)…")
                 .font(AinkradFont.display(12))
-                .foregroundStyle(theme.foreground.opacity(0.45))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o45))
         }
     }
 
@@ -73,11 +75,11 @@ struct WorkingIndicator: View {
     // Same idiom as `StreamingCursor` above.
     @ViewBuilder private var dots: some View {
         if reduceMotion {
-            HStack(spacing: 3) { ForEach(0..<3, id: \.self) { _ in dot(0.7) } }
+            HStack(spacing: skin.size.s3) { ForEach(0..<3, id: \.self) { _ in dot(0.7) } }
         } else {
             BudgetedTimelineView { date in
                 let t = date.timeIntervalSinceReferenceDate
-                HStack(spacing: 3) {
+                HStack(spacing: skin.size.s3) {
                     ForEach(0..<3, id: \.self) { i in
                         // ~1.6s breathe (2π·durationBase), 60° per-dot stagger.
                         let phase = t / AinkradMotion.durationBase + Double(i) * .pi / 3
@@ -89,6 +91,6 @@ struct WorkingIndicator: View {
     }
 
     private func dot(_ opacity: Double) -> some View {
-        Circle().fill(theme.accentSecondary.opacity(opacity)).frame(width: 4, height: 4)
+        Circle().fill(theme.accentSecondary.opacity(opacity)).frame(width: skin.size.s4, height: skin.size.s4)
     }
 }

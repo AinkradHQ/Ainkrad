@@ -7,18 +7,19 @@ import SwiftUI
 /// (the agent drafts via `propose_skill`, which never auto-installs); dismiss
 /// hides it. Presentation-only; all safety lives on `AgentSession`.
 struct SkillSuggestionChip: View {
+    @Environment(\.ainkradSkin) private var skin
     let session: AgentSession
     @Environment(\.ainkradTheme) private var theme
 
     var body: some View {
         if let suggestion = session.pendingSkillSuggestion {
-            HStack(spacing: 10) {
+            HStack(spacing: skin.size.s10) {
                 Image(systemName: "wand.and.stars")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(skin.font(AinkradFontToken(sizeKey: "t12", weight: "semibold", scaled: false)))
                     .foregroundStyle(theme.accentSecondary)
                 Text("This looked reusable — capture it as a skill?")
                     .font(AinkradFont.display(12, weight: .medium))
-                    .foregroundStyle(theme.foreground.opacity(0.9))
+                    .foregroundStyle(theme.foreground.opacity(skin.opacity.o90))
                 Spacer(minLength: 8)
                 AinkradButton(title: "Capture", style: .primary) {
                     session.acceptSkillSuggestion()
@@ -30,8 +31,8 @@ struct SkillSuggestionChip: View {
                 }
                 .accessibilityLabel("Dismiss skill suggestion")
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, skin.spacing.md)
+            .padding(.vertical, skin.spacing.sm)
             .background(ChamferShape().fill(theme.surfaceElevated))
         }
     }

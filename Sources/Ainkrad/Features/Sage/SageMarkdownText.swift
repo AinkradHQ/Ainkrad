@@ -9,6 +9,7 @@ import SwiftUI
 /// resolution is memoised via `InlineMarkdownCache`, so re-evaluating this
 /// view on every streaming update stays cheap.
 struct SageMarkdownText: View {
+    @Environment(\.ainkradSkin) private var skin
     private let blocks: [MarkdownBlock]
     @Environment(\.ainkradTheme) private var theme
     var typography: AinkradTypography
@@ -38,27 +39,27 @@ struct SageMarkdownText: View {
     private func blockView(_ block: MarkdownBlock) -> some View {
         switch block {
         case .paragraph(let src):
-            inline(src).font(AinkradFontResolver.font(size: 13, typography: typography)).foregroundStyle(theme.foreground.opacity(0.9))
+            inline(src).font(AinkradFontResolver.font(size: 13, typography: typography)).foregroundStyle(theme.foreground.opacity(skin.opacity.o90))
         case .heading(let level, let src):
             inline(src)
                 .font(AinkradFontResolver.font(size: headingSize(level), weight: .semibold, typography: typography))
-                .foregroundStyle(theme.foreground.opacity(0.95))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o95))
         case .bulletList(let items):
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: skin.size.s3) {
                 ForEach(Array(items.enumerated()), id: \.offset) { _, item in
-                    HStack(alignment: .top, spacing: 6) {
+                    HStack(alignment: .top, spacing: skin.size.s6) {
                         Text("•").foregroundStyle(theme.accentSecondary)
-                        inline(item).foregroundStyle(theme.foreground.opacity(0.9))
+                        inline(item).foregroundStyle(theme.foreground.opacity(skin.opacity.o90))
                     }
                     .font(AinkradFontResolver.font(size: 13, typography: typography))
                 }
             }
         case .orderedList(let items):
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: skin.size.s3) {
                 ForEach(Array(items.enumerated()), id: \.offset) { idx, item in
-                    HStack(alignment: .top, spacing: 6) {
+                    HStack(alignment: .top, spacing: skin.size.s6) {
                         Text("\(idx + 1).").foregroundStyle(theme.accentSecondary)
-                        inline(item).foregroundStyle(theme.foreground.opacity(0.9))
+                        inline(item).foregroundStyle(theme.foreground.opacity(skin.opacity.o90))
                     }
                     .font(AinkradFontResolver.font(size: 13, typography: typography))
                 }
@@ -67,10 +68,10 @@ struct SageMarkdownText: View {
             AinkradCodeBlock(code, language: language)
         case .thematicBreak:
             Rectangle()
-                .fill(theme.foreground.opacity(0.12))
-                .frame(height: 1)
+                .fill(theme.foreground.opacity(skin.opacity.o12))
+                .frame(height: skin.size.s1)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 4)
+                .padding(.vertical, skin.spacing.xs)
         }
     }
 

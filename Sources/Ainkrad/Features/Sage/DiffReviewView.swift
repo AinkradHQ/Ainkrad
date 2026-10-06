@@ -40,6 +40,7 @@ enum DiffReviewPresentation {
 /// native Picker) and a per-hunk Accept/Reject latch. Rejection is owned by the caller
 /// (session state) via a binding so the docked approve button reads the same set.
 struct DiffReviewView: View {
+    @Environment(\.ainkradSkin) private var skin
     let fileDiff: FileDiff
     @Binding var rejectedHunkIDs: Set<Int>
     @Environment(\.ainkradTheme) private var theme
@@ -48,7 +49,7 @@ struct DiffReviewView: View {
     @Environment(\.ainkradReduceMotion) private var reduceMotion
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: skin.spacing.sm) {
             header
             ForEach(fileDiff.hunks) { hunk in hunkBlock(hunk) }
         }
@@ -56,8 +57,8 @@ struct DiffReviewView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 8) {
-            Text(fileDiff.path).font(AinkradFont.mono(10)).foregroundStyle(theme.foreground.opacity(0.55))
+        HStack(spacing: skin.spacing.sm) {
+            Text(fileDiff.path).font(AinkradFont.mono(10)).foregroundStyle(theme.foreground.opacity(skin.opacity.o55))
                 .lineLimit(1).truncationMode(.middle)
             Spacer(minLength: 8)
             AinkradToggleButton(
@@ -68,18 +69,18 @@ struct DiffReviewView: View {
     @ViewBuilder
     private func hunkBlock(_ hunk: DiffHunk) -> some View {
         let rejected = rejectedHunkIDs.contains(hunk.id)
-        VStack(alignment: .leading, spacing: 3) {
-            HStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: skin.size.s3) {
+            HStack(spacing: skin.size.s6) {
                 Text("@@ -\(hunk.oldStart),\(hunk.oldCount) +\(hunk.newStart),\(hunk.newCount)")
-                    .font(AinkradFont.mono(9)).foregroundStyle(theme.foreground.opacity(0.4))
+                    .font(AinkradFont.mono(9)).foregroundStyle(theme.foreground.opacity(skin.opacity.o40))
                 Spacer(minLength: 6)
                 AinkradToggleButton(isOn: acceptedBinding(hunk.id), title: rejected ? "Rejected" : "Accepted")
             }
             if sideBySide { splitRows(hunk) } else { unifiedRows(hunk) }
         }
-        .opacity(rejected ? 0.5 : 1)
-        .padding(.horizontal, 8).padding(.vertical, 6)
-        .background(ChamferShape(cut: AinkradRadius.sm).fill(theme.background.opacity(0.4)))
+        .opacity(rejected ? skin.opacity.o50 : 1)
+        .padding(.horizontal, skin.spacing.sm).padding(.vertical, skin.size.s6)
+        .background(ChamferShape(cut: AinkradRadius.sm).fill(theme.background.opacity(skin.opacity.o40)))
     }
 
     @ViewBuilder private func unifiedRows(_ hunk: DiffHunk) -> some View {
@@ -96,12 +97,12 @@ struct DiffReviewView: View {
     @ViewBuilder private func splitRows(_ hunk: DiffHunk) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             ForEach(Array(DiffReviewPresentation.sideBySideRows(hunk).enumerated()), id: \.offset) { _, pair in
-                HStack(alignment: .top, spacing: 8) {
+                HStack(alignment: .top, spacing: skin.spacing.sm) {
                     Text(pair.left?.text ?? "").font(AinkradFont.mono(11))
-                        .foregroundStyle(pair.left.map(color) ?? theme.foreground.opacity(0.2))
+                        .foregroundStyle(pair.left.map(color) ?? theme.foreground.opacity(skin.opacity.o20))
                         .frame(maxWidth: .infinity, alignment: .leading)
                     Text(pair.right?.text ?? "").font(AinkradFont.mono(11))
-                        .foregroundStyle(pair.right.map(color) ?? theme.foreground.opacity(0.2))
+                        .foregroundStyle(pair.right.map(color) ?? theme.foreground.opacity(skin.opacity.o20))
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
@@ -122,7 +123,7 @@ struct DiffReviewView: View {
         switch line.kind {
         case .insertion: return statusColors.success
         case .deletion: return statusColors.danger
-        case .context: return theme.foreground.opacity(0.6)
+        case .context: return theme.foreground.opacity(skin.opacity.o60)
         }
     }
 }

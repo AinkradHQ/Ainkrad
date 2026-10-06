@@ -13,6 +13,7 @@ import SwiftUI
 /// `Ainkrad*` component.
 @MainActor
 struct ScheduleUIView: View {
+    @Environment(\.ainkradSkin) private var skin
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.ainkradTheme) private var theme
     @Environment(\.ainkradStatusColors) private var statusColors
@@ -34,7 +35,7 @@ struct ScheduleUIView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: skin.spacing.lg) {
                 AinkradSettingsPanel(
                     title: "New schedule",
                     hint: "Have the agent run on a timer, a file change, a git change, or an incoming webhook."
@@ -49,7 +50,7 @@ struct ScheduleUIView: View {
                     list()
                 }
             }
-            .padding(18)
+            .padding(skin.size.s18)
         }
         .scrollContentBackground(.hidden)
     }
@@ -61,7 +62,7 @@ struct ScheduleUIView: View {
     }
 
     private func editor() -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: skin.spacing.sm) {
             AinkradTextField(text: $draftName, placeholder: "Name")
 
             AinkradSelect(items: TriggerKind.allCases, selection: $draftKind, label: { $0.rawValue })
@@ -72,11 +73,11 @@ struct ScheduleUIView: View {
                 if let cron = compiledCron {
                     Text("Compiled: \(cron.text)")
                         .font(AinkradFont.mono(9))
-                        .foregroundStyle(theme.foreground.opacity(0.55))
+                        .foregroundStyle(theme.foreground.opacity(skin.opacity.o55))
                 } else if !draftWhen.isEmpty {
                     Text("Couldn't understand that schedule.")
                         .font(AinkradFont.mono(9))
-                        .foregroundStyle(statusColors.danger.opacity(0.9))
+                        .foregroundStyle(statusColors.danger.opacity(skin.opacity.o90))
                 }
             case .fileChange:
                 AinkradTextField(text: $draftPath, placeholder: "Directory to watch (absolute path)")
@@ -86,7 +87,7 @@ struct ScheduleUIView: View {
             case .webhook:
                 Text("Fires when the webhook endpoint receives an authenticated request.")
                     .font(AinkradFont.mono(9))
-                    .foregroundStyle(theme.foreground.opacity(0.55))
+                    .foregroundStyle(theme.foreground.opacity(skin.opacity.o55))
             }
 
             AinkradTextArea(
@@ -96,8 +97,8 @@ struct ScheduleUIView: View {
             AinkradButton(title: "Add", style: canAdd ? .primary : .ghost) { addSchedule() }
                 .disabled(!canAdd)
         }
-        .padding(14)
-        .background(ChamferShape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(0.4)))
+        .padding(skin.size.s14)
+        .background(ChamferShape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(skin.opacity.o40)))
     }
 
     private var canAdd: Bool {
@@ -147,7 +148,7 @@ struct ScheduleUIView: View {
                     "Add one above to have the agent run on a timer, a file change, a git change, or an incoming webhook."
             )
         } else {
-            LazyVStack(alignment: .leading, spacing: 8) {
+            LazyVStack(alignment: .leading, spacing: skin.spacing.sm) {
                 ForEach(store.schedules) { schedule in
                     scheduleRow(schedule)
                 }
@@ -156,20 +157,20 @@ struct ScheduleUIView: View {
     }
 
     private func scheduleRow(_ schedule: AgentSchedule) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: skin.spacing.xs) {
             AinkradListRow(
                 leading: {
                     Image(systemName: schedule.enabled ? "clock.fill" : "clock")
-                        .font(.system(size: 13))
+                        .font(skin.font(AinkradFontToken(sizeKey: "t13", scaled: false)))
                         .foregroundStyle(
-                            (schedule.enabled ? theme.accentSecondary : theme.foreground.opacity(0.4)).opacity(0.85)
+                            (schedule.enabled ? theme.accentSecondary : theme.foreground.opacity(skin.opacity.o40)).opacity(skin.opacity.o85)
                         )
-                        .frame(width: 18)
+                        .frame(width: skin.size.s18)
                 },
                 title: schedule.name,
                 subtitle: schedule.prompt,
                 trailing: {
-                    HStack(spacing: 6) {
+                    HStack(spacing: skin.size.s6) {
                         AinkradButton(title: schedule.enabled ? "Disable" : "Enable", style: .secondary) {
                             store.setEnabled(schedule.id, !schedule.enabled)
                         }
@@ -191,16 +192,16 @@ struct ScheduleUIView: View {
     private func lastRunRow(_ schedule: AgentSchedule) -> some View {
         let lastRun = schedule.lastRunID.flatMap { id in environment.runManager.runs.first { $0.id == id } }
 
-        return HStack(spacing: 8) {
+        return HStack(spacing: skin.spacing.sm) {
             if let lastFired = schedule.lastFired {
                 Text("Last fired \(lastFired.formatted())")
                     .font(AinkradFont.mono(9))
-                    .foregroundStyle(theme.foreground.opacity(0.45))
+                    .foregroundStyle(theme.foreground.opacity(skin.opacity.o45))
             }
             if let lastRun {
                 Text("· \(lastRun.status.rawValue)")
                     .font(AinkradFont.mono(9))
-                    .foregroundStyle(statusColor(lastRun.status).opacity(0.85))
+                    .foregroundStyle(statusColor(lastRun.status).opacity(skin.opacity.o85))
             }
         }
         .padding(.horizontal, AinkradSpacing.md)

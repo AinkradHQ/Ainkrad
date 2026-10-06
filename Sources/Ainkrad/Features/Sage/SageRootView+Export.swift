@@ -17,13 +17,13 @@ extension SageRootView {
     /// user's comma-separated redaction strings, the result is copied to the
     /// clipboard AND written to a user-chosen file via `NSSavePanel`.
     var exportModalContent: some View {
-        return VStack(alignment: .leading, spacing: 12) {
+        return VStack(alignment: .leading, spacing: skin.spacing.md) {
             Text("Export conversation")
                 .font(AinkradFont.display(14, weight: .semibold))
                 .foregroundStyle(theme.foreground)
             Text("Strings to redact, comma-separated (optional)")
                 .font(AinkradFont.display(11))
-                .foregroundStyle(theme.foreground.opacity(0.6))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o60))
             AinkradTextField(text: $redactionsText, placeholder: "e.g. sk-live-…, jane@example.com")
 
             HStack {

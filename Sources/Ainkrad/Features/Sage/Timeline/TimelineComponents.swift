@@ -7,6 +7,7 @@ import SwiftUI
 /// approval node so every rail node is identical by construction (not by
 /// hand-copied markup).
 struct TimelineRailGutter: View {
+    @Environment(\.ainkradSkin) private var skin
     let status: StepStatus
     @Environment(\.ainkradTheme) private var theme
     @Environment(\.ainkradStatusColors) private var statusColors
@@ -15,16 +16,16 @@ struct TimelineRailGutter: View {
     var body: some View {
         ZStack(alignment: .top) {
             Rectangle()
-                .fill(theme.accentPrimary.opacity(0.25))
-                .frame(width: 1)
+                .fill(theme.accentPrimary.opacity(skin.opacity.o25))
+                .frame(width: skin.size.s1)
                 .frame(maxHeight: .infinity)
             TimelineNodeMarker(
                 status: status, tint: theme.accentPrimary,
                 errorColor: statusColors.danger, reduceMotion: reduceMotion
             )
-            .padding(.top, 3)
+            .padding(.top, skin.size.s3)
         }
-        .frame(width: 10)
+        .frame(width: skin.size.s10)
     }
 }
 
@@ -33,6 +34,7 @@ struct TimelineRailGutter: View {
 /// step id; the live tail holds a single bool), passed in as `isExpanded` +
 /// `onToggle` so the row itself stays stateless.
 struct TimelineThinkingRow: View {
+    @Environment(\.ainkradSkin) private var skin
     let text: String
     let isExpanded: Bool
     @Environment(\.ainkradTheme) private var theme
@@ -46,7 +48,7 @@ struct TimelineThinkingRow: View {
         ) {
             Text(text)
                 .font(AinkradFont.mono(11))
-                .foregroundStyle(theme.foreground.opacity(0.5))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o50))
                 .textSelection(.enabled)
         }
     }

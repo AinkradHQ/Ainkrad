@@ -12,6 +12,7 @@ import SwiftUI
 /// (`AinkradListRow`, `AinkradButton`, `AinkradMeter`, `AinkradIconGlyph`) —
 /// no native SwiftUI controls, mirroring `UsageDashboardView`.
 struct RunsPanelView: View {
+    @Environment(\.ainkradSkin) private var skin
     let manager: RunManager
     @Environment(\.ainkradTheme) private var theme
 
@@ -32,13 +33,13 @@ struct RunsPanelView: View {
     private func header(runningCount: Int) -> some View {
         HStack(spacing: AinkradSpacing.md) {
             AinkradIconGlyph(systemName: "list.bullet.rectangle.portrait", filled: true)
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: skin.size.s2) {
                 Text("Runs")
                     .font(AinkradFont.display(15, weight: .semibold))
                     .foregroundStyle(theme.foreground)
                 Text("\(manager.active.count) active · \(manager.history.count) history")
                     .font(AinkradFont.display(11))
-                    .foregroundStyle(theme.foreground.opacity(0.5))
+                    .foregroundStyle(theme.foreground.opacity(skin.opacity.o50))
             }
             Spacer(minLength: 0)
             // Concurrency gauge: running slots filled vs. the active queue depth.
@@ -55,14 +56,14 @@ struct RunsPanelView: View {
             Text("\(title.uppercased()) (\(runs.count))")
                 .font(AinkradFont.display(11, weight: .semibold))
                 .tracking(0.8)
-                .foregroundStyle(theme.accentSecondary.opacity(0.85))
+                .foregroundStyle(theme.accentSecondary.opacity(skin.opacity.o85))
 
             if runs.isEmpty {
                 Text(showControls ? "No active runs." : "No completed runs yet.")
                     .font(AinkradFont.display(11))
-                    .foregroundStyle(theme.foreground.opacity(0.45))
+                    .foregroundStyle(theme.foreground.opacity(skin.opacity.o45))
             } else {
-                LazyVStack(alignment: .leading, spacing: 2) {
+                LazyVStack(alignment: .leading, spacing: skin.size.s2) {
                     ForEach(runs) { run in
                         row(for: run, showControls: showControls)
                     }

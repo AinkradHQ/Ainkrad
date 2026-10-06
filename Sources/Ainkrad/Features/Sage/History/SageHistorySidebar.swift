@@ -3,6 +3,7 @@ import AinkradHostRuntime
 import SwiftUI
 
 struct SageHistorySidebar: View {
+    @Environment(\.ainkradSkin) private var skin
     let store: SageSessionStore
     @Environment(\.ainkradTheme) private var theme
     /// The app's surface opacity for the Sage pane. The sidebar paints the
@@ -34,7 +35,7 @@ struct SageHistorySidebar: View {
             .scrollContentBackground(.hidden)
         }
         .padding(AinkradSpacing.md)
-        .frame(width: 240)
+        .frame(width: skin.size.s240)
         .frame(maxHeight: .infinity, alignment: .top)
         .background {
             // Same opacity-tinted base as the chat column (`SageRootView`),
@@ -42,7 +43,7 @@ struct SageHistorySidebar: View {
             // whole pane, so this only paints the tint.
             ZStack {
                 theme.background.opacity(surfaceOpacity)
-                theme.surfaceElevated.opacity(0.06)
+                theme.surfaceElevated.opacity(skin.opacity.o06)
             }
         }
     }
@@ -51,7 +52,7 @@ struct SageHistorySidebar: View {
         HStack {
             Text("HISTORY")
                 .font(AinkradFont.display(11, weight: .medium)).kerning(1.5)
-                .foregroundStyle(theme.foreground.opacity(0.5))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o50))
             Spacer()
             AinkradIconButton(
                 systemName: "square.and.pencil", size: 26,

@@ -32,6 +32,7 @@ struct SageDecisionBarContent: Equatable {
 /// without scrolling. Seamless elevated surface with an accent cue — matches
 /// the composer it sits above.
 struct SageDecisionBar: View {
+    @Environment(\.ainkradSkin) private var skin
     /// One button on the bar, drawn as a kit `AinkradButton` in `style` —
     /// `.primary` for the affirmative decision, `.ghost` for the others.
     struct Action {
@@ -45,18 +46,18 @@ struct SageDecisionBar: View {
     @Environment(\.ainkradTheme) private var theme
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: skin.size.s10) {
             Image(systemName: content.icon)
-                .font(.system(size: 12))
+                .font(skin.font(AinkradFontToken(sizeKey: "t12", scaled: false)))
                 .foregroundStyle(content.iconTint == .primary ? theme.accentPrimary : theme.accentSecondary)
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: skin.size.s1) {
                 Text(content.caption)
                     .font(AinkradFont.display(10, weight: .semibold))
                     .kerning(0.6)
-                    .foregroundStyle(theme.accentPrimary.opacity(0.85))
+                    .foregroundStyle(theme.accentPrimary.opacity(skin.opacity.o85))
                 Text(content.title)
                     .font(AinkradFont.display(12, weight: .medium))
-                    .foregroundStyle(theme.foreground.opacity(0.85))
+                    .foregroundStyle(theme.foreground.opacity(skin.opacity.o85))
                     .lineLimit(1)
             }
             Spacer(minLength: 12)
@@ -64,13 +65,13 @@ struct SageDecisionBar: View {
                 AinkradButton(title: actions[index].title, style: actions[index].style, action: actions[index].perform)
             }
         }
-        .padding(.horizontal, 14).padding(.vertical, 9)
+        .padding(.horizontal, skin.size.s14).padding(.vertical, skin.size.s9)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(0.6)))
+        .background(ChamferShape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(skin.opacity.o60)))
         .overlay {
-            ChamferShape(cut: AinkradRadius.md).stroke(theme.accentPrimary.opacity(0.55), lineWidth: 1)
+            ChamferShape(cut: AinkradRadius.md).stroke(theme.accentPrimary.opacity(skin.opacity.o55), lineWidth: 1)
         }
-        .padding(.horizontal, 14)
-        .padding(.bottom, 4)
+        .padding(.horizontal, skin.size.s14)
+        .padding(.bottom, skin.spacing.xs)
     }
 }

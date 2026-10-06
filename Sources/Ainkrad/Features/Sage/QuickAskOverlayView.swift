@@ -9,6 +9,7 @@ import SwiftUI
 /// the bar) and its composer auto-focuses on appear. `Esc` dismisses; the
 /// in-flight request keeps running in the shared session.
 struct QuickAskOverlayView: View {
+    @Environment(\.ainkradSkin) private var skin
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.ainkradTheme) private var theme
     let onDismiss: () -> Void
@@ -18,23 +19,23 @@ struct QuickAskOverlayView: View {
             bar()
             SageRootView(showsHeader: false, autoFocusComposer: true)
         }
-        .frame(width: 640)
-        .frame(maxHeight: 560)
+        .frame(width: skin.size.s640)
+        .frame(maxHeight: skin.size.s560)
         .hudPanelChrome(tokens: environment.themeManager.tokens)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .padding(.top, 120)
+        .padding(.top, skin.size.s120)
         .onExitCommand { onDismiss() }
     }
 
     private func bar() -> some View {
-        HStack(spacing: 10) {
+        HStack(spacing: skin.size.s10) {
             Image(systemName: "sparkles")
-                .font(.system(size: 12))
+                .font(skin.font(AinkradFontToken(sizeKey: "t12", scaled: false)))
                 .foregroundStyle(theme.accentSecondary)
             Text("QUICK ASK")
                 .font(AinkradFont.display(12, weight: .medium))
                 .kerning(0.6)
-                .foregroundStyle(theme.foreground.opacity(0.7))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o70))
 
             Spacer()
 
@@ -45,7 +46,7 @@ struct QuickAskOverlayView: View {
             }
             .help("Open this conversation in the Sage pane")
         }
-        .padding(.horizontal, 16)
-        .frame(height: 40)
+        .padding(.horizontal, skin.spacing.lg)
+        .frame(height: skin.size.s40)
     }
 }

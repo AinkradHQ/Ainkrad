@@ -9,6 +9,7 @@ import SwiftUI
 /// single `selectedIndex` maps across the flattened `selectionOrder` — the same
 /// order the composer's key monitor navigates. Presentation-only.
 struct CommandPaletteView: View {
+    @Environment(\.ainkradSkin) private var skin
     let commands: [SlashCommand]
     let query: String
     @Binding var selectedIndex: Int
@@ -35,7 +36,7 @@ struct CommandPaletteView: View {
                         onTap: { onSelect(command) },
                         leading: {
                             Image(systemName: "chevron.right.circle")
-                                .font(.system(size: 12, weight: .semibold))
+                                .font(skin.font(AinkradFontToken(sizeKey: "t12", weight: "semibold", scaled: false)))
                                 .foregroundStyle(theme.accentSecondary)
                         },
                         title: "/\(command.name)",
@@ -51,11 +52,11 @@ struct CommandPaletteView: View {
         Text(category.title.uppercased())
             .font(AinkradFont.display(10, weight: .medium))
             .kerning(0.6)
-            .foregroundStyle(theme.foreground.opacity(0.5))
+            .foregroundStyle(theme.foreground.opacity(skin.opacity.o50))
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 10)
-            .padding(.top, 6)
-            .padding(.bottom, 2)
+            .padding(.horizontal, skin.size.s10)
+            .padding(.top, skin.size.s6)
+            .padding(.bottom, skin.size.s2)
     }
 
     /// Substring match over the command name and summary — permissive, case-

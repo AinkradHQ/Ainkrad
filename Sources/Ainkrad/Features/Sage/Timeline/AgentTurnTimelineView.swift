@@ -20,6 +20,7 @@ enum TimelineLiveOutput {
 /// marker per step (`TimelineRailGutter`), and the step body (thinking disclosure
 /// / markdown / tool card) to its right. Reuses `ToolCallCardView` for tool steps.
 struct AgentTurnTimelineView: View {
+    @Environment(\.ainkradSkin) private var skin
     let steps: [TurnStep]
     @Environment(\.ainkradTheme) private var theme
     let typography: AinkradTypography
@@ -49,7 +50,7 @@ struct AgentTurnTimelineView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AinkradSpacing.xl) {
             ForEach(Array(steps.enumerated()), id: \.element.id) { index, step in
-                HStack(alignment: .top, spacing: 10) {
+                HStack(alignment: .top, spacing: skin.size.s10) {
                     TimelineRailGutter(status: step.status, reduceMotion: reduceMotion)
                     stepBody(step)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -84,7 +85,7 @@ struct AgentTurnTimelineView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .overlay(alignment: .topTrailing) {
                     SageTurnCopyButton(text: text, isVisible: hoveredTextStep == step.id)
-                        .padding(.trailing, 2)
+                        .padding(.trailing, skin.size.s2)
                 }
                 .onHover { isHovering in
                     hoveredTextStep = isHovering ? step.id : (hoveredTextStep == step.id ? nil : hoveredTextStep)
@@ -132,6 +133,7 @@ struct AgentTurnTimelineView: View {
 /// `TimelineThinkingRow` as committed steps so the hand-off to the settled rail
 /// is seamless.
 struct LiveStepView: View {
+    @Environment(\.ainkradSkin) private var skin
     let streamingText: String
     let streamingBlocks: [MarkdownBlock]
     let streamingThinking: String
@@ -142,16 +144,16 @@ struct LiveStepView: View {
     @State private var thinkingExpanded = true
 
     var body: some View {
-        HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .top, spacing: skin.size.s10) {
             TimelineRailGutter(status: .running, reduceMotion: reduceMotion)
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: skin.spacing.sm) {
                 if !streamingThinking.isEmpty {
                     TimelineThinkingRow(
                         text: streamingThinking, isExpanded: thinkingExpanded
                     ) { thinkingExpanded.toggle() }
                 }
                 if isStreaming || !streamingText.isEmpty {
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: skin.size.s2) {
                         SageMarkdownText(blocks: streamingBlocks, typography: typography)
                         if isStreaming { StreamingCursor() }
                     }

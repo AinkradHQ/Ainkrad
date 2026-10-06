@@ -8,13 +8,13 @@ import SwiftUI
 /// copies its `file://` link to the clipboard. Reuses the same redaction field.
 extension SageRootView {
     var shareModalContent: some View {
-        return VStack(alignment: .leading, spacing: 12) {
+        return VStack(alignment: .leading, spacing: skin.spacing.md) {
             Text("Share session")
                 .font(AinkradFont.display(14, weight: .semibold))
                 .foregroundStyle(theme.foreground)
             Text("Strings to redact, comma-separated (optional)")
                 .font(AinkradFont.display(11))
-                .foregroundStyle(theme.foreground.opacity(0.6))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o60))
             AinkradTextField(text: $redactionsText, placeholder: "e.g. sk-live-…, jane@example.com")
 
             HStack {

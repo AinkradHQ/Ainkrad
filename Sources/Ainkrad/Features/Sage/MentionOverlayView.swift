@@ -9,6 +9,7 @@ import SwiftUI
 /// `SageComposerBar.insertMention`). Presentation-only — keyboard
 /// navigation is driven by the composer's shared key monitor.
 struct MentionOverlayView: View {
+    @Environment(\.ainkradSkin) private var skin
     let matches: [FileMatch]
     @Binding var selectedIndex: Int
     @Environment(\.ainkradTheme) private var theme
@@ -26,7 +27,7 @@ struct MentionOverlayView: View {
                     onTap: { onSelect(match) },
                     leading: {
                         Image(systemName: FileGlyph.symbol(forPath: match.path))
-                            .font(.system(size: 12, weight: .semibold))
+                            .font(skin.font(AinkradFontToken(sizeKey: "t12", weight: "semibold", scaled: false)))
                             .foregroundStyle(theme.accentSecondary)
                     },
                     title: match.name,

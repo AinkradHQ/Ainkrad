@@ -23,10 +23,10 @@ extension SageComposerBar {
                 selection: Binding(get: { nil }, set: { if let item = $0 { openOverflowItem(item) } }),
                 icon: \.icon, label: \.title, uppercased: false)
             .padding(AinkradSpacing.xs)
-            .background(ChamferShape(cut: 8).fill(theme.surfaceElevated.opacity(0.97)))
-            .overlay(ChamferShape(cut: 8).strokeBorder(theme.accentSecondary.opacity(0.55), lineWidth: 1.25))
-            .shadow(color: theme.accentSecondary.opacity(0.35), radius: 10, y: 4)
-            .frame(minWidth: 160)
+            .background(ChamferShape(cut: skin.cut.c8).fill(theme.surfaceElevated.opacity(skin.opacity.o97)))
+            .overlay(ChamferShape(cut: skin.cut.c8).strokeBorder(theme.accentSecondary.opacity(skin.opacity.o55), lineWidth: 1.25))
+            .shadow(color: theme.accentSecondary.opacity(skin.opacity.o35), radius: skin.size.s10, y: 4)
+            .frame(minWidth: skin.size.s160)
         }
     }
 

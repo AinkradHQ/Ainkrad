@@ -8,6 +8,7 @@ import SwiftUI
 /// footer live in exactly one place. Presentation-only: no environment reads,
 /// no data fetching (mirrors the views it backs).
 struct SageOverlayList<Content: View>: View {
+    @Environment(\.ainkradSkin) private var skin
     let isEmpty: Bool
     let emptyIcon: String
     let emptyText: String
@@ -16,7 +17,7 @@ struct SageOverlayList<Content: View>: View {
     @ViewBuilder let content: () -> Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: skin.spacing.xs) {
             if isEmpty {
                 emptyState
             } else {
@@ -24,41 +25,41 @@ struct SageOverlayList<Content: View>: View {
                 if showsHint { hintFooter }
             }
         }
-        .padding(6)
+        .padding(skin.size.s6)
         // The floating-panel window is transparent by design
         // (`AinkradFloatingPanelController` sets it `.clear`/non-opaque), so the
         // content MUST draw its own panel chrome — same chamfer fill + accent
         // stroke + glow the kit's own dropdowns use (`MultiSelectPanelView`).
         // Without this the overlay renders see-through over the transcript.
-        .background(ChamferShape(cut: 8).fill(theme.surfaceElevated.opacity(0.97)))
-        .overlay(ChamferShape(cut: 8).strokeBorder(theme.accentSecondary.opacity(0.55), lineWidth: 1.25))
-        .shadow(color: theme.accentSecondary.opacity(0.35), radius: 10, y: 4)
-        .frame(minWidth: 280)
+        .background(ChamferShape(cut: skin.cut.c8).fill(theme.surfaceElevated.opacity(skin.opacity.o97)))
+        .overlay(ChamferShape(cut: skin.cut.c8).strokeBorder(theme.accentSecondary.opacity(skin.opacity.o55), lineWidth: 1.25))
+        .shadow(color: theme.accentSecondary.opacity(skin.opacity.o35), radius: skin.size.s10, y: 4)
+        .frame(minWidth: skin.size.s280)
     }
 
     /// Compact empty treatment sized for a ~280px floating panel — a single
     /// muted glyph over one muted line. Deliberately NOT `AinkradEmptyState`
     /// (icon + title + message), which is too tall for this panel.
     private var emptyState: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: skin.size.s6) {
             Image(systemName: emptyIcon)
-                .font(.system(size: 18, weight: .regular))
-                .foregroundStyle(theme.foreground.opacity(0.4))
+                .font(skin.font(AinkradFontToken(sizeKey: "t18", weight: "regular", scaled: false)))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o40))
             Text(emptyText)
                 .font(AinkradFont.display(12))
-                .foregroundStyle(theme.foreground.opacity(0.5))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o50))
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 14)
+        .padding(.vertical, skin.size.s14)
     }
 
     /// Muted keyboard-hint row (no separator line — Cardinal HUD rule).
     private var hintFooter: some View {
         Text("↑↓ navigate · ↵ select · esc dismiss")
             .font(AinkradFont.display(10))
-            .foregroundStyle(theme.foreground.opacity(0.35))
+            .foregroundStyle(theme.foreground.opacity(skin.opacity.o35))
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 6)
-            .padding(.top, 2)
+            .padding(.horizontal, skin.size.s6)
+            .padding(.top, skin.size.s2)
     }
 }

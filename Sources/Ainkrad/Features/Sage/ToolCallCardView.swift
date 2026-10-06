@@ -9,6 +9,7 @@ import SwiftUI
 /// an error is never hidden behind a click. The pending-approval preview always
 /// shows its body (summary + diff) with an accent frame.
 struct ToolCallCardView: View {
+    @Environment(\.ainkradSkin) private var skin
     /// Raw registered tool name (e.g. "edit_file") — identity only, drives icon/tint.
     var toolName: String
     let title: String
@@ -56,10 +57,10 @@ struct ToolCallCardView: View {
     private var showsChevron: Bool { (isHovering && canExpand) || isPending || isExpanded }
 
     private var iconColor: Color { isError ? statusColors.danger : tint }
-    private var textColor: Color { isError ? statusColors.danger : theme.foreground.opacity(0.85) }
+    private var textColor: Color { isError ? statusColors.danger : theme.foreground.opacity(skin.opacity.o85) }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: skin.spacing.sm) {
             header
             if pendingApproval, let fileDiff, let rejectedHunkIDs, !fileDiff.hunks.isEmpty {
                 DiffReviewView(fileDiff: fileDiff, rejectedHunkIDs: rejectedHunkIDs)
@@ -82,22 +83,22 @@ struct ToolCallCardView: View {
     // MARK: - Header (the collapsed, clickable row)
 
     private var header: some View {
-        let row = HStack(spacing: 6) {
+        let row = HStack(spacing: skin.size.s6) {
             Image(systemName: presentation.icon)
-                .font(.system(size: 11))
+                .font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false)))
                 .foregroundStyle(iconColor)
             Text(title)
                 .font(AinkradFont.display(12, weight: .semibold))
                 .foregroundStyle(textColor)
             if showsChevron {
                 Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                    .font(.system(size: 9))
-                    .foregroundStyle(theme.foreground.opacity(0.45))
+                    .font(skin.font(AinkradFontToken(sizeKey: "t9", scaled: false)))
+                    .foregroundStyle(theme.foreground.opacity(skin.opacity.o45))
                     .transition(.opacity)
             }
             Spacer(minLength: 0)
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, skin.size.s2)
         .contentShape(Rectangle())
         .onTapGesture {
             guard canExpand else { return }
@@ -111,7 +112,7 @@ struct ToolCallCardView: View {
             if isPending && !reduceMotion {
                 BudgetedTimelineView { date in
                     let wave = 0.5 + 0.5 * sin(date.timeIntervalSinceReferenceDate / AinkradMotion.durationBase)
-                    row.opacity(0.5 + 0.5 * wave)
+                    row.opacity(skin.opacity.o50 + skin.opacity.o50 * wave)
                 }
             } else {
                 row
@@ -130,15 +131,15 @@ struct ToolCallCardView: View {
             } else if !summary.isEmpty {
                 Text(summary)
                     .font(AinkradFont.mono(11))
-                    .foregroundStyle(theme.foreground.opacity(isError ? 0.9 : 0.7))
+                    .foregroundStyle(theme.foreground.opacity(isError ? skin.opacity.o90 : skin.opacity.o70))
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
-        .padding(.horizontal, 10).padding(.vertical, 8)
+        .padding(.horizontal, skin.size.s10).padding(.vertical, skin.spacing.sm)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(maxHeight: 260)
-        .background(ChamferShape(cut: AinkradRadius.sm).fill(theme.background.opacity(0.45)))
+        .frame(maxHeight: skin.size.s260)
+        .background(ChamferShape(cut: AinkradRadius.sm).fill(theme.background.opacity(skin.opacity.o45)))
         .overlay {
             ChamferShape(cut: AinkradRadius.sm)
                 .stroke(
@@ -161,7 +162,7 @@ struct ToolCallCardView: View {
             } else if sign == "-" {
                 seg.foregroundColor = statusColors.danger
             } else {
-                seg.foregroundColor = theme.foreground.opacity(0.6)
+                seg.foregroundColor = theme.foreground.opacity(skin.opacity.o60)
             }
             out += seg
         }

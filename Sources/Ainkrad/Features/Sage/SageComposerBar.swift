@@ -21,7 +21,8 @@ struct SageComposerBar: View {
     // least `internal`).
     @Environment(AppEnvironment.self) var environment
     @Environment(\.ainkradToastCenter) var toastCenter
-    @Environment(\.ainkradSkin) private var skin
+    // Not `private` — read from the `SageComposerBar+*.swift` extensions.
+    @Environment(\.ainkradSkin) var skin
     let session: AgentSession
     // Not `private` — read from `SageComposerBar+Overflow.swift`.
     @Environment(\.ainkradTheme) var theme
@@ -91,7 +92,7 @@ struct SageComposerBar: View {
     var body: some View {
         let isBusy = SageComposerBar.isBusy(session.state)
 
-        return VStack(alignment: .leading, spacing: 8) {
+        return VStack(alignment: .leading, spacing: skin.spacing.sm) {
             if !pendingImages.isEmpty {
                 attachmentChips
             }
@@ -112,7 +113,7 @@ struct SageComposerBar: View {
             // (30) so the icon buttons, the model select, and the send button
             // all read as the same size — see each control's `size`/`.frame`
             // below, all set to `Self.controlHeight`.
-            HStack(spacing: 8) {
+            HStack(spacing: skin.spacing.sm) {
                 // Left cluster (Wave 3c): agent and permission are icon
                 // buttons that cycle on click, matching the right cluster's
                 // `AinkradIconButton` idiom; model is the only real select.
@@ -158,8 +159,8 @@ struct SageComposerBar: View {
             }
             .frame(height: Self.controlHeight)
         }
-        .padding(.horizontal, 12).padding(.vertical, 10)
-        .background(ChamferShape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(0.45)))
+        .padding(.horizontal, skin.spacing.md).padding(.vertical, skin.size.s10)
+        .background(ChamferShape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(skin.opacity.o45)))
         .background(
             // Tab-cycle affordance (M7 Slice 5a Task 5): swallows a plain Tab
             // keyDown to advance the active agent, but ONLY when the draft is
@@ -208,7 +209,7 @@ struct SageComposerBar: View {
             draft = draft.isEmpty ? new : draft + " " + new
             environment.voiceService.reviewTranscript = nil
         }
-        .padding(14)
+        .padding(skin.size.s14)
     }
 
     /// Opens the `/usage` dashboard (session + cumulative tokens/cost/savings)

@@ -55,9 +55,9 @@ func modelOptionRowLabel(connectionName: String, model: String, isCurated: Bool)
 /// dot. Pure.
 func providerSwatchColor(for kind: ProviderKind) -> Color {
     switch kind {
-    case .claude: return Color(hex: "CC785C")
-    case .gemini: return Color(hex: "4285F4")
-    case .openAICompatible: return Color(hex: "10A37F")
+    case .claude: return Color(hex: "CC785C")  // design-lint: allow hex-color token-gap colors.providerBrand
+    case .gemini: return Color(hex: "4285F4")  // design-lint: allow hex-color token-gap colors.providerBrand
+    case .openAICompatible: return Color(hex: "10A37F")  // design-lint: allow hex-color token-gap colors.providerBrand
     }
 }
 
