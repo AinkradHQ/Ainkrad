@@ -1,4 +1,5 @@
 import AVFoundation
+import AinkradHostRuntime
 import Foundation
 
 protocol AudioCaptureSession: AnyObject {
@@ -23,7 +24,12 @@ final class AVAudioEngineCaptureSession: AudioCaptureSession {
         self.url = target
         self.file = try AVAudioFile(forWriting: target, settings: format.settings)
         input.installTap(onBus: 0, bufferSize: 4096, format: format) { [weak self] buffer, _ in
-            try? self?.file?.write(from: buffer)
+            do {
+                try self?.file?.write(from: buffer)
+            } catch {
+                // A dropped buffer is lost audio: say so rather than record a silent gap.
+                Log.app.error("Push-to-talk dropped an audio buffer: \(String(describing: error), privacy: .public)")
+            }
         }
         engine.prepare()
         try engine.start()

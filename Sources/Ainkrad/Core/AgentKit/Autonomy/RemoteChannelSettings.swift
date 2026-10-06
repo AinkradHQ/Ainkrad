@@ -55,7 +55,8 @@ final class RemoteChannelSettingsStore {
 
     @discardableResult
     func rotateToken() -> String {
-        let token = (0..<32).map { _ in "abcdefghijklmnopqrstuvwxyz0123456789".randomElement()! }
+        let alphabet = Array("abcdefghijklmnopqrstuvwxyz0123456789")
+        let token = (0..<32).map { _ in alphabet[Int.random(in: alphabet.indices)] }
             .reduce(into: "") { $0.append($1) }
         secrets.setSecret(token, for: Self.tokenSecretID)
         return token

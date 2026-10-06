@@ -6,6 +6,7 @@ import Foundation
 /// providers are key-based (no keyless video exists). Defaults to Replicate.
 struct RoutingVideoBackend: VideoBackend {
     let persistence: PersistenceStore
+    // `nonisolated(unsafe)`: an immutable `let`; `KeychainSecretStore` keeps no mutable state and Keychain calls are thread-safe.
     nonisolated(unsafe) let secrets: SecretStore
     let replicate: ReplicateVideoBackend
     let luma: LumaVideoBackend

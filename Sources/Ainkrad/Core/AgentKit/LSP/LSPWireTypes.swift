@@ -113,18 +113,6 @@ enum LSPRPC {
             ]))
     }
 
-    static func formattingRequest(id: String, uri: String, tabSize: Int = 4, insertSpaces: Bool = true) -> JSONValue {
-        request(
-            id: id, method: "textDocument/formatting",
-            params: .object([
-                "textDocument": .object(["uri": .string(uri)]),
-                "options": .object([
-                    "tabSize": .number(Double(tabSize)),
-                    "insertSpaces": .bool(insertSpaces),
-                ]),
-            ]))
-    }
-
     /// Decodes a `textDocument/publishDiagnostics` notification's params into
     /// the flattened `LSPDiagnostic` list.
     static func decodeDiagnostics(_ params: JSONValue) -> [LSPDiagnostic] {

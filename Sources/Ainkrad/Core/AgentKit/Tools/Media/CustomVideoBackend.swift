@@ -8,6 +8,7 @@ import Foundation
 /// `ReplicateImageBackend.firstOutputURL` for the flexible output shape.
 struct CustomVideoBackend: VideoBackend {
     static let secretID = "media.customvideo.apiKey"
+    // `nonisolated(unsafe)`: an immutable `let`; `KeychainSecretStore` keeps no mutable state and Keychain calls are thread-safe.
     nonisolated(unsafe) let secrets: SecretStore
     let http: DataHTTPClient
     let baseURL: String

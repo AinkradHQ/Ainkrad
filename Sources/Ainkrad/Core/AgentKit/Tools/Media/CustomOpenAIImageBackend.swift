@@ -8,6 +8,7 @@ import Foundation
 /// works without hardcoding each one.
 struct CustomOpenAIImageBackend: MediaBackend {
     static let secretID = "media.custom.apiKey"
+    // `nonisolated(unsafe)`: an immutable `let`; `KeychainSecretStore` keeps no mutable state and Keychain calls are thread-safe.
     nonisolated(unsafe) let secrets: SecretStore
     let http: DataHTTPClient
     let baseURL: String

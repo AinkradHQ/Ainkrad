@@ -27,6 +27,7 @@ struct SystemAudioPlayer: AudioPlaying {
 /// detached Task and silently falls back to on-device if unconfigured or failing.
 struct RoutingSpeechSynthesizer: SpeechSynthesizing {
     let persistence: PersistenceStore
+    // `nonisolated(unsafe)`: an immutable `let`; `KeychainSecretStore` keeps no mutable state and Keychain calls are thread-safe.
     nonisolated(unsafe) let secrets: SecretStore
     let onDevice: any SpeechSynthesizing
     let http: DataHTTPClient

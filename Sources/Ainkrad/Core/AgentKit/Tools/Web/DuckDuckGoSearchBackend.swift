@@ -13,10 +13,15 @@ struct DuckDuckGoSearchBackend: WebSearchBackend {
     /// No credential to configure — the whole point of this backend.
     var isConfigured: Bool { true }
 
+    private static let endpoint = URL(checkedLiteral: "https://html.duckduckgo.com/html/")
+
     func search(query: String, count: Int) async throws -> [WebSearchResult] {
-        var comps = URLComponents(string: "https://html.duckduckgo.com/html/")!
-        comps.queryItems = [.init(name: "q", value: query)]
-        var request = URLRequest(url: comps.url!, timeoutInterval: 20)
+        var comps = URLComponents(url: Self.endpoint, resolvingAgainstBaseURL: false)
+        comps?.queryItems = [.init(name: "q", value: query)]
+        guard let url = comps?.url else {
+            throw ToolError.message("web_search could not build the DuckDuckGo request URL.")
+        }
+        var request = URLRequest(url: url, timeoutInterval: 20)
         // DuckDuckGo serves an empty page to clients without a browser UA.
         request.setValue(
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "

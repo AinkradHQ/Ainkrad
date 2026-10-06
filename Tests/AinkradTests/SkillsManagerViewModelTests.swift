@@ -135,4 +135,24 @@ struct SkillsManagerViewModelTests {
         #expect(!vm.hasUnsavedChanges(skill))
         #expect(registry.skill(named: "deploy")?.description == "updated")
     }
+
+    @Test func aFailedSaveKeepsTheDraft() throws {
+        let (registry, store, _, root) = make()
+        try makeSkill(registry, name: "deploy")
+        let vm = SkillsManagerViewModel(registry: registry, store: store, resyncCommands: {})
+        let skill = try #require(registry.skill(named: "deploy"))
+        // A read-only skill directory makes the atomic write fail.
+        let dir = registry.paths.skillDir("deploy")
+        try FileManager.default.setAttributes([.posixPermissions: 0o555], ofItemAtPath: dir.path)
+        defer {
+            try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: dir.path)
+            try? FileManager.default.removeItem(at: root)
+        }
+
+        let edited = "---\nname: deploy\ndescription: updated\n---\nNew body."
+        vm.setDraft(edited, for: skill)
+        vm.save(skill)
+        #expect(vm.draft(for: skill) == edited)
+        #expect(vm.hasUnsavedChanges(skill))
+    }
 }

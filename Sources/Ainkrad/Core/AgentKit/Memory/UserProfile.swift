@@ -54,8 +54,8 @@ final class UserProfileStore {
     }
 
     private func project() {
-        let body = doc.facts.keys.sorted()
-            .map { "- \($0): \(doc.facts[$0]!)" }
+        let body = doc.facts.sorted { $0.key < $1.key }
+            .map { "- \($0.key): \($0.value)" }
             .joined(separator: "\n")
         memory.write(body, to: .user)
     }

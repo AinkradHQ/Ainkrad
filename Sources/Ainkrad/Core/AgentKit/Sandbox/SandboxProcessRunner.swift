@@ -166,6 +166,7 @@ final class TerminalProcessController: @unchecked Sendable {
 /// local `var`) keeps every closure that touches it a plain capture of a
 /// `Sendable` reference, satisfying Swift 6 strict concurrency at the
 /// `@Sendable` closure boundaries `DispatchQueue`/`Process` require.
+/// `@unchecked Sendable`: every mutable property is read and written under `lock`.
 private final class ContinuationGate: @unchecked Sendable {
     private let lock = NSLock()
     private var didResume = false

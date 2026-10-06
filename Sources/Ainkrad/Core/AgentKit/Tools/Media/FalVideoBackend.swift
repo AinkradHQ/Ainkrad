@@ -6,6 +6,7 @@ import Foundation
 /// response URL and extracts the video link. Parsing is isolated for unit tests.
 struct FalVideoBackend: VideoBackend {
     static let secretID = "media.fal.apiKey"
+    // `nonisolated(unsafe)`: an immutable `let`; `KeychainSecretStore` keeps no mutable state and Keychain calls are thread-safe.
     nonisolated(unsafe) let secrets: SecretStore
     let http: DataHTTPClient
     /// The fal model id to run, e.g. `fal-ai/ltx-video`.

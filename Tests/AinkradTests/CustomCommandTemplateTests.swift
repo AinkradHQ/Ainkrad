@@ -29,6 +29,12 @@ struct CustomCommandTemplateTests {
                 == "Cost is $5 for coffee")
     }
 
+    /// `½` and Arabic-Indic `٠` are numeric but name no positional slot: they stay verbatim
+    /// rather than trapping on a missing `wholeNumberValue` or indexing `positional[-1]`.
+    @Test func nonWholeOrZeroNumericAfterDollarLeftAlone() {
+        #expect(CustomCommandTemplate.expand("$½ and $\u{0660}", arguments: "a") == "$½ and $\u{0660}")
+    }
+
     @Test func nonPlaceholderDollarLeftAlone() {
         #expect(
             CustomCommandTemplate.expand("var x = $foo", arguments: "")

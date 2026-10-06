@@ -2,8 +2,8 @@
 import Foundation
 
 enum BuiltInAgents {
-    static let planID = UUID(uuidString: "00000000-0000-0000-0000-0000000000A1")!
-    static let buildID = UUID(uuidString: "00000000-0000-0000-0000-0000000000A2")!
+    static let planID = UUID(checkedLiteral: "00000000-0000-0000-0000-0000000000A1")
+    static let buildID = UUID(checkedLiteral: "00000000-0000-0000-0000-0000000000A2")
 
     static let plan = AgentProfile(
         id: planID, name: "Plan",
@@ -32,4 +32,15 @@ enum BuiltInAgents {
         icon: "hammer")
 
     static let all: [AgentProfile] = [plan, build]
+}
+
+private extension UUID {
+    /// A UUID from a compile-time-constant literal — the `URL(checkedLiteral:)` pattern. A
+    /// malformed literal is a programmer error, so it traps with the literal named.
+    init(checkedLiteral literal: StaticString) {
+        guard let uuid = UUID(uuidString: "\(literal)") else {
+            preconditionFailure("Malformed UUID literal: \(literal)")
+        }
+        self = uuid
+    }
 }
