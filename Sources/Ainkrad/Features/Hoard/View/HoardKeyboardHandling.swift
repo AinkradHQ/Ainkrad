@@ -61,11 +61,11 @@ struct HoardKeyboardHandling: ViewModifier {
 
     /// Function keys are private-use unicode scalars, not `KeyEquivalent`
     /// members — `.f5` does not exist. These are the AppKit `NSF*FunctionKey`
-    /// constants.
-    static let f2 = KeyEquivalent(Character(UnicodeScalar(0xF705)!))
-    static let f5 = KeyEquivalent(Character(UnicodeScalar(0xF708)!))
-    static let f6 = KeyEquivalent(Character(UnicodeScalar(0xF709)!))
-    static let f7 = KeyEquivalent(Character(UnicodeScalar(0xF70A)!))
+    /// constants, spelled as literals so no optional scalar needs unwrapping.
+    static let f2 = KeyEquivalent(Character("\u{F705}"))
+    static let f5 = KeyEquivalent(Character("\u{F708}"))
+    static let f6 = KeyEquivalent(Character("\u{F709}"))
+    static let f7 = KeyEquivalent(Character("\u{F70A}"))
 
     /// Shared by every arrow/page binding: guard, move, report handled.
     /// ⇧ extends the selection as it goes, which is the only case where

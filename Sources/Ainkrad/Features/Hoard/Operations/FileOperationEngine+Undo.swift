@@ -1,3 +1,4 @@
+import AinkradHostRuntime
 import Foundation
 
 /// Why an undo could not be applied. Both cases are surfaced to the user —
@@ -135,16 +136,31 @@ extension FileOperationEngine {
 
     private func apply(_ action: InverseAction) {
         switch action {
+        // Best-effort per item, as before: one step that fails does not stop
+        // the rest of the inverse, but it is logged rather than swallowed.
         case .moveBack(let items):
-            for item in items { try? mutatorMove(item.from, item.to) }
+            for item in items {
+                do { try mutatorMove(item.from, item.to) } catch { logUndoFailure("move back", item.from, error) }
+            }
         case .delete(let urls):
-            for url in urls { try? mutatorRemove(url) }
+            for url in urls {
+                do { try mutatorRemove(url) } catch { logUndoFailure("remove", url, error) }
+            }
         case .restoreFromTrash(let items):
-            for item in items { try? trashRestore(item.inTrash, item.original) }
+            for item in items {
+                do { try trashRestore(item.inTrash, item.original) } catch {
+                    logUndoFailure("restore from Trash", item.original, error)
+                }
+            }
         case .composite(let actions):
             // Order matters: remove what was written BEFORE restoring what was
             // displaced, or the restore collides with the file still there.
             for nested in actions { apply(nested) }
         }
+    }
+
+    private func logUndoFailure(_ step: String, _ url: URL, _ error: any Error) {
+        Log.app.error(
+            "Hoard undo: \(step, privacy: .public) failed for \(url.lastPathComponent): \(error.localizedDescription)")
     }
 }

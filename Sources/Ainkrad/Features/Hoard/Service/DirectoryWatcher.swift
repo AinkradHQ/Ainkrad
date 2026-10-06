@@ -5,6 +5,8 @@ import Foundation
 /// itself is NOT `Sendable` (it owns a stream pointer), so handing *it* to the
 /// callback trips Swift 6's region isolation. A box holding just the closure
 /// is safely sendable, and it is what the context pointer carries.
+// `@unchecked` is safe: the box is immutable (one `let`, written once in `init`
+// before the pointer is shared) and the closure it holds is `@Sendable`.
 private final class WatcherCallbackBox: @unchecked Sendable {
     let onChange: @Sendable @MainActor () -> Void
     init(_ onChange: @escaping @Sendable @MainActor () -> Void) {
