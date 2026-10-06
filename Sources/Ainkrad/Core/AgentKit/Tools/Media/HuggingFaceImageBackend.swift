@@ -6,6 +6,7 @@ import Foundation
 /// payment card. The inference endpoint returns raw image bytes (MIME sniffed).
 struct HuggingFaceImageBackend: MediaBackend {
     static let secretID = "media.huggingface.apiKey"
+    // `nonisolated(unsafe)`: an immutable `let`; `KeychainSecretStore` keeps no mutable state and Keychain calls are thread-safe.
     nonisolated(unsafe) let secrets: SecretStore
     let http: DataHTTPClient
     var model: String = "black-forest-labs/FLUX.1-schnell"

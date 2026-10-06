@@ -7,6 +7,7 @@ import Foundation
 /// array of URL strings depending on the model, so it is parsed leniently.
 struct ReplicateImageBackend: MediaBackend {
     static let secretID = "media.replicate.apiKey"
+    // `nonisolated(unsafe)`: an immutable `let`; `KeychainSecretStore` keeps no mutable state and Keychain calls are thread-safe.
     nonisolated(unsafe) let secrets: SecretStore
     let http: DataHTTPClient
     /// `owner/name` of a text-to-image model. flux-schnell is fast and cheap.

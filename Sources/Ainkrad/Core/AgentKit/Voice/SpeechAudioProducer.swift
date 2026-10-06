@@ -21,6 +21,7 @@ struct OnDeviceSpeechAudioProducer: SpeechAudioProducing {
         return (bytes, "caf")
     }
 
+    // `@unchecked Sendable`: `file`/`resumed` are touched only from `AVSpeechSynthesizer.write`'s serial callback.
     private final class WriteHolder: @unchecked Sendable {
         private let synth = AVSpeechSynthesizer()
         private var file: AVAudioFile?
@@ -77,6 +78,7 @@ struct CloudSpeechAudioProducer: SpeechAudioProducing {
 /// mp3. Falls back to on-device if a cloud provider is selected but unconfigured.
 struct RoutingSpeechAudioProducer: SpeechAudioProducing {
     let persistence: PersistenceStore
+    // `nonisolated(unsafe)`: an immutable `let`; `KeychainSecretStore` keeps no mutable state and Keychain calls are thread-safe.
     nonisolated(unsafe) let secrets: SecretStore
     let http: DataHTTPClient
     let onDevice: any SpeechAudioProducing

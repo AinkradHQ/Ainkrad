@@ -17,6 +17,7 @@ struct OpenAITTSBackend: SpeechSynthesisBackend {
     static let secretID = "voice.openai.apiKey"
     /// Secret id for the `custom` OpenAI-speech-compatible provider.
     static let customSecretID = "voice.custom.apiKey"
+    // `nonisolated(unsafe)`: an immutable `let`; `KeychainSecretStore` keeps no mutable state and Keychain calls are thread-safe.
     nonisolated(unsafe) let secrets: SecretStore
     let http: DataHTTPClient
     var model = "gpt-4o-mini-tts"
@@ -58,6 +59,7 @@ struct OpenAITTSBackend: SpeechSynthesisBackend {
 /// ElevenLabs text-to-speech. Key in the Keychain via SecretStore.
 struct ElevenLabsTTSBackend: SpeechSynthesisBackend {
     static let secretID = "voice.elevenlabs.apiKey"
+    // `nonisolated(unsafe)`: an immutable `let`; `KeychainSecretStore` keeps no mutable state and Keychain calls are thread-safe.
     nonisolated(unsafe) let secrets: SecretStore
     let http: DataHTTPClient
     var voiceID: String

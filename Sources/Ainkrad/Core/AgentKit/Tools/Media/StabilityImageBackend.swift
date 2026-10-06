@@ -6,6 +6,7 @@ import Foundation
 /// which returns base64 JSON artifacts.
 struct StabilityImageBackend: MediaBackend {
     static let secretID = "media.stability.apiKey"
+    // `nonisolated(unsafe)`: an immutable `let`; `KeychainSecretStore` keeps no mutable state and Keychain calls are thread-safe.
     nonisolated(unsafe) let secrets: SecretStore
     let http: DataHTTPClient
     var engine: String = "stable-diffusion-xl-1024-v1-0"

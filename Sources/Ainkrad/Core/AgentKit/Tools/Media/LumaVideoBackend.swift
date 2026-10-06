@@ -6,6 +6,7 @@ import Foundation
 /// the asset. The status/URL parsing is isolated in static funcs for unit tests.
 struct LumaVideoBackend: VideoBackend {
     static let secretID = "media.luma.apiKey"
+    // `nonisolated(unsafe)`: an immutable `let`; `KeychainSecretStore` keeps no mutable state and Keychain calls are thread-safe.
     nonisolated(unsafe) let secrets: SecretStore
     let http: DataHTTPClient
     var baseURL = "https://api.lumalabs.ai/dream-machine/v1"

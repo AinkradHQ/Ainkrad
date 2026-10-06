@@ -6,6 +6,7 @@ import Foundation
 /// query parameter per the Generative Language API convention.
 struct GoogleImagenBackend: MediaBackend {
     static let secretID = "media.google.apiKey"
+    // `nonisolated(unsafe)`: an immutable `let`; `KeychainSecretStore` keeps no mutable state and Keychain calls are thread-safe.
     nonisolated(unsafe) let secrets: SecretStore
     let http: DataHTTPClient
     var model: String = "imagen-3.0-generate-002"

@@ -7,6 +7,7 @@ import Foundation
 /// the outbound request to an internal host is never dispatched. Closes the
 /// auto-redirect SSRF vector that the boundary check on the initial URL alone
 /// cannot (URLSession.shared auto-follows redirects with no per-hop check).
+/// `@unchecked Sendable`: the only stored property, `session`, is written once in `init` (see below).
 final class RedirectValidatingHTTPClient: NSObject, DataHTTPClient, URLSessionTaskDelegate, @unchecked Sendable {
     // Written exactly once in `init` (before any concurrent `data(for:)` call),
     // read-only thereafter — so `nonisolated(unsafe)` is sound and avoids the
