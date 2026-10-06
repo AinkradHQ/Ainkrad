@@ -57,15 +57,13 @@ actor StubMCPTransport: MCPTransport {
 /// continuation to a `send`/`inject` call made from the actor without
 /// crossing actor isolation for the reference itself. `Continuation.yield`
 /// and `.finish()` are safe to call concurrently by design.
-/// Shared by `StubMCPTransport` and `InProcessTransport` — both need to hand a
-/// continuation from a `nonisolated incoming()` to an isolated `send`. Not
-/// `private`: internal so `InProcessTransport` (a different file) can use it.
-/// Named `MCPSharedContinuationBox` (not the bare `ContinuationBox` name) so
-/// the "Shared" distinguishes it from two unrelated, file-private boxes that
-/// happen to sit in the same module: the `private final class
-/// MCPContinuationBox` in `HTTPSSETransport.swift`, and the `private final
-/// class ContinuationBox` in `Voice/OnDeviceTranscriptionBackend.swift`. Both
-/// stay file-private and untouched — those are distinct types, not this one.
+/// Shared by `StubMCPTransport`, `InProcessTransport` and `HTTPSSETransport` —
+/// each hands a continuation from a `nonisolated incoming()` to an isolated
+/// `send`. Internal so the other transport files can use it. Named
+/// `MCPSharedContinuationBox` (not the bare `ContinuationBox` name) to keep it
+/// apart from the unrelated, file-private resume-once `ContinuationBox` in
+/// `Voice/OnDeviceTranscriptionBackend.swift`.
+/// `@unchecked Sendable`: every stored property is read and written under `lock`.
 final class MCPSharedContinuationBox: @unchecked Sendable {
     private let lock = NSLock()
     private var continuation: AsyncThrowingStream<JSONValue, Error>.Continuation?
