@@ -23,19 +23,21 @@ struct AppStoreCard: View {
     let onUninstall: () -> Void
     let onToggleEnabled: (Bool) -> Void
 
+    @Environment(\.ainkradSkin) private var skin
+
     var body: some View {
         AinkradCard {
-            VStack(alignment: .leading, spacing: 10) {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(spacing: 12) {
-                        NeonAppTile(symbol: row.icon, tokens: tokens, size: 42)
-                        VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: skin.size.s10) {
+                VStack(alignment: .leading, spacing: skin.size.s10) {
+                    HStack(spacing: skin.spacing.md) {
+                        AinkradAppTile(symbol: row.icon, size: skin.size.s42)
+                        VStack(alignment: .leading, spacing: skin.size.s1) {
                             Text(row.displayName)
                                 .font(AinkradFont.display(13, weight: .medium))
                                 .foregroundStyle(tokens.foreground)
                             Text(row.versionLine)
-                                .font(.system(size: 10))
-                                .foregroundStyle(tokens.foreground.opacity(0.5))
+                                .font(skin.font(AinkradFontToken(sizeKey: "t10", scaled: false)))
+                                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
                         }
                         Spacer()
                         if row.status == .updateAvailable {
@@ -50,8 +52,8 @@ struct AppStoreCard: View {
                     // Reserve two lines so every card is the same height
                     // regardless of description length (uniform grid).
                     Text(row.description.isEmpty ? " " : row.description)
-                        .font(.system(size: 11))
-                        .foregroundStyle(tokens.foreground.opacity(0.7))
+                        .font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false)))
+                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o70))
                         .lineLimit(2, reservesSpace: true)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
