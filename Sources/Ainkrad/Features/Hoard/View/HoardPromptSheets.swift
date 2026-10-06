@@ -53,8 +53,8 @@ struct HoardPromptSheet: View {
             HStack(spacing: AinkradSpacing.sm) {
                 Spacer()
                 AinkradButton(title: cancelTitle, style: .ghost, action: onCancel)
-                if confirmTitle != nil {
-                    AinkradButton(title: confirmTitle!, style: .primary, action: commit)
+                if let confirmTitle {
+                    AinkradButton(title: confirmTitle, style: .primary, action: commit)
                         .disabled(text.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }

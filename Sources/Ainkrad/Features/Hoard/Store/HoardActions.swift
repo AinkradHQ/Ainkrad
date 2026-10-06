@@ -324,10 +324,3 @@ final class HoardActions {
         }
     }
 }
-
-extension String {
-    fileprivate var capitalizedFirst: String {
-        guard let first else { return self }
-        return first.uppercased() + dropFirst()
-    }
-}
