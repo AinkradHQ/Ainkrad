@@ -22,9 +22,15 @@ final class SignalSubscriptionStore {
     }
 
     func save(_ approved: [String: Set<String>]) {
-        try? FileManager.default.createDirectory(
-            at: url.deletingLastPathComponent(),
-            withIntermediateDirectories: true)
+        do {
+            try FileManager.default.createDirectory(
+                at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        } catch {
+            // Logged and carried on: the write below then fails and logs too.
+            Log.registry.error(
+                "Failed to create the folder for \(self.url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
+            )
+        }
         guard let data = try? JSONEncoder().encode(approved.mapValues { Array($0).sorted() })
         else { return }
         do {

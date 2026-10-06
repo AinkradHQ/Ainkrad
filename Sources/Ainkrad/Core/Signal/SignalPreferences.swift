@@ -49,8 +49,15 @@ struct SignalPreferencesStore {
 
     func save(_ prefs: SignalPreferences) {
         guard let data = try? JSONEncoder().encode(prefs) else { return }
-        try? FileManager.default.createDirectory(
-            at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        do {
+            try FileManager.default.createDirectory(
+                at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        } catch {
+            // Logged and carried on: the write below then fails and logs too.
+            Log.settings.error(
+                "Failed to create the folder for \(url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
+            )
+        }
         do {
             try data.write(to: url, options: .atomic)
         } catch {

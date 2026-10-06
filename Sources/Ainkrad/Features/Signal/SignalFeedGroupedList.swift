@@ -22,6 +22,7 @@ struct SignalFeedGroupedList: View {
     @Environment(\.ainkradTheme) private var theme
     @Environment(\.ainkradStatusColors) private var status
     @Environment(\.ainkradReduceMotion) private var reduceMotion
+    @Environment(\.ainkradSkin) private var skin
 
     /// Eight, because a 25ms stagger across nineteen rows stops reading as
     /// motion and starts reading as lag.
@@ -89,13 +90,14 @@ struct SignalFeedGroupedList: View {
 
     private func header(_ group: SignalSourceGroup) -> some View {
         let isCollapsed = collapsed.contains(group.id)
-        return Button {
+        // The label is the whole group header row; no kit button takes one.
+        return Button {  // design-lint: allow raw-control kit gap, content label
             if isCollapsed { collapsed.remove(group.id) } else { collapsed.insert(group.id) }
         } label: {
             HStack(spacing: AinkradSpacing.xs + 2) {
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 8, weight: .bold))
-                    .foregroundStyle(theme.foreground.opacity(0.45))
+                    .font(skin.font(AinkradFontToken(sizeKey: "t8", weight: "bold", scaled: false)))
+                    .foregroundStyle(theme.foreground.opacity(skin.opacity.o45))
                     .rotationEffect(.degrees(isCollapsed ? 0 : 90))
                 Circle()
                     .fill(
@@ -103,7 +105,7 @@ struct SignalFeedGroupedList: View {
                             SignalPresentation.status(for: $0).color(in: theme, statusColors: status)
                         } ?? .clear
                     )
-                    .frame(width: 5, height: 5)
+                    .frame(width: skin.size.s5, height: skin.size.s5)
                 Text(group.name)
                     .font(AinkradFont.display(11.5, weight: .semibold))
                     .foregroundStyle(theme.foreground)
@@ -112,7 +114,7 @@ struct SignalFeedGroupedList: View {
                 if isCollapsed, let preview = group.preview {
                     Text(preview)
                         .font(AinkradFont.display(10.5))
-                        .foregroundStyle(theme.foreground.opacity(0.5))
+                        .foregroundStyle(theme.foreground.opacity(skin.opacity.o50))
                         .lineLimit(1)
                 }
                 Spacer(minLength: AinkradSpacing.xs)
@@ -123,7 +125,7 @@ struct SignalFeedGroupedList: View {
                     Text("\(group.events.count)")
                         .font(AinkradFont.mono(9.5, weight: .medium))
                         .monospacedDigit()
-                        .foregroundStyle(theme.foreground.opacity(0.45))
+                        .foregroundStyle(theme.foreground.opacity(skin.opacity.o45))
                 }
                 if group.unread > 0 {
                     AinkradBadge(text: "\(group.unread) new", tint: theme.accentSecondary)
@@ -134,7 +136,7 @@ struct SignalFeedGroupedList: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             // A tint band, not a rule: the design language forbids separators,
             // and a group header still has to read as a boundary.
-            .background(theme.surface.opacity(0.92))
+            .background(theme.surface.opacity(skin.opacity.o92))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

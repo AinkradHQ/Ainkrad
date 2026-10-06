@@ -64,9 +64,15 @@ enum SignalCLIPairing {
     }
 
     private static func write(token: String, to url: URL) {
-        try? FileManager.default.createDirectory(
-            at: url.deletingLastPathComponent(),
-            withIntermediateDirectories: true)
+        do {
+            try FileManager.default.createDirectory(
+                at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        } catch {
+            // Logged and carried on: the write below then fails and logs too.
+            Log.settings.error(
+                "Failed to create the folder for \(url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
+            )
+        }
         guard let data = try? JSONEncoder().encode(["token": token]) else { return }
         // Written with 0600 in the ATTRIBUTES, not chmod'ed afterwards: a file
         // that exists world-readable for even an instant has already leaked
@@ -78,8 +84,12 @@ enum SignalCLIPairing {
                 "Failed to write \(data.count, privacy: .public) bytes to \(url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
             )
         }
-        try? FileManager.default.setAttributes(
-            [.posixPermissions: 0o600],
-            ofItemAtPath: url.path)
+        do {
+            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+        } catch {
+            Log.settings.error(
+                "Failed to restrict \(url.lastPathComponent, privacy: .public) to 0600: \(error.localizedDescription, privacy: .public)"
+            )
+        }
     }
 }

@@ -103,7 +103,7 @@ struct SignalSnapshotTests {
             Spacer()
             SignalBellButton(unread: 3, tokens: tokens) {}
             HStack(spacing: 8) {
-                ChevronMark().fill(tokens.accentSecondary).frame(width: 10, height: 8.5)
+                AinkradBrandChevron().fill(tokens.accentSecondary).frame(width: 10, height: 8.5)
                 Rectangle().fill(tokens.foreground.opacity(0.28))
                     .frame(width: 5, height: 5).rotationEffect(.degrees(45))
             }
@@ -133,7 +133,7 @@ struct SignalSnapshotTests {
                 Spacer()
                 SignalBellButton(unread: 3, tokens: theme.tokens) {}
                 HStack(spacing: 8) {
-                    ChevronMark().fill(theme.tokens.accentSecondary).frame(width: 10, height: 8.5)
+                    AinkradBrandChevron().fill(theme.tokens.accentSecondary).frame(width: 10, height: 8.5)
                     Rectangle().fill(theme.tokens.foreground.opacity(0.28))
                         .frame(width: 5, height: 5).rotationEffect(.degrees(45))
                 }
