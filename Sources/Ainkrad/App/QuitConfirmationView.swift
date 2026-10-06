@@ -19,7 +19,7 @@ struct QuitConfirmationView: View {
     @State private var dontAskAgain = false
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
+        let tokens = environment.themeManager.hostSkin
         let coordinator = environment.quitCoordinator
 
         GeometryReader { geo in
@@ -34,16 +34,16 @@ struct QuitConfirmationView: View {
         }
     }
 
-    private func panel(tokens: DesignTokens, coordinator: QuitCoordinator) -> some View {
+    private func panel(tokens: AinkradSkin, coordinator: QuitCoordinator) -> some View {
         VStack(spacing: 0) {
             VStack(spacing: skin.spacing.sm) {
                 Text("Quit Ainkrad?")
                     .font(AinkradFont.display(16, weight: .semibold))
-                    .foregroundStyle(tokens.foreground)
+                    .foregroundStyle(tokens.color(\.foreground))
 
                 Text("Running workspaces and their sessions will end.")
                     .font(AinkradFont.display(12))
-                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o62))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o62))
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
             }

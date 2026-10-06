@@ -187,7 +187,7 @@ struct TileLayoutView: View {
     /// an empty workspace, not a static blurred stand-in. A single faint scrim
     /// keeps pane content legible over a busy sky.
     private var workspaceBackdrop: some View {
-        let tokens = environment.themeManager.tokens
+        let tokens = environment.themeManager.hostSkin
         return ZStack {
             // Match the empty workspace's island placement. There the island is
             // the top child of a centered stack that also holds the shortcut
@@ -204,7 +204,7 @@ struct TileLayoutView: View {
             // Legibility scrim only — low enough that motion clearly shows
             // through, high enough that text over a busy sky stays readable.
             // Tuned during screenshot review.
-            tokens.background.opacity(skin.opacity.o12)
+            tokens.color(\.background).opacity(skin.opacity.o12)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -224,7 +224,7 @@ private struct SeamView: View {
     @State private var isDragging = false
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
+        let tokens = environment.themeManager.hostSkin
         let isLit = isHovering || isDragging
         let seamAlpha = isLit ? skin.opacity.o90 : skin.opacity.o22
         let seamWidth = isLit ? skin.size.s2 : skin.size.s1
@@ -232,7 +232,7 @@ private struct SeamView: View {
         Group {
             if placement.axis == .horizontal {
                 LinearGradient(
-                    colors: [.clear, tokens.accentSecondary.opacity(seamAlpha), .clear],
+                    colors: [.clear, tokens.color(\.accentSecondary).opacity(seamAlpha), .clear],
                     startPoint: .top,
                     endPoint: .bottom
                 )
@@ -241,14 +241,14 @@ private struct SeamView: View {
                 .overlay {
                     if isLit {
                         Capsule()
-                            .fill(tokens.accentSecondary)
+                            .fill(tokens.color(\.accentSecondary))
                             .frame(width: skin.size.s3, height: skin.size.s22)
-                            .shadow(color: tokens.accentSecondary.opacity(skin.opacity.o90), radius: skin.size.s4)
+                            .shadow(color: tokens.color(\.accentSecondary).opacity(skin.opacity.o90), radius: skin.size.s4)
                     }
                 }
             } else {
                 LinearGradient(
-                    colors: [.clear, tokens.accentSecondary.opacity(seamAlpha), .clear],
+                    colors: [.clear, tokens.color(\.accentSecondary).opacity(seamAlpha), .clear],
                     startPoint: .leading,
                     endPoint: .trailing
                 )
@@ -257,14 +257,14 @@ private struct SeamView: View {
                 .overlay {
                     if isLit {
                         Capsule()
-                            .fill(tokens.accentSecondary)
+                            .fill(tokens.color(\.accentSecondary))
                             .frame(width: skin.size.s22, height: skin.size.s3)
-                            .shadow(color: tokens.accentSecondary.opacity(skin.opacity.o90), radius: skin.size.s4)
+                            .shadow(color: tokens.color(\.accentSecondary).opacity(skin.opacity.o90), radius: skin.size.s4)
                     }
                 }
             }
         }
-        .shadow(color: isLit ? tokens.accentSecondary.opacity(skin.opacity.o70) : .clear, radius: skin.size.s5)
+        .shadow(color: isLit ? tokens.color(\.accentSecondary).opacity(skin.opacity.o70) : .clear, radius: skin.size.s5)
         // Grab target is wider than the 1px seam so the boundary is easy to
         // catch with the mouse without hunting for a hairline.
         .contentShape(Rectangle().inset(by: -skin.size.s6))

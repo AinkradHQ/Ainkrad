@@ -122,9 +122,9 @@ private struct FocusTab: View {
     @State private var draft = ""
     @FocusState private var fieldFocused: Bool
 
-    /// Colours stay on `DesignTokens`, which carry the user's custom accent;
-    /// every scalar comes from the skin.
-    private var tokens: DesignTokens { environment.themeManager.tokens }
+    /// Colours come from `hostSkin`, which carries the user's custom accent;
+    /// every scalar comes from the environment's skin.
+    private var tokens: AinkradSkin { environment.themeManager.hostSkin }
     private var title: String { block.displayTitle(appName: appName) }
     /// The pencil and × only show on the active or hovered tab.
     private var showsTabActions: Bool { isActive || hovering }
@@ -140,14 +140,14 @@ private struct FocusTab: View {
                     // container looking for a break — the workspace list's
                     // ACTIVE badge wrapped to "ACT"/"IVE" for exactly this.
                     .font(AinkradFont.mono(9, weight: .medium))
-                    .foregroundStyle(tokens.accentSecondary.opacity(isActive ? skin.opacity.o95 : skin.opacity.o50))
+                    .foregroundStyle(tokens.color(\.accentSecondary).opacity(isActive ? skin.opacity.o95 : skin.opacity.o50))
                     .lineLimit(1)
                     .fixedSize()
                     .padding(.horizontal, skin.size.s3)
                     .padding(.vertical, skin.size.s1)
                     .background(
                         ChamferShape(cut: skin.cut.c3)
-                            .fill(tokens.accentSecondary.opacity(isActive ? skin.opacity.o16 : skin.opacity.o08))
+                            .fill(tokens.color(\.accentSecondary).opacity(isActive ? skin.opacity.o16 : skin.opacity.o08))
                     )
             }
 
@@ -160,7 +160,7 @@ private struct FocusTab: View {
                 TextField("", text: $draft)  // design-lint: allow raw-control kit gap, focus binding
                     .textFieldStyle(.plain)
                     .font(AinkradFont.display(11, weight: .medium))
-                    .foregroundStyle(tokens.foreground)
+                    .foregroundStyle(tokens.color(\.foreground))
                     .frame(maxWidth: .infinity)
                     .focused($fieldFocused)
                     .onSubmit(commit)
@@ -177,7 +177,7 @@ private struct FocusTab: View {
                 Text(title)
                     .font(AinkradFont.display(11, weight: isActive ? .medium : .regular))
                     .kerning(0.4)
-                    .foregroundStyle(tokens.foreground.opacity(isActive ? skin.opacity.o95 : skin.opacity.o55))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(isActive ? skin.opacity.o95 : skin.opacity.o55))
                     .lineLimit(1)
                     .truncationMode(.middle)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -219,17 +219,17 @@ private struct FocusTab: View {
             // from off-screen — on switches; that was the jump on every click.
             // Two cross-fading fills cannot fly anywhere.
             ChamferShape(cut: skin.radius.sm)
-                .fill(tokens.accentPrimary.opacity(skin.opacity.o18))
+                .fill(tokens.color(\.accentPrimary).opacity(skin.opacity.o18))
                 .opacity(isActive ? 1 : 0)
                 .overlay {
                     ChamferShape(cut: skin.radius.sm)
-                        .fill(tokens.foreground.opacity(skin.opacity.o06))
+                        .fill(tokens.color(\.foreground).opacity(skin.opacity.o06))
                         .opacity(!isActive && hovering ? 1 : 0)
                 }
         }
         .overlay {
             ChamferShape(cut: skin.radius.sm)
-                .strokeBorder(tokens.accentPrimary.opacity(skin.opacity.o45), lineWidth: 1)
+                .strokeBorder(tokens.color(\.accentPrimary).opacity(skin.opacity.o45), lineWidth: 1)
                 .opacity(isActive ? 1 : 0)
         }
         // An accent bar along the active tab's top edge, drawn on every tab and
@@ -239,7 +239,7 @@ private struct FocusTab: View {
         // it grows in from the tab's centre, which points at the pane below.
         .overlay(alignment: .top) {
             Capsule()
-                .fill(tokens.accentSecondary)
+                .fill(tokens.color(\.accentSecondary))
                 .frame(height: skin.size.s2)
                 .scaleEffect(x: isActive ? 1 : 0.3, anchor: .center)
                 .opacity(isActive ? 1 : 0)

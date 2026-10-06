@@ -11,7 +11,14 @@ struct PluginStageView: View {
     let state: DevHostModel.State
     var surface: DevHostModel.Surface = .root
 
+    @Environment(\.ainkradSkin) private var skin
+
     /// Picks the plugin's view factory for `surface`.
+    ///
+    /// Settings render the app's declared `settingsCatalog` through the kit,
+    /// as the real host's Settings does; plugins' legacy settings views go
+    /// away in 5B/5C (decision 14). An app that publishes no catalog yet
+    /// falls back to `makeSettingsView`, the real host's fallback too.
     ///
     /// Static and separate from `body` because that is the only seam a test
     /// can observe: `AnyView` cannot be inspected, so a test proves the
@@ -19,8 +26,13 @@ struct PluginStageView: View {
     @MainActor
     static func view(for app: RegisteredApp, surface: DevHostModel.Surface) -> AnyView {
         switch surface {
-        case .root: app.makeRootView()
-        case .settings: app.makeSettingsView()
+        case .root: return app.makeRootView()
+        case .settings:
+            guard let page = app.settingsCatalog() else { return app.makeSettingsView() }
+            return AnyView(
+                AinkradSettingsPanel(title: page.title) {
+                    SettingsPageView(page: page)
+                })
         }
     }
 
@@ -47,7 +59,7 @@ struct PluginStageView: View {
     }
 
     private func placeholder(_ message: String, systemImage: String) -> some View {
-        VStack(spacing: 8) {
+        VStack(spacing: skin.spacing.sm) {
             Image(systemName: systemImage)
                 .font(.largeTitle)
             Text(message)

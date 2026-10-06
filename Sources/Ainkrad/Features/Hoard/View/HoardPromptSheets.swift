@@ -117,7 +117,7 @@ struct ConflictSheet: View {
     @Environment(\.ainkradStatusColors) private var statusColors
     @Environment(\.ainkradSkin) private var skin
 
-    private var tokens: DesignTokens { environment.themeManager.tokens }
+    private var tokens: AinkradSkin { environment.themeManager.hostSkin }
 
     var body: some View {
         VStack(alignment: .leading, spacing: AinkradSpacing.lg) {
@@ -140,12 +140,12 @@ struct ConflictSheet: View {
             VStack(alignment: .leading, spacing: skin.size.s3) {
                 Text("\u{201C}\(question.name)\u{201D} already exists")
                     .font(AinkradFontResolver.font(.headline, weight: .medium, typography: typo))
-                    .foregroundStyle(tokens.foreground)
+                    .foregroundStyle(tokens.color(\.foreground))
                     .lineLimit(2)
                     .truncationMode(.middle)
                 Text(question.destination.deletingLastPathComponent().path)
                     .font(AinkradFontResolver.font(.caption, typography: typo))
-                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o50))
                     .lineLimit(1)
                     .truncationMode(.head)
             }

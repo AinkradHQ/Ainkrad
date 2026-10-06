@@ -67,7 +67,6 @@ extension HostSettingsCatalog {
 
     static func themeFields(_ environment: AppEnvironment, group: SettingsPath) -> [SettingsField] {
         let manager = environment.themeManager
-        let tokens = manager.tokens
         let accentTitle =
             manager.accentColorHex.map { "#" + $0.uppercased().trimmingCharacters(in: ["#"]) }
             ?? "Theme default"
@@ -89,8 +88,7 @@ extension HostSettingsCatalog {
                 help: "Used for anything live: selection, focus, the things that are currently doing something.",
                 keywords: ["accent", "color", "highlight"],
                 kind: .action(title: accentTitle) {
-                    let current = manager.accentColorHex.map { Color(hex: $0) } ?? tokens.accentPrimary  // design-lint: allow hex-color user data, the stored accent override
-                    SettingsColorPanel.shared.edit(current) { manager.setAccentColorHex($0.hexString) }
+                    SettingsColorPanel.shared.edit(manager.hostSkin.color(\.accentPrimary)) { manager.setAccentColor($0) }
                 },
                 defaultDescription: "the theme's accent",
                 isModified: { manager.accentColorHex != nil },

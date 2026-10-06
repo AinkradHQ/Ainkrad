@@ -9,10 +9,10 @@ struct StatusColorBridgeTests {
     @Test("every theme carries distinct status colors through the ABI-safe AinkradStatusColors bridge")
     func bridged() {
         for theme in Theme.allCases {
-            let t = theme.tokens
-            let statusColors = AinkradStatusColors(success: t.success, warning: t.warning, danger: t.danger)
+            let t = theme.skin
+            let statusColors = AinkradStatusColors(success: t.color(\.success), warning: t.color(\.warning), danger: t.color(\.danger))
             #expect(statusColors.success != statusColors.danger)
-            #expect(statusColors.warning != t.background)
+            #expect(statusColors.warning != t.color(\.background))
         }
     }
 }

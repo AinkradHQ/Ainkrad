@@ -38,14 +38,14 @@ struct SetupDoneStepView: View {
     }
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
+        let tokens = environment.themeManager.hostSkin
 
         VStack(alignment: .leading, spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: skin.spacing.lg) {
                     Text("Everything is set up. Here is where your things live.")
                         .font(AinkradFont.display(14))
-                        .foregroundStyle(tokens.foreground)
+                        .foregroundStyle(tokens.color(\.foreground))
                         .fixedSize(horizontal: false, vertical: true)
                         .frame(
                             maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth),
@@ -93,7 +93,7 @@ struct SetupDoneStepView: View {
 
                     Text("You can change any of these choices later in Settings.")
                         .font(AinkradFont.display(12))
-                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o60))
+                        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o60))
                         .fixedSize(horizontal: false, vertical: true)
                         .frame(
                             maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth),
@@ -144,25 +144,25 @@ struct SetupDoneStepView: View {
 
     private func point(
         title: String, body: String, icon: String,
-        tokens: DesignTokens
+        tokens: AinkradSkin
     ) -> some View {
         HStack(alignment: .top, spacing: skin.spacing.md) {
             Image(systemName: icon)
                 .font(skin.font(AinkradFontToken(sizeKey: "t13", scaled: false)))
-                .foregroundStyle(tokens.accentSecondary)
+                .foregroundStyle(tokens.color(\.accentSecondary))
                 .frame(width: skin.size.s18)
             VStack(alignment: .leading, spacing: skin.spacing.xs) {
                 Text(title)
                     .font(AinkradFont.display(13, weight: .medium))
-                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o90))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o90))
                 Text(body)
                     .font(AinkradFont.display(12))
-                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o60))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o60))
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(skin.spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: skin.radius.md).fill(tokens.surfaceElevated.opacity(skin.opacity.o40)))
+        .background(ChamferShape(cut: skin.radius.md).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o40)))
     }
 }

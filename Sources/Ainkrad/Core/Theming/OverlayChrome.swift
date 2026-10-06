@@ -25,7 +25,7 @@ enum OverlayChrome {
 /// panel glow. Applied to each overlay's outermost panel container. Reads
 /// the overlay opacity/blur settings live.
 private struct HUDPanelChrome: ViewModifier {
-    let tokens: DesignTokens
+    let tokens: AinkradSkin
     /// How the blur samples what it sits over.
     ///
     /// `.withinWindow` is right for an overlay drawn INSIDE the app window —
@@ -47,7 +47,7 @@ private struct HUDPanelChrome: ViewModifier {
                         // the host's own blur used — same pixels.
                         VisualEffectBlur(level: .panel, blendingMode: blending)
                     }
-                    tokens.background.opacity(store.overlayBackgroundOpacity)
+                    tokens.color(\.background).opacity(store.overlayBackgroundOpacity)
                 }
             }
             .clipShape(ChamferShape(cut: skin.radius.panel))
@@ -63,8 +63,8 @@ private struct HUDPanelChrome: ViewModifier {
                     .strokeBorder(
                         LinearGradient(
                             colors: [
-                                tokens.accentSecondary.opacity(skin.opacity.o55),
-                                tokens.accentPrimary.opacity(skin.opacity.o28),
+                                tokens.color(\.accentSecondary).opacity(skin.opacity.o55),
+                                tokens.color(\.accentPrimary).opacity(skin.opacity.o28),
                             ],
                             startPoint: .top, endPoint: .bottom),
                         lineWidth: skin.chrome.overlay.edgeWidth)
@@ -78,7 +78,7 @@ extension View {
     /// shadow stack) used by the Launcher, Settings, App Store, Workspace
     /// Overview, and Quit panels.
     func hudPanelChrome(
-        tokens: DesignTokens,
+        tokens: AinkradSkin,
         blending: NSVisualEffectView.BlendingMode = .withinWindow
     ) -> some View {
         modifier(HUDPanelChrome(tokens: tokens, blending: blending))

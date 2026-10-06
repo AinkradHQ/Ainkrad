@@ -32,7 +32,7 @@ struct HUDBar: View {
     }
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
+        let tokens = environment.themeManager.hostSkin
 
         HStack(spacing: skin.spacing.md) {
             // In full screen the system traffic lights are suppressed (they'd
@@ -93,7 +93,7 @@ struct HUDBar: View {
     /// One diamond per workspace — the brand's diamond accent (the mark
     /// inside the chevron), not a generic dot. The active one glows in
     /// accentSecondary; clicking any switches to it.
-    private func workspaceDots(tokens: DesignTokens) -> some View {
+    private func workspaceDots(tokens: AinkradSkin) -> some View {
         let manager = environment.workspaceManager
 
         return HStack(spacing: skin.spacing.sm) {
@@ -109,17 +109,17 @@ struct HUDBar: View {
                         if workspace.isMain {
                             // The home island wears the chevron mark.
                             AinkradBrandChevron()
-                                .fill(isActive ? tokens.accentSecondary : tokens.foreground.opacity(skin.opacity.o35))
+                                .fill(isActive ? tokens.color(\.accentSecondary) : tokens.color(\.foreground).opacity(skin.opacity.o35))
                                 .frame(width: isActive ? 10 : 8, height: isActive ? 8.5 : 7)
                         } else {
                             Rectangle()
-                                .fill(isActive ? tokens.accentSecondary : tokens.foreground.opacity(skin.opacity.o28))
+                                .fill(isActive ? tokens.color(\.accentSecondary) : tokens.color(\.foreground).opacity(skin.opacity.o28))
                                 .frame(width: isActive ? 7 : 5, height: isActive ? 7 : 5)
                                 .rotationEffect(.degrees(45))
                         }
                     }
                     .shadow(
-                        color: isActive ? tokens.accentSecondary.opacity(skin.opacity.o90) : .clear,
+                        color: isActive ? tokens.color(\.accentSecondary).opacity(skin.opacity.o90) : .clear,
                         radius: skin.size.s4
                     )
                     .frame(width: skin.size.s12, height: skin.size.s11)

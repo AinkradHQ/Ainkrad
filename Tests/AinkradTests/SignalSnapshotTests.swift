@@ -78,9 +78,9 @@ struct SignalSnapshotTests {
         .environment(
             \.ainkradStatusColors,
             AinkradStatusColors(
-                success: theme.tokens.success,
-                warning: theme.tokens.warning,
-                danger: theme.tokens.danger))
+                success: theme.skin.color(\.success),
+                warning: theme.skin.color(\.warning),
+                danger: theme.skin.color(\.danger)))
 
         let png = try Self.render(view, size: CGSize(width: 380, height: 420))
         let url = outputDirectory.appendingPathComponent("signal-feed-list.png")
@@ -91,20 +91,20 @@ struct SignalSnapshotTests {
     @Test("render the top-bar bell")
     func renderTopBarBell() throws {
         let theme = Theme.neonBlue
-        let tokens = theme.tokens
+        let tokens = theme.skin
 
         // The bell as it sits in HUDBar: floating on the sky beside the
         // workspace diamonds, with the readout chips to its left for scale.
         let view = HStack(spacing: 12) {
             Text("3:32 PM").font(AinkradFont.mono(11, weight: .medium))
-                .foregroundStyle(tokens.foreground.opacity(0.85))
+                .foregroundStyle(tokens.color(\.foreground).opacity(0.85))
             Text("Tue, 1 Sep").font(AinkradFont.mono(11, weight: .medium))
-                .foregroundStyle(tokens.foreground.opacity(0.5))
+                .foregroundStyle(tokens.color(\.foreground).opacity(0.5))
             Spacer()
             SignalBellButton(unread: 3, tokens: tokens) {}
             HStack(spacing: 8) {
-                AinkradBrandChevron().fill(tokens.accentSecondary).frame(width: 10, height: 8.5)
-                Rectangle().fill(tokens.foreground.opacity(0.28))
+                AinkradBrandChevron().fill(tokens.color(\.accentSecondary)).frame(width: 10, height: 8.5)
+                Rectangle().fill(tokens.color(\.foreground).opacity(0.28))
                     .frame(width: 5, height: 5).rotationEffect(.degrees(45))
             }
         }
@@ -129,12 +129,12 @@ struct SignalSnapshotTests {
             HostThemeTokens(from: theme).background
             HStack(spacing: 12) {
                 Text("3:32 PM").font(AinkradFont.mono(11, weight: .medium))
-                    .foregroundStyle(theme.tokens.foreground.opacity(0.85))
+                    .foregroundStyle(theme.skin.color(\.foreground).opacity(0.85))
                 Spacer()
-                SignalBellButton(unread: 3, tokens: theme.tokens) {}
+                SignalBellButton(unread: 3, tokens: theme.skin) {}
                 HStack(spacing: 8) {
-                    AinkradBrandChevron().fill(theme.tokens.accentSecondary).frame(width: 10, height: 8.5)
-                    Rectangle().fill(theme.tokens.foreground.opacity(0.28))
+                    AinkradBrandChevron().fill(theme.skin.color(\.accentSecondary)).frame(width: 10, height: 8.5)
+                    Rectangle().fill(theme.skin.color(\.foreground).opacity(0.28))
                         .frame(width: 5, height: 5).rotationEffect(.degrees(45))
                 }
             }
@@ -158,9 +158,9 @@ struct SignalSnapshotTests {
         .environment(
             \.ainkradStatusColors,
             AinkradStatusColors(
-                success: theme.tokens.success,
-                warning: theme.tokens.warning,
-                danger: theme.tokens.danger))
+                success: theme.skin.color(\.success),
+                warning: theme.skin.color(\.warning),
+                danger: theme.skin.color(\.danger)))
 
         let png = try Self.render(view, size: CGSize(width: 560, height: 470))
         try png.write(to: outputDirectory.appendingPathComponent("signal-dropdown.png"))
@@ -209,9 +209,9 @@ struct SignalSnapshotTests {
         .environment(
             \.ainkradStatusColors,
             AinkradStatusColors(
-                success: theme.tokens.success,
-                warning: theme.tokens.warning,
-                danger: theme.tokens.danger))
+                success: theme.skin.color(\.success),
+                warning: theme.skin.color(\.warning),
+                danger: theme.skin.color(\.danger)))
 
         let png = try Self.render(view, size: CGSize(width: 940, height: 660))
         try png.write(to: outputDirectory.appendingPathComponent("signal-feed-overlay.png"))
@@ -258,9 +258,9 @@ struct SignalSnapshotTests {
         .environment(
             \.ainkradStatusColors,
             AinkradStatusColors(
-                success: theme.tokens.success,
-                warning: theme.tokens.warning,
-                danger: theme.tokens.danger))
+                success: theme.skin.color(\.success),
+                warning: theme.skin.color(\.warning),
+                danger: theme.skin.color(\.danger)))
 
         let png = try Self.render(view, size: CGSize(width: 700, height: 460))
         try png.write(to: outputDirectory.appendingPathComponent("signal-feed-grouped.png"))
@@ -281,7 +281,7 @@ struct SignalSnapshotTests {
             HostThemeTokens(from: theme).background
             HStack {
                 Spacer()
-                SignalBellButton(unread: 3, tokens: theme.tokens) {}
+                SignalBellButton(unread: 3, tokens: theme.skin) {}
                     .padding(.trailing, 14)
             }
             .frame(height: 30)
@@ -295,9 +295,9 @@ struct SignalSnapshotTests {
         .environment(
             \.ainkradStatusColors,
             AinkradStatusColors(
-                success: theme.tokens.success,
-                warning: theme.tokens.warning,
-                danger: theme.tokens.danger))
+                success: theme.skin.color(\.success),
+                warning: theme.skin.color(\.warning),
+                danger: theme.skin.color(\.danger)))
 
         let png = try Self.render(view, size: CGSize(width: 420, height: 340))
         try png.write(to: outputDirectory.appendingPathComponent("signal-toasts.png"))
@@ -306,7 +306,7 @@ struct SignalSnapshotTests {
     @Test("render the launcher tiles with unread badges")
     func renderLauncherBadges() throws {
         let theme = Theme.neonBlue
-        let tokens = theme.tokens
+        let tokens = theme.skin
 
         // Tiles at both sizes the launcher uses (32 list, 46 grid), badged and
         // unbadged side by side, so the badge's effect on the footprint is
@@ -406,9 +406,9 @@ struct SignalSnapshotTests {
             .environment(
                 \.ainkradStatusColors,
                 AinkradStatusColors(
-                    success: theme.tokens.success,
-                    warning: theme.tokens.warning,
-                    danger: theme.tokens.danger))
+                    success: theme.skin.color(\.success),
+                    warning: theme.skin.color(\.warning),
+                    danger: theme.skin.color(\.danger)))
     }
 
     private func writeSnapshot<V: View>(_ view: V, size: CGSize, named name: String) throws {

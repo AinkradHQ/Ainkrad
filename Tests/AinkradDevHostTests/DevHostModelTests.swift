@@ -110,8 +110,8 @@ struct DevHostModelTests {
 @MainActor
 private final class SurfaceProbe {
     var asked: [String] = []
-    func app() -> RegisteredApp {
-        RegisteredApp(
+    func app(publishesCatalog: Bool = false) -> RegisteredApp {
+        var app = RegisteredApp(
             id: "hello", displayName: "Hello", icon: "hand.wave", isEnabledByDefault: true,
             source: .plugin(
                 url: URL(fileURLWithPath: "/tmp/hello.bundle"),
@@ -125,6 +125,14 @@ private final class SurfaceProbe {
                 return AnyView(EmptyView())
             },
             chromeFill: { nil })
+        app.settingsCatalog = {
+            self.asked.append("catalog")
+            guard publishesCatalog else { return nil }
+            return SettingsPage(
+                path: SettingsPath(["app", "hello"]), title: "Hello", icon: "hand.wave",
+                group: .installedApps, order: 0, groups: [])
+        }
+        return app
     }
 }
 
@@ -137,11 +145,18 @@ struct DevHostSettingsSurfaceTests {
         #expect(probe.asked == ["root"])
     }
 
-    @Test("the stage renders the plugin's settings view on the settings surface")
-    func settingsSurfaceUsesSettingsFactory() {
+    @Test("the settings surface renders the app's settings catalog, not its legacy view")
+    func settingsSurfaceUsesCatalog() {
+        let probe = SurfaceProbe()
+        _ = PluginStageView.view(for: probe.app(publishesCatalog: true), surface: .settings)
+        #expect(probe.asked == ["catalog"])
+    }
+
+    @Test("an app with no settings catalog falls back to its settings view")
+    func settingsSurfaceFallsBackWithoutCatalog() {
         let probe = SurfaceProbe()
         _ = PluginStageView.view(for: probe.app(), surface: .settings)
-        #expect(probe.asked == ["settings"])
+        #expect(probe.asked == ["catalog", "settings"])
     }
 
     @Test("a newly loaded bundle starts on the root surface")

@@ -1,33 +1,29 @@
+import AinkradAppKitUI
 import SwiftUI
 
 /// Renders `LogTail`'s merged line stream — lifecycle events from
-/// `DevHostModel` plus the plugin subsystem's real os_log tail — as a
-/// scrolling, monospaced list. Kept seamless with the window body per the
-/// Cardinal HUD language: a filled background, no separator line above it
-/// (the `ValidationBanner` strip above already reads as a distinct region
-/// by color, not by a drawn line).
+/// `DevHostModel` plus the plugin subsystem's real os_log tail — through the
+/// kit's `AinkradLogView`, the same log pane Thrall uses. Kept seamless with
+/// the window body per the Cardinal HUD language: a filled background, no
+/// separator line above it (the `ValidationBanner` strip above already reads
+/// as a distinct region by color, not by a drawn line).
 struct LogPaneView: View {
     let logTail: LogTail
     let subsystem: String
 
-    @State private var lines: [String] = []
+    @Environment(\.ainkradSkin) private var skin
+    @State private var buffer = AinkradLogBuffer()
 
     var body: some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 2) {
-                ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
-                    Text(line)
-                        .font(.system(.caption, design: .monospaced))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-            .padding(8)
-        }
+        AinkradLogView(
+            lines: buffer.all, palette: AinkradANSIPalette(skin: skin),
+            foreground: skin.color(skin.text.primary)
+        )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(.black.opacity(0.85))
+        .background(skin.color(.palette("black", skin.opacity.o85)))
         .task {
             for await line in logTail.stream(subsystem: subsystem) {
-                lines.append(line)
+                buffer.append(line + "\n")
             }
         }
     }

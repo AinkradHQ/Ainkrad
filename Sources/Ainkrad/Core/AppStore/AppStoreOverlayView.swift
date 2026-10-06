@@ -14,7 +14,7 @@ struct AppStoreOverlayView: View {
     private var columns: [GridItem] { [GridItem(.adaptive(minimum: 248), spacing: skin.spacing.lg)] }
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
+        let tokens = environment.themeManager.hostSkin
         GeometryReader { geo in
             ZStack {
                 skin.color(.palette("black", skin.chrome.overlay.backdropOpacity))
@@ -60,15 +60,15 @@ struct AppStoreOverlayView: View {
     /// that left settings behind (AIN-149). The kit modal supplies the scrim,
     /// panel, entrance (skipped under Reduce Motion) and Esc/scrim dismissal,
     /// which cancel the reinstall.
-    private func reinstallPrompt(appID: String, tokens: DesignTokens) -> some View {
+    private func reinstallPrompt(appID: String, tokens: AinkradSkin) -> some View {
         let name = store.rows.first { $0.id == appID }?.displayName ?? appID
         return VStack(alignment: .leading, spacing: skin.size.s14) {
             Text("Reinstall \(name)")
                 .font(AinkradFont.display(15, weight: .semibold))
-                .foregroundStyle(tokens.foreground)
+                .foregroundStyle(tokens.color(\.foreground))
             Text("Previous settings for \(name) were kept. Restore them, or reset to defaults?")
                 .font(skin.font(AinkradFontToken(sizeKey: "t12", scaled: false)))
-                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o75))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o75))
                 .fixedSize(horizontal: false, vertical: true)
             HStack(spacing: skin.size.s10) {
                 Spacer()
@@ -81,7 +81,7 @@ struct AppStoreOverlayView: View {
         }
     }
 
-    private func panel(tokens: DesignTokens) -> some View {
+    private func panel(tokens: AinkradSkin) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             if let row = store.selectedRow {
                 AppStoreDetailView(
@@ -147,7 +147,7 @@ struct AppStoreOverlayView: View {
     /// ESC/←/→ are handled by the panel's key handlers above (the panel keeps
     /// keyboard focus while this overlay is up). No kit component shows a
     /// full-screen image gallery, so this stays local, on skin tokens.
-    private func screenshotLightbox(_ box: AppStoreStore.Lightbox, tokens: DesignTokens) -> some View {
+    private func screenshotLightbox(_ box: AppStoreStore.Lightbox, tokens: AinkradSkin) -> some View {
         ZStack {
             skin.color(.palette("black", skin.opacity.o82)).ignoresSafeArea()
                 .onTapGesture {
@@ -163,10 +163,10 @@ struct AppStoreOverlayView: View {
                     VStack(spacing: skin.spacing.sm) {
                         Image(systemName: "exclamationmark.triangle")
                             .font(skin.font(AinkradFontToken(sizeKey: "t28", scaled: false)))
-                            .foregroundStyle(tokens.accentTertiary)
+                            .foregroundStyle(tokens.color(\.accentTertiary))
                         Text("Couldn't load image")
                             .font(AinkradFont.display(12))
-                            .foregroundStyle(tokens.foreground.opacity(skin.opacity.o60))
+                            .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o60))
                     }
                 default:
                     AinkradSpinner(size: 36)
@@ -205,10 +205,10 @@ struct AppStoreOverlayView: View {
         }
     }
 
-    private func header(tokens: DesignTokens) -> some View {
+    private func header(tokens: AinkradSkin) -> some View {
         HStack {
             Text("APP STORE").font(AinkradFont.display(14, weight: .semibold)).kerning(1)
-                .foregroundStyle(tokens.foreground)
+                .foregroundStyle(tokens.color(\.foreground))
             Spacer()
             // Refresh morphs to a spinner in place while refreshing — both
             // views stay mounted, only `.opacity` toggles. Local because the
@@ -228,7 +228,7 @@ struct AppStoreOverlayView: View {
         .padding(.horizontal, skin.size.s18).padding(.vertical, skin.size.s14)
     }
 
-    private func filterBar(tokens: DesignTokens) -> some View {
+    private func filterBar(tokens: AinkradSkin) -> some View {
         let updateCount = store.rows.filter { $0.status == .updateAvailable }.count
         return HStack(spacing: skin.spacing.sm) {
             AinkradSegmentedPicker(items: AppStoreStore.Filter.allCases, selection: $store.filter) { filter in
@@ -239,7 +239,7 @@ struct AppStoreOverlayView: View {
             Spacer()
             if let error = store.error {
                 Text(error.message).font(skin.font(AinkradFontToken(sizeKey: "t10", scaled: false)))
-                    .foregroundStyle(tokens.accentTertiary)
+                    .foregroundStyle(tokens.color(\.accentTertiary))
                     .lineLimit(1)
                 AinkradIconButton(systemName: "xmark.circle") { store.error = nil }
             }
@@ -263,7 +263,7 @@ struct AppStoreOverlayView: View {
     /// with no apps. That is a defensible trade, but not a silent one: the
     /// user is trusting the catalog rather than the code, and should know it.
     /// Hidden entirely once a Developer-ID release is cut.
-    @ViewBuilder private func trustPostureBanner(tokens: DesignTokens) -> some View {
+    @ViewBuilder private func trustPostureBanner(tokens: AinkradSkin) -> some View {
         if !PluginTrust.isVerifyingPluginSignatures {
             HStack(alignment: .top, spacing: skin.size.s6) {
                 Image(systemName: "lock.open").font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false)))
@@ -274,13 +274,13 @@ struct AppStoreOverlayView: View {
                         "Downloads are still checked against the catalog’s SHA-256, so the bytes match what was published — but who published them isn’t verified."
                     )
                     .font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false)))
-                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o70))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o70))
                     .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 0)
             }
-            .foregroundStyle(tokens.accentSecondary)
-            .banner(tint: tokens.accentSecondary, fill: skin.opacity.o10, stroke: skin.opacity.o35, skin: skin)
+            .foregroundStyle(tokens.color(\.accentSecondary))
+            .banner(tint: tokens.color(\.accentSecondary), fill: skin.opacity.o10, stroke: skin.opacity.o35, skin: skin)
         }
     }
 
@@ -288,7 +288,7 @@ struct AppStoreOverlayView: View {
     /// launch. Without this the failure is invisible: the loader records it and
     /// the app simply shows fewer apps, which reads as "nothing installed"
     /// rather than "something is wrong". Hidden entirely when nothing failed.
-    @ViewBuilder private func loadFailureBanner(tokens: DesignTokens) -> some View {
+    @ViewBuilder private func loadFailureBanner(tokens: AinkradSkin) -> some View {
         let failures = store.loadFailures
         if !failures.isEmpty {
             VStack(alignment: .leading, spacing: skin.spacing.xs) {
@@ -298,20 +298,20 @@ struct AppStoreOverlayView: View {
                     Text(failures.count == 1 ? "1 app couldn’t be loaded" : "\(failures.count) apps couldn’t be loaded")
                         .font(AinkradFont.display(12, weight: .semibold))
                 }
-                .foregroundStyle(tokens.accentTertiary)
+                .foregroundStyle(tokens.color(\.accentTertiary))
                 ForEach(failures, id: \.url) { failure in
                     Text(AppStoreStore.failureText(failure))
                         .font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false)))
-                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o75))
+                        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o75))
                         .fixedSize(horizontal: false, vertical: true)
                         .textSelection(.enabled)
                 }
             }
-            .banner(tint: tokens.accentTertiary, fill: skin.opacity.o12, stroke: skin.opacity.o45, skin: skin)
+            .banner(tint: tokens.color(\.accentTertiary), fill: skin.opacity.o12, stroke: skin.opacity.o45, skin: skin)
         }
     }
 
-    @ViewBuilder private func content(tokens: DesignTokens) -> some View {
+    @ViewBuilder private func content(tokens: AinkradSkin) -> some View {
         let rows = store.visibleRows
         if rows.isEmpty {
             if store.isRefreshing && store.rows.isEmpty {

@@ -40,7 +40,7 @@ struct SetupWelcomeStepView: View {
     @State private var hasSettled = false
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
+        let tokens = environment.themeManager.hostSkin
 
         VStack(spacing: 0) {
             paragraph(tokens: tokens)
@@ -68,7 +68,7 @@ struct SetupWelcomeStepView: View {
         .onAppear { settle() }
     }
 
-    private func paragraph(tokens: DesignTokens) -> some View {
+    private func paragraph(tokens: AinkradSkin) -> some View {
         let size: CGFloat = 16
         let geometry = SetupStageMotion.layerGeometry(
             .content,
@@ -87,7 +87,7 @@ struct SetupWelcomeStepView: View {
                 + "another machine."
         )
         .font(AinkradFont.display(size))
-        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o82))
+        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o82))
         .lineSpacing(size * 0.36)
         .multilineTextAlignment(.center)
         .fixedSize(horizontal: false, vertical: true)

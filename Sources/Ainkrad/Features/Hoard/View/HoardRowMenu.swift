@@ -97,7 +97,7 @@ struct HoardContextMenuList: View {
     /// crashed the app the moment the panel measured its content. The kit
     /// re-injects theme, typography and status colours; anything else has to
     /// be captured at the call site.
-    let tokens: DesignTokens
+    let tokens: AinkradSkin
     let onSelect: () -> Void
 
     @Environment(\.ainkradTypography) private var typo
@@ -125,7 +125,7 @@ struct HoardContextMenuList: View {
 
 private struct HoardContextMenuRow: View {
     let action: HoardMenuAction
-    let tokens: DesignTokens
+    let tokens: AinkradSkin
     let onSelect: () -> Void
 
     @Environment(\.ainkradTypography) private var typo
@@ -135,7 +135,7 @@ private struct HoardContextMenuRow: View {
     @State private var hovering = false
 
     private var tint: Color {
-        action.isDestructive ? statusColors.danger : tokens.foreground.opacity(skin.opacity.o90)
+        action.isDestructive ? statusColors.danger : tokens.color(\.foreground).opacity(skin.opacity.o90)
     }
 
     var body: some View {
@@ -162,7 +162,7 @@ private struct HoardContextMenuRow: View {
             .padding(.vertical, AinkradSpacing.xs)
             .background(
                 ChamferShape(cut: skin.cut.c4).fill(
-                    hovering ? tokens.accentSecondary.opacity(skin.opacity.o14) : .clear)
+                    hovering ? tokens.color(\.accentSecondary).opacity(skin.opacity.o14) : .clear)
             )
             .contentShape(Rectangle())
         }
@@ -288,7 +288,7 @@ private struct HoardRowMenu: ViewModifier {
                 // its content.
                 HoardContextMenuList(
                     actions: menuActions,
-                    tokens: environment.themeManager.tokens
+                    tokens: environment.themeManager.hostSkin
                 ) {
                     isPresented = false
                 }
@@ -326,7 +326,7 @@ private struct SidebarRootMenu: ViewModifier {
                             shortcut: nil,
                             run: { onRemove(root) })
                     ],
-                    tokens: environment.themeManager.tokens
+                    tokens: environment.themeManager.hostSkin
                 ) { isPresented = false }
                 .environment(environment)
             }

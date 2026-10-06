@@ -164,7 +164,7 @@ extension EnvironmentValues {
 /// VoiceOver gets the words instead, where they cost the visual design nothing.
 struct SetupRail: View {
     let model: SetupRailModel
-    let tokens: DesignTokens
+    let tokens: AinkradSkin
     let reduceMotion: Bool
 
     @Environment(\.ainkradSkin) private var skin
@@ -197,9 +197,9 @@ struct SetupRail: View {
     }
 
     private func fill(for item: SetupRailModel.Item) -> Color {
-        if item.isCurrent { return tokens.accentPrimary }
-        if item.isComplete { return tokens.accentSecondary.opacity(skin.opacity.o70) }
-        return tokens.foreground.opacity(skin.opacity.o16)
+        if item.isCurrent { return tokens.color(\.accentPrimary) }
+        if item.isComplete { return tokens.color(\.accentSecondary).opacity(skin.opacity.o70) }
+        return tokens.color(\.foreground).opacity(skin.opacity.o16)
     }
 }
 
@@ -238,7 +238,7 @@ enum SetupHeader {
 /// what keeps ONE Back in the wizard.
 struct SetupStage<Content: View>: View {
     let coordinator: SetupCoordinator
-    let tokens: DesignTokens
+    let tokens: AinkradSkin
     let reduceMotion: Bool
     @ViewBuilder let content: (SetupStep) -> Content
 
@@ -378,7 +378,7 @@ struct SetupStage<Content: View>: View {
         // but the stage says what Ainkrad actually is. See `SetupStep.headline`.
         Text(coordinator.step.headline)
             .font(AinkradFont.display(SetupHeader.headlineSize, weight: .semibold))
-            .foregroundStyle(tokens.foreground)
+            .foregroundStyle(tokens.color(\.foreground))
             .fixedSize(horizontal: false, vertical: true)
             .frame(
                 maxWidth: .infinity,

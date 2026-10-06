@@ -67,7 +67,7 @@ final class SetupModalPresenter {
 /// be scrolled away from.
 struct SetupModalView: View {
     let modal: SetupModalPresenter.Modal
-    let tokens: DesignTokens
+    let tokens: AinkradSkin
 
     @Environment(\.ainkradSkin) private var skin
 
@@ -79,7 +79,7 @@ struct SetupModalView: View {
                     .foregroundStyle(tint)
                 Text(modal.title)
                     .font(AinkradFont.display(16, weight: .semibold))
-                    .foregroundStyle(tokens.foreground)
+                    .foregroundStyle(tokens.color(\.foreground))
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -90,7 +90,7 @@ struct SetupModalView: View {
             ScrollView {
                 Text(modal.message)
                     .font(AinkradFont.display(13))
-                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o80))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o80))
                     .lineSpacing(4)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -119,8 +119,8 @@ struct SetupModalView: View {
     /// confirmation in the secondary one.
     private var tint: Color {
         switch modal.tone {
-        case .informational: return tokens.accentSecondary
-        case .caution: return tokens.accentTertiary
+        case .informational: return tokens.color(\.accentSecondary)
+        case .caution: return tokens.color(\.accentTertiary)
         }
     }
 }

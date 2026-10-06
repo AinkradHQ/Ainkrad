@@ -40,9 +40,9 @@ struct WorkspaceListRow: View {
     @Environment(\.ainkradReduceMotion) private var reduceMotion
     @State private var hovering = false
 
-    /// Colours stay on `DesignTokens`, which carry the user's custom accent;
-    /// every scalar comes from the skin.
-    private var tokens: DesignTokens { environment.themeManager.tokens }
+    /// Colours come from `hostSkin`, which carries the user's custom accent;
+    /// every scalar comes from the environment's skin.
+    private var tokens: AinkradSkin { environment.themeManager.hostSkin }
 
     private var appCount: Int { workspace.tileLayout.appIDs.count }
 
@@ -81,7 +81,7 @@ struct WorkspaceListRow: View {
             // drop ring sits on the row's edge.
             ChamferShape(cut: skin.cut.c6)
                 .strokeBorder(
-                    isDropTarget ? tokens.accentSecondary.opacity(skin.opacity.o90) : .clear, lineWidth: 1.5)
+                    isDropTarget ? tokens.color(\.accentSecondary).opacity(skin.opacity.o90) : .clear, lineWidth: 1.5)
         )
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
@@ -118,7 +118,7 @@ struct WorkspaceListRow: View {
             TextField("Name", text: $renameDraft)  // design-lint: allow raw-control kit gap, focus binding
                 .textFieldStyle(.plain)
                 .font(AinkradFont.display(12, weight: .medium))
-                .foregroundStyle(tokens.foreground)
+                .foregroundStyle(tokens.color(\.foreground))
                 .focused(renameFocus, equals: .rename(workspace.id))
                 .onSubmit(onCommitRename)
                 .onKeyPress(.escape) {
@@ -129,7 +129,7 @@ struct WorkspaceListRow: View {
             HStack(spacing: skin.size.s5) {
                 if workspace.isMain {
                     ChevronMark()
-                        .fill(tokens.accentSecondary)
+                        .fill(tokens.color(\.accentSecondary))
                         .frame(width: skin.size.s9, height: skin.size.s7)
                         .help("Home workspace")
                 }
@@ -141,14 +141,14 @@ struct WorkspaceListRow: View {
                 // detail header still spells it out where there is room.
                 if isActive {
                     Circle()
-                        .fill(tokens.accentSecondary)
+                        .fill(tokens.color(\.accentSecondary))
                         .frame(width: skin.size.s6, height: skin.size.s6)
                         .help("Current workspace")
                 }
 
                 Text(workspace.name)
                     .font(AinkradFont.display(12, weight: isSelected ? .semibold : .medium))
-                    .foregroundStyle(tokens.foreground.opacity(isSelected || isActive ? 1 : skin.opacity.o80))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(isSelected || isActive ? 1 : skin.opacity.o80))
                     .lineLimit(1)
                     .truncationMode(.tail)
                     // The name outranks everything else in the column: if
@@ -165,7 +165,7 @@ struct WorkspaceListRow: View {
         HStack(spacing: skin.size.s6) {
             Text(appCount == 0 ? "empty" : "\(appCount) app\(appCount == 1 ? "" : "s")")
                 .font(AinkradFont.mono(10))
-                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o45))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o45))
                 // `lineLimit(1)` alone is not enough: under horizontal pressure
                 // SwiftUI will still break "2 apps" across two lines rather than
                 // truncate. `fixedSize` is what refuses to be compressed at all.
@@ -182,7 +182,7 @@ struct WorkspaceListRow: View {
             if index < 9 {
                 Text("⌘\(index + 1)")
                     .font(AinkradFont.mono(10))
-                    .foregroundStyle(tokens.foreground.opacity(isSelected ? skin.opacity.o55 : skin.opacity.o30))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(isSelected ? skin.opacity.o55 : skin.opacity.o30))
                     .lineLimit(1)
                     .fixedSize()
                     .opacity(hovering ? 0 : 1)

@@ -16,7 +16,7 @@ struct EmblemView: View {
     @State private var isBreathing = false
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
+        let tokens = environment.themeManager.hostSkin
         let reduceMotion = environment.generalSettingsStore.uiReduceMotion
         let pulse = reduceMotion ? 1.0 : (isBreathing ? 1.0 : 0.72)
 
@@ -27,11 +27,11 @@ struct EmblemView: View {
                 .stroke(
                     AngularGradient(
                         stops: [
-                            .init(color: tokens.accentPrimary.opacity(skin.opacity.o10), location: 0),
-                            .init(color: tokens.accentSecondary, location: 0.25),
-                            .init(color: tokens.accentPrimary.opacity(skin.opacity.o10), location: 0.5),
-                            .init(color: tokens.accentPrimary.opacity(skin.opacity.o05), location: 0.75),
-                            .init(color: tokens.accentPrimary.opacity(skin.opacity.o10), location: 1),
+                            .init(color: tokens.color(\.accentPrimary).opacity(skin.opacity.o10), location: 0),
+                            .init(color: tokens.color(\.accentSecondary), location: 0.25),
+                            .init(color: tokens.color(\.accentPrimary).opacity(skin.opacity.o10), location: 0.5),
+                            .init(color: tokens.color(\.accentPrimary).opacity(skin.opacity.o05), location: 0.75),
+                            .init(color: tokens.color(\.accentPrimary).opacity(skin.opacity.o10), location: 1),
                         ],
                         center: .center,
                         angle: .degrees(-90)
@@ -39,12 +39,12 @@ struct EmblemView: View {
                     lineWidth: 2
                 )
                 .frame(width: skin.size.s150, height: skin.size.s150)
-                .shadow(color: tokens.accentPrimary.opacity(skin.opacity.o60 * pulse), radius: skin.size.s18)
+                .shadow(color: tokens.color(\.accentPrimary).opacity(skin.opacity.o60 * pulse), radius: skin.size.s18)
 
             AinkradBrandChevron()
-                .fill(tokens.foreground)
+                .fill(tokens.color(\.foreground))
                 .frame(width: skin.size.s54, height: skin.size.s46)
-                .shadow(color: tokens.accentSecondary.opacity(skin.opacity.o80 * pulse), radius: skin.size.s10)
+                .shadow(color: tokens.color(\.accentSecondary).opacity(skin.opacity.o80 * pulse), radius: skin.size.s10)
                 .offset(y: 6)
         }
         .onAppear {

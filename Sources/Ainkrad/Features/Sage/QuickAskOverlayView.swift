@@ -21,7 +21,7 @@ struct QuickAskOverlayView: View {
         }
         .frame(width: skin.size.s640)
         .frame(maxHeight: skin.size.s560)
-        .hudPanelChrome(tokens: environment.themeManager.tokens)
+        .hudPanelChrome(tokens: environment.themeManager.hostSkin)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .padding(.top, skin.size.s120)
         .onExitCommand { onDismiss() }

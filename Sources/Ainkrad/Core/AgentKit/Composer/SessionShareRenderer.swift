@@ -1,3 +1,4 @@
+// design-lint: allow-file hex-color,radius-literal export data — the shared HTML page's own stylesheet, not app chrome
 import Foundation
 
 /// Renders a session to ONE self-contained HTML document: inline CSS, images

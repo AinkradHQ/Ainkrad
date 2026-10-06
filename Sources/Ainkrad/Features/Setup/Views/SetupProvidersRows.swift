@@ -11,7 +11,7 @@ import SwiftUI
 /// from the store so it survives every switch, Back and return.
 struct SetupConnectedList: View {
     let connections: [Connection]
-    let tokens: DesignTokens
+    let tokens: AinkradSkin
     let onRemove: (Connection) -> Void
 
     @Environment(\.ainkradSkin) private var skin
@@ -40,7 +40,7 @@ struct SetupConnectedList: View {
 /// control that removes it.
 struct SetupConnectedRow: View {
     let connection: Connection
-    let tokens: DesignTokens
+    let tokens: AinkradSkin
     let onRemove: () -> Void
 
     @Environment(\.ainkradSkin) private var skin
@@ -49,16 +49,16 @@ struct SetupConnectedRow: View {
         HStack(spacing: skin.size.s10) {
             Image(systemName: "checkmark.seal.fill")
                 .font(skin.font(AinkradFontToken(sizeKey: "t13", scaled: false)))
-                .foregroundStyle(tokens.accentSecondary)
+                .foregroundStyle(tokens.color(\.accentSecondary))
             VStack(alignment: .leading, spacing: skin.size.s2) {
                 Text(connection.displayName)
                     .font(AinkradFont.display(13, weight: .medium))
-                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o92))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o92))
                 // The host, not the whole URL: it identifies WHICH endpoint
                 // without turning the row into a path nobody reads.
                 Text(URL(string: connection.baseURL)?.host ?? connection.baseURL)
                     .font(skin.font(AinkradFontToken(sizeKey: "t11", mono: "system", scaled: false)))
-                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o45))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o45))
             }
             Spacer(minLength: 0)
             AinkradIconButton(systemName: "trash", tooltip: "Remove this connection", action: onRemove)
@@ -72,7 +72,7 @@ struct SetupConnectedRow: View {
 /// An icon and a line of copy in the colour of what happened — a connection
 /// made, a failure, a deferral.
 struct SetupProviderStatusRow: View {
-    let tokens: DesignTokens
+    let tokens: AinkradSkin
     let icon: String
     let text: String
     let color: Color
@@ -85,7 +85,7 @@ struct SetupProviderStatusRow: View {
                 color)
             Text(text)
                 .font(AinkradFont.display(12))
-                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o85))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o85))
                 .fixedSize(horizontal: false, vertical: true)
         }
     }

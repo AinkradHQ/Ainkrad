@@ -88,7 +88,7 @@ struct SettingsOverlayView: View {
     }
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
+        let tokens = environment.themeManager.hostSkin
         let _ = catalogCache.value = nil
 
         GeometryReader { geo in
@@ -124,7 +124,7 @@ struct SettingsOverlayView: View {
         }
     }
 
-    private func panel(tokens: DesignTokens) -> some View {
+    private func panel(tokens: AinkradSkin) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             header(tokens: tokens)
 
@@ -175,20 +175,20 @@ struct SettingsOverlayView: View {
         }
     }
 
-    private func header(tokens: DesignTokens) -> some View {
+    private func header(tokens: AinkradSkin) -> some View {
         HStack(spacing: skin.spacing.md) {
             AinkradBrandChevron()
-                .fill(tokens.accentSecondary)
+                .fill(tokens.color(\.accentSecondary))
                 .frame(width: skin.size.s16, height: skin.size.s14)
-                .shadow(color: tokens.accentSecondary.opacity(skin.opacity.o90), radius: skin.size.s6)
+                .shadow(color: tokens.color(\.accentSecondary).opacity(skin.opacity.o90), radius: skin.size.s6)
             Text("SETTINGS")
                 .font(AinkradFont.display(13, weight: .semibold))
                 .kerning(4)
-                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o90))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o90))
             Spacer()
             Text("esc")
                 .font(AinkradFont.mono(9))
-                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o35))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o35))
         }
         .padding(.horizontal, skin.size.s18)
         .frame(height: skin.size.s52)
@@ -196,7 +196,7 @@ struct SettingsOverlayView: View {
 
     // MARK: - Sidebar
 
-    private func sidebar(tokens: DesignTokens) -> some View {
+    private func sidebar(tokens: AinkradSkin) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             AinkradSearchField(text: $query, placeholder: "Search settings", focus: $searchFocused)
                 .padding(.horizontal, AinkradSpacing.md)
@@ -248,7 +248,7 @@ struct SettingsOverlayView: View {
         return .handled
     }
 
-    private func sidebarList(tokens: DesignTokens) -> some View {
+    private func sidebarList(tokens: AinkradSkin) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: skin.spacing.xs) {
                 ForEach(SettingsPageGroup.allCases, id: \.self) { group in
@@ -268,7 +268,7 @@ struct SettingsOverlayView: View {
     }
 
     /// A catalog-driven sidebar row for any page in any group.
-    private func sidebarRow(page: SettingsPage, tokens: DesignTokens) -> some View {
+    private func sidebarRow(page: SettingsPage, tokens: AinkradSkin) -> some View {
         let isSelected = displayedPage?.path == page.path
         return AinkradListRow(
             isSelected: isSelected,
@@ -283,13 +283,13 @@ struct SettingsOverlayView: View {
                 // Read here rather than at catalog-build time so the count
                 // stays live while the overlay is open (Skills proposals).
                 if let badgeCount = page.badge?(), badgeCount > 0 {
-                    AinkradBadge(text: "\(badgeCount)", tint: tokens.accentSecondary)
+                    AinkradBadge(text: "\(badgeCount)", tint: tokens.color(\.accentSecondary))
                 }
             }
         )
         .overlay(
             AinkradCornerBrackets(length: skin.size.s7)
-                .stroke(isSelected ? tokens.accentSecondary.opacity(skin.opacity.o90) : .clear, lineWidth: 1.3)
+                .stroke(isSelected ? tokens.color(\.accentSecondary).opacity(skin.opacity.o90) : .clear, lineWidth: 1.3)
                 .padding(skin.size.s1)
         )
         // The kit row takes its tap as a gesture; these keep the row one
@@ -317,7 +317,7 @@ struct SettingsOverlayView: View {
     /// a tinted SF Symbol fallback. Used by both sidebar rows and the app
     /// settings identity header.
     @ViewBuilder
-    private func appTile(appID: String?, systemIcon: String, size: CGFloat, isSelected: Bool, tokens: DesignTokens)
+    private func appTile(appID: String?, systemIcon: String, size: CGFloat, isSelected: Bool, tokens: AinkradSkin)
         -> some View
     {
         if appID != nil {
@@ -327,7 +327,7 @@ struct SettingsOverlayView: View {
             // A fixed settings section (General, Sound, …): a tinted SF Symbol.
             Image(systemName: systemIcon)
                 .font(.system(size: size * 0.6))  // design-lint: allow font-size token-gap settingsGlyphRatio
-                .foregroundStyle(isSelected ? tokens.accentSecondary : tokens.foreground.opacity(skin.opacity.o55))
+                .foregroundStyle(isSelected ? tokens.color(\.accentSecondary) : tokens.color(\.foreground).opacity(skin.opacity.o55))
                 .frame(width: size, height: size)
         }
     }
@@ -335,7 +335,7 @@ struct SettingsOverlayView: View {
     // MARK: - Detail
 
     @ViewBuilder
-    private func detail(tokens: DesignTokens) -> some View {
+    private func detail(tokens: AinkradSkin) -> some View {
         switch searchMode {
         case .palette(let q):
             SettingsPaletteView(
@@ -381,14 +381,14 @@ struct SettingsOverlayView: View {
     /// Makes the filter escapable — a filter you cannot see or exit is the
     /// disorienting part of System Settings' version, which we're
     /// deliberately not copying.
-    private func filterBanner(query: String, tokens: DesignTokens) -> some View {
+    private func filterBanner(query: String, tokens: AinkradSkin) -> some View {
         HStack(spacing: skin.spacing.sm) {
             Image(systemName: "line.3.horizontal.decrease")
                 .font(skin.font(AinkradFontToken(sizeKey: "t10", scaled: false)))
-                .foregroundStyle(tokens.accentSecondary.opacity(skin.opacity.o85))
+                .foregroundStyle(tokens.color(\.accentSecondary).opacity(skin.opacity.o85))
             Text("Filtering by \u{201C}\(query)\u{201D} — non-matching settings are dimmed")
                 .font(AinkradFont.display(11))
-                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o60))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o60))
             Spacer(minLength: skin.spacing.sm)
             AinkradButton(title: "Clear", style: .ghost) { self.query = "" }
         }

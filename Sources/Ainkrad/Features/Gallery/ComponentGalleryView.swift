@@ -81,9 +81,9 @@ struct ComponentGalleryView: View {
     var galleryTokens: HostThemeTokens { HostThemeTokens(from: galleryTheme) }
     var galleryStatusColors: AinkradStatusColors {
         AinkradStatusColors(
-            success: galleryTheme.tokens.success,
-            warning: galleryTheme.tokens.warning,
-            danger: galleryTheme.tokens.danger
+            success: galleryTheme.skin.color(\.success),
+            warning: galleryTheme.skin.color(\.warning),
+            danger: galleryTheme.skin.color(\.danger)
         )
     }
     var galleryTypography: AinkradTypography { .default }

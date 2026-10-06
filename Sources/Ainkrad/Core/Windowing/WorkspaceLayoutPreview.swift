@@ -37,9 +37,9 @@ struct WorkspaceLayoutPreview: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.ainkradSkin) private var skin
 
-    /// Colours stay on `DesignTokens`, which carry the user's custom accent;
-    /// every scalar comes from the skin.
-    private var tokens: DesignTokens { environment.themeManager.tokens }
+    /// Colours come from `hostSkin`, which carries the user's custom accent;
+    /// every scalar comes from the environment's skin.
+    private var tokens: AinkradSkin { environment.themeManager.hostSkin }
     private var layout: TileLayout { workspace.tileLayout }
 
     // The style's metrics: the feature preview is drawn at full detail, the
@@ -68,12 +68,12 @@ struct WorkspaceLayoutPreview: View {
         }
         .background(
             ChamferShape(cut: outerCornerCut)
-                .fill(tokens.background.opacity(skin.opacity.o35))
+                .fill(tokens.color(\.background).opacity(skin.opacity.o35))
         )
         .clipShape(ChamferShape(cut: outerCornerCut))
         .overlay(
             ChamferShape(cut: outerCornerCut)
-                .strokeBorder(tokens.foreground.opacity(skin.opacity.o10), lineWidth: 1)
+                .strokeBorder(tokens.color(\.foreground).opacity(skin.opacity.o10), lineWidth: 1)
         )
     }
 
@@ -82,14 +82,14 @@ struct WorkspaceLayoutPreview: View {
     private var emptyState: some View {
         ChamferShape(cut: outerCornerCut)
             .strokeBorder(
-                tokens.foreground.opacity(skin.opacity.o18),
+                tokens.color(\.foreground).opacity(skin.opacity.o18),
                 style: StrokeStyle(lineWidth: 1, dash: [3, 2])
             )
             .overlay {
                 if style.showsNames {
                     Text("empty")
                         .font(AinkradFont.mono(10))
-                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o35))
+                        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o35))
                 }
             }
     }
@@ -128,15 +128,15 @@ struct WorkspaceLayoutPreview: View {
                     ChamferShape(cut: paneCornerCut)
                         .fill(
                             isActive
-                                ? tokens.accentPrimary.opacity(skin.opacity.o50)
-                                : tokens.surfaceElevated.opacity(skin.opacity.o70)
+                                ? tokens.color(\.accentPrimary).opacity(skin.opacity.o50)
+                                : tokens.color(\.surfaceElevated).opacity(skin.opacity.o70)
                         )
                         .frame(height: stripHeight)
                         .overlay {
                             if style.showsNames, isActive {
                                 Text(title(for: block))
                                     .font(AinkradFont.mono(8, weight: .medium))
-                                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o90))
+                                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o90))
                                     .lineLimit(1)
                                     .padding(.horizontal, skin.size.s3)
                             }
@@ -157,13 +157,13 @@ struct WorkspaceLayoutPreview: View {
     private func paneCell(_ block: Block) -> some View {
         let isFocused = block.id == layout.focusedBlockID && layout.blocks.count > 1
         return ChamferShape(cut: paneCornerCut)
-            .fill(tokens.surface.opacity(skin.opacity.o75))
+            .fill(tokens.color(\.surface).opacity(skin.opacity.o75))
             .overlay(
                 ChamferShape(cut: paneCornerCut)
                     .strokeBorder(
                         isFocused
-                            ? tokens.accentPrimary.opacity(skin.opacity.o70)
-                            : tokens.foreground.opacity(skin.opacity.o12),
+                            ? tokens.color(\.accentPrimary).opacity(skin.opacity.o70)
+                            : tokens.color(\.foreground).opacity(skin.opacity.o12),
                         lineWidth: 1
                     )
             )
@@ -177,7 +177,7 @@ struct WorkspaceLayoutPreview: View {
                 NeonAppTile(symbol: icon(for: block), tokens: tokens, size: skin.size.s22)
                 Text(title(for: block))
                     .font(AinkradFont.display(10, weight: .medium))
-                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o75))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o75))
                     .lineLimit(1)
                     .truncationMode(.middle)
                     .padding(.horizontal, skin.spacing.xs)
@@ -188,7 +188,7 @@ struct WorkspaceLayoutPreview: View {
                 if let shortcut = shortcut(for: block) {
                     Text(shortcut)
                         .font(AinkradFont.mono(9, weight: .medium))
-                        .foregroundStyle(tokens.accentSecondary.opacity(skin.opacity.o70))
+                        .foregroundStyle(tokens.color(\.accentSecondary).opacity(skin.opacity.o70))
                         .lineLimit(1)
                         .fixedSize()
                 }

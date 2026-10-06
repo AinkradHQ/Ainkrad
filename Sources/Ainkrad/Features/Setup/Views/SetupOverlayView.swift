@@ -31,7 +31,7 @@ struct SetupOverlayView: View {
     @State private var modals = SetupModalPresenter()
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
+        let tokens = environment.themeManager.hostSkin
 
         ZStack {
             // The scrim stays; the PANEL is what went away. The island keeps
@@ -113,7 +113,7 @@ struct SetupOverlayView: View {
     }
 
     /// Full-bleed: rail, heading, step, nav — no panel chrome, no fixed size.
-    private func stage(coordinator: SetupCoordinator, tokens: DesignTokens) -> some View {
+    private func stage(coordinator: SetupCoordinator, tokens: AinkradSkin) -> some View {
         SetupStage(
             coordinator: coordinator,
             tokens: tokens,

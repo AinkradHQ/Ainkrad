@@ -58,7 +58,7 @@ struct SetupStepFooter: View {
 /// cannot express on its own.
 struct SetupRequirementNote: View {
     let message: String
-    let tokens: DesignTokens
+    let tokens: AinkradSkin
 
     @Environment(\.ainkradSkin) private var skin
 
@@ -74,7 +74,7 @@ struct SetupRequirementNote: View {
         // uses for a FAILED connection, while `accentSecondary` is that step's
         // success colour (`checkmark.seal.fill`). An unmet requirement drawn in
         // the wizard's success colour is a contradiction.
-        .foregroundStyle(tokens.accentTertiary)
+        .foregroundStyle(tokens.color(\.accentTertiary))
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
