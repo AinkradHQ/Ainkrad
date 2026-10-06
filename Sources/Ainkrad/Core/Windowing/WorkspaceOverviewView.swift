@@ -11,6 +11,7 @@ import UniformTypeIdentifiers
 /// list to move it there.
 struct WorkspaceOverviewView: View {
     @Environment(AppEnvironment.self) var environment
+    @Environment(\.ainkradSkin) var skin
     let onDismiss: () -> Void
 
     @State var selectedWorkspaceID: UUID?
@@ -36,16 +37,18 @@ struct WorkspaceOverviewView: View {
 
     var manager: WorkspaceManager { environment.workspaceManager }
 
-    var body: some View {
-        let tokens = environment.themeManager.tokens
+    /// Colours stay on `DesignTokens`, which carry the user's custom accent;
+    /// every scalar comes from the skin.
+    var tokens: DesignTokens { environment.themeManager.tokens }
 
+    var body: some View {
         GeometryReader { geo in
             ZStack {
-                Color.black.opacity(OverlayChrome.backdropOpacity)
+                skin.color(.palette("black", skin.chrome.overlay.backdropOpacity))
                     .ignoresSafeArea()
                     .onTapGesture { onDismiss() }
 
-                panel(tokens: tokens)
+                panel
                     .frame(width: min(max(820, geo.size.width * 0.66), 1060))
                     // The panel takes its CONTENT's height, clamped to what the
                     // window can show.
@@ -63,26 +66,21 @@ struct WorkspaceOverviewView: View {
                     // height range absorb the difference.
                     .frame(height: panelHeight(in: geo.size))
                     .offset(y: -24)
-                    .overlay {
-                        if let pendingDeletion {
-                            ZStack {
-                                ChamferShape(cut: OverlayChrome.cornerRadius)
-                                    .fill(.black.opacity(0.5))
-                                    .transition(.opacity)
-                                DeleteWorkspaceConfirmation(
-                                    workspaceName: pendingDeletion.name,
-                                    appCount: pendingDeletion.tileLayout.appIDs.count,
-                                    tokens: tokens,
-                                    onCancel: { self.pendingDeletion = nil },
-                                    onConfirm: { confirmDeletion(pendingDeletion) }
-                                )
-                                .transition(.opacity.combined(with: .scale(scale: 0.96)))
-                            }
-                        }
+                    // Scoped to the panel: the kit dialog dims and centres
+                    // within the view it is attached to.
+                    .ainkradConfirmDialog(
+                        isPresented: Binding(
+                            get: { pendingDeletion != nil },
+                            set: { if !$0 { pendingDeletion = nil } }),
+                        title: "Delete “\(pendingDeletion?.name ?? "")”?",
+                        message: Self.deletionMessage(appCount: pendingDeletion?.tileLayout.appIDs.count ?? 0),
+                        confirmTitle: "Delete",
+                        isDestructive: true
+                    ) {
+                        if let pendingDeletion { confirmDeletion(pendingDeletion) }
                     }
             }
         }
-        .animation(.easeOut(duration: 0.16), value: pendingDeletion?.id)
         .onAppear {
             selectedWorkspaceID = manager.activeWorkspaceID
             focus = .panel
@@ -118,37 +116,39 @@ struct WorkspaceOverviewView: View {
         min(max(420, height * 0.9), maximumPanelHeight)
     }
 
+    /// What the delete confirmation says about a workspace that still has apps.
+    static func deletionMessage(appCount: Int) -> String {
+        let apps = "\(appCount) app\(appCount == 1 ? "" : "s")"
+        let sessions = appCount == 1 ? "its session" : "their sessions"
+        return "\(apps) still running here — \(sessions) will end."
+    }
+
     // MARK: - Panel
 
-    private func panel(tokens: DesignTokens) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            header(tokens: tokens)
-            horizontalRule(tokens: tokens)
+    /// Header, the two columns and the footer, with no rules between them: the
+    /// gaps and the column backgrounds carry the grouping (design bar — no
+    /// separator lines).
+    private var panel: some View {
+        let store = environment.generalSettingsStore
+        return VStack(alignment: .leading, spacing: 0) {
+            header
             // `.top`, because the two columns no longer have the same height:
             // whichever is shorter must sit at the top of the row rather than
             // float in the middle of it.
             HStack(alignment: .top, spacing: 0) {
-                workspaceList(tokens: tokens)
-                    .frame(width: 268, height: workspaceListHeight)
-                detailPane(tokens: tokens)
+                workspaceList
+                    .frame(width: skin.size.s268, height: workspaceListHeight)
+                detailPane
                     .frame(maxWidth: .infinity)
             }
-            // The divider is an OVERLAY, not a child.
-            //
-            // As a child it was the one thing left demanding infinite height —
-            // it stretches to fill the row on purpose, which is right when the
-            // row's height comes from somewhere else and fatal when the row is
-            // supposed to take its content's height: one flexible child is all it
-            // takes to pull the panel back up to its ceiling. An overlay fills
-            // the row without having a vote in how tall it is.
-            .overlay(alignment: .topLeading) {
-                verticalRule(tokens: tokens)
-                    .frame(width: 1)
-                    .offset(x: 268)
-            }
-            footer(tokens: tokens)
+            footer
         }
-        .hudPanelChrome(tokens: tokens)
+        // The user's overlay opacity and blur settings, as every summoned
+        // overlay reads them.
+        .ainkradOverlayChrome(
+            backgroundOpacity: store.overlayBackgroundOpacity,
+            blurEnabled: store.overlayBlurEnabled,
+            blending: .withinWindow)
         .focusable()
         .focused($focus, equals: .panel)
         .focusEffectDisabled()
@@ -189,39 +189,23 @@ struct WorkspaceOverviewView: View {
 
     private var canNavigate: Bool { renamingWorkspaceID == nil && pendingDeletion == nil }
 
-    private func header(tokens: DesignTokens) -> some View {
-        HStack(spacing: 12) {
+    private var header: some View {
+        HStack(spacing: skin.spacing.md) {
             ChevronMark()
                 .fill(tokens.accentSecondary)
-                .frame(width: 16, height: 14)
-                .shadow(color: tokens.accentSecondary.opacity(0.9), radius: 6)
+                .frame(width: skin.size.s16, height: skin.size.s14)
+                .shadow(color: tokens.accentSecondary.opacity(skin.opacity.o90), radius: skin.size.s6)
             Text("WORKSPACES")
                 .font(AinkradFont.display(13, weight: .semibold))
                 .kerning(4)
-                .foregroundStyle(tokens.foreground.opacity(0.9))
+                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o90))
             Spacer()
             Text("\(manager.workspaces.count)")
                 .font(AinkradFont.mono(11, weight: .medium))
-                .foregroundStyle(tokens.accentSecondary.opacity(0.8))
+                .foregroundStyle(tokens.accentSecondary.opacity(skin.opacity.o80))
         }
-        .padding(.horizontal, 18)
-        .frame(height: 52)
-    }
-
-    private func horizontalRule(tokens: DesignTokens) -> some View {
-        LinearGradient(
-            colors: [.clear, tokens.accentPrimary.opacity(0.5), .clear],
-            startPoint: .leading, endPoint: .trailing
-        )
-        .frame(height: 1)
-    }
-
-    private func verticalRule(tokens: DesignTokens) -> some View {
-        LinearGradient(
-            colors: [.clear, tokens.accentPrimary.opacity(0.35), .clear],
-            startPoint: .top, endPoint: .bottom
-        )
-        .frame(width: 1)
+        .padding(.horizontal, skin.size.s18)
+        .frame(height: skin.size.s52)
     }
 
     // MARK: - Workspace list (master)
@@ -248,27 +232,27 @@ struct WorkspaceOverviewView: View {
     private static let listPadding: CGFloat = 10
     private static let maximumListHeight: CGFloat = 520
 
-    /// Header, footer and the rule between them — everything the panel spends on
-    /// itself, outside the two columns.
-    static let panelChromeHeight: CGFloat = 106
+    /// Header and footer — everything the panel spends on itself, outside the
+    /// two columns. (106 while a 1pt rule sat under the header.)
+    static let panelChromeHeight: CGFloat = 105
     /// The panel's own ceiling. Must clear the tallest content it can hold, or a
     /// busy workspace overflows the chrome instead of scrolling inside it —
     /// asserted in `WorkspaceOverviewLayoutTests`.
     static let maximumPanelHeight: CGFloat = 860
 
-    private func workspaceList(tokens: DesignTokens) -> some View {
+    private var workspaceList: some View {
         ScrollView {
-            VStack(spacing: 4) {
+            VStack(spacing: Self.rowSpacing) {
                 ForEach(Array(manager.workspaces.enumerated()), id: \.element.id) { index, workspace in
-                    workspaceRow(workspace, index: index, tokens: tokens)
+                    workspaceRow(workspace, index: index)
                 }
-                newWorkspaceButton(tokens: tokens)
+                newWorkspaceRow
             }
             .padding(Self.listPadding)
         }
     }
 
-    private func workspaceRow(_ workspace: Workspace, index: Int, tokens: DesignTokens) -> some View {
+    private func workspaceRow(_ workspace: Workspace, index: Int) -> some View {
         // An app can be dropped on any workspace except the one it came from —
         // and except the home workspace, which by design stays empty (opening an
         // app from it spawns a new workspace instead). Offering it as a target
@@ -286,7 +270,6 @@ struct WorkspaceOverviewView: View {
             isSelected: workspace.id == selectedWorkspaceID,
             isDropTarget: isDropTarget,
             isRenaming: renamingWorkspaceID == workspace.id,
-            tokens: tokens,
             renameDraft: $renameDraft,
             renameFocus: $focus,
             onSelect: { selectedWorkspaceID = workspace.id },
@@ -308,28 +291,24 @@ struct WorkspaceOverviewView: View {
         )
     }
 
-    private func newWorkspaceButton(tokens: DesignTokens) -> some View {
-        Button {
-            let workspace = manager.createWorkspace()
-            selectedWorkspaceID = workspace.id
-        } label: {
-            HStack(spacing: 8) {
-                Image(systemName: "plus").font(.system(size: 12, weight: .medium)).foregroundStyle(
-                    tokens.accentSecondary)
-                Text("New Workspace").font(AinkradFont.display(11, weight: .medium)).foregroundStyle(
-                    tokens.foreground.opacity(0.6))
-                Spacer()
-                Text("⌘⇧N").font(AinkradFont.mono(9)).foregroundStyle(tokens.foreground.opacity(0.3))
+    /// The last row of the list: a kit row that creates a workspace and selects
+    /// it, wearing the shortcut that does the same from anywhere.
+    private var newWorkspaceRow: some View {
+        AinkradListRow(
+            onTap: {
+                let workspace = manager.createWorkspace()
+                selectedWorkspaceID = workspace.id
+            },
+            leading: {
+                Image(systemName: "plus")
+                    .font(skin.font(AinkradFontToken(sizeKey: "t12", weight: "medium", scaled: false)))
+                    .foregroundStyle(tokens.accentSecondary)
+            },
+            title: "New Workspace",
+            trailing: {
+                Text("⌘⇧N").font(AinkradFont.mono(9)).foregroundStyle(tokens.foreground.opacity(skin.opacity.o30))
             }
-            .padding(.horizontal, 9).padding(.vertical, 9)
-            .frame(maxWidth: .infinity)
-            .background(
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
-                    .strokeBorder(tokens.accentPrimary.opacity(0.25), style: StrokeStyle(lineWidth: 1, dash: [5, 4]))
-            )
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
+        )
     }
 
     // MARK: - Footer
@@ -340,24 +319,24 @@ struct WorkspaceOverviewView: View {
     /// exactly when the window is small is not advice. Every one of those actions
     /// now says what it is where it happens: the row's own tooltips, its pencil
     /// button, and its context menu.
-    private func footer(tokens: DesignTokens) -> some View {
-        HStack(spacing: 14) {
+    private var footer: some View {
+        HStack(spacing: skin.size.s14) {
             Spacer()
             ForEach(Self.keyboardHints, id: \.keys) { hint in
-                HStack(spacing: 5) {
+                HStack(spacing: skin.size.s5) {
                     Text(hint.keys)
                         .font(AinkradFont.mono(10, weight: .medium))
-                        .foregroundStyle(tokens.accentSecondary.opacity(0.8))
+                        .foregroundStyle(tokens.accentSecondary.opacity(skin.opacity.o80))
                         .lineLimit(1).fixedSize()
                     Text(hint.label)
                         .font(AinkradFont.mono(10))
-                        .foregroundStyle(tokens.foreground.opacity(0.45))
+                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o45))
                         .lineLimit(1).fixedSize()
                 }
             }
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 12)
+        .padding(.horizontal, skin.size.s18)
+        .padding(.vertical, skin.spacing.md)
     }
 
     private static let keyboardHints: [(keys: String, label: String)] = [

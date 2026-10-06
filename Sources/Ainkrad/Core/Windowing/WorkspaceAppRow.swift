@@ -4,7 +4,9 @@ import AppKit
 import SwiftUI
 
 /// One open pane, listed in the Workspace Overview's detail pane: its icon, the
-/// name the user knows it by, and the actions that act on it.
+/// name the user knows it by, and the actions that act on it. The row itself is
+/// the kit's `AinkradListRow`; this view supplies its content and the hover
+/// actions laid over its trailing edge.
 struct WorkspaceAppRow: View {
     let block: Block
     let workspace: Workspace
@@ -17,7 +19,6 @@ struct WorkspaceAppRow: View {
     let appName: String?
     let appIcon: String
     let sourceLabel: String
-    let tokens: DesignTokens
     let isDuplicateMenuOpen: Bool
     let onOpen: () -> Void
     let onToggleDuplicateMenu: () -> Void
@@ -25,8 +26,14 @@ struct WorkspaceAppRow: View {
     let onBeginDrag: () -> NSItemProvider
     @ViewBuilder let duplicateDestinations: () -> AnyView
 
+    @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradSkin) private var skin
     @Environment(\.ainkradReduceMotion) private var reduceMotion
     @State private var hovering = false
+
+    /// Colours stay on `DesignTokens`, which carry the user's custom accent;
+    /// every scalar comes from the skin.
+    private var tokens: DesignTokens { environment.themeManager.tokens }
 
     /// The name the user gave this pane, falling back to the app's own.
     ///
@@ -48,53 +55,29 @@ struct WorkspaceAppRow: View {
         hasCustomTitle ? (appName ?? block.appID) : sourceLabel
     }
 
+    /// Actions show on hover, and while this row's duplicate popover is open —
+    /// or it would vanish out from under the mouse.
+    private var showsActions: Bool { hovering || isDuplicateMenuOpen }
+
     var body: some View {
-        HStack(spacing: 11) {
-            NeonAppTile(symbol: appIcon, tokens: tokens, size: 26)
-
-            VStack(alignment: .leading, spacing: 1) {
-                HStack(spacing: 6) {
-                    Text(title)
-                        .font(AinkradFont.display(12, weight: .medium))
-                        .foregroundStyle(tokens.foreground.opacity(0.92))
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-
-                    if let shortcut = PaneShortcut.label(forOrdinal: ordinal) {
-                        Text(shortcut)
-                            .font(AinkradFont.mono(9, weight: .medium))
-                            .foregroundStyle(tokens.accentSecondary.opacity(0.75))
-                            .lineLimit(1)
-                            .fixedSize()
-                            .padding(.horizontal, 3)
-                            .padding(.vertical, 1)
-                            .background(ChamferShape(cut: 3).fill(tokens.accentSecondary.opacity(0.12)))
-                            .help("Focus this pane with \(shortcut) in Tabs mode")
-                    }
-                }
-
-                Text(subtitle)
-                    .font(AinkradFont.mono(10))
-                    .foregroundStyle(tokens.foreground.opacity(0.45))
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-            }
-
-            Spacer(minLength: 6)
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
-        // Actions appear on hover (and while this row's duplicate popover is
-        // open, or it would vanish out from under the mouse), OVERLAID rather
-        // than laid out. Hidden-but-present views still take part in layout, so
-        // three reserved buttons were charging every row ~76pt that the pane's
-        // name needed. An overlay costs no width and still reflows nothing.
+        AinkradListRow(
+            leading: { NeonAppTile(symbol: appIcon, tokens: tokens, size: skin.size.s26) },
+            title: title,
+            subtitle: subtitle,
+            trailing: { shortcutChip.opacity(showsActions ? 0 : 1) }
+        )
+        // Actions OVERLAID rather than laid out. Hidden-but-present views still
+        // take part in layout, so three reserved buttons were charging every
+        // row ~76pt that the pane's name needed. An overlay costs no width and
+        // still reflows nothing.
         .overlay(alignment: .trailing) {
-            HStack(spacing: 4) {
-                rowButton("arrow.up.forward.app", help: "Open in \(workspace.name)", action: onOpen)
+            HStack(spacing: skin.spacing.xs) {
+                AinkradIconButton(
+                    systemName: "arrow.up.forward.app", size: skin.size.s24,
+                    tooltip: "Open in \(workspace.name)", action: onOpen)
 
                 AinkradIconButton(
-                    systemName: "plus.square.on.square", size: 24,
+                    systemName: "plus.square.on.square", size: skin.size.s24,
                     tooltip: "Duplicate \(title) to another workspace",
                     action: onToggleDuplicateMenu
                 )
@@ -106,37 +89,33 @@ struct WorkspaceAppRow: View {
                     duplicateDestinations()
                 }
 
-                rowButton("xmark", help: "Close \(title)", action: onClose)
+                AinkradIconButton(
+                    systemName: "xmark", size: skin.size.s24, tooltip: "Close \(title)", action: onClose)
             }
-            .padding(.trailing, 8)
-            .opacity(hovering || isDuplicateMenuOpen ? 1 : 0)
-            .allowsHitTesting(hovering || isDuplicateMenuOpen)
+            .padding(.trailing, skin.spacing.sm)
+            .opacity(showsActions ? 1 : 0)
+            .allowsHitTesting(showsActions)
         }
-        .background(
-            ChamferShape(cut: AinkradRadius.sm)
-                .fill(tokens.surfaceElevated.opacity(hovering ? 0.6 : 0.4))
-        )
-        .overlay(
-            ChamferShape(cut: AinkradRadius.sm)
-                .strokeBorder(tokens.foreground.opacity(hovering ? 0.14 : 0.06), lineWidth: 1)
-        )
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
         .onDrag(onBeginDrag)
         .help("Drag onto a workspace on the left to move it — the app keeps running")
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: hovering)
+        .animation(reduceMotion ? nil : .easeOut(duration: skin.motion.durations.d0_12), value: hovering)
     }
 
-    private func rowButton(_ symbol: String, help: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: symbol)
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(tokens.foreground.opacity(0.6))
-                .frame(width: 24, height: 24)
-                .background(Circle().fill(tokens.surfaceElevated.opacity(0.5)))
-                .contentShape(Circle())
+    /// The ⌥N that reaches this pane in Tabs mode, as a small accent chip.
+    @ViewBuilder
+    private var shortcutChip: some View {
+        if let shortcut = PaneShortcut.label(forOrdinal: ordinal) {
+            Text(shortcut)
+                .font(AinkradFont.mono(9, weight: .medium))
+                .foregroundStyle(tokens.accentSecondary.opacity(skin.opacity.o75))
+                .lineLimit(1)
+                .fixedSize()
+                .padding(.horizontal, skin.size.s3)
+                .padding(.vertical, skin.size.s1)
+                .background(ChamferShape(cut: skin.cut.c3).fill(tokens.accentSecondary.opacity(skin.opacity.o12)))
+                .help("Focus this pane with \(shortcut) in Tabs mode")
         }
-        .buttonStyle(.plain)
-        .help(help)
     }
 }

@@ -9,6 +9,11 @@ import UniformTypeIdentifiers
 ///
 /// A real view rather than a function on the overview, for two reasons: hover
 /// state needs somewhere to live, and the overview was past 688 lines.
+///
+/// Not an `AinkradListRow`: that row's title is a plain string, and this one
+/// renames in place and carries the home and current-workspace marks beside the
+/// name (an Epic 4 gap, "list row with an editable title"). It does wear the
+/// kit's row background, so selection and hover read like every other list.
 struct WorkspaceListRow: View {
     let workspace: Workspace
     let registry: BuiltInAppRegistry
@@ -19,7 +24,6 @@ struct WorkspaceListRow: View {
     /// True while an app is being dragged that this row would accept.
     let isDropTarget: Bool
     let isRenaming: Bool
-    let tokens: DesignTokens
     @Binding var renameDraft: String
     let renameFocus: FocusState<WorkspaceOverviewView.FocusTarget?>.Binding
     let onSelect: () -> Void
@@ -31,23 +35,19 @@ struct WorkspaceListRow: View {
     let onBeginDrag: () -> NSItemProvider
     let dropDelegate: WorkspaceRowDropDelegate
 
+    @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradSkin) private var skin
     @Environment(\.ainkradReduceMotion) private var reduceMotion
     @State private var hovering = false
+
+    /// Colours stay on `DesignTokens`, which carry the user's custom accent;
+    /// every scalar comes from the skin.
+    private var tokens: DesignTokens { environment.themeManager.tokens }
 
     private var appCount: Int { workspace.tileLayout.appIDs.count }
 
     var body: some View {
-        HStack(spacing: 10) {
-            // The selection marker: a solid accent bar down the leading edge.
-            // Selected and active used to be a 14%-opacity wash against a
-            // 6%-opacity wash — two nearly identical tints doing the work of
-            // telling you where you are versus where you're looking. A bar and a
-            // badge are different KINDS of mark, so they can't be confused.
-            Capsule()
-                .fill(isSelected ? tokens.accentSecondary : .clear)
-                .frame(width: 2.5)
-                .frame(maxHeight: .infinity)
-
+        HStack(spacing: skin.size.s10) {
             // The same preview the detail pane features, at row size — so a row
             // shows what is in the workspace, not just how many rectangles it
             // has. Two workspaces holding two side-by-side panes used to be
@@ -55,28 +55,33 @@ struct WorkspaceListRow: View {
             WorkspaceLayoutPreview(
                 workspace: workspace,
                 registry: registry,
-                tokens: tokens,
                 style: .thumbnail
             )
-            .frame(width: 50, height: 36)
+            .frame(width: skin.size.s50, height: skin.size.s36)
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: skin.size.s3) {
                 nameLine
                 subtitleLine
             }
 
-            Spacer(minLength: 4)
+            Spacer(minLength: skin.spacing.xs)
 
             trailingControls
         }
-        .padding(.leading, 6)
-        .padding(.trailing, 9)
-        .padding(.vertical, 7)
+        // The selection marker is the kit row background's leading accent bar,
+        // and its wash: a bar and a badge are different KINDS of mark, so
+        // "selected" can't be confused with "current" (the dot by the name).
+        .padding(.leading, skin.size.s6)
+        .padding(.trailing, skin.size.s9)
+        .padding(.vertical, skin.size.s7)
         .overlay(alignment: .trailing) { hoverActions }
-        .background(rowBackground)
+        .ainkradRowBackground(isSelected: isSelected, isHovered: hovering)
         .overlay(
-            ChamferShape(cut: AinkradRadius.md)
-                .strokeBorder(borderColor, lineWidth: isDropTarget ? 1.5 : 1)
+            // The kit row background's own chamfer (listRow shape, cut 6), so the
+            // drop ring sits on the row's edge.
+            ChamferShape(cut: skin.cut.c6)
+                .strokeBorder(
+                    isDropTarget ? tokens.accentSecondary.opacity(skin.opacity.o90) : .clear, lineWidth: 1.5)
         )
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
@@ -101,14 +106,16 @@ struct WorkspaceListRow: View {
         .ainkradContextMenu(menuItems)
         .onDrag(onBeginDrag)
         .onDrop(of: [UTType.text], delegate: dropDelegate)
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: isSelected)
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: hovering)
+        .animation(reduceMotion ? nil : .easeOut(duration: skin.motion.durations.d0_12), value: isSelected)
+        .animation(reduceMotion ? nil : .easeOut(duration: skin.motion.durations.d0_12), value: hovering)
     }
 
     @ViewBuilder
     private var nameLine: some View {
         if isRenaming {
-            TextField("Name", text: $renameDraft)
+            // The kit text field owns its focus state, so the overview could not
+            // focus it when a rename starts.
+            TextField("Name", text: $renameDraft)  // design-lint: allow raw-control kit gap, focus binding
                 .textFieldStyle(.plain)
                 .font(AinkradFont.display(12, weight: .medium))
                 .foregroundStyle(tokens.foreground)
@@ -119,11 +126,11 @@ struct WorkspaceListRow: View {
                     return .handled
                 }
         } else {
-            HStack(spacing: 5) {
+            HStack(spacing: skin.size.s5) {
                 if workspace.isMain {
                     ChevronMark()
                         .fill(tokens.accentSecondary)
-                        .frame(width: 9, height: 7)
+                        .frame(width: skin.size.s9, height: skin.size.s7)
                         .help("Home workspace")
                 }
 
@@ -135,13 +142,13 @@ struct WorkspaceListRow: View {
                 if isActive {
                     Circle()
                         .fill(tokens.accentSecondary)
-                        .frame(width: 6, height: 6)
+                        .frame(width: skin.size.s6, height: skin.size.s6)
                         .help("Current workspace")
                 }
 
                 Text(workspace.name)
                     .font(AinkradFont.display(12, weight: isSelected ? .semibold : .medium))
-                    .foregroundStyle(tokens.foreground.opacity(isSelected || isActive ? 1 : 0.8))
+                    .foregroundStyle(tokens.foreground.opacity(isSelected || isActive ? 1 : skin.opacity.o80))
                     .lineLimit(1)
                     .truncationMode(.tail)
                     // The name outranks everything else in the column: if
@@ -155,10 +162,10 @@ struct WorkspaceListRow: View {
     /// What's in the workspace, and whether it's the one you're in. Both were
     /// 8pt, which is below reading size for anything you actually need.
     private var subtitleLine: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: skin.size.s6) {
             Text(appCount == 0 ? "empty" : "\(appCount) app\(appCount == 1 ? "" : "s")")
                 .font(AinkradFont.mono(10))
-                .foregroundStyle(tokens.foreground.opacity(0.45))
+                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o45))
                 // `lineLimit(1)` alone is not enough: under horizontal pressure
                 // SwiftUI will still break "2 apps" across two lines rather than
                 // truncate. `fixedSize` is what refuses to be compressed at all.
@@ -175,7 +182,7 @@ struct WorkspaceListRow: View {
             if index < 9 {
                 Text("⌘\(index + 1)")
                     .font(AinkradFont.mono(10))
-                    .foregroundStyle(tokens.foreground.opacity(isSelected ? 0.55 : 0.3))
+                    .foregroundStyle(tokens.foreground.opacity(isSelected ? skin.opacity.o55 : skin.opacity.o30))
                     .lineLimit(1)
                     .fixedSize()
                     .opacity(hovering ? 0 : 1)
@@ -194,14 +201,14 @@ struct WorkspaceListRow: View {
     /// An overlay costs no width at all, so the text gets it back and hovering
     /// still reflows nothing.
     private var hoverActions: some View {
-        HStack(spacing: 2) {
+        HStack(spacing: skin.size.s2) {
             iconButton("pencil", help: "Rename \(workspace.name)", action: onBeginRename)
 
             if !workspace.isMain {
                 iconButton("xmark", help: "Delete \(workspace.name)", action: onRequestDeletion)
             }
         }
-        .padding(.trailing, 6)
+        .padding(.trailing, skin.size.s6)
         .opacity(hovering ? 1 : 0)
         .allowsHitTesting(hovering)
     }
@@ -210,15 +217,7 @@ struct WorkspaceListRow: View {
         _ symbol: String, help: String,
         action: @escaping () -> Void
     ) -> some View {
-        Button(action: action) {
-            Image(systemName: symbol)
-                .font(.system(size: 9, weight: .semibold))
-                .foregroundStyle(tokens.foreground.opacity(0.6))
-                .frame(width: 20, height: 20)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .help(help)
+        AinkradIconButton(systemName: symbol, size: skin.size.s20, tooltip: help, action: action)
     }
 
     private var menuItems: [AinkradMenuItem] {
@@ -233,22 +232,5 @@ struct WorkspaceListRow: View {
                     isDestructive: true, action: onRequestDeletion))
         }
         return items
-    }
-
-    private var rowBackground: some View {
-        ChamferShape(cut: AinkradRadius.md)
-            .fill(
-                isSelected
-                    ? tokens.accentPrimary.opacity(0.18)
-                    : (hovering
-                        ? tokens.foreground.opacity(0.06)
-                        : (isActive ? tokens.accentPrimary.opacity(0.07) : .clear))
-            )
-    }
-
-    private var borderColor: Color {
-        if isDropTarget { return tokens.accentSecondary.opacity(0.9) }
-        if isSelected { return tokens.accentPrimary.opacity(0.45) }
-        return .clear
     }
 }

@@ -1,3 +1,4 @@
+import AinkradAppKit
 import AinkradHostRuntime
 import SwiftUI
 
@@ -28,6 +29,7 @@ import SwiftUI
 struct PaneGlassBackdrop: View {
     let isEnabled: Bool
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradSkin) private var skin
 
     var body: some View {
         if isEnabled {
@@ -65,9 +67,9 @@ struct PaneGlassBackdrop: View {
             // user can actually see stopped moving.
             AmbientSkyView(isLive: false)
             FloatingIslandView()
-                .frame(maxWidth: 860, maxHeight: 574)
+                .frame(maxWidth: skin.size.s860, maxHeight: skin.size.s574)
         }
-        .blur(radius: 26)
+        .blur(radius: skin.size.s26)
     }
 }
 

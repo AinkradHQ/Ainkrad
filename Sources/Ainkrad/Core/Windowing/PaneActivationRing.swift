@@ -16,8 +16,9 @@ import SwiftUI
 /// shadow this file used to animate was an offscreen render pass per frame.
 struct PaneActivationRing: View {
     let isFocused: Bool
-    let tokens: DesignTokens
 
+    @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradSkin) private var skin
     @Environment(\.ainkradReduceMotion) private var reduceMotion
     /// 1 at the instant of activation, easing to 0. Drives both the border's
     /// brightness and its width, so the flare reads as light rather than as the
@@ -26,12 +27,12 @@ struct PaneActivationRing: View {
 
     var body: some View {
         ZStack {
-            ChamferShape(cut: AinkradRadius.md)
+            ChamferShape(cut: skin.radius.md)
                 .strokeBorder(borderColor, lineWidth: 1 + pulse * 0.6)
 
-            TargetingBrackets(length: 10)
+            TargetingBrackets(length: skin.size.s10)
                 .stroke(bracketColor, lineWidth: 1.5)
-                .padding(-2)
+                .padding(-skin.size.s2)
         }
         .onChange(of: isFocused) { _, focused in
             guard focused, !reduceMotion else { return }
@@ -42,18 +43,22 @@ struct PaneActivationRing: View {
             // has been committed.
             pulse = 1
             DispatchQueue.main.async {
-                withAnimation(.easeOut(duration: 0.32)) { pulse = 0 }
+                withAnimation(.easeOut(duration: skin.motion.durations.d0_32)) { pulse = 0 }
             }
         }
     }
 
+    /// Colours stay on `DesignTokens`, which carry the user's custom accent;
+    /// every scalar comes from the skin.
+    private var tokens: DesignTokens { environment.themeManager.tokens }
+
     private var borderColor: Color {
-        guard isFocused else { return tokens.foreground.opacity(0.1) }
-        return tokens.accentPrimary.opacity(0.55 + 0.45 * pulse)
+        guard isFocused else { return tokens.foreground.opacity(skin.opacity.o10) }
+        return tokens.accentPrimary.opacity(skin.opacity.o55 + skin.opacity.o45 * pulse)
     }
 
     private var bracketColor: Color {
         guard isFocused else { return .clear }
-        return tokens.accentSecondary.opacity(0.85)
+        return tokens.accentSecondary.opacity(skin.opacity.o85)
     }
 }

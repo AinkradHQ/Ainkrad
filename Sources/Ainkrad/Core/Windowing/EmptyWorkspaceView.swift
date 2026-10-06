@@ -1,3 +1,4 @@
+import AinkradAppKit
 import SwiftUI
 
 /// The empty workspace: the ambient sky shows through, with the floating
@@ -5,6 +6,7 @@ import SwiftUI
 /// See Navigation & Settings Architecture.md.
 struct EmptyWorkspaceView: View {
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradSkin) private var skin
 
     /// Whether this workspace is the one currently on screen. Non-active
     /// workspaces (e.g. rendered off-canvas or behind an overlay) still
@@ -32,6 +34,6 @@ struct EmptyWorkspaceView: View {
         // text or shortcut hint over it; the empty workspace is just the hero
         // over the live sky.
         FloatingIslandView(isVisible: islandVisible)
-            .frame(maxWidth: 860, maxHeight: 574)
+            .frame(maxWidth: skin.size.s860, maxHeight: skin.size.s574)
     }
 }

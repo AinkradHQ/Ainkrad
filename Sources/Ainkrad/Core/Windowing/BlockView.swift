@@ -17,6 +17,7 @@ import UniformTypeIdentifiers
 /// drag it over another pane to change position (the grid reflows live).
 struct BlockView: View {
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradSkin) private var skin
     @Environment(\.ainkradReduceMotion) private var reduceMotion
     // Injected per pane by `WorkspacePaneLayer`.
     @Environment(\.ainkradPaneMode) private var paneMode
@@ -69,8 +70,8 @@ struct BlockView: View {
     }
 
     private var paneOpacity: Double {
-        if isBeingDragged { return 0.45 }
-        return isFocused ? 1 : 0.92
+        if isBeingDragged { return skin.opacity.o45 }
+        return isFocused ? 1 : skin.opacity.o92
     }
 
     private var paneScale: CGFloat {
@@ -78,15 +79,17 @@ struct BlockView: View {
         return isBeingDragged ? 0.98 : 1
     }
 
-    var body: some View {
-        let tokens = environment.themeManager.tokens
+    /// Colours stay on `DesignTokens`, which carry the user's custom accent;
+    /// every scalar comes from the skin.
+    private var tokens: DesignTokens { environment.themeManager.tokens }
 
-        return PaneContent(
+    var body: some View {
+        PaneContent(
             app: app, topInset: contentTopInset, fallback: tokens.surface,
             paneLocator: environment.paneLocators.sink(forBlock: block.id),
             launchGeneration: block.launchGeneration
         )
-        .overlay(alignment: .top) { grabStrip(tokens: tokens) }
+        .overlay(alignment: .top) { grabStrip }
         // The pane body is clear, so a translucent app (Terminal scheme
         // opacity, Git Mage transparency, Sage opacity) reveals whatever
         // sits behind it: the shared sharp workspace backdrop by default, or —
@@ -98,15 +101,17 @@ struct BlockView: View {
         // only input is whether the blur is on, which does NOT change when focus
         // moves, so SwiftUI skips re-rendering it on a tab switch.
         .background(PaneGlassBackdrop(isEnabled: glassBlur))
-        .clipShape(ChamferShape(cut: AinkradRadius.md))
+        .clipShape(ChamferShape(cut: skin.radius.md))
         // The pane's frame — and, when it becomes the focused one, the pulse of
         // light that now carries the tab transition. Its own view so the pulse
         // animates without re-evaluating this body (and therefore without
         // touching the app's content or the blurred backdrop) on every frame.
-        .overlay(PaneActivationRing(isFocused: isFocused, tokens: tokens))
-        .overlay(dropZoneHighlight(tokens: tokens))
+        .overlay(PaneActivationRing(isFocused: isFocused))
+        .overlay(dropZoneHighlight)
         .shadow(
-            color: isFocused ? tokens.accentPrimary.opacity(0.28) : .black.opacity(0.25), radius: isFocused ? 22 : 12
+            color: isFocused
+                ? tokens.accentPrimary.opacity(skin.opacity.o28) : skin.color(.palette("black", skin.opacity.o25)),
+            radius: isFocused ? skin.size.s22 : skin.size.s12
         )
         .opacity(paneOpacity)
         .scaleEffect(paneScale)
@@ -116,7 +121,7 @@ struct BlockView: View {
         // to the app inside it, so the terminal that just came forward is
         // typeable without a second click.
         .background(PaneKeyFocusAnchor(isFocused: isFocused))
-        .animation(.easeOut(duration: 0.15), value: isBeingDragged)
+        .animation(.easeOut(duration: skin.motion.fast), value: isBeingDragged)
         // When the drag session ends (drop landed elsewhere, or released
         // over no target), drop any lingering preview highlight — SwiftUI
         // doesn't reliably call dropExited on panes the drag merely passed
@@ -133,11 +138,11 @@ struct BlockView: View {
                 edge: $dropEdge
             )
         )
-        .animation(.easeOut(duration: 0.15), value: isFocused)
-        .animation(.easeOut(duration: 0.1), value: dropEdge)
+        .animation(.easeOut(duration: skin.motion.fast), value: isFocused)
+        .animation(.easeOut(duration: skin.motion.durations.d0_1), value: dropEdge)
         .onAppear {
             guard !reduceMotion else { return }
-            withAnimation(.easeOut(duration: 0.15)) { hasArrived = true }
+            withAnimation(.easeOut(duration: skin.motion.fast)) { hasArrived = true }
         }
     }
 
@@ -146,31 +151,31 @@ struct BlockView: View {
     /// and a split-direction glyph, animating between edges as the drag
     /// moves.
     @ViewBuilder
-    private func dropZoneHighlight(tokens: DesignTokens) -> some View {
+    private var dropZoneHighlight: some View {
         // A drop preview only means anything while a drag is in flight —
         // gating on the live drag flag (which every render observes)
         // guarantees the highlight vanishes the instant the drag ends, even
         // if a stale `dropEdge` lingers from a pane the drag passed over.
         if let dropEdge, tileLayout.draggingBlockID != nil {
             let isHorizontal = dropEdge == .leading || dropEdge == .trailing
-            let zone = ChamferShape(cut: AinkradRadius.sm)
-                .fill(tokens.accentPrimary.opacity(0.16))
+            let zone = ChamferShape(cut: skin.radius.sm)
+                .fill(tokens.accentPrimary.opacity(skin.opacity.o16))
                 .overlay(
-                    ChamferShape(cut: AinkradRadius.sm)
-                        .strokeBorder(tokens.accentSecondary.opacity(0.65), lineWidth: 1)
+                    ChamferShape(cut: skin.radius.sm)
+                        .strokeBorder(tokens.accentSecondary.opacity(skin.opacity.o65), lineWidth: 1)
                 )
                 .overlay(
-                    TargetingBrackets(length: 9)
-                        .stroke(tokens.accentSecondary.opacity(0.9), lineWidth: 1.5)
-                        .padding(4)
+                    TargetingBrackets(length: skin.size.s9)
+                        .stroke(tokens.accentSecondary.opacity(skin.opacity.o90), lineWidth: 1.5)
+                        .padding(skin.spacing.xs)
                 )
                 .overlay(
                     Image(systemName: isHorizontal ? "rectangle.split.2x1" : "rectangle.split.1x2")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(tokens.accentSecondary.opacity(0.85))
-                        .shadow(color: tokens.accentSecondary.opacity(0.8), radius: 6)
+                        .font(skin.font(AinkradFontToken(sizeKey: "t15", weight: "medium", scaled: false)))
+                        .foregroundStyle(tokens.accentSecondary.opacity(skin.opacity.o85))
+                        .shadow(color: tokens.accentSecondary.opacity(skin.opacity.o80), radius: skin.size.s6)
                 )
-                .padding(3)
+                .padding(skin.size.s3)
                 .transition(.opacity.combined(with: .scale(scale: 0.96)))
 
             Group {
@@ -201,33 +206,26 @@ struct BlockView: View {
     /// panes the strip sits entirely in the padding and steals no clicks from
     /// the app. Where there is no inset it falls back to a minimum height and
     /// does overlay the app's top edge — the price of keeping drag.
-    private func grabStrip(tokens: DesignTokens) -> some View {
-        Color.clear
-            .frame(height: max(contentTopInset, 10))
+    private var grabStrip: some View {
+        // Built here, while the view is installed, so the preview closure
+        // (called at drag start) captures resolved colours and sizes.
+        let ghost = dragGhost
+        return Color.clear
+            .frame(height: max(contentTopInset, skin.size.s10))
             .overlay {
                 Capsule()
-                    .fill(tokens.foreground.opacity(isHoveringGrabber ? 0.35 : 0))
-                    .frame(width: 34, height: 3)
+                    .fill(tokens.foreground.opacity(isHoveringGrabber ? skin.opacity.o35 : 0))
+                    .frame(width: skin.size.s34, height: skin.size.s3)
             }
             .contentShape(Rectangle())
             .onHover { isHoveringGrabber = $0 }
-            .animation(.easeOut(duration: 0.12), value: isHoveringGrabber)
+            .animation(.easeOut(duration: skin.motion.durations.d0_12), value: isHoveringGrabber)
             .onDrag {
                 tileLayout.focus(block.id)
                 tileLayout.draggingBlockID = block.id
                 return NSItemProvider(object: block.id.uuidString as NSString)
             } preview: {
-                // Termius-style drag ghost: a small pill, not the whole pane.
-                HStack(spacing: 6) {
-                    paneTile(tokens: tokens)
-                    Text(block.displayTitle(appName: app?.displayName))
-                        .font(AinkradFont.display(11, weight: .medium))
-                        .foregroundStyle(tokens.foreground)
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background(tokens.surfaceElevated)
-                .clipShape(Capsule())
+                ghost
             }
             .help("Drag to rearrange")
             // The pane menu used to hang off the header. It moves here rather
@@ -288,11 +286,19 @@ struct BlockView: View {
         return items
     }
 
-    /// The app's neon tile at HUD size, drawn live from the active theme and
-    /// matching the Launcher rows. Only the drag ghost uses it now that the
-    /// pane header is gone.
-    private func paneTile(tokens: DesignTokens) -> some View {
-        NeonAppTile(symbol: app?.icon ?? "app", tokens: tokens, size: 18)
+    /// Termius-style drag ghost: a small pill, not the whole pane — the app's
+    /// neon tile at HUD size (matching the Launcher rows) and the pane's name.
+    private var dragGhost: some View {
+        HStack(spacing: skin.size.s6) {
+            NeonAppTile(symbol: app?.icon ?? "app", tokens: tokens, size: skin.size.s18)
+            Text(block.displayTitle(appName: app?.displayName))
+                .font(AinkradFont.display(11, weight: .medium))
+                .foregroundStyle(tokens.foreground)
+        }
+        .padding(.horizontal, skin.size.s10)
+        .padding(.vertical, skin.size.s5)
+        .background(tokens.surfaceElevated)
+        .clipShape(Capsule())
     }
 
     // MARK: - Content
@@ -310,6 +316,6 @@ struct BlockView: View {
     /// their own interior padding, which is why this is a terminal-shaped
     /// problem in the first place.
     private var contentTopInset: CGFloat {
-        app?.chromeFill() == nil ? 0 : 12
+        app?.chromeFill() == nil ? 0 : skin.spacing.md
     }
 }

@@ -38,6 +38,7 @@ extension EnvironmentValues {
 /// `PaneCanvasMetrics` so the seams stay between the panes they separate.
 struct TileLayoutView: View {
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradSkin) private var skin
     @Environment(\.ainkradReduceMotion) private var reduceMotion
     let workspace: Workspace
     let registry: BuiltInAppRegistry
@@ -114,7 +115,7 @@ struct TileLayoutView: View {
                             // of intermediate resizes duplicates terminal
                             // output).
                             .transition(.opacity)
-                            .animation(.easeInOut(duration: 0.2), value: workspace.viewMode)
+                            .animation(.easeInOut(duration: skin.motion.durations.d0_2), value: workspace.viewMode)
                     }
                 }
                 .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
@@ -150,12 +151,12 @@ struct TileLayoutView: View {
     private func announceShortcut(for blockID: UUID?) {
         guard let blockID else { return }
         badgeDismissal?.cancel()
-        withAnimation(reduceMotion ? nil : .easeOut(duration: 0.14)) {
+        withAnimation(reduceMotion ? nil : .easeOut(duration: skin.motion.durations.d0_14)) {
             badgeBlockID = blockID
         }
         badgeDismissal = Task { @MainActor in
             do { try await Task.sleep(for: .seconds(1.4)) } catch { return }
-            withAnimation(reduceMotion ? nil : .easeIn(duration: 0.22)) {
+            withAnimation(reduceMotion ? nil : .easeIn(duration: skin.motion.durations.d0_22)) {
                 badgeBlockID = nil
             }
         }
@@ -170,10 +171,9 @@ struct TileLayoutView: View {
             let appName = registry.allApps.first { $0.id == block.appID }?.displayName
             PaneShortcutBadge(
                 title: block.displayTitle(appName: appName),
-                shortcut: PaneShortcut.label(forOrdinal: index),
-                tokens: environment.themeManager.tokens
+                shortcut: PaneShortcut.label(forOrdinal: index)
             )
-            .padding(AinkradSpacing.md)
+            .padding(skin.spacing.md)
             .transition(.opacity)
         }
     }
@@ -198,13 +198,13 @@ struct TileLayoutView: View {
             // the revealed island at the exact height it has on the main screen.
             VStack(spacing: 0) {
                 FloatingIslandView()
-                    .frame(maxWidth: 860, maxHeight: 574)
-                Color.clear.frame(height: 72)
+                    .frame(maxWidth: skin.size.s860, maxHeight: skin.size.s574)
+                Color.clear.frame(height: skin.size.s72)
             }
             // Legibility scrim only — low enough that motion clearly shows
             // through, high enough that text over a busy sky stays readable.
             // Tuned during screenshot review.
-            tokens.background.opacity(0.12)
+            tokens.background.opacity(skin.opacity.o12)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -216,6 +216,7 @@ struct TileLayoutView: View {
 /// capsule that brightens on hover and while dragging to resize.
 private struct SeamView: View {
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradSkin) private var skin
     let placement: SeamPlacement
     let tileLayout: TileLayout
 
@@ -225,46 +226,48 @@ private struct SeamView: View {
     var body: some View {
         let tokens = environment.themeManager.tokens
         let isLit = isHovering || isDragging
+        let seamAlpha = isLit ? skin.opacity.o90 : skin.opacity.o22
+        let seamWidth = isLit ? skin.size.s2 : skin.size.s1
 
         Group {
             if placement.axis == .horizontal {
                 LinearGradient(
-                    colors: [.clear, tokens.accentSecondary.opacity(isLit ? 0.9 : 0.22), .clear],
+                    colors: [.clear, tokens.accentSecondary.opacity(seamAlpha), .clear],
                     startPoint: .top,
                     endPoint: .bottom
                 )
-                .frame(width: isLit ? 2 : 1)
+                .frame(width: seamWidth)
                 .frame(maxWidth: .infinity)
                 .overlay {
                     if isLit {
                         Capsule()
                             .fill(tokens.accentSecondary)
-                            .frame(width: 3, height: 22)
-                            .shadow(color: tokens.accentSecondary.opacity(0.9), radius: 4)
+                            .frame(width: skin.size.s3, height: skin.size.s22)
+                            .shadow(color: tokens.accentSecondary.opacity(skin.opacity.o90), radius: skin.size.s4)
                     }
                 }
             } else {
                 LinearGradient(
-                    colors: [.clear, tokens.accentSecondary.opacity(isLit ? 0.9 : 0.22), .clear],
+                    colors: [.clear, tokens.accentSecondary.opacity(seamAlpha), .clear],
                     startPoint: .leading,
                     endPoint: .trailing
                 )
-                .frame(height: isLit ? 2 : 1)
+                .frame(height: seamWidth)
                 .frame(maxHeight: .infinity)
                 .overlay {
                     if isLit {
                         Capsule()
                             .fill(tokens.accentSecondary)
-                            .frame(width: 22, height: 3)
-                            .shadow(color: tokens.accentSecondary.opacity(0.9), radius: 4)
+                            .frame(width: skin.size.s22, height: skin.size.s3)
+                            .shadow(color: tokens.accentSecondary.opacity(skin.opacity.o90), radius: skin.size.s4)
                     }
                 }
             }
         }
-        .shadow(color: isLit ? tokens.accentSecondary.opacity(0.7) : .clear, radius: 5)
+        .shadow(color: isLit ? tokens.accentSecondary.opacity(skin.opacity.o70) : .clear, radius: skin.size.s5)
         // Grab target is wider than the 1px seam so the boundary is easy to
         // catch with the mouse without hunting for a hairline.
-        .contentShape(Rectangle().inset(by: -6))
+        .contentShape(Rectangle().inset(by: -skin.size.s6))
         .gesture(
             DragGesture(minimumDistance: 0, coordinateSpace: .named("pane-canvas"))
                 .onChanged { value in
@@ -286,6 +289,6 @@ private struct SeamView: View {
                 NSCursor.arrow.set()
             }
         }
-        .animation(.easeOut(duration: 0.12), value: isLit)
+        .animation(.easeOut(duration: skin.motion.durations.d0_12), value: isLit)
     }
 }
