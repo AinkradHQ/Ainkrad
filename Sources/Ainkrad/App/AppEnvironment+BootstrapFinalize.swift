@@ -9,6 +9,19 @@ import SwiftUI
 /// closures can capture it (weakly) directly, mirroring `bootstrap()`'s
 /// original order exactly.
 extension AppEnvironment {
+    #if DEBUG
+    /// The finalize phases in the order the last `finalizeBootstrap` ran them, so
+    /// `BootstrapPhaseOrderTests` fails if a future edit reorders them.
+    static var finalizePhaseLog: [String] = []
+    #endif
+
+    /// Appends a phase to `finalizePhaseLog` in DEBUG; does nothing in release.
+    static func recordFinalizePhase(_ name: String) {
+        #if DEBUG
+        finalizePhaseLog.append(name)
+        #endif
+    }
+
     static func finalizeBootstrap(
         environment: AppEnvironment,
         connectionStore: ConnectionStore,
@@ -35,6 +48,9 @@ extension AppEnvironment {
     ) {
         // Two phases, in this order: the apps phase reports plugin load failures
         // into the feed the signal phase builds.
+        #if DEBUG
+        finalizePhaseLog = []
+        #endif
         let signalCenter = finalizeSignal(
             environment: environment, agentContextHub: agentContextHub, signalHub: signalHub,
             signalReadAccess: signalReadAccess, pluginLaunchHub: pluginLaunchHub, home: home)

@@ -30,6 +30,7 @@ extension AppEnvironment {
         workspaceManager: WorkspaceManager,
         defaults: UserDefaults
     ) {
+        recordFinalizePhase("apps")
         // Launch-time external I/O (local-model probes, MCP connect, LSP
         // autodetect) is skipped when the app is hosting a test bundle: under
         // `xcodebuild test` these otherwise hang the shared process on network

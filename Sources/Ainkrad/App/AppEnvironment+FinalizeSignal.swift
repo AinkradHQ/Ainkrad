@@ -17,6 +17,7 @@ extension AppEnvironment {
         pluginLaunchHub: PluginLaunchHub,
         home: Home
     ) -> SignalCenter {
+        recordFinalizePhase("signal")
         // MARK: Signal (notification feed)
         //
         // Built here rather than in `bootstrapCoreStores` because it needs the
