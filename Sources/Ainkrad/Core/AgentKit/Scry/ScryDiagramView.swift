@@ -36,25 +36,26 @@ enum ScryDiagramRouting {
 /// never takes any other scry element down with it.
 @MainActor
 struct ScryDiagramView: View {
+    @Environment(\.ainkradSkin) private var skin
     let element: ScryElement
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
 
     var body: some View {
         switch ScryDiagramRouting.route(for: element) {
         case .diagram(let source):
-            MermaidDiagramHost(source: source, tokens: tokens)
+            MermaidDiagramHost(source: source)
         case .diagramFallback:
             fallback(caption: "Diagram preview pending", language: "mermaid")
         case .chart(let bars):
-            ScryChartView(bars: bars, tokens: tokens)
+            ScryChartView(bars: bars)
         case .chartFallback:
             fallback(caption: "Chart data unavailable", language: "csv")
         }
     }
 
     private func fallback(caption: String, language: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(caption).font(AinkradFont.display(11)).foregroundStyle(tokens.foreground.opacity(0.5))
+        VStack(alignment: .leading, spacing: skin.spacing.xs) {
+            Text(caption).font(AinkradFont.display(11)).foregroundStyle(theme.foreground.opacity(skin.opacity.o50))
             AinkradCodeBlock(element.body, language: language)
         }
     }
@@ -66,15 +67,15 @@ struct ScryDiagramView: View {
 /// element instance.
 private struct MermaidDiagramHost: View {
     let source: String
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
     @State private var renderError: String?
 
     var body: some View {
         Group {
             if let renderError {
-                MermaidErrorCard(message: renderError, tokens: tokens)
+                ScryErrorCard(message: renderError, label: "Diagram render error")
             } else {
-                MermaidWebView(source: source, tokens: tokens) { error in
+                MermaidWebView(source: source, theme: theme) { error in
                     renderError = error
                 }
             }
@@ -93,26 +94,9 @@ private struct MermaidDiagramHost: View {
     }
 }
 
-/// Native inline error card shown when mermaid fails to parse/render — the
-/// isolation contract from `ScryElementView.errorCard` mirrored here so a
-/// bad diagram body never propagates past this one element.
-private struct MermaidErrorCard: View {
-    let message: String
-    let tokens: DesignTokens
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 6) {
-            Circle().fill(tokens.danger).frame(width: 7, height: 7).padding(.top, 3)
-            Text("Diagram render error: \(message)")
-                .font(AinkradFont.display(11))
-                .foregroundStyle(tokens.danger.opacity(0.9))
-        }
-    }
-}
-
 /// `NSViewRepresentable` hosting a `WKWebView` that renders `source` as a
 /// mermaid diagram, dark-themed to match the HUD's accent/foreground
-/// tokens. The bundled `mermaid.min.js` (Resources/) is inlined into the
+/// theme colours. The bundled `mermaid.min.js` (Resources/) is inlined into the
 /// loaded HTML so no on-disk file access is needed at render time. Any
 /// parse/render failure — thrown synchronously by `mermaid.parse`, rejected
 /// by the `mermaid.render` promise, or an uncaught JS error — is posted back
@@ -120,7 +104,7 @@ private struct MermaidErrorCard: View {
 /// this view never lets a bad diagram body crash the host app.
 private struct MermaidWebView: NSViewRepresentable {
     let source: String
-    let tokens: DesignTokens
+    let theme: HostThemeTokens
     let onError: (String) -> Void
 
     func makeCoordinator() -> Coordinator { Coordinator(onError: onError) }
@@ -131,7 +115,7 @@ private struct MermaidWebView: NSViewRepresentable {
         let config = WKWebViewConfiguration()
         config.userContentController = controller
         let webView = WKWebView(frame: .zero, configuration: config)
-        webView.underPageBackgroundColor = NSColor(tokens.surfaceElevated)
+        webView.underPageBackgroundColor = NSColor(theme.surfaceElevated)
         load(into: webView, context: context)
         return webView
     }
@@ -154,7 +138,7 @@ private struct MermaidWebView: NSViewRepresentable {
         // otherwise this would reload (and visibly flash) on every mouse move.
         guard
             context.coordinator.lastLoaded?.source != source
-                || context.coordinator.lastLoaded?.tokens != tokens
+                || context.coordinator.lastLoaded?.theme != theme
         else {
             return
         }
@@ -168,21 +152,21 @@ private struct MermaidWebView: NSViewRepresentable {
             onError("mermaid.min.js resource not found in app bundle")
             return
         }
-        context.coordinator.lastLoaded = (source, tokens)
-        webView.loadHTMLString(Self.html(js: js, source: source, tokens: tokens), baseURL: nil)
+        context.coordinator.lastLoaded = (source, theme)
+        webView.loadHTMLString(Self.html(js: js, source: source, theme: theme), baseURL: nil)
     }
 
-    private static func html(js: String, source: String, tokens: DesignTokens) -> String {
+    private static func html(js: String, source: String, theme: HostThemeTokens) -> String {
         let escapedSource =
             source
             .replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "`", with: "\\`")
             .replacingOccurrences(of: "${", with: "\\${")
             .replacingOccurrences(of: "</script>", with: "<\\/script>")
-        let bg = tokens.surfaceElevated.hexString ?? "1A2233"
-        let fg = tokens.foreground.hexString ?? "E2E8F0"
-        let primary = tokens.accentPrimary.hexString ?? "2563EB"
-        let secondary = tokens.accentSecondary.hexString ?? "22D3EE"
+        let bg = theme.surfaceElevated.hexString ?? "1A2233"
+        let fg = theme.foreground.hexString ?? "E2E8F0"
+        let primary = theme.accentPrimary.hexString ?? "2563EB"
+        let secondary = theme.accentSecondary.hexString ?? "22D3EE"
         return """
             <!doctype html>
             <html>
@@ -238,9 +222,9 @@ private struct MermaidWebView: NSViewRepresentable {
     @MainActor
     final class Coordinator: NSObject, WKScriptMessageHandler {
         let onError: (String) -> Void
-        /// The `(source, tokens)` pair last loaded into the web view, used
+        /// The `(source, theme)` pair last loaded into the web view, used
         /// by `updateNSView` to skip a reload when neither changed.
-        var lastLoaded: (source: String, tokens: DesignTokens)?
+        var lastLoaded: (source: String, theme: HostThemeTokens)?
         init(onError: @escaping (String) -> Void) { self.onError = onError }
 
         func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {

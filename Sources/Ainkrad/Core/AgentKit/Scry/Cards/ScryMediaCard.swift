@@ -33,8 +33,9 @@ enum ScryMediaURL {
 /// CoreMedia XPC connection.
 @MainActor
 struct ScryMediaCard: View {
+    @Environment(\.ainkradSkin) private var skin
     let element: ScryElement
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
 
     @State private var current: (url: URL, player: AVPlayer)?
     @State private var hasResolved = false
@@ -48,7 +49,7 @@ struct ScryMediaCard: View {
         Group {
             if let player {
                 if isAudio {
-                    ScryAudioTransport(player: player, tokens: tokens)
+                    ScryAudioTransport(player: player)
                 } else {
                     VideoPlayer(player: player)
                         .aspectRatio(16.0 / 9.0, contentMode: .fit)
@@ -59,7 +60,7 @@ struct ScryMediaCard: View {
                 // genuine failure, not just "hasn't resolved yet".
                 Text(isAudio ? "Audio unavailable" : "Video unavailable")
                     .font(AinkradFont.display(12))
-                    .foregroundStyle(tokens.foreground.opacity(0.4))
+                    .foregroundStyle(theme.foreground.opacity(skin.opacity.o40))
             } else {
                 // `.task` runs after the first render, so without this branch
                 // "unavailable" would flash for one confident, wrong frame
@@ -109,6 +110,10 @@ struct ScryMediaCard: View {
 /// desync from it (e.g. when the item plays to the end on its own). All
 /// mutation happens hopped onto the main actor, since AVFoundation's
 /// callbacks are not actor-isolated.
+// `@unchecked Sendable` is safe through main-actor isolation: every stored
+// property is read and written on the main actor, and the AVFoundation
+// callbacks (periodic time observer on `.main`, `timeControlStatus` KVO) only
+// capture `self` weakly and hop to it with `Task { @MainActor in … }`.
 @MainActor
 private final class ScryAudioPlayerObserver: ObservableObject, @unchecked Sendable {
     @Published private(set) var isPlaying = false
@@ -178,16 +183,16 @@ private final class ScryAudioPlayerObserver: ObservableObject, @unchecked Sendab
 /// with an elapsed/duration label — not a decorative bar.
 @MainActor
 private struct ScryAudioTransport: View {
+    @Environment(\.ainkradSkin) private var skin
     let player: AVPlayer
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
 
     @StateObject private var observer: ScryAudioPlayerObserver
     @State private var isDragging = false
     @State private var dragFraction: Double = 0
 
-    init(player: AVPlayer, tokens: DesignTokens) {
+    init(player: AVPlayer) {
         self.player = player
-        self.tokens = tokens
         _observer = StateObject(wrappedValue: ScryAudioPlayerObserver(player: player))
     }
 
@@ -197,7 +202,7 @@ private struct ScryAudioTransport: View {
     }
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: skin.size.s10) {
             AinkradIconButton(
                 systemName: observer.isPlaying ? "pause.fill" : "play.fill",
                 size: 22,
@@ -205,11 +210,11 @@ private struct ScryAudioTransport: View {
             ) {
                 observer.togglePlayPause()
             }
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: skin.size.s3) {
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
-                        Capsule().fill(tokens.foreground.opacity(0.12))
-                        Capsule().fill(tokens.accentPrimary.opacity(0.85))
+                        Capsule().fill(theme.foreground.opacity(skin.opacity.o12))
+                        Capsule().fill(theme.accentPrimary.opacity(skin.opacity.o85))
                             .frame(width: max(0, geo.size.width * progressFraction))
                     }
                     .contentShape(Rectangle())
@@ -226,13 +231,13 @@ private struct ScryAudioTransport: View {
                             }
                     )
                 }
-                .frame(height: 3)
+                .frame(height: skin.size.s3)
                 Text(timeLabel)
                     .font(AinkradFont.mono(9))
-                    .foregroundStyle(tokens.foreground.opacity(0.5))
+                    .foregroundStyle(theme.foreground.opacity(skin.opacity.o50))
             }
         }
-        .frame(height: 44)
+        .frame(height: skin.size.s44)
         .onDisappear { observer.teardown() }
     }
 

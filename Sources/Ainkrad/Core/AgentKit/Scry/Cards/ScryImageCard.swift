@@ -6,8 +6,9 @@ import SwiftUI
 /// `http(s)` URL loaded via `AsyncImage`.
 @MainActor
 struct ScryImageCard: View {
+    @Environment(\.ainkradSkin) private var skin
     let element: ScryElement
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
 
     var body: some View {
         if let nsImage = ScryImageDecoding.dataURLImage(element.body) {
@@ -25,7 +26,7 @@ struct ScryImageCard: View {
         } else {
             Text("Image unavailable")
                 .font(AinkradFont.display(12))
-                .foregroundStyle(tokens.foreground.opacity(0.4))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o40))
         }
     }
 }

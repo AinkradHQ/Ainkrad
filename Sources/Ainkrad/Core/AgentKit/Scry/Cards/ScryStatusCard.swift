@@ -2,27 +2,30 @@ import AinkradAppKit
 import AinkradHostRuntime
 import SwiftUI
 
-/// `.status` — a small colored dot plus a status line.
+/// `.status` — a small colored dot plus a status line (local: the kit has no
+/// status dot); `.card` — a plain body line; anything else — the kit empty
+/// state.
 @MainActor
 struct ScryStatusCard: View {
+    @Environment(\.ainkradSkin) private var skin
     let element: ScryElement
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
 
     var body: some View {
         switch element.kind {
         case .status:
-            HStack(spacing: 8) {
-                Circle().fill(tokens.accentPrimary).frame(width: 7, height: 7)
+            HStack(spacing: skin.spacing.sm) {
+                Circle().fill(theme.accentPrimary).frame(width: skin.size.s7, height: skin.size.s7)
                 Text(element.body).font(AinkradFont.display(12))
-                    .foregroundStyle(tokens.foreground.opacity(0.85))
+                    .foregroundStyle(theme.foreground.opacity(skin.opacity.o85))
             }
         case .card:
             Text(element.body).font(AinkradFont.display(13))
-                .foregroundStyle(tokens.foreground.opacity(0.85))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o85))
         default:
-            Text("Unsupported element type")
-                .font(AinkradFont.display(12))
-                .foregroundStyle(tokens.foreground.opacity(0.4))
+            AinkradEmptyState(
+                icon: "questionmark.square.dashed", title: "Unsupported element type",
+                message: "This version of Ainkrad can't draw it.")
         }
     }
 }
