@@ -12,9 +12,9 @@ extension ComponentGalleryView {
     func gallerySectionView(named sectionName: String, theme: Theme) -> some View {
         let tokens = HostThemeTokens(from: theme)
         let statusColors = AinkradStatusColors(
-            success: theme.tokens.success,
-            warning: theme.tokens.warning,
-            danger: theme.tokens.danger
+            success: theme.skin.color(\.success),
+            warning: theme.skin.color(\.warning),
+            danger: theme.skin.color(\.danger)
         )
         let typography = AinkradTypography.default
 
@@ -79,9 +79,9 @@ extension ComponentGalleryView {
             }
 
             HStack(spacing: AinkradSpacing.lg) {
-                statusSwatch(label: "Success", color: galleryTheme.tokens.success)
-                statusSwatch(label: "Warning", color: galleryTheme.tokens.warning)
-                statusSwatch(label: "Danger", color: galleryTheme.tokens.danger)
+                statusSwatch(label: "Success", color: galleryTheme.skin.color(\.success))
+                statusSwatch(label: "Warning", color: galleryTheme.skin.color(\.warning))
+                statusSwatch(label: "Danger", color: galleryTheme.skin.color(\.danger))
             }
             .padding(.top, AinkradSpacing.sm)
         }

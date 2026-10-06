@@ -71,7 +71,7 @@ struct SetupAppearanceStepView: View {
     @State private var hasSettled = false
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
+        let tokens = environment.themeManager.hostSkin
 
         VStack(alignment: .leading, spacing: 0) {
             ScrollView {
@@ -136,7 +136,7 @@ struct SetupAppearanceStepView: View {
     /// The only sentence on this screen that is not attached to a control, and
     /// the only one that matters if the user reads nothing else: it says the
     /// thing behind the blur is the real app, already running.
-    private func lead(tokens: DesignTokens) -> some View {
+    private func lead(tokens: AinkradSkin) -> some View {
         staged(index: 0) {
             Text(
                 "Ainkrad is already running behind this screen — that is your workspace "
@@ -144,7 +144,7 @@ struct SetupAppearanceStepView: View {
                     + "something and watch it happen."
             )
             .font(AinkradFont.display(15))
-            .foregroundStyle(tokens.foreground.opacity(skin.opacity.o85))
+            .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o85))
             .lineSpacing(5)
             .fixedSize(horizontal: false, vertical: true)
             .frame(
@@ -157,7 +157,7 @@ struct SetupAppearanceStepView: View {
 
     // MARK: - Theme
 
-    private func themeGrid(tokens: DesignTokens) -> some View {
+    private func themeGrid(tokens: AinkradSkin) -> some View {
         let columns = [GridItem(.adaptive(minimum: skin.size.s200, maximum: skin.size.s260), spacing: skin.size.s10)]
         return LazyVGrid(columns: columns, spacing: skin.size.s10) {
             ForEach(Theme.allCases, id: \.self) { theme in
@@ -168,9 +168,9 @@ struct SetupAppearanceStepView: View {
 
     /// A kit list row per theme: its two accents as the leading swatch, and a
     /// tick that reads as the current choice.
-    private func themeCard(_ theme: Theme, tokens: DesignTokens) -> some View {
+    private func themeCard(_ theme: Theme, tokens: AinkradSkin) -> some View {
         let isSelected = environment.themeManager.currentTheme == theme
-        let themeTokens = theme.tokens
+        let themeSkin = theme.skin
 
         return AinkradListRow(
             isSelected: isSelected,
@@ -179,7 +179,7 @@ struct SetupAppearanceStepView: View {
                 ChamferShape(cut: skin.cut.c7)
                     .fill(
                         LinearGradient(
-                            colors: [themeTokens.accentPrimary, themeTokens.accentSecondary],
+                            colors: [themeSkin.color(\.accentPrimary), themeSkin.color(\.accentSecondary)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
@@ -194,7 +194,7 @@ struct SetupAppearanceStepView: View {
             trailing: {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(skin.font(AinkradFontToken(sizeKey: "t13", scaled: false)))
-                    .foregroundStyle(isSelected ? tokens.accentSecondary : tokens.foreground.opacity(skin.opacity.o25))
+                    .foregroundStyle(isSelected ? tokens.color(\.accentSecondary) : tokens.color(\.foreground).opacity(skin.opacity.o25))
             }
         )
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
@@ -209,15 +209,15 @@ struct SetupAppearanceStepView: View {
     /// free-form 6-digit hex, not one of a fixed set — restricting the
     /// wizard to presets while Settings allows any color would be a
     /// regression the moment the user opens Settings afterward.
-    private func accentColorRow(tokens: DesignTokens, manager: ThemeManager) -> some View {
+    private func accentColorRow(tokens: AinkradSkin, manager: ThemeManager) -> some View {
         HStack(spacing: skin.size.s9) {
             ForEach(Theme.allCases, id: \.self) { theme in
                 accentSwatch(theme, tokens: tokens, manager: manager)
             }
             AinkradColorPicker(
                 selection: Binding(
-                    get: { manager.accentColorHex.map { Color(hex: $0) } ?? tokens.accentPrimary },  // design-lint: allow hex-color user data, the stored accent override
-                    set: { manager.setAccentColorHex($0.hexString) }
+                    get: { manager.hostSkin.color(\.accentPrimary) },
+                    set: { manager.setAccentColor($0) }
                 )
             )
             .frame(width: skin.size.s30, height: skin.size.s30)
@@ -238,15 +238,15 @@ struct SetupAppearanceStepView: View {
     /// workspace visibly had an accent. It now shows the theme's own accent as
     /// the current one, which is what the user is actually looking at.
     private func accentSwatch(
-        _ theme: Theme, tokens: DesignTokens,
+        _ theme: Theme, tokens: AinkradSkin,
         manager: ThemeManager
     ) -> some View {
-        let color = theme.tokens.accentPrimary
+        let color = theme.skin.color(\.accentPrimary)
         let hex = color.hexString ?? ""
         let isSelected = AccentSelection.isSelected(
             swatchHex: hex,
             overrideHex: manager.accentColorHex,
-            themeAccentHex: manager.currentTheme.tokens.accentPrimary.hexString ?? "")
+            themeAccentHex: manager.currentTheme.skin.color(\.accentPrimary).hexString ?? "")
 
         // A raw `Button`: the kit's swatch chip carries a text label, and seven
         // labelled chips plus the well cannot fit the row a 280pt column gives.
@@ -259,7 +259,7 @@ struct SetupAppearanceStepView: View {
                 .overlay(
                     ChamferShape(cut: skin.cut.c7).strokeBorder(
                         isSelected
-                            ? tokens.foreground.opacity(skin.opacity.o95)
+                            ? tokens.color(\.foreground).opacity(skin.opacity.o95)
                             : skin.color(.palette("white", skin.opacity.o16)),
                         lineWidth: isSelected ? 2 : 1
                     )
@@ -282,7 +282,7 @@ struct SetupAppearanceStepView: View {
 
     // MARK: - Typography
 
-    private func typographyControls(tokens: DesignTokens) -> some View {
+    private func typographyControls(tokens: AinkradSkin) -> some View {
         let manager = environment.themeManager
         return VStack(alignment: .leading, spacing: skin.size.s9) {
             AinkradCaptionedRow("Typeface") {
@@ -310,7 +310,7 @@ struct SetupAppearanceStepView: View {
 
     // MARK: - App icon
 
-    private func appIconControls(tokens: DesignTokens) -> some View {
+    private func appIconControls(tokens: AinkradSkin) -> some View {
         let store = environment.appIconStore
         return VStack(alignment: .leading, spacing: skin.size.s9) {
             AinkradCaptionedRow(AppIconCaptions.color) {

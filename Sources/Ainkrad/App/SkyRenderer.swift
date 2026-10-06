@@ -1,4 +1,5 @@
 // design-lint: allow-file opacity-literal token-gap colors.sky — the sky's colour data (per-effect alphas)
+import AinkradAppKitUI
 import AinkradHostRuntime
 import AppKit
 import SwiftUI
@@ -35,13 +36,13 @@ enum SkyRenderer {
     /// (0…1, from `SkyMath.auroraSurge`) blooms the whole curtain briefly.
     static func aurora(
         in context: inout GraphicsContext, size: CGSize, time: TimeInterval,
-        surge: Double, intensity: Double = 1, tokens: DesignTokens
+        surge: Double, intensity: Double = 1, tokens: AinkradSkin
     ) {
         // Sweep smoothly through all three theme accents across the curtain
         // so it reads as this theme's full palette. A *smooth* sweep (not a
         // per-segment hue switch) keeps adjacent samples close in luminance,
         // so the screen-blended ribbon stays band-free (SkyRendererTests).
-        let accents = [tokens.accentPrimary, tokens.accentSecondary, tokens.accentTertiary]
+        let accents = [tokens.color(\.accentPrimary), tokens.color(\.accentSecondary), tokens.color(\.accentTertiary)]
         func auroraHue(ribbon: Int, segment: Int) -> Color {
             let phase =
                 Double(segment) / Double(SkyMath.auroraSegments) * Double(accents.count)
@@ -82,7 +83,7 @@ enum SkyRenderer {
     /// animated (`time > 0`).
     static func stars(
         in context: inout GraphicsContext, size: CGSize, time: TimeInterval,
-        intensity: Double = 1, tokens: DesignTokens
+        intensity: Double = 1, tokens: AinkradSkin
     ) {
         for index in 0..<SkyMath.starCount {
             let star = SkyMath.star(index: index)
@@ -98,7 +99,7 @@ enum SkyRenderer {
             )
 
             let radius = star.radius * (1 + glint * 0.8)
-            let color = (star.isAccent ? tokens.accentSecondary : tokens.foreground)
+            let color = (star.isAccent ? tokens.color(\.accentSecondary) : tokens.color(\.foreground))
                 .opacity(brightness)
             let rect = CGRect(x: x - radius, y: y - radius, width: radius * 2, height: radius * 2)
             if glint > 0 {
@@ -118,7 +119,7 @@ enum SkyRenderer {
     /// wider glow, and a bright head.
     static func streak(
         _ streak: SkyMath.ShootingStar,
-        in context: inout GraphicsContext, size: CGSize, comet: Bool, tokens: DesignTokens
+        in context: inout GraphicsContext, size: CGSize, comet: Bool, tokens: AinkradSkin
     ) {
         let inclination = abs(streak.angle)
         let direction = CGVector(
@@ -140,15 +141,15 @@ enum SkyRenderer {
         // Wide soft glow beneath a bright core that fades along its tail.
         context.stroke(
             path,
-            with: .color(tokens.accentPrimary.opacity((comet ? 0.35 : 0.25) * streak.brightness)),
+            with: .color(tokens.color(\.accentPrimary).opacity((comet ? 0.35 : 0.25) * streak.brightness)),
             lineWidth: comet ? 6 : 3.5
         )
         context.stroke(
             path,
             with: .linearGradient(
                 Gradient(colors: [
-                    tokens.accentPrimary.opacity(0),
-                    tokens.foreground.opacity(0.85 * streak.brightness),
+                    tokens.color(\.accentPrimary).opacity(0),
+                    tokens.color(\.foreground).opacity(0.85 * streak.brightness),
                 ]),
                 startPoint: tail,
                 endPoint: head
@@ -162,7 +163,7 @@ enum SkyRenderer {
                     ellipseIn: CGRect(
                         x: head.x - headRadius, y: head.y - headRadius,
                         width: headRadius * 2, height: headRadius * 2)),
-                with: .color(tokens.foreground.opacity(0.9 * streak.brightness))
+                with: .color(tokens.color(\.foreground).opacity(0.9 * streak.brightness))
             )
         }
     }
@@ -172,7 +173,7 @@ enum SkyRenderer {
     /// Faint fog bands sliding sideways near the horizon.
     static func mist(
         in context: inout GraphicsContext, size: CGSize, time: TimeInterval,
-        intensity: Double = 1, tokens: DesignTokens
+        intensity: Double = 1, tokens: AinkradSkin
     ) {
         for index in 0..<SkyMath.mistBands {
             let band = SkyMath.mistBand(index: index, time: time)
@@ -190,7 +191,7 @@ enum SkyRenderer {
                         width: radiusX * 2, height: radiusX * 2)),
                 with: .radialGradient(
                     Gradient(colors: [
-                        tokens.foreground.opacity(band.opacity * intensity), tokens.foreground.opacity(0),
+                        tokens.color(\.foreground).opacity(band.opacity * intensity), tokens.color(\.foreground).opacity(0),
                     ]),
                     center: .zero, startRadius: 0, endRadius: radiusX
                 )
@@ -206,13 +207,13 @@ enum SkyRenderer {
     /// `emphasis` (per-theme, see `SkyProfile`) scales the beams' strength.
     static func lightRays(
         in context: inout GraphicsContext, size: CGSize, time: TimeInterval,
-        emphasis: Double = 1, tokens: DesignTokens
+        emphasis: Double = 1, tokens: AinkradSkin
     ) {
         let sun = CGPoint(x: size.width * 0.5, y: size.height * 1.15)
         // Each beam carries a different theme accent so the fan reads as this
         // theme's hues rather than one flat accent; they overlap softly near
         // the sun under `.screen` and merge.
-        let accents = [tokens.accentPrimary, tokens.accentSecondary, tokens.accentTertiary]
+        let accents = [tokens.color(\.accentPrimary), tokens.color(\.accentSecondary), tokens.color(\.accentTertiary)]
         for index in 0..<SkyMath.lightRayCount {
             let ray = SkyMath.lightRay(index: index, time: time)
             let color = accents[index % accents.count]
@@ -248,14 +249,14 @@ enum SkyRenderer {
     /// `emphasis` (per-theme, see `SkyProfile`) scales their presence.
     static func fireflies(
         in context: inout GraphicsContext, size: CGSize, time: TimeInterval,
-        emphasis: Double = 1, tokens: DesignTokens
+        emphasis: Double = 1, tokens: AinkradSkin
     ) {
         for index in 0..<SkyMath.fireflyCount {
             let fly = SkyMath.firefly(index: index, time: time)
             guard fly.opacity > 0.005 else { continue }
             let x = fly.x * size.width
             let y = fly.y * size.height
-            let color = tokens.accentTertiary
+            let color = tokens.color(\.accentTertiary)
             let opacity = fly.opacity * emphasis
 
             let halo = fly.radius * 2.4
@@ -276,7 +277,7 @@ enum SkyRenderer {
     /// Large, ultra-faint out-of-focus orbs in the extreme foreground —
     /// drawn last, over everything in the sky.
     static func bokeh(
-        in context: inout GraphicsContext, size: CGSize, time: TimeInterval, tokens: DesignTokens
+        in context: inout GraphicsContext, size: CGSize, time: TimeInterval, tokens: AinkradSkin
     ) {
         for index in 0..<SkyMath.bokehCount {
             let orb = SkyMath.bokehOrb(index: index, time: time)
@@ -285,9 +286,9 @@ enum SkyRenderer {
             // foreground orbs alongside foreground and the primary accent.
             let color: Color
             switch index % 3 {
-            case 0: color = tokens.foreground
-            case 1: color = tokens.accentPrimary
-            default: color = tokens.accentTertiary
+            case 0: color = tokens.color(\.foreground)
+            case 1: color = tokens.color(\.accentPrimary)
+            default: color = tokens.color(\.accentTertiary)
             }
 
             var layer = context
@@ -312,7 +313,7 @@ enum SkyRenderer {
     /// punch-out, wrapped in a wide halo. Crisp by design, like the stars.
     static func moon(
         _ celestial: SkyMath.Celestial,
-        in context: inout GraphicsContext, size: CGSize, tokens: DesignTokens
+        in context: inout GraphicsContext, size: CGSize, tokens: AinkradSkin
     ) {
         guard celestial.brightness > 0.01 else { return }
         let center = CGPoint(x: celestial.x * size.width, y: celestial.y * size.height)
@@ -328,8 +329,8 @@ enum SkyRenderer {
                     width: haloRadius * 2, height: haloRadius * 2)),
             with: .radialGradient(
                 Gradient(colors: [
-                    tokens.foreground.opacity(0.16 * celestial.brightness),
-                    tokens.foreground.opacity(0),
+                    tokens.color(\.foreground).opacity(0.16 * celestial.brightness),
+                    tokens.color(\.foreground).opacity(0),
                 ]),
                 center: center, startRadius: 0, endRadius: haloRadius
             )
@@ -341,7 +342,7 @@ enum SkyRenderer {
                     ellipseIn: CGRect(
                         x: center.x - radius, y: center.y - radius,
                         width: radius * 2, height: radius * 2)),
-                with: .color(tokens.foreground.opacity(0.5 * celestial.brightness))
+                with: .color(tokens.color(\.foreground).opacity(0.5 * celestial.brightness))
             )
             body.blendMode = .destinationOut
             let punch = CGPoint(x: center.x + radius * 0.5, y: center.y - radius * 0.28)
@@ -361,7 +362,7 @@ enum SkyRenderer {
     /// bright hull speck, and a blinking accent beacon.
     static func vessel(
         _ vessel: SkyMath.Vessel,
-        in context: inout GraphicsContext, size: CGSize, time: TimeInterval, tokens: DesignTokens
+        in context: inout GraphicsContext, size: CGSize, time: TimeInterval, tokens: AinkradSkin
     ) {
         let x =
             (vessel.direction > 0
@@ -377,8 +378,8 @@ enum SkyRenderer {
             Path(ellipseIn: CGRect(x: -11, y: -11, width: 22, height: 22)),
             with: .radialGradient(
                 Gradient(colors: [
-                    tokens.accentPrimary.opacity(0.35 * vessel.brightness),
-                    tokens.accentPrimary.opacity(0),
+                    tokens.color(\.accentPrimary).opacity(0.35 * vessel.brightness),
+                    tokens.color(\.accentPrimary).opacity(0),
                 ]),
                 center: .zero, startRadius: 0, endRadius: 11
             )
@@ -386,7 +387,7 @@ enum SkyRenderer {
 
         context.fill(
             Path(ellipseIn: CGRect(x: x - 1.3, y: y - 1.3, width: 2.6, height: 2.6)),
-            with: .color(tokens.foreground.opacity(0.7 * vessel.brightness))
+            with: .color(tokens.color(\.foreground).opacity(0.7 * vessel.brightness))
         )
         let blink = sin(time * 2 * .pi * 0.9) > 0.55 ? 1.0 : 0.15
         context.fill(
@@ -394,7 +395,7 @@ enum SkyRenderer {
                 ellipseIn: CGRect(
                     x: x + 4 * vessel.direction - 0.9, y: y - 0.9,
                     width: 1.8, height: 1.8)),
-            with: .color(tokens.accentSecondary.opacity(0.9 * vessel.brightness * blink))
+            with: .color(tokens.color(\.accentSecondary).opacity(0.9 * vessel.brightness * blink))
         )
     }
 
@@ -404,7 +405,7 @@ enum SkyRenderer {
     /// between them, then the whole figure dissolves.
     static func constellation(
         _ constellation: SkyMath.Constellation,
-        in context: inout GraphicsContext, size: CGSize, tokens: DesignTokens
+        in context: inout GraphicsContext, size: CGSize, tokens: AinkradSkin
     ) {
         let points = constellation.points.map {
             CGPoint(x: $0.x * size.width, y: $0.y * size.height)
@@ -416,18 +417,18 @@ enum SkyRenderer {
         for point in points.dropFirst() { path.addLine(to: point) }
         context.stroke(
             path,
-            with: .color(tokens.accentSecondary.opacity(0.28 * constellation.brightness)),
+            with: .color(tokens.color(\.accentSecondary).opacity(0.28 * constellation.brightness)),
             lineWidth: 0.8
         )
 
         for point in points {
             context.fill(
                 Path(ellipseIn: CGRect(x: point.x - 4, y: point.y - 4, width: 8, height: 8)),
-                with: .color(tokens.accentSecondary.opacity(0.16 * constellation.brightness))
+                with: .color(tokens.color(\.accentSecondary).opacity(0.16 * constellation.brightness))
             )
             context.fill(
                 Path(ellipseIn: CGRect(x: point.x - 1.6, y: point.y - 1.6, width: 3.2, height: 3.2)),
-                with: .color(tokens.foreground.opacity(0.85 * constellation.brightness))
+                with: .color(tokens.color(\.foreground).opacity(0.85 * constellation.brightness))
             )
         }
     }
@@ -439,13 +440,13 @@ enum SkyRenderer {
     /// their glow — warm themes push it up, cool themes pull it back.
     static func embers(
         in context: inout GraphicsContext, size: CGSize, time: TimeInterval,
-        emphasis: Double = 1, tokens: DesignTokens
+        emphasis: Double = 1, tokens: AinkradSkin
     ) {
         for index in 0..<SkyMath.emberCount {
             let ember = SkyMath.ember(index: index, time: time)
             let x = ember.x * size.width
             let y = ember.y * size.height
-            let color = (ember.isAccent ? tokens.accentSecondary : tokens.foreground)
+            let color = (ember.isAccent ? tokens.color(\.accentSecondary) : tokens.color(\.foreground))
                 .opacity(ember.opacity * emphasis)
             let rect = CGRect(
                 x: x - ember.radius, y: y - ember.radius,

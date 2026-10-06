@@ -136,7 +136,7 @@ struct SetupBrandMark: View {
         case inline(height: CGFloat)
     }
 
-    let tokens: DesignTokens
+    let tokens: AinkradSkin
     let reduceMotion: Bool
     var style: Style = .hero(diameter: 236)
 
@@ -252,11 +252,11 @@ struct SetupBrandMark: View {
                 bloom.opacity = 0.5 * (0.3 + depth * 0.7)
                 bloom.fill(
                     Path(ellipseIn: rect.insetBy(dx: -radius, dy: -radius)),
-                    with: .color(tokens.accentSecondary))
+                    with: .color(tokens.color(\.accentSecondary)))
 
                 var dot = context
                 dot.opacity = 0.30 + depth * 0.65
-                dot.fill(Path(ellipseIn: rect), with: .color(tokens.accentSecondary))
+                dot.fill(Path(ellipseIn: rect), with: .color(tokens.color(\.accentSecondary)))
             }
         }
         .allowsHitTesting(false)
@@ -292,7 +292,7 @@ struct SetupBrandMark: View {
                 stroked.opacity = strength * 0.4 * (0.35 + (a.depth + b.depth) / 2 * 0.65)
                 stroked.stroke(
                     line,
-                    with: .color(tokens.accentPrimary),
+                    with: .color(tokens.color(\.accentPrimary)),
                     lineWidth: 0.9 * scale)
             }
         }
@@ -306,8 +306,8 @@ struct SetupBrandMark: View {
             .fill(
                 RadialGradient(
                     colors: [
-                        tokens.accentPrimary.opacity(skin.opacity.o42),
-                        tokens.accentPrimary.opacity(skin.opacity.o10),
+                        tokens.color(\.accentPrimary).opacity(skin.opacity.o42),
+                        tokens.color(\.accentPrimary).opacity(skin.opacity.o10),
                         .clear,
                     ],
                     center: .center,
@@ -337,14 +337,14 @@ struct SetupBrandMark: View {
             AinkradChevronMark()
                 .fill(
                     LinearGradient(
-                        colors: [tokens.foreground, tokens.foreground.opacity(skin.opacity.o72)],
+                        colors: [tokens.color(\.foreground), tokens.color(\.foreground).opacity(skin.opacity.o72)],
                         startPoint: .top,
                         endPoint: .bottom
                     )
                 )
                 .frame(width: chevronWidth, height: chevronHeight)
-                .shadow(color: tokens.accentSecondary.opacity(skin.opacity.o55), radius: skin.size.s8)
-                .shadow(color: tokens.accentPrimary.opacity(skin.opacity.o75), radius: skin.size.s26)
+                .shadow(color: tokens.color(\.accentSecondary).opacity(skin.opacity.o55), radius: skin.size.s8)
+                .shadow(color: tokens.color(\.accentPrimary).opacity(skin.opacity.o75), radius: skin.size.s26)
 
             crystal(width: crystalW, height: crystalH)
                 .offset(y: chevronHeight * MarkProportions.crystalTop)
@@ -360,17 +360,17 @@ struct SetupBrandMark: View {
             AinkradCrystalMark()
                 .fill(
                     LinearGradient(
-                        colors: [tokens.accentSecondary, tokens.accentPrimary],
+                        colors: [tokens.color(\.accentSecondary), tokens.color(\.accentPrimary)],
                         startPoint: .top,
                         endPoint: .bottom
                     )
                 )
             AinkradCrystalFacet()
-                .fill(tokens.foreground.opacity(skin.opacity.o28))
+                .fill(tokens.color(\.foreground).opacity(skin.opacity.o28))
         }
         .frame(width: width, height: height)
-        .shadow(color: tokens.accentSecondary.opacity(skin.opacity.o95), radius: skin.size.s6)
-        .shadow(color: tokens.accentSecondary.opacity(skin.opacity.o70), radius: skin.size.s16)
-        .shadow(color: tokens.accentSecondary.opacity(skin.opacity.o40), radius: skin.size.s34)
+        .shadow(color: tokens.color(\.accentSecondary).opacity(skin.opacity.o95), radius: skin.size.s6)
+        .shadow(color: tokens.color(\.accentSecondary).opacity(skin.opacity.o70), radius: skin.size.s16)
+        .shadow(color: tokens.color(\.accentSecondary).opacity(skin.opacity.o40), radius: skin.size.s34)
     }
 }

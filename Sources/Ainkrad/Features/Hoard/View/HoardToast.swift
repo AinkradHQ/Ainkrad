@@ -60,13 +60,13 @@ struct HoardToast: View {
     @Environment(\.ainkradReduceMotion) private var reduceMotion
     @Environment(\.ainkradSkin) private var skin
 
-    private var tokens: DesignTokens { environment.themeManager.tokens }
+    private var tokens: AinkradSkin { environment.themeManager.hostSkin }
 
     private var accent: Color {
         switch message.kind {
         case .failure: return statusColors.danger
         case .warning: return statusColors.warning
-        default: return tokens.accentSecondary
+        default: return tokens.color(\.accentSecondary)
         }
     }
 
@@ -83,11 +83,11 @@ struct HoardToast: View {
             VStack(alignment: .leading, spacing: skin.size.s1) {
                 Text(message.text)
                     .font(AinkradFontResolver.font(.body, weight: .medium, typography: typo))
-                    .foregroundStyle(tokens.foreground)
+                    .foregroundStyle(tokens.color(\.foreground))
                 if let detail = message.detail {
                     Text(detail)
                         .font(AinkradFontResolver.font(.caption, typography: typo))
-                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
+                        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o50))
                 }
             }
 
@@ -103,7 +103,7 @@ struct HoardToast: View {
         .padding(.vertical, AinkradSpacing.sm)
         .background {
             ZStack {
-                ChamferShape(cut: skin.cut.c8).fill(tokens.surfaceElevated.opacity(skin.opacity.o96))
+                ChamferShape(cut: skin.cut.c8).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o96))
                 // A leading accent rule rather than a full tinted fill: colour
                 // the meaning, not the whole surface.
                 HStack(spacing: 0) {
@@ -141,7 +141,7 @@ struct HoardFailureSheet: View {
     @Environment(\.ainkradStatusColors) private var statusColors
     @Environment(\.ainkradSkin) private var skin
 
-    private var tokens: DesignTokens { environment.themeManager.tokens }
+    private var tokens: AinkradSkin { environment.themeManager.hostSkin }
 
     var body: some View {
         VStack(alignment: .leading, spacing: AinkradSpacing.lg) {
@@ -153,7 +153,7 @@ struct HoardFailureSheet: View {
                     .background(ChamferShape(cut: skin.cut.c5).fill(statusColors.warning.opacity(skin.opacity.o15)))
                 Text("\(failures.count) item\(failures.count == 1 ? "" : "s") failed")
                     .font(AinkradFontResolver.font(.headline, weight: .medium, typography: typo))
-                    .foregroundStyle(tokens.foreground)
+                    .foregroundStyle(tokens.color(\.foreground))
                 Spacer(minLength: 0)
             }
 
@@ -167,10 +167,10 @@ struct HoardFailureSheet: View {
                                         .body, weight: .medium,
                                         typography: typo)
                                 )
-                                .foregroundStyle(tokens.foreground)
+                                .foregroundStyle(tokens.color(\.foreground))
                             Text(failure.reason)
                                 .font(AinkradFontResolver.font(.caption, typography: typo))
-                                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o60))
+                                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o60))
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -179,7 +179,7 @@ struct HoardFailureSheet: View {
                 .padding(AinkradSpacing.sm)
             }
             .frame(height: skin.size.s200)
-            .background(ChamferShape(cut: skin.cut.c6).fill(tokens.foreground.opacity(skin.opacity.o05)))
+            .background(ChamferShape(cut: skin.cut.c6).fill(tokens.color(\.foreground).opacity(skin.opacity.o05)))
 
             HStack {
                 Spacer()

@@ -49,25 +49,25 @@ struct SignalContrastTests {
 
     private func severityColor(
         _ severity: SignalSeverity,
-        tokens: DesignTokens
+        tokens: AinkradSkin
     ) -> Color {
         switch SignalPresentation.status(for: severity) {
-        case .success: return tokens.success
-        case .warning: return tokens.warning
-        case .danger: return tokens.danger
-        case .neutral: return tokens.foreground
-        @unknown default: return tokens.foreground
+        case .success: return tokens.color(\.success)
+        case .warning: return tokens.color(\.warning)
+        case .danger: return tokens.color(\.danger)
+        case .neutral: return tokens.color(\.foreground)
+        @unknown default: return tokens.color(\.foreground)
         }
     }
 
     @Test("every severity reads against the panel surface, in every theme")
     func againstSurface() {
         for theme in Theme.allCases {
-            let tokens = theme.tokens
+            let tokens = theme.skin
             for severity in SignalSeverity.allCases {
                 check(
                     severityColor(severity, tokens: tokens)
-                        .contrastRatio(against: tokens.surface),
+                        .contrastRatio(against: tokens.color(\.surface)),
                     "\(theme.rawValue)/\(severity.rawValue)/surface")
             }
         }
@@ -79,11 +79,11 @@ struct SignalContrastTests {
         // surfaceElevated at 0.9 over the panel — the lighter surface is
         // where a ramp tuned against the darker one goes quietly illegible.
         for theme in Theme.allCases {
-            let tokens = theme.tokens
+            let tokens = theme.skin
             for severity in SignalSeverity.allCases {
                 check(
                     severityColor(severity, tokens: tokens)
-                        .contrastRatio(against: tokens.surfaceElevated),
+                        .contrastRatio(against: tokens.color(\.surfaceElevated)),
                     "\(theme.rawValue)/\(severity.rawValue)/hover")
             }
         }
@@ -91,13 +91,13 @@ struct SignalContrastTests {
 
     @Test("the launcher badge's text reads on every severity tint")
     func badgeTextOnTint() {
-        // The badge draws `tokens.background` on the severity colour, so this
+        // The badge draws `tokens.color(\.background)` on the severity colour, so this
         // is the pair that has to hold now that the tint varies.
         for theme in Theme.allCases {
-            let tokens = theme.tokens
+            let tokens = theme.skin
             for severity in SignalSeverity.allCases {
                 check(
-                    tokens.background
+                    tokens.color(\.background)
                         .contrastRatio(against: severityColor(severity, tokens: tokens)),
                     "\(theme.rawValue)/\(severity.rawValue)/badge")
             }

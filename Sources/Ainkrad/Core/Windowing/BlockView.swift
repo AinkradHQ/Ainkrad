@@ -79,13 +79,13 @@ struct BlockView: View {
         return isBeingDragged ? 0.98 : 1
     }
 
-    /// Colours stay on `DesignTokens`, which carry the user's custom accent;
-    /// every scalar comes from the skin.
-    private var tokens: DesignTokens { environment.themeManager.tokens }
+    /// Colours come from `hostSkin`, which carries the user's custom accent;
+    /// every scalar comes from the environment's skin.
+    private var tokens: AinkradSkin { environment.themeManager.hostSkin }
 
     var body: some View {
         PaneContent(
-            app: app, topInset: contentTopInset, fallback: tokens.surface,
+            app: app, topInset: contentTopInset, fallback: tokens.color(\.surface),
             paneLocator: environment.paneLocators.sink(forBlock: block.id),
             launchGeneration: block.launchGeneration
         )
@@ -110,7 +110,7 @@ struct BlockView: View {
         .overlay(dropZoneHighlight)
         .shadow(
             color: isFocused
-                ? tokens.accentPrimary.opacity(skin.opacity.o28) : skin.color(.palette("black", skin.opacity.o25)),
+                ? tokens.color(\.accentPrimary).opacity(skin.opacity.o28) : skin.color(.palette("black", skin.opacity.o25)),
             radius: isFocused ? skin.size.s22 : skin.size.s12
         )
         .opacity(paneOpacity)
@@ -159,21 +159,21 @@ struct BlockView: View {
         if let dropEdge, tileLayout.draggingBlockID != nil {
             let isHorizontal = dropEdge == .leading || dropEdge == .trailing
             let zone = ChamferShape(cut: skin.radius.sm)
-                .fill(tokens.accentPrimary.opacity(skin.opacity.o16))
+                .fill(tokens.color(\.accentPrimary).opacity(skin.opacity.o16))
                 .overlay(
                     ChamferShape(cut: skin.radius.sm)
-                        .strokeBorder(tokens.accentSecondary.opacity(skin.opacity.o65), lineWidth: 1)
+                        .strokeBorder(tokens.color(\.accentSecondary).opacity(skin.opacity.o65), lineWidth: 1)
                 )
                 .overlay(
                     TargetingBrackets(length: skin.size.s9)
-                        .stroke(tokens.accentSecondary.opacity(skin.opacity.o90), lineWidth: 1.5)
+                        .stroke(tokens.color(\.accentSecondary).opacity(skin.opacity.o90), lineWidth: 1.5)
                         .padding(skin.spacing.xs)
                 )
                 .overlay(
                     Image(systemName: isHorizontal ? "rectangle.split.2x1" : "rectangle.split.1x2")
                         .font(skin.font(AinkradFontToken(sizeKey: "t15", weight: "medium", scaled: false)))
-                        .foregroundStyle(tokens.accentSecondary.opacity(skin.opacity.o85))
-                        .shadow(color: tokens.accentSecondary.opacity(skin.opacity.o80), radius: skin.size.s6)
+                        .foregroundStyle(tokens.color(\.accentSecondary).opacity(skin.opacity.o85))
+                        .shadow(color: tokens.color(\.accentSecondary).opacity(skin.opacity.o80), radius: skin.size.s6)
                 )
                 .padding(skin.size.s3)
                 .transition(.opacity.combined(with: .scale(scale: 0.96)))
@@ -214,7 +214,7 @@ struct BlockView: View {
             .frame(height: max(contentTopInset, skin.size.s10))
             .overlay {
                 Capsule()
-                    .fill(tokens.foreground.opacity(isHoveringGrabber ? skin.opacity.o35 : 0))
+                    .fill(tokens.color(\.foreground).opacity(isHoveringGrabber ? skin.opacity.o35 : 0))
                     .frame(width: skin.size.s34, height: skin.size.s3)
             }
             .contentShape(Rectangle())
@@ -293,11 +293,11 @@ struct BlockView: View {
             NeonAppTile(symbol: app?.icon ?? "app", tokens: tokens, size: skin.size.s18)
             Text(block.displayTitle(appName: app?.displayName))
                 .font(AinkradFont.display(11, weight: .medium))
-                .foregroundStyle(tokens.foreground)
+                .foregroundStyle(tokens.color(\.foreground))
         }
         .padding(.horizontal, skin.size.s10)
         .padding(.vertical, skin.size.s5)
-        .background(tokens.surfaceElevated)
+        .background(tokens.color(\.surfaceElevated))
         .clipShape(Capsule())
     }
 

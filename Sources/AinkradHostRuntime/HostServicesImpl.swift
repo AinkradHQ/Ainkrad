@@ -53,7 +53,7 @@ public final class HostServicesImpl: HostServices, PluginInstanceIdentity {
         // ABI-frozen for plugins), and without them a plugin had no way to
         // express success/warning/danger through the theme — which is why they
         // all hardcoded system colors.
-        self.theme.updateStatusColors(HostStatusColors(from: themeManager.tokens))
+        self.theme.updateStatusColors(HostStatusColors(from: themeManager.skin))
         self.context = HostContextRegistry(appID: appID, hub: hub)
         self.actions = HostActionRegistry(appID: appID, hub: actionHub)
         self.apps = HostAppLauncher(appID: appID, hub: launchHub)
@@ -75,7 +75,7 @@ public final class HostServicesImpl: HostServices, PluginInstanceIdentity {
             Task { @MainActor in
                 guard let self else { return }
                 self.theme.update(HostThemeTokens(from: self.themeManager.currentTheme))
-                self.theme.updateStatusColors(HostStatusColors(from: self.themeManager.tokens))
+                self.theme.updateStatusColors(HostStatusColors(from: self.themeManager.skin))
                 self.armThemeSync()
             }
         }
@@ -197,13 +197,13 @@ final class PluginLoggerImpl: PluginLogger {
 
 extension HostThemeTokens {
     public init(from theme: Theme) {
-        let t = theme.tokens
+        let s = theme.skin
         self.init(
             themeID: theme.rawValue,
-            background: t.background, surface: t.surface,
-            surfaceElevated: t.surfaceElevated, accentPrimary: t.accentPrimary,
-            accentSecondary: t.accentSecondary, accentTertiary: t.accentTertiary,
-            foreground: t.foreground
+            background: s.color(\.background), surface: s.color(\.surface),
+            surfaceElevated: s.color(\.surfaceElevated), accentPrimary: s.color(\.accentPrimary),
+            accentSecondary: s.color(\.accentSecondary), accentTertiary: s.color(\.accentTertiary),
+            foreground: s.color(\.foreground)
         )
     }
 }
@@ -211,10 +211,10 @@ extension HostThemeTokens {
 extension HostStatusColors {
     /// The host's own semantic palette, as published to plugins.
     ///
-    /// `DesignTokens` carries real `success`/`warning`/`danger` values; the
+    /// The skin carries real `success`/`warning`/`danger` values; the
     /// plugin-facing `HostThemeTokens` deliberately does not, because it is
     /// ABI-frozen. This is the one adapter between them.
-    init(from tokens: DesignTokens) {
-        self.init(success: tokens.success, warning: tokens.warning, danger: tokens.danger)
+    init(from skin: AinkradSkin) {
+        self.init(success: skin.color(\.success), warning: skin.color(\.warning), danger: skin.color(\.danger))
     }
 }

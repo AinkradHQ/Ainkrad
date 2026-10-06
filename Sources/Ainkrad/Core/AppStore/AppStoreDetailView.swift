@@ -13,7 +13,7 @@ struct AppStoreDetailView: View {
     /// `row` carries.
     let entry: CatalogEntry?
     let row: AppStoreRow
-    let tokens: DesignTokens
+    let tokens: AinkradSkin
     let isBusy: Bool
     let onBack: () -> Void
     let onInstall: () -> Void
@@ -34,11 +34,11 @@ struct AppStoreDetailView: View {
                     AinkradSectionHeader(title: "Description")
                     Text(longDescriptionText)
                         .font(skin.font(AinkradFontToken(sizeKey: "t13", scaled: false)))
-                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o80))
+                        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o80))
                         .fixedSize(horizontal: false, vertical: true)
                     Text(informationLine)
                         .font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false)))
-                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
+                        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o50))
                 }
                 if let secretKeys = requiredSecretKeys {
                     VStack(alignment: .leading, spacing: skin.spacing.sm) {
@@ -76,15 +76,15 @@ struct AppStoreDetailView: View {
             VStack(alignment: .leading, spacing: skin.size.s5) {
                 Text(row.displayName)
                     .font(AinkradFont.display(20, weight: .semibold))
-                    .foregroundStyle(tokens.foreground)
+                    .foregroundStyle(tokens.color(\.foreground))
                 if let author = entry?.author, !author.isEmpty {
                     Text("by \(author)")
                         .font(skin.font(AinkradFontToken(sizeKey: "t12", scaled: false)))
-                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o60))
+                        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o60))
                 }
                 Text(row.versionLine)
                     .font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false)))
-                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o50))
                 actions.padding(.top, skin.spacing.xs)
             }
             Spacer()
@@ -149,15 +149,15 @@ struct AppStoreDetailView: View {
             case .success(let image):
                 image.resizable().aspectRatio(contentMode: .fill)
             case .failure:
-                screenshotBox(systemImage: "exclamationmark.triangle", tint: tokens.accentTertiary)
+                screenshotBox(systemImage: "exclamationmark.triangle", tint: tokens.color(\.accentTertiary))
             default:
-                screenshotBox(systemImage: nil, tint: tokens.foreground)
+                screenshotBox(systemImage: nil, tint: tokens.color(\.foreground))
             }
         }
         .frame(width: skin.size.s260, height: skin.size.s164)
         .clipShape(ChamferShape(cut: skin.radius.md))
         .overlay(
-            ChamferShape(cut: skin.radius.md).strokeBorder(tokens.foreground.opacity(skin.opacity.o10), lineWidth: 1)
+            ChamferShape(cut: skin.radius.md).strokeBorder(tokens.color(\.foreground).opacity(skin.opacity.o10), lineWidth: 1)
         )
         .contentShape(ChamferShape(cut: skin.radius.md))
         .onTapGesture { onOpenScreenshot(urls, index) }
@@ -166,7 +166,7 @@ struct AppStoreDetailView: View {
 
     private func screenshotBox(systemImage: String?, tint: Color) -> some View {
         ZStack {
-            ChamferShape(cut: skin.radius.md).fill(tokens.surfaceElevated)
+            ChamferShape(cut: skin.radius.md).fill(tokens.color(\.surfaceElevated))
             if let systemImage {
                 Image(systemName: systemImage).foregroundStyle(tint.opacity(skin.opacity.o70))
             } else {

@@ -29,7 +29,7 @@ struct BatchRenameSheet: View {
     @Environment(\.ainkradStatusColors) private var statusColors
     @Environment(\.ainkradSkin) private var skin
 
-    private var tokens: DesignTokens { environment.themeManager.tokens }
+    private var tokens: AinkradSkin { environment.themeManager.hostSkin }
 
     private var plan: [BatchRenamePlanItem] {
         batchRenamePlan(
@@ -51,17 +51,17 @@ struct BatchRenameSheet: View {
         HStack(alignment: .top, spacing: AinkradSpacing.md) {
             Image(systemName: "character.cursor.ibeam")
                 .font(skin.font(AinkradFontToken(sizeKey: "t13", weight: "semibold", scaled: false)))
-                .foregroundStyle(tokens.accentSecondary)
+                .foregroundStyle(tokens.color(\.accentSecondary))
                 .frame(width: skin.size.s26, height: skin.size.s26)
-                .background(ChamferShape(cut: skin.cut.c5).fill(tokens.accentSecondary.opacity(skin.opacity.o15)))
+                .background(ChamferShape(cut: skin.cut.c5).fill(tokens.color(\.accentSecondary).opacity(skin.opacity.o15)))
 
             VStack(alignment: .leading, spacing: skin.size.s3) {
                 Text("Rename \(entries.count) Item\(entries.count == 1 ? "" : "s")")
                     .font(AinkradFontResolver.font(.headline, weight: .medium, typography: typo))
-                    .foregroundStyle(tokens.foreground)
+                    .foregroundStyle(tokens.color(\.foreground))
                 Text(entries.first?.url.deletingLastPathComponent().path ?? "")
                     .font(AinkradFontResolver.font(.caption, typography: typo))
-                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o50))
                     .lineLimit(1)
                     .truncationMode(.head)
             }
@@ -107,25 +107,25 @@ struct BatchRenameSheet: View {
             }
         }
         .frame(height: skin.size.s220)
-        .background(ChamferShape(cut: skin.cut.c6).fill(tokens.foreground.opacity(skin.opacity.o05)))
+        .background(ChamferShape(cut: skin.cut.c6).fill(tokens.color(\.foreground).opacity(skin.opacity.o05)))
     }
 
     private func row(_ item: BatchRenamePlanItem) -> some View {
         HStack(spacing: AinkradSpacing.sm) {
             Text(item.entry.name)
-                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o55))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o55))
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             Image(systemName: "arrow.right")
                 .font(skin.font(AinkradFontToken(sizeKey: "t9", scaled: false)))
-                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o30))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o30))
 
             Text(item.problem == nil ? item.newName : (item.problem.map(label) ?? ""))
                 .foregroundStyle(
                     item.problem == nil
-                        ? tokens.foreground
+                        ? tokens.color(\.foreground)
                         : (item.problem == .unchanged
-                            ? tokens.foreground.opacity(skin.opacity.o35)
+                            ? tokens.color(\.foreground).opacity(skin.opacity.o35)
                             : statusColors.warning)
                 )
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -154,7 +154,7 @@ struct BatchRenameSheet: View {
                 .foregroundStyle(
                     summary.blocked > 0
                         ? statusColors.warning
-                        : tokens.foreground.opacity(skin.opacity.o55))
+                        : tokens.color(\.foreground).opacity(skin.opacity.o55))
             Spacer()
             AinkradButton(title: "Cancel", style: .ghost, action: onCancel)
             AinkradButton(title: "Rename", style: .primary) { onApply(plan) }

@@ -66,7 +66,7 @@ struct SetupYouStepView: View {
         SetupValidation.unmet(for: .you, values: [:]).map(\.field))
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
+        let tokens = environment.themeManager.hostSkin
 
         VStack(alignment: .leading, spacing: 0) {
             ScrollView {
@@ -130,7 +130,7 @@ struct SetupYouStepView: View {
         return unmet.first { $0.field == key }?.message
     }
 
-    private func intro(tokens: DesignTokens) -> some View {
+    private func intro(tokens: AinkradSkin) -> some View {
         Text(
             "Anything you fill in here goes into the assistant's memory, so it knows who "
                 + "it's working with. Your name and role are needed so it knows who it is "
@@ -138,7 +138,7 @@ struct SetupYouStepView: View {
                 + "Memory."
         )
         .font(AinkradFont.display(12))
-        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o60))
+        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o60))
         .fixedSize(horizontal: false, vertical: true)
         // Prose is capped even though the column fills.
         .frame(
@@ -155,7 +155,7 @@ struct SetupYouStepView: View {
     ///
     /// The cards therefore take the whole column, which on a wide window means a
     /// wide text field. That is the accepted trade.
-    private func fieldGrid(tokens: DesignTokens) -> some View {
+    private func fieldGrid(tokens: AinkradSkin) -> some View {
         VStack(alignment: .leading, spacing: skin.size.s10) {
             ForEach(UserProfileField.all) { profileField in
                 field(
@@ -177,28 +177,28 @@ struct SetupYouStepView: View {
     }
 
     private func field(
-        tokens: DesignTokens, title: String, subtitle: String,
+        tokens: AinkradSkin, title: String, subtitle: String,
         placeholder: String, text: Binding<String>, key: String
     ) -> some View {
         VStack(alignment: .leading, spacing: skin.size.s6) {
             HStack(spacing: skin.size.s6) {
                 Text(title)
                     .font(AinkradFont.display(13, weight: .medium))
-                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o90))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o90))
                 // Visible from arrival, for required fields only. This is what
                 // keeps the rule on screen without greeting a blank form with
                 // warnings — see `message(for:)`.
                 if Self.requiredFields.contains(key) {
                     Text("Required")
                         .font(AinkradFont.display(9, weight: .medium)).kerning(0.5)
-                        .foregroundStyle(tokens.accentTertiary)
+                        .foregroundStyle(tokens.color(\.accentTertiary))
                         .accessibilityIdentifier("setup.you.\(key).required")
                 }
                 Spacer(minLength: 0)
             }
             Text(subtitle)
                 .font(AinkradFont.display(11))
-                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o50))
             AinkradTextField(text: text, placeholder: placeholder)
                 .onChange(of: text.wrappedValue) { _, new in
                     touched.insert(key)
@@ -212,9 +212,9 @@ struct SetupYouStepView: View {
         }
         .padding(skin.size.s14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: skin.radius.md).fill(tokens.surfaceElevated.opacity(skin.opacity.o50)))
+        .background(ChamferShape(cut: skin.radius.md).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o50)))
         .overlay(
-            ChamferShape(cut: skin.radius.md).strokeBorder(tokens.accentPrimary.opacity(skin.opacity.o15), lineWidth: 1)
+            ChamferShape(cut: skin.radius.md).strokeBorder(tokens.color(\.accentPrimary).opacity(skin.opacity.o15), lineWidth: 1)
         )
     }
 

@@ -18,7 +18,7 @@ import SwiftUI
 /// Layout only: the async route actions stay in `SetupProvidersStepView`, which
 /// owns their state, and arrive here as closures.
 struct SetupClaudeRoutes: View {
-    let tokens: DesignTokens
+    let tokens: AinkradSkin
     /// True when the importer says a Claude Code login exists on this Mac.
     let canImport: Bool
     let isBusy: Bool
@@ -76,7 +76,7 @@ struct SetupClaudeRoutes: View {
                 if let routeError {
                     SetupProviderStatusRow(
                         tokens: tokens, icon: "exclamationmark.triangle.fill",
-                        text: routeError, color: tokens.accentTertiary
+                        text: routeError, color: tokens.color(\.accentTertiary)
                     )
                     .accessibilityIdentifier("setup.providers.routeError")
                 }
@@ -88,7 +88,7 @@ struct SetupClaudeRoutes: View {
 /// One Claude route: what it is, what it will do, and whether it is the easy
 /// one. A whole-row button, so the target is the card rather than the words.
 struct SetupClaudeRoute: View {
-    let tokens: DesignTokens
+    let tokens: AinkradSkin
     let icon: String
     let title: String
     let detail: String
@@ -107,24 +107,24 @@ struct SetupClaudeRoute: View {
                     .font(skin.font(AinkradFontToken(sizeKey: "t15", scaled: false)))
                     .foregroundStyle(
                         isRecommended
-                            ? tokens.accentSecondary
-                            : tokens.foreground.opacity(skin.opacity.o55)
+                            ? tokens.color(\.accentSecondary)
+                            : tokens.color(\.foreground).opacity(skin.opacity.o55)
                     )
                     .frame(width: skin.size.s20)
                 VStack(alignment: .leading, spacing: skin.size.s3) {
                     HStack(spacing: skin.size.s7) {
                         Text(title)
                             .font(AinkradFont.display(13, weight: .medium))
-                            .foregroundStyle(tokens.foreground.opacity(skin.opacity.o92))
+                            .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o92))
                         if isRecommended {
                             Text("FASTEST")
                                 .font(AinkradFont.display(9, weight: .medium)).kerning(0.6)
-                                .foregroundStyle(tokens.accentSecondary)
+                                .foregroundStyle(tokens.color(\.accentSecondary))
                         }
                     }
                     Text(detail)
                         .font(AinkradFont.display(11))
-                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
+                        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o50))
                         .fixedSize(horizontal: false, vertical: true)
                         .multilineTextAlignment(.leading)
                 }
@@ -134,18 +134,18 @@ struct SetupClaudeRoute: View {
                 } else {
                     Image(systemName: "chevron.right")
                         .font(skin.font(AinkradFontToken(sizeKey: "t11", weight: "semibold", scaled: false)))
-                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o30))
+                        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o30))
                 }
             }
             .padding(skin.spacing.md)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 ChamferShape(cut: skin.radius.sm)
-                    .fill(tokens.surfaceElevated.opacity(isRecommended ? skin.opacity.o62 : skin.opacity.o42))
+                    .fill(tokens.color(\.surfaceElevated).opacity(isRecommended ? skin.opacity.o62 : skin.opacity.o42))
             )
             .overlay(
                 ChamferShape(cut: skin.radius.sm).strokeBorder(
-                    isRecommended ? tokens.accentSecondary.opacity(skin.opacity.o30) : .clear, lineWidth: 1)
+                    isRecommended ? tokens.color(\.accentSecondary).opacity(skin.opacity.o30) : .clear, lineWidth: 1)
             )
             .contentShape(Rectangle())
         }
@@ -159,7 +159,7 @@ struct SetupClaudeRoute: View {
 /// nowhere to redirect back to and the user has to carry the code across by
 /// hand.
 struct SetupPasteFallback: View {
-    let tokens: DesignTokens
+    let tokens: AinkradSkin
     let authorizeURL: URL?
     @Binding var pasteText: String
     let onSubmit: (String) -> Void
@@ -170,7 +170,7 @@ struct SetupPasteFallback: View {
         VStack(alignment: .leading, spacing: skin.spacing.sm) {
             Text("Paste the code from your browser")
                 .font(AinkradFont.display(12, weight: .medium))
-                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o85))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o85))
             if let url = authorizeURL {
                 // The loopback couldn't bind, so this URL is the only way back
                 // to the consent screen if the tab was closed or
@@ -178,7 +178,7 @@ struct SetupPasteFallback: View {
                 Link(destination: url) {
                     Text("Open the Claude sign-in page again")
                         .font(AinkradFont.display(11, weight: .medium))
-                        .foregroundStyle(tokens.accentSecondary)
+                        .foregroundStyle(tokens.color(\.accentSecondary))
                 }
             }
             HStack(spacing: skin.size.s10) {
@@ -193,7 +193,7 @@ struct SetupPasteFallback: View {
         }
         .padding(skin.spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: skin.radius.sm).fill(tokens.surfaceElevated.opacity(skin.opacity.o50)))
+        .background(ChamferShape(cut: skin.radius.sm).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o50)))
     }
 }
 
@@ -201,7 +201,7 @@ struct SetupPasteFallback: View {
 /// preset allows one), and connect. The preset binding carries the parent's
 /// reset rules, so switching provider behaves exactly as it does there.
 struct SetupAPIKeyRoute: View {
-    let tokens: DesignTokens
+    let tokens: AinkradSkin
     let preset: ProviderPreset
     /// Writing it switches preset — see `SetupProvidersStepView.presetSelection`.
     let presetSelection: Binding<String>
@@ -239,13 +239,13 @@ struct SetupAPIKeyRoute: View {
                 HStack(spacing: skin.size.s7) {
                     Image(systemName: "checkmark.seal.fill")
                         .font(skin.font(AinkradFontToken(sizeKey: "t12", scaled: false)))
-                        .foregroundStyle(tokens.accentSecondary)
+                        .foregroundStyle(tokens.color(\.accentSecondary))
                     Text(
                         "\(preset.displayName) is connected. Enter a key below only to "
                             + "replace it."
                     )
                     .font(AinkradFont.display(11))
-                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o60))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o60))
                     .fixedSize(horizontal: false, vertical: true)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -258,7 +258,7 @@ struct SetupAPIKeyRoute: View {
                 } else {
                     Text("No API key required")
                         .font(AinkradFont.display(11))
-                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o45))
+                        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o45))
                 }
                 AinkradButton(
                     title: isPresetConnected ? "Replace" : "Connect",

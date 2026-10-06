@@ -35,7 +35,7 @@ struct PaneGlassBackdrop: View {
         if isEnabled {
             let key = PaneGlassImageCache.Key(
                 theme: environment.themeManager.currentTheme.rawValue,
-                tokens: environment.themeManager.tokens,
+                tokens: environment.themeManager.hostSkin,
                 effects: environment.skySettingsStore.effectEnabled)
             GeometryReader { proxy in
                 if let image = PaneGlassImageCache.image(for: key, render: render) {
@@ -83,7 +83,7 @@ enum PaneGlassImageCache {
 
     struct Key: Equatable {
         let theme: String
-        let tokens: DesignTokens
+        let tokens: AinkradSkin
         let effects: [String: Bool]
     }
 

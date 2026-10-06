@@ -31,9 +31,9 @@ struct WorkspaceAppRow: View {
     @Environment(\.ainkradReduceMotion) private var reduceMotion
     @State private var hovering = false
 
-    /// Colours stay on `DesignTokens`, which carry the user's custom accent;
-    /// every scalar comes from the skin.
-    private var tokens: DesignTokens { environment.themeManager.tokens }
+    /// Colours come from `hostSkin`, which carries the user's custom accent;
+    /// every scalar comes from the environment's skin.
+    private var tokens: AinkradSkin { environment.themeManager.hostSkin }
 
     /// The name the user gave this pane, falling back to the app's own.
     ///
@@ -109,12 +109,12 @@ struct WorkspaceAppRow: View {
         if let shortcut = PaneShortcut.label(forOrdinal: ordinal) {
             Text(shortcut)
                 .font(AinkradFont.mono(9, weight: .medium))
-                .foregroundStyle(tokens.accentSecondary.opacity(skin.opacity.o75))
+                .foregroundStyle(tokens.color(\.accentSecondary).opacity(skin.opacity.o75))
                 .lineLimit(1)
                 .fixedSize()
                 .padding(.horizontal, skin.size.s3)
                 .padding(.vertical, skin.size.s1)
-                .background(ChamferShape(cut: skin.cut.c3).fill(tokens.accentSecondary.opacity(skin.opacity.o12)))
+                .background(ChamferShape(cut: skin.cut.c3).fill(tokens.color(\.accentSecondary).opacity(skin.opacity.o12)))
                 .help("Focus this pane with \(shortcut) in Tabs mode")
         }
     }

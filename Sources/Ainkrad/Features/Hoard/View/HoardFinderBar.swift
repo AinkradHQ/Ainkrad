@@ -24,7 +24,7 @@ struct HoardFinderBar: View {
     @State private var highlighted = 0
 
     private var hits: [SearchHit] { search.rankedResults }
-    private var tokens: DesignTokens { environment.themeManager.tokens }
+    private var tokens: AinkradSkin { environment.themeManager.hostSkin }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -52,7 +52,7 @@ struct HoardFinderBar: View {
                 leading: {
                     Image(systemName: search.mode == .jump ? "arrow.turn.down.right" : "magnifyingglass")
                         .font(skin.font(AinkradFontToken(sizeKey: "t13", weight: "semibold", scaled: false)))
-                        .foregroundStyle(tokens.accentSecondary)
+                        .foregroundStyle(tokens.color(\.accentSecondary))
                 },
                 onArrow: { arrow in
                     switch arrow {
@@ -77,7 +77,7 @@ struct HoardFinderBar: View {
         if hits.isEmpty && !search.isSearching && !search.queryText.isEmpty {
             Text("No matches")
                 .font(AinkradFontResolver.font(.caption, typography: typo))
-                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o50))
                 .padding(.horizontal, AinkradSpacing.lg)
                 .padding(.bottom, AinkradSpacing.md)
         } else {
@@ -107,13 +107,13 @@ struct HoardFinderBar: View {
                 .frame(width: iconSize + 6)
             Text(hit.entry.name)
                 .font(AinkradFontResolver.font(.body, typography: typo))
-                .foregroundStyle(tokens.foreground)
+                .foregroundStyle(tokens.color(\.foreground))
                 .lineLimit(1)
             Spacer(minLength: AinkradSpacing.md)
             // WHERE it was found is most of the value of a recursive search.
             Text(hit.relativeDirectory)
                 .font(AinkradFontResolver.font(.caption, typography: typo))
-                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o45))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o45))
                 .lineLimit(1)
                 .truncationMode(.head)
         }
@@ -121,13 +121,13 @@ struct HoardFinderBar: View {
         .padding(.vertical, AinkradSpacing.sm)
         .background(
             ChamferShape(cut: AinkradRadius.md)
-                .fill(tokens.accentSecondary.opacity(isHighlighted ? skin.opacity.o12 : 0))
+                .fill(tokens.color(\.accentSecondary).opacity(isHighlighted ? skin.opacity.o12 : 0))
         )
         // The Launcher's targeting brackets on the highlighted row, for the
         // same reason: one selection language across every palette.
         .overlay(
             TargetingBrackets()
-                .stroke(tokens.accentSecondary, lineWidth: isHighlighted ? 1 : 0)
+                .stroke(tokens.color(\.accentSecondary), lineWidth: isHighlighted ? 1 : 0)
         )
         .contentShape(Rectangle())
     }
@@ -135,7 +135,7 @@ struct HoardFinderBar: View {
     private var footer: some View {
         HStack(spacing: AinkradSpacing.md) {
             Text(search.mode == .jump ? "Jump" : "Global search")
-                .foregroundStyle(tokens.accentSecondary)
+                .foregroundStyle(tokens.color(\.accentSecondary))
             if search.didTruncate {
                 // Silent truncation would read as "that's everything".
                 Text("first \(hits.count) shown — narrow to see more")
@@ -144,10 +144,10 @@ struct HoardFinderBar: View {
             }
             Spacer()
             Text("↑↓ move · ⏎ open · esc close")
-                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o40))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o40))
         }
         .font(AinkradFontResolver.font(.caption, typography: typo))
-        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o55))
+        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o55))
         .padding(.horizontal, AinkradSpacing.lg)
         .padding(.vertical, AinkradSpacing.sm)
     }

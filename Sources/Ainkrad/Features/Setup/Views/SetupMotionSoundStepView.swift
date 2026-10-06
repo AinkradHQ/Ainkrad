@@ -79,7 +79,7 @@ struct SetupMotionSoundStepView: View {
     @State private var hasSettled = false
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
+        let tokens = environment.themeManager.hostSkin
 
         VStack(alignment: .leading, spacing: 0) {
             ScrollView {
@@ -113,7 +113,7 @@ struct SetupMotionSoundStepView: View {
     /// at the size the other sections use for their headings, and its own
     /// sentence rather than a subtitle. It is the question this screen exists to
     /// ask; the sky and sound switches are the follow-ups.
-    private func reduceMotionPanel(tokens: DesignTokens) -> some View {
+    private func reduceMotionPanel(tokens: AinkradSkin) -> some View {
         let store = environment.generalSettingsStore
         return staged(index: 0) {
             HStack(alignment: .top, spacing: skin.size.s14) {
@@ -126,7 +126,7 @@ struct SetupMotionSoundStepView: View {
                     // screen-reader users now hear the same word.
                     Text("Reduce motion")
                         .font(AinkradFont.display(16, weight: .medium))
-                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o95))
+                        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o95))
                     Text(
                         "Ainkrad drifts, parallaxes and springs by default. If that kind of "
                             + "movement makes you queasy, turn this on — the rest of this setup "
@@ -135,7 +135,7 @@ struct SetupMotionSoundStepView: View {
                             + "Settings → Appearance afterwards."
                     )
                     .font(AinkradFont.display(13))
-                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o72))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o72))
                     .lineSpacing(4)
                     .fixedSize(horizontal: false, vertical: true)
                     // Prose is capped even though the column fills — see the
@@ -159,7 +159,7 @@ struct SetupMotionSoundStepView: View {
             // per the no-separator design language.
             .background(
                 ChamferShape(cut: skin.radius.md)
-                    .fill(tokens.accentPrimary.opacity(skin.opacity.o10))
+                    .fill(tokens.color(\.accentPrimary).opacity(skin.opacity.o10))
             )
             .accessibilityIdentifier("setup.motion.reduceMotion")
         }
@@ -167,7 +167,7 @@ struct SetupMotionSoundStepView: View {
 
     // MARK: - Living sky
 
-    private func skySection(tokens: DesignTokens) -> some View {
+    private func skySection(tokens: AinkradSkin) -> some View {
         let store = environment.skySettingsStore
         return staged(index: 1) {
             VStack(alignment: .leading, spacing: skin.spacing.md) {
@@ -195,11 +195,11 @@ struct SetupMotionSoundStepView: View {
     /// The same Calm/Normal/Lively picker Settings → Living Sky renders, off
     /// the same `SkySettingsStore.speedPresets`. Every preset is inside
     /// `speedRange`, so the clamp in `setMotionSpeed` never fires from here.
-    private func speedRow(tokens: DesignTokens, store: SkySettingsStore) -> some View {
+    private func speedRow(tokens: AinkradSkin, store: SkySettingsStore) -> some View {
         VStack(alignment: .leading, spacing: skin.size.s10) {
             Text("How fast")
                 .font(AinkradFont.display(13, weight: .medium))
-                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o90))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o90))
             AinkradSegmentedPicker(
                 items: SkySettingsStore.speedPresets.map(\.value),
                 selection: Binding(
@@ -211,12 +211,12 @@ struct SetupMotionSoundStepView: View {
         }
         .padding(skin.size.s14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: skin.radius.md).fill(tokens.surfaceElevated.opacity(skin.opacity.o45)))
+        .background(ChamferShape(cut: skin.radius.md).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o45)))
     }
 
     // MARK: - Sound
 
-    private func soundSection(tokens: DesignTokens) -> some View {
+    private func soundSection(tokens: AinkradSkin) -> some View {
         let store = environment.generalSettingsStore
         return staged(index: 2) {
             VStack(alignment: .leading, spacing: skin.spacing.md) {
@@ -238,15 +238,15 @@ struct SetupMotionSoundStepView: View {
         }
     }
 
-    private func volumeRow(tokens: DesignTokens, store: GeneralSettingsStore) -> some View {
+    private func volumeRow(tokens: AinkradSkin, store: GeneralSettingsStore) -> some View {
         VStack(alignment: .leading, spacing: skin.size.s10) {
             Text("Volume")
                 .font(AinkradFont.display(13, weight: .medium))
-                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o90))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o90))
             HStack(spacing: skin.size.s10) {
                 Image(systemName: "speaker.fill")
                     .font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false)))
-                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o50))
                 // Bounded to 0...1 in the view: `setSoundVolume` does not clamp,
                 // so `AinkradSlider`'s own `in:` range is what keeps this safe.
                 // Same range as the Sound & Voice page's volume row.
@@ -259,12 +259,12 @@ struct SetupMotionSoundStepView: View {
                 )
                 Image(systemName: "speaker.wave.3.fill")
                     .font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false)))
-                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o50))
             }
         }
         .padding(skin.size.s14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: skin.radius.md).fill(tokens.surfaceElevated.opacity(skin.opacity.o45)))
+        .background(ChamferShape(cut: skin.radius.md).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o45)))
     }
 
     // MARK: - Shared pieces
@@ -272,14 +272,14 @@ struct SetupMotionSoundStepView: View {
     /// A spoken heading and one sentence, replacing the all-caps section
     /// headers this step used to carry. Same shape as the Appearance step's
     /// groups, so the two live-preview screens read as a pair.
-    private func sectionIntro(title: String, hint: String, tokens: DesignTokens) -> some View {
+    private func sectionIntro(title: String, hint: String, tokens: AinkradSkin) -> some View {
         VStack(alignment: .leading, spacing: skin.size.s5) {
             Text(title)
                 .font(AinkradFont.display(15, weight: .medium))
-                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o95))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o95))
             Text(hint)
                 .font(AinkradFont.display(12))
-                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o55))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o55))
                 .lineSpacing(3)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -289,19 +289,19 @@ struct SetupMotionSoundStepView: View {
     /// The switch rows carry a title only. Their explanation is in the intro
     /// above them, and — for the sky — in the window behind them.
     private func toggleRow(
-        tokens: DesignTokens, title: String,
+        tokens: AinkradSkin, title: String,
         isOn: Bool, action: @escaping (Bool) -> Void
     ) -> some View {
         HStack(alignment: .center, spacing: skin.spacing.md) {
             Text(title)
                 .font(AinkradFont.display(13, weight: .medium))
-                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o90))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o90))
             Spacer(minLength: skin.spacing.md)
             AinkradToggle(isOn: Binding(get: { isOn }, set: action))
         }
         .padding(skin.size.s14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: skin.radius.md).fill(tokens.surfaceElevated.opacity(skin.opacity.o45)))
+        .background(ChamferShape(cut: skin.radius.md).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o45)))
     }
 
     /// Staging, routed through `SetupStageMotion` — never a bare

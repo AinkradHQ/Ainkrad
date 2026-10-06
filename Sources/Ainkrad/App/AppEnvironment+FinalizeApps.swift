@@ -124,7 +124,7 @@ extension AppEnvironment {
             chromeFillOverride: {
                 HoardApp.surfaceFill(
                     opacity: appAppearanceStore.surfaceOpacity("hoard"),
-                    base: themeManager.tokens.background
+                    base: themeManager.hostSkin.color(\.background)
                 )
             },
             // A built-in declares its default here, where a plugin declares it
@@ -171,7 +171,7 @@ extension AppEnvironment {
                     chromeFillOverride: {
                         SageApp.surfaceFill(
                             opacity: appAppearanceStore.surfaceOpacity("sage"),
-                            base: themeManager.tokens.background
+                            base: themeManager.hostSkin.color(\.background)
                         )
                     },
                     // Advanced by default: the transcript history and the runs

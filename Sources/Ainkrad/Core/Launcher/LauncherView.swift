@@ -34,9 +34,9 @@ struct LauncherView: View {
     /// Apps-per-row in grid mode; also the up/down arrow step.
     private static let gridColumns = 4
 
-    /// Colours stay on `DesignTokens`, which carry the user's custom accent;
-    /// every scalar comes from the skin.
-    private var tokens: DesignTokens { environment.themeManager.tokens }
+    /// Colours come from `hostSkin`, which carries the user's custom accent;
+    /// every scalar comes from the environment's skin.
+    private var tokens: AinkradSkin { environment.themeManager.hostSkin }
 
     private var viewMode: LauncherViewMode { environment.generalSettingsStore.launcherViewMode }
     private var isGrid: Bool { viewMode == .grid }
@@ -96,7 +96,7 @@ struct LauncherView: View {
             Text("APPS")
                 .font(AinkradFont.mono(9, weight: .medium))
                 .kerning(2.5)
-                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o40))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o40))
                 .padding(.horizontal, skin.size.s18)
                 .padding(.top, skin.size.s14)
                 .padding(.bottom, skin.size.s6)
@@ -104,7 +104,7 @@ struct LauncherView: View {
             if results.isEmpty {
                 Text("No matching apps")
                     .font(AinkradFont.display(13))
-                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o35))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o35))
                     .padding(.horizontal, skin.size.s18)
                     .padding(.vertical, skin.size.s14)
             } else if isGrid {
@@ -144,13 +144,13 @@ struct LauncherView: View {
                 if isSelected {
                     Text("↩")
                         .font(AinkradFont.mono(11))
-                        .foregroundStyle(tokens.accentSecondary.opacity(skin.opacity.o80))
+                        .foregroundStyle(tokens.color(\.accentSecondary).opacity(skin.opacity.o80))
                 }
             }
         )
         .overlay(
             AinkradCornerBrackets()
-                .stroke(isSelected ? tokens.accentSecondary.opacity(skin.opacity.o90) : .clear, lineWidth: 1.5)
+                .stroke(isSelected ? tokens.color(\.accentSecondary).opacity(skin.opacity.o90) : .clear, lineWidth: 1.5)
                 .padding(skin.size.s1)
         )
         .contentShape(Rectangle())
@@ -202,17 +202,17 @@ struct LauncherView: View {
             tile(for: row, size: skin.size.s46)
             Text(row.displayName)
                 .font(AinkradFont.display(11, weight: isSelected ? .medium : .regular))
-                .foregroundStyle(tokens.foreground.opacity(isSelected ? skin.opacity.o95 : skin.opacity.o70))
+                .foregroundStyle(tokens.color(\.foreground).opacity(isSelected ? skin.opacity.o95 : skin.opacity.o70))
                 .lineLimit(1)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, skin.spacing.md)
         .background(
-            ChamferShape(cut: skin.radius.md).fill(tokens.accentSecondary.opacity(isSelected ? skin.opacity.o12 : 0))
+            ChamferShape(cut: skin.radius.md).fill(tokens.color(\.accentSecondary).opacity(isSelected ? skin.opacity.o12 : 0))
         )
         .overlay(
             AinkradCornerBrackets(length: skin.size.s10)
-                .stroke(isSelected ? tokens.accentSecondary.opacity(skin.opacity.o90) : .clear, lineWidth: 1.5)
+                .stroke(isSelected ? tokens.color(\.accentSecondary).opacity(skin.opacity.o90) : .clear, lineWidth: 1.5)
                 .padding(skin.size.s2)
         )
         .contentShape(Rectangle())
@@ -225,7 +225,7 @@ struct LauncherView: View {
             Text("↑↓ navigate    ↩ open    esc dismiss")
                 .font(AinkradFont.mono(9))
                 .kerning(0.5)
-                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o35))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o35))
         }
         .padding(.horizontal, skin.size.s18)
         .padding(.bottom, skin.spacing.md)

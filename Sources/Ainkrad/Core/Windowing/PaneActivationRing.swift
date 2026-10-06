@@ -48,17 +48,17 @@ struct PaneActivationRing: View {
         }
     }
 
-    /// Colours stay on `DesignTokens`, which carry the user's custom accent;
-    /// every scalar comes from the skin.
-    private var tokens: DesignTokens { environment.themeManager.tokens }
+    /// Colours come from `hostSkin`, which carries the user's custom accent;
+    /// every scalar comes from the environment's skin.
+    private var tokens: AinkradSkin { environment.themeManager.hostSkin }
 
     private var borderColor: Color {
-        guard isFocused else { return tokens.foreground.opacity(skin.opacity.o10) }
-        return tokens.accentPrimary.opacity(skin.opacity.o55 + skin.opacity.o45 * pulse)
+        guard isFocused else { return tokens.color(\.foreground).opacity(skin.opacity.o10) }
+        return tokens.color(\.accentPrimary).opacity(skin.opacity.o55 + skin.opacity.o45 * pulse)
     }
 
     private var bracketColor: Color {
         guard isFocused else { return .clear }
-        return tokens.accentSecondary.opacity(skin.opacity.o85)
+        return tokens.color(\.accentSecondary).opacity(skin.opacity.o85)
     }
 }

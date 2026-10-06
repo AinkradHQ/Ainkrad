@@ -61,22 +61,10 @@ struct DefaultThemeParityTests {
         ),
     ]
 
-    let legacyFixtures: [Theme: DesignTokens] = [
-        .neonBlue: LegacyDesignTokens.neonBlue,
-        .cyberPurple: LegacyDesignTokens.cyberPurple,
-        .dracula: LegacyDesignTokens.dracula,
-        .nord: LegacyDesignTokens.nord,
-        .tokyoNight: LegacyDesignTokens.tokyoNight,
-        .gruvbox: LegacyDesignTokens.gruvbox,
-        .solarizedDark: LegacyDesignTokens.solarizedDark,
-    ]
-
     @Test("all 7 themes palette, skyProfile and iconColorFamily equal legacy fixtures")
     func testPaletteSkyIconParity() {
         for theme in Theme.allCases {
-            let tokens = theme.tokens
-            let legacy = legacyFixtures[theme]!
-            #expect(tokens == legacy)
+            #expect(LegacyPalettes.hexes(theme.skin) == LegacyPalettes.table[theme], "\(theme.rawValue)")
             #expect(theme.skyProfile == theme.skyProfile)
             #expect(theme.iconColorFamily == theme.iconColorFamily)
         }

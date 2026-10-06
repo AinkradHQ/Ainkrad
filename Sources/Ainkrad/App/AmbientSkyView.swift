@@ -61,7 +61,7 @@ struct AmbientSkyView: View {
     var isLive: Bool = true
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
+        let tokens = environment.themeManager.hostSkin
         // Per-theme sky character (emphasis only — colors come from `tokens`).
         // Read `currentTheme` (observed) so a theme switch repaints the sky.
         let profile = environment.themeManager.currentTheme.skyProfile
@@ -76,9 +76,9 @@ struct AmbientSkyView: View {
         ZStack {
             LinearGradient(
                 stops: [
-                    .init(color: tokens.background, location: 0),
-                    .init(color: tokens.surface, location: 0.55),
-                    .init(color: tokens.background, location: 1),
+                    .init(color: tokens.color(\.background), location: 0),
+                    .init(color: tokens.color(\.surface), location: 0.55),
+                    .init(color: tokens.color(\.background), location: 1),
                 ],
                 startPoint: .top,
                 endPoint: .bottom
@@ -115,7 +115,7 @@ struct AmbientSkyView: View {
     /// tuple lays out as an implicit VERTICAL stack — the glows and canvas
     /// become three hard-edged horizontal bands across the home screen.
     /// `SkyRendererTests.animatedStructureHasNoBands` guards this.
-    private func layers(at time: TimeInterval, sky: SkySettingsStore, tokens: DesignTokens, profile: SkyProfile)
+    private func layers(at time: TimeInterval, sky: SkySettingsStore, tokens: AinkradSkin, profile: SkyProfile)
         -> some View
     {
         let breath = sky.isEnabled(.breathingSky) && time > 0 ? SkyMath.breath(time: time) : 0.5
@@ -130,7 +130,7 @@ struct AmbientSkyView: View {
         return ZStack {
             // Horizon glow — a sun below the edge of the island.
             RadialGradient(
-                colors: [tokens.accentPrimary.opacity((0.16 + 0.12 * breath) * (1 + glowBoost)), .clear],
+                colors: [tokens.color(\.accentPrimary).opacity((0.16 + 0.12 * breath) * (1 + glowBoost)), .clear],
                 center: .init(x: 0.5, y: 1.15),
                 startRadius: 0,
                 endRadius: 900
@@ -139,7 +139,7 @@ struct AmbientSkyView: View {
             // High-altitude accent haze, offset so the two glows don't read
             // as symmetric.
             RadialGradient(
-                colors: [tokens.accentSecondary.opacity((0.05 + 0.06 * breath) * (1 + glowBoost)), .clear],
+                colors: [tokens.color(\.accentSecondary).opacity((0.05 + 0.06 * breath) * (1 + glowBoost)), .clear],
                 center: .init(x: 0.18, y: -0.1),
                 startRadius: 0,
                 endRadius: 700
@@ -165,7 +165,7 @@ struct AmbientSkyView: View {
     /// the frozen arrangement).
     private func canvas(
         at time: TimeInterval, sky: SkySettingsStore,
-        celestial: SkyMath.Celestial?, tokens: DesignTokens, profile: SkyProfile
+        celestial: SkyMath.Celestial?, tokens: AinkradSkin, profile: SkyProfile
     ) -> some View {
         Canvas { context, size in
             guard size.width > 0, size.height > 0 else { return }

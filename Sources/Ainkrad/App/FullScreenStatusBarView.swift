@@ -18,9 +18,9 @@ struct FullScreenStatusBarView: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.ainkradSkin) private var skin
 
-    /// Colours stay on `DesignTokens`, which carry the user's custom accent;
-    /// every scalar comes from the skin.
-    private var tokens: DesignTokens { environment.themeManager.tokens }
+    /// Colours come from `hostSkin`, which carries the user's custom accent;
+    /// every scalar comes from the environment's skin.
+    private var tokens: AinkradSkin { environment.themeManager.hostSkin }
 
     var body: some View {
         HStack(spacing: skin.spacing.sm) {
@@ -29,11 +29,11 @@ struct FullScreenStatusBarView: View {
                     .padding(.horizontal, skin.spacing.sm)
                     .padding(.vertical, skin.spacing.xs)
                     .background(
-                        ChamferShape(cut: skin.radius.sm).fill(tokens.surfaceElevated.opacity(skin.opacity.o32))
+                        ChamferShape(cut: skin.radius.sm).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o32))
                     )
                     .overlay(
                         ChamferShape(cut: skin.radius.sm).strokeBorder(
-                            tokens.surface.opacity(skin.opacity.o40), lineWidth: 1))
+                            tokens.color(\.surface).opacity(skin.opacity.o40), lineWidth: 1))
             }
         }
     }
@@ -56,9 +56,9 @@ struct FullScreenStatusBarView: View {
         case .clock(let time, let date):
             HStack(spacing: skin.size.s6) {
                 Text(time)
-                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o85))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o85))
                 Text(date)
-                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o50))
             }
             .font(AinkradFont.mono(11, weight: .medium))
         case .network(let status):
@@ -75,10 +75,10 @@ struct FullScreenStatusBarView: View {
         HStack(spacing: skin.spacing.xs) {
             Image(systemName: symbolName)
                 .font(skin.font(AinkradFontToken(sizeKey: "t10", scaled: false)))
-                .foregroundStyle(tokens.accentSecondary.opacity(skin.opacity.o95))
+                .foregroundStyle(tokens.color(\.accentSecondary).opacity(skin.opacity.o95))
             Text(text)
                 .font(AinkradFont.mono(11))
-                .foregroundStyle(tokens.accentSecondary.opacity(skin.opacity.o85))
+                .foregroundStyle(tokens.color(\.accentSecondary).opacity(skin.opacity.o85))
         }
     }
 }

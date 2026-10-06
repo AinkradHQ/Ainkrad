@@ -33,44 +33,44 @@ struct PaneShortcutBadge: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.ainkradSkin) private var skin
 
-    /// Colours stay on `DesignTokens`, which carry the user's custom accent;
-    /// every scalar comes from the skin.
-    private var tokens: DesignTokens { environment.themeManager.tokens }
+    /// Colours come from `hostSkin`, which carries the user's custom accent;
+    /// every scalar comes from the environment's skin.
+    private var tokens: AinkradSkin { environment.themeManager.hostSkin }
 
     var body: some View {
         HStack(spacing: skin.spacing.sm) {
             if let shortcut {
                 Text(shortcut)
                     .font(AinkradFont.mono(12, weight: .semibold))
-                    .foregroundStyle(tokens.accentSecondary)
+                    .foregroundStyle(tokens.color(\.accentSecondary))
                     .lineLimit(1)
                     .fixedSize()
                     .padding(.horizontal, skin.size.s6)
                     .padding(.vertical, skin.size.s2)
                     .background(
-                        ChamferShape(cut: skin.cut.c4).fill(tokens.accentSecondary.opacity(skin.opacity.o16))
+                        ChamferShape(cut: skin.cut.c4).fill(tokens.color(\.accentSecondary).opacity(skin.opacity.o16))
                     )
                     .overlay(
                         ChamferShape(cut: skin.cut.c4)
-                            .strokeBorder(tokens.accentSecondary.opacity(skin.opacity.o45), lineWidth: 1)
+                            .strokeBorder(tokens.color(\.accentSecondary).opacity(skin.opacity.o45), lineWidth: 1)
                     )
             }
 
             Text(title)
                 .font(AinkradFont.display(12, weight: .medium))
                 .kerning(0.4)
-                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o90))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o90))
                 .lineLimit(1)
                 .truncationMode(.middle)
         }
         .padding(.horizontal, skin.spacing.md)
         .padding(.vertical, skin.spacing.sm)
         .background(
-            ChamferShape(cut: skin.radius.sm).fill(tokens.surfaceElevated.opacity(skin.opacity.o92))
+            ChamferShape(cut: skin.radius.sm).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o92))
         )
         .overlay(
             ChamferShape(cut: skin.radius.sm)
-                .strokeBorder(tokens.accentPrimary.opacity(skin.opacity.o35), lineWidth: 1)
+                .strokeBorder(tokens.color(\.accentPrimary).opacity(skin.opacity.o35), lineWidth: 1)
         )
         .shadow(color: skin.color(.palette("black", skin.opacity.o35)), radius: skin.size.s12, y: 4)
         // Never intercepts anything: it floats over the app's content, and a

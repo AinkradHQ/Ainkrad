@@ -15,7 +15,7 @@ import SwiftUI
 /// attached only to the content sub-area above the actions row.
 struct AppStoreCard: View {
     let row: AppStoreRow
-    let tokens: DesignTokens
+    let tokens: AinkradSkin
     let isBusy: Bool
     let onOpen: () -> Void
     let onInstall: () -> Void
@@ -34,10 +34,10 @@ struct AppStoreCard: View {
                         VStack(alignment: .leading, spacing: skin.size.s1) {
                             Text(row.displayName)
                                 .font(AinkradFont.display(13, weight: .medium))
-                                .foregroundStyle(tokens.foreground)
+                                .foregroundStyle(tokens.color(\.foreground))
                             Text(row.versionLine)
                                 .font(skin.font(AinkradFontToken(sizeKey: "t10", scaled: false)))
-                                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
+                                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o50))
                         }
                         Spacer()
                         if row.status == .updateAvailable {
@@ -53,7 +53,7 @@ struct AppStoreCard: View {
                     // regardless of description length (uniform grid).
                     Text(row.description.isEmpty ? " " : row.description)
                         .font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false)))
-                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o70))
+                        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o70))
                         .lineLimit(2, reservesSpace: true)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }

@@ -74,9 +74,9 @@ extension WorkspaceOverviewView {
             VStack(spacing: skin.size.s10) {
                 Image(systemName: "rectangle.split.3x1")
                     .font(skin.font(AinkradFontToken(sizeKey: "t30", weight: "light", scaled: false)))
-                    .foregroundStyle(tokens.accentPrimary.opacity(skin.opacity.o50))
+                    .foregroundStyle(tokens.color(\.accentPrimary).opacity(skin.opacity.o50))
                 Text("Select a workspace").font(AinkradFont.display(13)).foregroundStyle(
-                    tokens.foreground.opacity(skin.opacity.o55))
+                    tokens.color(\.foreground).opacity(skin.opacity.o55))
             }
             .frame(maxWidth: .infinity)
             .frame(height: Self.noSelectionHeight)
@@ -89,13 +89,13 @@ extension WorkspaceOverviewView {
         VStack(spacing: skin.spacing.sm) {
             Image(systemName: "square.dashed")
                 .font(skin.font(AinkradFontToken(sizeKey: "t24", weight: "light", scaled: false)))
-                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o30))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o30))
             Text("No apps in this workspace")
                 .font(AinkradFont.display(12))
-                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o45))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o45))
             Text("Drag an app here from another workspace, or open one from the Launcher.")
                 .font(AinkradFont.display(11))
-                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o30))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o30))
                 .multilineTextAlignment(.center)
                 // A measure, not the full column width — a line of guidance
                 // stretched across ~1100pt is harder to read than one that wraps.
@@ -106,7 +106,7 @@ extension WorkspaceOverviewView {
         .background(
             ChamferShape(cut: skin.radius.sm)
                 .strokeBorder(
-                    tokens.foreground.opacity(skin.opacity.o16),
+                    tokens.color(\.foreground).opacity(skin.opacity.o16),
                     style: StrokeStyle(lineWidth: 1, dash: [4, 3])
                 )
         )
@@ -170,15 +170,15 @@ extension WorkspaceOverviewView {
         HStack(spacing: skin.size.s10) {
             Text(workspace.name)
                 .font(AinkradFont.display(16, weight: .semibold))
-                .foregroundStyle(tokens.foreground)
+                .foregroundStyle(tokens.color(\.foreground))
                 .lineLimit(1)
 
             if workspace.id == manager.activeWorkspaceID {
                 Text("ACTIVE").font(AinkradFont.mono(9, weight: .bold)).tracking(1)
-                    .foregroundStyle(tokens.accentSecondary)
+                    .foregroundStyle(tokens.color(\.accentSecondary))
                     .lineLimit(1).fixedSize()
                     .padding(.horizontal, skin.size.s6).padding(.vertical, skin.size.s2)
-                    .background(Capsule().fill(tokens.accentSecondary.opacity(skin.opacity.o15)))
+                    .background(Capsule().fill(tokens.color(\.accentSecondary).opacity(skin.opacity.o15)))
             }
 
             // Which mode you'll land in. The overview showed no trace of this,
@@ -187,10 +187,10 @@ extension WorkspaceOverviewView {
             if workspace.tileLayout.blocks.count > 1 {
                 Text(workspace.viewMode == .focus ? "TABS" : "SPLIT")
                     .font(AinkradFont.mono(9, weight: .medium)).tracking(1)
-                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o50))
                     .lineLimit(1).fixedSize()
                     .padding(.horizontal, skin.size.s5).padding(.vertical, skin.size.s2)
-                    .background(Capsule().fill(tokens.foreground.opacity(skin.opacity.o08)))
+                    .background(Capsule().fill(tokens.color(\.foreground).opacity(skin.opacity.o08)))
             }
 
             Spacer()
@@ -225,11 +225,11 @@ extension WorkspaceOverviewView {
             HStack(spacing: skin.size.s6) {
                 Text("OPEN APPS")
                     .font(AinkradFont.mono(9, weight: .semibold)).kerning(1.5)
-                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o45))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o45))
                     .lineLimit(1).fixedSize()
                 Text("\(count)")
                     .font(AinkradFont.mono(9))
-                    .foregroundStyle(tokens.accentSecondary.opacity(skin.opacity.o80))
+                    .foregroundStyle(tokens.color(\.accentSecondary).opacity(skin.opacity.o80))
                 Spacer()
             }
             .padding(.horizontal, skin.size.s18)

@@ -31,7 +31,7 @@ struct AppStoreActionControls: View {
     }
 
     let row: AppStoreRow
-    let tokens: DesignTokens
+    let tokens: AinkradSkin
     let isBusy: Bool
     var style: Style = .card
     let onInstall: () -> Void
@@ -94,7 +94,7 @@ struct AppStoreActionControls: View {
             Image(systemName: "checkmark.circle.fill").font(font(style.smallFontKey))
             Text("Installed").font(font(style.fontKey, weight: "medium"))
         }
-        .foregroundStyle(tokens.accentTertiary)
+        .foregroundStyle(tokens.color(\.accentTertiary))
     }
 
     /// A labeled `AinkradToggle` — the kit's chamfered switch, plus the
@@ -104,7 +104,7 @@ struct AppStoreActionControls: View {
             AinkradToggle(isOn: Binding(get: { row.isEnabled }, set: onToggleEnabled))
             Text(row.isEnabled ? "Enabled" : "Disabled")
                 .font(font(style.fontKey, weight: "medium"))
-                .foregroundStyle(row.isEnabled ? tokens.accentTertiary : tokens.foreground.opacity(skin.opacity.o55))
+                .foregroundStyle(row.isEnabled ? tokens.color(\.accentTertiary) : tokens.color(\.foreground).opacity(skin.opacity.o55))
         }
         .help(row.isEnabled ? "Disable" : "Enable")
     }
@@ -119,7 +119,7 @@ struct AppStoreActionControls: View {
             Text("Add secrets & enable in MCP Servers")
                 .font(font(style.smallFontKey, weight: "medium"))
         }
-        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o55))
+        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o55))
         .help("Enable, trust, and configure secrets for this MCP server in Settings → MCP Servers")
     }
 

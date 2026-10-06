@@ -22,7 +22,7 @@ struct SignalBellButton: View {
     /// Changes when something arrives. The bell reacts to the CHANGE, not the
     /// value, so any increment pulses once.
     var arrivalToken: Int = 0
-    let tokens: DesignTokens
+    let tokens: AinkradSkin
     let action: () -> Void
 
     @State private var isHovered = false
@@ -67,8 +67,8 @@ struct SignalBellButton: View {
                     .font(skin.font(AinkradFontToken(sizeKey: "t10_5", weight: "medium", scaled: false)))
                     .foregroundStyle(
                         hasUnread
-                            ? tokens.accentSecondary
-                            : tokens.foreground.opacity(isHovered ? skin.opacity.o75 : skin.opacity.o40)
+                            ? tokens.color(\.accentSecondary)
+                            : tokens.color(\.foreground).opacity(isHovered ? skin.opacity.o75 : skin.opacity.o40)
                     )
                     // The glyph is its own layer: it lifts on hover rather than
                     // the whole control moving.
@@ -78,13 +78,13 @@ struct SignalBellButton: View {
                     .opacity(pulse && reduceMotion ? skin.opacity.o55 : 1)
                     .shadow(
                         color: hasUnread || pulse
-                            ? tokens.accentSecondary.opacity(pulse ? 1 : skin.opacity.o80) : .clear,
+                            ? tokens.color(\.accentSecondary).opacity(pulse ? 1 : skin.opacity.o80) : .clear,
                         radius: pulse ? skin.size.s8 : skin.size.s4)
 
                 if let badge = Self.badgeText(unread) {
                     Text(badge)
                         .font(AinkradFont.mono(9.5, weight: .semibold))
-                        .foregroundStyle(tokens.accentSecondary)
+                        .foregroundStyle(tokens.color(\.accentSecondary))
                 }
             }
             .frame(minWidth: skin.size.s14, minHeight: skin.size.s11)

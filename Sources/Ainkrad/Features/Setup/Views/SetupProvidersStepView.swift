@@ -97,7 +97,7 @@ struct SetupProvidersStepView: View {
     private var canDefer: Bool { escape.isOffered(isConnected: isConnected) }
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
+        let tokens = environment.themeManager.hostSkin
 
         VStack(alignment: .leading, spacing: 0) {
             ScrollView {
@@ -155,14 +155,14 @@ struct SetupProvidersStepView: View {
 
     // MARK: - Sections
 
-    private func intro(tokens: DesignTokens) -> some View {
+    private func intro(tokens: AinkradSkin) -> some View {
         Text(
             "Ainkrad needs one working AI connection before it can do anything. "
                 + "Connect a provider below — the connection is tested before it's saved, "
                 + "so nothing broken gets stored."
         )
         .font(AinkradFont.display(12))
-        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o60))
+        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o60))
         .fixedSize(horizontal: false, vertical: true)
         // Prose is capped even though the column fills, so the provider rows
         // below can use the room without the intro running with them.
@@ -188,7 +188,7 @@ struct SetupProvidersStepView: View {
             })
     }
 
-    private func claudeRoutes(tokens: DesignTokens) -> some View {
+    private func claudeRoutes(tokens: AinkradSkin) -> some View {
         SetupClaudeRoutes(
             tokens: tokens,
             canImport: oauthController?.canImportFromClaudeCode == true,
@@ -202,7 +202,7 @@ struct SetupProvidersStepView: View {
             onPaste: { raw in Task { await runPaste(raw) } })
     }
 
-    private func apiKeyRoute(tokens: DesignTokens) -> some View {
+    private func apiKeyRoute(tokens: AinkradSkin) -> some View {
         SetupAPIKeyRoute(
             tokens: tokens,
             preset: preset,
@@ -235,21 +235,21 @@ struct SetupProvidersStepView: View {
     /// already left no connection, and this path adds none. The user lands in
     /// the workspace with AI off, a persistent banner, and the step still owed.
     @ViewBuilder
-    private func deferAffordance(tokens: DesignTokens) -> some View {
+    private func deferAffordance(tokens: AinkradSkin) -> some View {
         if escape.taken {
             SetupProviderStatusRow(
                 tokens: tokens, icon: "clock.badge.exclamationmark",
                 text: adoptionWarning
                     ?? "Set up later. Ainkrad's AI features stay off until you connect a "
                     + "provider — you'll be reminded in the workspace.",
-                color: tokens.accentTertiary
+                color: tokens.color(\.accentTertiary)
             )
             .accessibilityIdentifier("setup.providers.deferred")
         } else if canDefer {
             VStack(alignment: .leading, spacing: skin.size.s6) {
                 Text(escape.offerCopy)
                     .font(AinkradFont.display(11))
-                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o55))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o55))
                 AinkradButton(title: "Set this up later", style: .secondary) {
                     // One act: walked past AND recorded as still owed.
                     escape.take()
@@ -261,16 +261,16 @@ struct SetupProvidersStepView: View {
     }
 
     @ViewBuilder
-    private func status(tokens: DesignTokens) -> some View {
+    private func status(tokens: AinkradSkin) -> some View {
         switch outcome {
         case .connected(let message):
             SetupProviderStatusRow(
                 tokens: tokens, icon: "checkmark.seal.fill",
-                text: message, color: tokens.accentSecondary)
+                text: message, color: tokens.color(\.accentSecondary))
         case .failed(let message, _):
             SetupProviderStatusRow(
                 tokens: tokens, icon: "exclamationmark.triangle.fill",
-                text: message, color: tokens.accentTertiary)
+                text: message, color: tokens.color(\.accentTertiary))
         case nil:
             // `routeError` is rendered inside the Claude section now, beside the
             // route that produced it. Repeating it here would print the same

@@ -37,9 +37,9 @@ struct WorkspaceOverviewView: View {
 
     var manager: WorkspaceManager { environment.workspaceManager }
 
-    /// Colours stay on `DesignTokens`, which carry the user's custom accent;
-    /// every scalar comes from the skin.
-    var tokens: DesignTokens { environment.themeManager.tokens }
+    /// Colours come from `hostSkin`, which carries the user's custom accent;
+    /// every scalar comes from the environment's skin.
+    var tokens: AinkradSkin { environment.themeManager.hostSkin }
 
     var body: some View {
         GeometryReader { geo in
@@ -192,17 +192,17 @@ struct WorkspaceOverviewView: View {
     private var header: some View {
         HStack(spacing: skin.spacing.md) {
             ChevronMark()
-                .fill(tokens.accentSecondary)
+                .fill(tokens.color(\.accentSecondary))
                 .frame(width: skin.size.s16, height: skin.size.s14)
-                .shadow(color: tokens.accentSecondary.opacity(skin.opacity.o90), radius: skin.size.s6)
+                .shadow(color: tokens.color(\.accentSecondary).opacity(skin.opacity.o90), radius: skin.size.s6)
             Text("WORKSPACES")
                 .font(AinkradFont.display(13, weight: .semibold))
                 .kerning(4)
-                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o90))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o90))
             Spacer()
             Text("\(manager.workspaces.count)")
                 .font(AinkradFont.mono(11, weight: .medium))
-                .foregroundStyle(tokens.accentSecondary.opacity(skin.opacity.o80))
+                .foregroundStyle(tokens.color(\.accentSecondary).opacity(skin.opacity.o80))
         }
         .padding(.horizontal, skin.size.s18)
         .frame(height: skin.size.s52)
@@ -302,11 +302,11 @@ struct WorkspaceOverviewView: View {
             leading: {
                 Image(systemName: "plus")
                     .font(skin.font(AinkradFontToken(sizeKey: "t12", weight: "medium", scaled: false)))
-                    .foregroundStyle(tokens.accentSecondary)
+                    .foregroundStyle(tokens.color(\.accentSecondary))
             },
             title: "New Workspace",
             trailing: {
-                Text("⌘⇧N").font(AinkradFont.mono(9)).foregroundStyle(tokens.foreground.opacity(skin.opacity.o30))
+                Text("⌘⇧N").font(AinkradFont.mono(9)).foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o30))
             }
         )
     }
@@ -326,11 +326,11 @@ struct WorkspaceOverviewView: View {
                 HStack(spacing: skin.size.s5) {
                     Text(hint.keys)
                         .font(AinkradFont.mono(10, weight: .medium))
-                        .foregroundStyle(tokens.accentSecondary.opacity(skin.opacity.o80))
+                        .foregroundStyle(tokens.color(\.accentSecondary).opacity(skin.opacity.o80))
                         .lineLimit(1).fixedSize()
                     Text(hint.label)
                         .font(AinkradFont.mono(10))
-                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o45))
+                        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o45))
                         .lineLimit(1).fixedSize()
                 }
             }
