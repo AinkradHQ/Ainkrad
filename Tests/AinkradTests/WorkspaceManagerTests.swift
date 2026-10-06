@@ -62,6 +62,37 @@ struct WorkspaceManagerTests {
         #expect(manager.activeWorkspace.isMain)
     }
 
+    @Test("deleting the active workspace finds main by flag, not by position")
+    func deletingActiveFindsMainWhereverItSits() {
+        let manager = WorkspaceManager()
+        let main = manager.workspaces[0]
+        _ = manager.createWorkspace()
+        let third = manager.createWorkspace()
+        manager.moveWorkspace(fromOffsets: IndexSet(integer: 0), toOffset: 3)
+        #expect(manager.workspaces.last?.id == main.id)
+
+        manager.deleteWorkspace(third.id)
+
+        #expect(manager.activeWorkspace.id == main.id)
+    }
+
+    @Test("a restore without a main workspace re-creates one, and the active workspace still resolves")
+    func restoreWithoutMainKeepsActiveValid() {
+        let source = WorkspaceManager()
+        let extra = source.createWorkspace()
+        var snapshot = source.snapshot()
+        snapshot.workspaces = snapshot.workspaces.filter { !$0.isMain }
+        snapshot.activeWorkspaceIndex = 0
+
+        let manager = WorkspaceManager()
+        manager.restore(from: snapshot)
+
+        #expect(manager.workspaces.map(\.isMain) == [true, false])
+        #expect(manager.workspaces[1].name == extra.name)
+        // The re-created main is inserted first, so index 0 now names it.
+        #expect(manager.activeWorkspace.isMain)
+    }
+
     @Test("deleting an inactive workspace keeps the active one active")
     func deletingInactiveKeepsActive() {
         let manager = WorkspaceManager()

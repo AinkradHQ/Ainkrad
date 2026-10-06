@@ -27,8 +27,22 @@ final class WorkspaceManager {
         self.activeWorkspaceID = main.id
     }
 
+    /// `activeWorkspaceID` only ever names a workspace in `workspaces`: it is
+    /// set from one, and deleting the active workspace moves it to main first.
     var activeWorkspace: Workspace {
-        workspaces.first(where: { $0.id == activeWorkspaceID })!
+        guard let active = workspaces.first(where: { $0.id == activeWorkspaceID }) else {
+            preconditionFailure("activeWorkspaceID names no workspace")
+        }
+        return active
+    }
+
+    /// The permanent home workspace. There is always exactly one: `init`
+    /// creates it, `deleteWorkspace` refuses it and `restore` re-creates it.
+    private var mainWorkspace: Workspace {
+        guard let main = workspaces.first(where: { $0.isMain }) else {
+            preconditionFailure("the main workspace is missing")
+        }
+        return main
     }
 
     @discardableResult
@@ -48,7 +62,7 @@ final class WorkspaceManager {
         guard let workspace = workspaces.first(where: { $0.id == id }), !workspace.isMain else { return }
         workspaces.removeAll { $0.id == id }
         if activeWorkspaceID == id {
-            activeWorkspaceID = workspaces.first(where: { $0.isMain })!.id
+            activeWorkspaceID = mainWorkspace.id
         }
         onStateChange?()
     }

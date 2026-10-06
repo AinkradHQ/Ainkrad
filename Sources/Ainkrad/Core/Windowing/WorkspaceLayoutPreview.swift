@@ -27,19 +27,27 @@ struct WorkspaceLayoutPreview: View {
         /// The detail pane's recognition anchor: arrangement, tiles and names.
         case feature
 
-        var paneCornerCut: CGFloat { self == .feature ? 6 : 2 }
-        var outerCornerCut: CGFloat { self == .feature ? AinkradRadius.sm : 4 }
-        var gap: CGFloat { self == .feature ? 4 : 1.5 }
         var showsNames: Bool { self == .feature }
-        var tabStripHeight: CGFloat { self == .feature ? 14 : 5 }
     }
 
     let workspace: Workspace
     let registry: BuiltInAppRegistry
-    let tokens: DesignTokens
     let style: Style
 
+    @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradSkin) private var skin
+
+    /// Colours stay on `DesignTokens`, which carry the user's custom accent;
+    /// every scalar comes from the skin.
+    private var tokens: DesignTokens { environment.themeManager.tokens }
     private var layout: TileLayout { workspace.tileLayout }
+
+    // The style's metrics: the feature preview is drawn at full detail, the
+    // row thumbnail at hairline scale.
+    private var paneCornerCut: CGFloat { style == .feature ? skin.cut.c6 : skin.cut.c2 }
+    private var outerCornerCut: CGFloat { style == .feature ? skin.radius.sm : skin.cut.c4 }
+    private var gap: CGFloat { style == .feature ? skin.size.s4 : skin.size.s1_5 }
+    private var tabStripHeight: CGFloat { style == .feature ? skin.size.s14 : skin.size.s5 }
 
     /// Focus Mode only reads as Focus Mode when there is more than one pane —
     /// matching `PaneGeometryResolver`, so the preview never claims a state the
@@ -59,29 +67,29 @@ struct WorkspaceLayoutPreview: View {
             }
         }
         .background(
-            ChamferShape(cut: style.outerCornerCut)
-                .fill(tokens.background.opacity(0.35))
+            ChamferShape(cut: outerCornerCut)
+                .fill(tokens.background.opacity(skin.opacity.o35))
         )
-        .clipShape(ChamferShape(cut: style.outerCornerCut))
+        .clipShape(ChamferShape(cut: outerCornerCut))
         .overlay(
-            ChamferShape(cut: style.outerCornerCut)
-                .strokeBorder(tokens.foreground.opacity(0.1), lineWidth: 1)
+            ChamferShape(cut: outerCornerCut)
+                .strokeBorder(tokens.foreground.opacity(skin.opacity.o10), lineWidth: 1)
         )
     }
 
     /// An empty workspace is a real state, not a missing preview — the dashed
     /// frame says "nothing here yet" rather than "failed to draw".
     private var emptyState: some View {
-        ChamferShape(cut: style.outerCornerCut)
+        ChamferShape(cut: outerCornerCut)
             .strokeBorder(
-                tokens.foreground.opacity(0.18),
+                tokens.foreground.opacity(skin.opacity.o18),
                 style: StrokeStyle(lineWidth: 1, dash: [3, 2])
             )
             .overlay {
                 if style.showsNames {
                     Text("empty")
                         .font(AinkradFont.mono(10))
-                        .foregroundStyle(tokens.foreground.opacity(0.35))
+                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o35))
                 }
             }
     }
@@ -94,12 +102,12 @@ struct WorkspaceLayoutPreview: View {
                 let unit = frames[block.id] ?? .zero
                 paneCell(block)
                     .frame(
-                        width: max(unit.width * size.width - style.gap, 1),
-                        height: max(unit.height * size.height - style.gap, 1)
+                        width: max(unit.width * size.width - gap, 1),
+                        height: max(unit.height * size.height - gap, 1)
                     )
                     .offset(
-                        x: unit.minX * size.width + style.gap / 2,
-                        y: unit.minY * size.height + style.gap / 2
+                        x: unit.minX * size.width + gap / 2,
+                        y: unit.minY * size.height + gap / 2
                     )
             }
         }
@@ -111,26 +119,26 @@ struct WorkspaceLayoutPreview: View {
     private func focusModePreview(in size: CGSize) -> some View {
         let focusedID = layout.focusedBlockID
         let focused = layout.blocks.first { $0.id == focusedID } ?? layout.blocks[0]
-        let stripHeight = style.tabStripHeight
+        let stripHeight = tabStripHeight
 
-        return VStack(spacing: style.gap) {
-            HStack(spacing: style.gap) {
+        return VStack(spacing: gap) {
+            HStack(spacing: gap) {
                 ForEach(layout.blocks) { block in
                     let isActive = block.id == focused.id
-                    ChamferShape(cut: style.paneCornerCut)
+                    ChamferShape(cut: paneCornerCut)
                         .fill(
                             isActive
-                                ? tokens.accentPrimary.opacity(0.5)
-                                : tokens.surfaceElevated.opacity(0.7)
+                                ? tokens.accentPrimary.opacity(skin.opacity.o50)
+                                : tokens.surfaceElevated.opacity(skin.opacity.o70)
                         )
                         .frame(height: stripHeight)
                         .overlay {
                             if style.showsNames, isActive {
                                 Text(title(for: block))
                                     .font(AinkradFont.mono(8, weight: .medium))
-                                    .foregroundStyle(tokens.foreground.opacity(0.9))
+                                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o90))
                                     .lineLimit(1)
-                                    .padding(.horizontal, 3)
+                                    .padding(.horizontal, skin.size.s3)
                             }
                         }
                 }
@@ -140,7 +148,7 @@ struct WorkspaceLayoutPreview: View {
             paneCell(focused)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .padding(style.gap)
+        .padding(gap)
         .frame(width: size.width, height: size.height)
     }
 
@@ -148,12 +156,14 @@ struct WorkspaceLayoutPreview: View {
     /// the focused pane's accent border — the same signal the real pane wears.
     private func paneCell(_ block: Block) -> some View {
         let isFocused = block.id == layout.focusedBlockID && layout.blocks.count > 1
-        return ChamferShape(cut: style.paneCornerCut)
-            .fill(tokens.surface.opacity(0.75))
+        return ChamferShape(cut: paneCornerCut)
+            .fill(tokens.surface.opacity(skin.opacity.o75))
             .overlay(
-                ChamferShape(cut: style.paneCornerCut)
+                ChamferShape(cut: paneCornerCut)
                     .strokeBorder(
-                        isFocused ? tokens.accentPrimary.opacity(0.7) : tokens.foreground.opacity(0.12),
+                        isFocused
+                            ? tokens.accentPrimary.opacity(skin.opacity.o70)
+                            : tokens.foreground.opacity(skin.opacity.o12),
                         lineWidth: 1
                     )
             )
@@ -163,14 +173,14 @@ struct WorkspaceLayoutPreview: View {
     @ViewBuilder
     private func paneContents(_ block: Block) -> some View {
         if style.showsNames {
-            VStack(spacing: 4) {
-                NeonAppTile(symbol: icon(for: block), tokens: tokens, size: 22)
+            VStack(spacing: skin.spacing.xs) {
+                NeonAppTile(symbol: icon(for: block), tokens: tokens, size: skin.size.s22)
                 Text(title(for: block))
                     .font(AinkradFont.display(10, weight: .medium))
-                    .foregroundStyle(tokens.foreground.opacity(0.75))
+                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o75))
                     .lineLimit(1)
                     .truncationMode(.middle)
-                    .padding(.horizontal, 4)
+                    .padding(.horizontal, skin.spacing.xs)
 
                 // Which ⌥N reaches this pane. Three unnamed terminals otherwise
                 // read as three cells all labelled "Rune", so the preview showed
@@ -178,7 +188,7 @@ struct WorkspaceLayoutPreview: View {
                 if let shortcut = shortcut(for: block) {
                     Text(shortcut)
                         .font(AinkradFont.mono(9, weight: .medium))
-                        .foregroundStyle(tokens.accentSecondary.opacity(0.7))
+                        .foregroundStyle(tokens.accentSecondary.opacity(skin.opacity.o70))
                         .lineLimit(1)
                         .fixedSize()
                 }
@@ -186,7 +196,7 @@ struct WorkspaceLayoutPreview: View {
         } else {
             // At row size a name would be unreadable, so the tile alone carries
             // the identity — which is still infinitely more than a blank fill.
-            NeonAppTile(symbol: icon(for: block), tokens: tokens, size: 12)
+            NeonAppTile(symbol: icon(for: block), tokens: tokens, size: skin.size.s12)
         }
     }
 
