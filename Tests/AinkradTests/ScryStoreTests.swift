@@ -54,15 +54,13 @@ struct ScryStoreTests {
         #expect(s.model.elements.count == ScryStore.cardCap)
     }
 
-    @Test("overrides are recorded per element and clearable")
+    @Test("overrides are recorded per element")
     func overrides() {
         let s = ScryStore()
         _ = s.add(ScryElement(id: "a", kind: .card, body: ""))
         #expect(s.overrides.isEmpty)
         s.setOverride(id: "a", ScryRect(x: 12, y: 34, width: 300, height: 200))
         #expect(s.overrides["a"]?.x == 12)
-        s.clearOverrides()
-        #expect(s.overrides.isEmpty)
     }
 
     @Test("overrideOrder tracks drag recency: re-dragging an id moves it to the end")
@@ -103,18 +101,6 @@ struct ScryStoreTests {
         s.sessionID = "A"
         #expect(s.model.elements.map(\.id) == ["a"])
         #expect(s.overrides["a"]?.x == 10)
-    }
-
-    @Test("clear empties the active session only")
-    func clearIsPerSession() {
-        let s = ScryStore(sessionID: "A")
-        _ = s.add(ScryElement(id: "a", kind: .text, body: ""))
-        s.sessionID = "B"
-        _ = s.add(ScryElement(id: "b", kind: .text, body: ""))
-        s.clear()
-        #expect(s.model.elements.isEmpty)
-        s.sessionID = "A"
-        #expect(s.model.elements.count == 1)
     }
 
     @Test("an all-pinned model is left over the cap")

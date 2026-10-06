@@ -72,7 +72,7 @@ private struct MermaidDiagramHost: View {
     var body: some View {
         Group {
             if let renderError {
-                MermaidErrorCard(message: renderError, tokens: tokens)
+                ScryErrorCard(tokens: tokens, message: renderError, label: "Diagram render error")
             } else {
                 MermaidWebView(source: source, tokens: tokens) { error in
                     renderError = error
@@ -89,23 +89,6 @@ private struct MermaidDiagramHost: View {
         // `onError` re-populates `renderError` from the fresh load.
         .onChange(of: source) { _, _ in
             renderError = nil
-        }
-    }
-}
-
-/// Native inline error card shown when mermaid fails to parse/render — the
-/// isolation contract from `ScryElementView.errorCard` mirrored here so a
-/// bad diagram body never propagates past this one element.
-private struct MermaidErrorCard: View {
-    let message: String
-    let tokens: DesignTokens
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 6) {
-            Circle().fill(tokens.danger).frame(width: 7, height: 7).padding(.top, 3)
-            Text("Diagram render error: \(message)")
-                .font(AinkradFont.display(11))
-                .foregroundStyle(tokens.danger.opacity(0.9))
         }
     }
 }

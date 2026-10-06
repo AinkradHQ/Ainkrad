@@ -11,15 +11,17 @@ struct ScryElementRenderError: Error {
 /// The inline error card shape, shared by `ScryElementView` (for any kind
 /// whose `buildContent()` throws) and `ScryTextCard` (whose markdown parse
 /// failure is caught internally so it stays a real `View`, per the uniform
-/// `(element:tokens:)` dispatcher contract).
+/// `(element:tokens:)` dispatcher contract), and by the mermaid host (with
+/// its own "Diagram render error" label).
 struct ScryErrorCard: View {
     let tokens: DesignTokens
     let message: String
+    var label = "Render error"
 
     var body: some View {
         HStack(alignment: .top, spacing: 6) {
             Circle().fill(tokens.danger).frame(width: 7, height: 7).padding(.top, 3)
-            Text("Render error: \(message)")
+            Text("\(label): \(message)")
                 .font(AinkradFont.display(11))
                 .foregroundStyle(tokens.danger.opacity(0.9))
         }
