@@ -8,6 +8,7 @@ import SwiftUI
 struct RootView: View {
     @Environment(AppEnvironment.self) var environment
     @Environment(\.ainkradReduceMotion) var reduceMotion
+    @Environment(\.ainkradSkin) var skin
 
     private var isOverlayPresented: Bool {
         var presented =
@@ -146,8 +147,8 @@ struct RootView: View {
                     .zIndex(100)
             }
         }
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.16), value: isOverlayPresented)
-        .animation(reduceMotion ? nil : AinkradMotion.present, value: signalOverlayDepth)
+        .animation(reduceMotion ? nil : .easeOut(duration: skin.motion.durations.d0_16), value: isOverlayPresented)
+        .animation(reduceMotion ? nil : skin.animation(skin.motion.present), value: signalOverlayDepth)
         .background(
             KeyboardShortcutMonitor(environment: environment, pushToTalkController: environment.voiceService.pushToTalk)
         )

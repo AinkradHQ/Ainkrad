@@ -1,3 +1,5 @@
+// design-lint: allow-file raw-color token-gap colors.trafficLight — the full-screen window controls
+import AinkradAppKit
 import AinkradHostRuntime
 import AppKit
 import SwiftUI
@@ -18,6 +20,7 @@ struct HUDBar: View {
     static let height: CGFloat = 30
 
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradSkin) private var skin
     @State private var statusMonitor = SystemStatusMonitor()
 
     /// The system traffic lights vacate the leading region in full-screen —
@@ -31,7 +34,7 @@ struct HUDBar: View {
     var body: some View {
         let tokens = environment.themeManager.tokens
 
-        HStack(spacing: 12) {
+        HStack(spacing: skin.spacing.md) {
             // In full screen the system traffic lights are suppressed (they'd
             // drag the OS titlebar over this bar), so we host our own to the
             // left of the clock — hidden by default, revealed while the pointer
@@ -42,7 +45,7 @@ struct HUDBar: View {
             }
 
             if showsStatusBar {
-                FullScreenStatusBarView(monitor: statusMonitor, tokens: tokens)
+                FullScreenStatusBarView(monitor: statusMonitor)
             }
 
             // Left side otherwise empty — the system traffic lights occupy
@@ -62,7 +65,7 @@ struct HUDBar: View {
 
             workspaceDots(tokens: tokens)
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, skin.size.s14)
         .frame(height: Self.height)
         .contentShape(Rectangle())
         // Reveal the traffic lights the moment the pointer is anywhere in the
@@ -73,7 +76,7 @@ struct HUDBar: View {
             guard environment.isFullScreen else { return }
             environment.isTopBarRevealed = hovering
         }
-        .animation(.easeOut(duration: 0.16), value: environment.isTopBarRevealed)
+        .animation(.easeOut(duration: skin.motion.durations.d0_16), value: environment.isTopBarRevealed)
         // Only run the monitor's timer/NWPathMonitor while the bar is
         // actually shown, so full-screen + the toggle both gate the cost —
         // `initial: true` also starts it if the bar is already visible when
@@ -93,35 +96,40 @@ struct HUDBar: View {
     private func workspaceDots(tokens: DesignTokens) -> some View {
         let manager = environment.workspaceManager
 
-        return HStack(spacing: 8) {
+        return HStack(spacing: skin.spacing.sm) {
             ForEach(Array(manager.workspaces.enumerated()), id: \.element.id) { index, workspace in
                 let isActive = workspace.id == manager.activeWorkspaceID
 
-                Button {
+                // The label is the workspace's mark; no kit button takes a
+                // custom label.
+                Button {  // design-lint: allow raw-control kit gap, content label
                     manager.switchTo(workspace.id)
                 } label: {
                     Group {
                         if workspace.isMain {
                             // The home island wears the chevron mark.
-                            ChevronMark()
-                                .fill(isActive ? tokens.accentSecondary : tokens.foreground.opacity(0.35))
+                            AinkradBrandChevron()
+                                .fill(isActive ? tokens.accentSecondary : tokens.foreground.opacity(skin.opacity.o35))
                                 .frame(width: isActive ? 10 : 8, height: isActive ? 8.5 : 7)
                         } else {
                             Rectangle()
-                                .fill(isActive ? tokens.accentSecondary : tokens.foreground.opacity(0.28))
+                                .fill(isActive ? tokens.accentSecondary : tokens.foreground.opacity(skin.opacity.o28))
                                 .frame(width: isActive ? 7 : 5, height: isActive ? 7 : 5)
                                 .rotationEffect(.degrees(45))
                         }
                     }
-                    .shadow(color: isActive ? tokens.accentSecondary.opacity(0.9) : .clear, radius: 4)
-                    .frame(width: 12, height: 11)
+                    .shadow(
+                        color: isActive ? tokens.accentSecondary.opacity(skin.opacity.o90) : .clear,
+                        radius: skin.size.s4
+                    )
+                    .frame(width: skin.size.s12, height: skin.size.s11)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .help("\(workspace.name)\(index < 9 ? " — ⌘\(index + 1)" : "")")
             }
         }
-        .animation(.easeOut(duration: 0.18), value: manager.activeWorkspaceID)
+        .animation(.easeOut(duration: skin.motion.durations.d0_18), value: manager.activeWorkspaceID)
     }
 }
 
@@ -131,10 +139,11 @@ struct HUDBar: View {
 /// these carry the same three actions and show their glyphs on hover, matching
 /// the native look.
 private struct WindowControlsView: View {
+    @Environment(\.ainkradSkin) private var skin
     @State private var isHovering = false
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: skin.spacing.sm) {
             control(
                 color: Color(red: 1.0, green: 0.37, blue: 0.34),
                 glyph: "xmark", help: "Close"
@@ -156,7 +165,8 @@ private struct WindowControlsView: View {
         color: Color, glyph: String, help: String,
         action: @escaping (NSWindow) -> Void
     ) -> some View {
-        Button {
+        // The label is a drawn traffic light; no kit button takes a custom label.
+        Button {  // design-lint: allow raw-control kit gap, content label
             if let window = NSApp.keyWindow ?? NSApp.mainWindow ?? NSApp.windows.first {
                 action(window)
             }
@@ -165,11 +175,11 @@ private struct WindowControlsView: View {
                 Circle().fill(color)
                 if isHovering {
                     Image(systemName: glyph)
-                        .font(.system(size: 6.5, weight: .bold))
-                        .foregroundStyle(.black.opacity(0.55))
+                        .font(skin.font(AinkradFontToken(sizeKey: "t6_5", weight: "bold", scaled: false)))
+                        .foregroundStyle(skin.color(.palette("black", skin.opacity.o55)))
                 }
             }
-            .frame(width: 12, height: 12)
+            .frame(width: skin.size.s12, height: skin.size.s12)
             .contentShape(Circle())
         }
         .buttonStyle(.plain)

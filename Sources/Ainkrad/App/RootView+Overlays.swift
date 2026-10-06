@@ -18,10 +18,7 @@ extension RootView {
         {
             let mode = environment.appAppearanceStore.effectiveMode(for: app)
             let size = environment.appAppearanceStore.effectiveOverlaySize(app.id)
-            PluginOverlayView(
-                app: app, tokens: environment.themeManager.tokens,
-                mode: mode, size: size
-            ) {
+            PluginOverlayView(app: app, mode: mode, size: size) {
                 environment.presentedOverlayAppID = nil
             }
             .transition(.opacity)
@@ -172,7 +169,7 @@ extension RootView {
         .environment(\.ainkradSignalIdentity, signalIdentities)
         // Clear of the 30pt top bar, so a toast never covers the clock or the
         // bell whose count it corresponds to.
-        .padding(.top, 34)
+        .padding(.top, skin.size.s34)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
         .allowsHitTesting(!environment.isSetupPresented)
         .zIndex(50)

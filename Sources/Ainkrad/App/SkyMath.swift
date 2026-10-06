@@ -1,3 +1,4 @@
+// design-lint: allow-file radius-literal sky data — particle radii in points, not corner radii
 import CoreGraphics
 import Foundation
 

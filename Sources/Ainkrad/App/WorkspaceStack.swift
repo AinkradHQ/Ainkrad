@@ -12,6 +12,7 @@ import SwiftUI
 struct WorkspaceStack: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.ainkradReduceMotion) private var reduceMotion
+    @Environment(\.ainkradSkin) private var skin
 
     /// A one-shot zoom for the focused pane on a Focus toggle: it pops from this
     /// scale back to 1. A *scale* (not a frame morph) so the terminal's cols and
@@ -89,7 +90,7 @@ struct WorkspaceStack: View {
             }
             .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
             .clipped()
-            .animation(.spring(response: 0.42, dampingFraction: 0.88), value: manager.activeWorkspaceID)
+            .animation(skin.motion.springs["sp42_88"].map { skin.animation($0) }, value: manager.activeWorkspaceID)
             // The Focus-Mode zoom, owned here now that the panes are. Only the
             // active workspace's panes are visible, so its mode is the only one
             // that can call for a pop.
@@ -110,7 +111,7 @@ struct WorkspaceStack: View {
         // `DispatchQueue.main.async` on purpose (S-CON-5): the spring must
         // start on the next run-loop turn, after the 0.92 frame has rendered.
         DispatchQueue.main.async {
-            withAnimation(.spring(response: 0.34, dampingFraction: 0.8)) {
+            withAnimation(skin.motion.springs["sp34_80"].map { skin.animation($0) }) {
                 focusPop = 1
             }
         }

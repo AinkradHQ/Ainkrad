@@ -1,3 +1,4 @@
+import AinkradAppKit
 import SwiftUI
 
 /// Blurs everything behind an overlay — the sky, the HUD bar and every mounted
@@ -26,6 +27,7 @@ struct OverlayBackdrop<Content: View>: View {
 
     let isBlurred: Bool
     @ViewBuilder var content: Content
+    @Environment(\.ainkradSkin) private var skin
 
     var body: some View {
         content
@@ -33,6 +35,6 @@ struct OverlayBackdrop<Content: View>: View {
             // `RootView` wraps this whole stack in an `.easeOut(0.16)` keyed on
             // the same flag; this overrides it per direction, and the `nil` on
             // the way out is what stops the blur inheriting it.
-            .animation(isBlurred ? .easeOut(duration: 0.16) : nil, value: isBlurred)
+            .animation(isBlurred ? .easeOut(duration: skin.motion.durations.d0_16) : nil, value: isBlurred)
     }
 }

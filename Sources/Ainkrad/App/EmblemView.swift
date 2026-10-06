@@ -12,6 +12,7 @@ typealias ChevronMark = AinkradBrandChevron
 /// macOS system Reduce Motion flag.
 struct EmblemView: View {
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradSkin) private var skin
     @State private var isBreathing = false
 
     var body: some View {
@@ -26,29 +27,29 @@ struct EmblemView: View {
                 .stroke(
                     AngularGradient(
                         stops: [
-                            .init(color: tokens.accentPrimary.opacity(0.1), location: 0),
+                            .init(color: tokens.accentPrimary.opacity(skin.opacity.o10), location: 0),
                             .init(color: tokens.accentSecondary, location: 0.25),
-                            .init(color: tokens.accentPrimary.opacity(0.1), location: 0.5),
-                            .init(color: tokens.accentPrimary.opacity(0.05), location: 0.75),
-                            .init(color: tokens.accentPrimary.opacity(0.1), location: 1),
+                            .init(color: tokens.accentPrimary.opacity(skin.opacity.o10), location: 0.5),
+                            .init(color: tokens.accentPrimary.opacity(skin.opacity.o05), location: 0.75),
+                            .init(color: tokens.accentPrimary.opacity(skin.opacity.o10), location: 1),
                         ],
                         center: .center,
                         angle: .degrees(-90)
                     ),
                     lineWidth: 2
                 )
-                .frame(width: 150, height: 150)
-                .shadow(color: tokens.accentPrimary.opacity(0.6 * pulse), radius: 18)
+                .frame(width: skin.size.s150, height: skin.size.s150)
+                .shadow(color: tokens.accentPrimary.opacity(skin.opacity.o60 * pulse), radius: skin.size.s18)
 
-            ChevronMark()
+            AinkradBrandChevron()
                 .fill(tokens.foreground)
-                .frame(width: 54, height: 46)
-                .shadow(color: tokens.accentSecondary.opacity(0.8 * pulse), radius: 10)
+                .frame(width: skin.size.s54, height: skin.size.s46)
+                .shadow(color: tokens.accentSecondary.opacity(skin.opacity.o80 * pulse), radius: skin.size.s10)
                 .offset(y: 6)
         }
         .onAppear {
             guard !reduceMotion else { return }
-            withAnimation(.easeInOut(duration: 3.2).repeatForever(autoreverses: true)) {
+            withAnimation(.easeInOut(duration: skin.motion.durations.breathe).repeatForever(autoreverses: true)) {
                 isBreathing = true
             }
         }
