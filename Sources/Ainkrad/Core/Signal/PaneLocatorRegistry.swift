@@ -67,6 +67,4 @@ final class PaneLocatorRegistry {
         sinks[blockID] = sink
         return sink
     }
-
-    var trackedCountForTesting: Int { locators.count }
 }
