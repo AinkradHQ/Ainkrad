@@ -14,7 +14,7 @@ enum PlanStepPresentation {
 /// The agent's proposed plan rendered as a single timeline node: a chamfered
 /// panel with a "Plan" header, an optional summary, and an ordered step list
 /// with numbered badges. No separators; no action buttons — the Approve & Build
-/// / Keep planning decision lives in the docked `PlanApprovalBar` (Task 7),
+/// / Keep planning decision lives in the docked `SageDecisionBar` (Task 7),
 /// mirroring how a gated tool's card stays in the rail while its buttons dock
 /// above the composer.
 struct PlanCardView: View {

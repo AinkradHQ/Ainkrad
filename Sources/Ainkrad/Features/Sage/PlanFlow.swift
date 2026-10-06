@@ -49,7 +49,7 @@ enum PlanTurnHeuristics {
 }
 
 /// Composes the plan decision from the existing seams — flipping the shared
-/// `AgentStore` (the same store the composer's `AgentSwitcherView` drives) and
+/// `AgentStore` (the same store the composer's agent button cycles) and
 /// `AgentSession.send`. Deliberately NO new `AgentSession` state or gate change.
 @MainActor
 enum PlanFlow {

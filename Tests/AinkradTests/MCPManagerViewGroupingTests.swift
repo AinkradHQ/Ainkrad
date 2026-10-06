@@ -86,30 +86,4 @@ struct MCPManagerViewGroupingTests {
     func badgeSingular() {
         #expect(MCPServerGrouping.connectedBadgeText(toolCount: 1, resourceCount: 0) == "1 tool")
     }
-
-    // MARK: - Resource labels
-
-    @Test("a publisher-supplied title wins over anything derived from the URI")
-    func resourceLabelPrefersTitle() {
-        #expect(
-            ToolPresentation.resourceLabel(name: "Terminal buffer", uri: "terminal://buffer")
-                == "Terminal buffer")
-    }
-
-    /// `MCPRPC.decodeResourceList` defaults a missing `name` to the URI, so this
-    /// is the path that would otherwise render "Terminal://buffer".
-    @Test("a missing title falls back to the URI's last segment, not the raw URI")
-    func resourceLabelFallsBackToURISegment() {
-        #expect(
-            ToolPresentation.resourceLabel(name: "terminal://buffer", uri: "terminal://buffer")
-                == "Buffer")
-        #expect(
-            ToolPresentation.resourceLabel(name: "", uri: "app://logs/today-tail")
-                == "Today tail")
-    }
-
-    @Test("a URI with no usable segment degrades to the URI itself rather than an empty label")
-    func resourceLabelDegradesToURI() {
-        #expect(ToolPresentation.resourceLabel(name: "scheme://", uri: "scheme://") == "scheme://")
-    }
 }

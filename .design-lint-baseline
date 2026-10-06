@@ -2,19 +2,19 @@
 # Raising one needs `make lint-rebaseline`, DESIGN_LINT_ALLOW_RAISE=1 on push, and a PR note.
 version 1
 format off
-font-size 26
-padding-literal 60
-spacing-literal 94
+font-size 24
+padding-literal 54
+spacing-literal 90
 radius-literal 7
 hex-color 6
 raw-color 1
-raw-control 12
+raw-control 9
 file-length 3
 try-bang 0
 force-cast 0
 force-unwrap 19
 print 0
-opacity-literal 157
-frame-literal 64
-chamfer-literal 9
+opacity-literal 147
+frame-literal 63
+chamfer-literal 8
 motion-literal 1

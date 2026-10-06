@@ -93,25 +93,34 @@ struct SageRootView: View {
             transcript(session: session, tokens: tokens)
 
             if case .awaitingApproval(let pending) = session.state {
-                SageApprovalBar(
-                    toolName: pending.call.name,
-                    title: pending.preview.title,
-                    tokens: tokens,
-                    onDeny: { session.deny(reason: "Denied by user.") },
-                    onApproveAlways: { session.approve(always: true) },
-                    onApprove: { session.approve() }
+                SageDecisionBar(
+                    content: .toolApproval(toolName: pending.call.name, title: pending.preview.title),
+                    actions: [
+                        .init(title: "Deny", tint: tokens.accentTertiary, filled: false) {
+                            session.deny(reason: "Denied by user.")
+                        },
+                        .init(title: "Allow always", tint: tokens.accentSecondary, filled: false) {
+                            session.approve(always: true)
+                        },
+                        .init(title: "Approve", tint: tokens.accentPrimary, filled: true) { session.approve() },
+                    ],
+                    tokens: tokens
                 )
                 .transition(reduceMotion ? .identity : .move(edge: .bottom).combined(with: .opacity))
             } else if session.state == .idle,
                 let plan = PlanTurnHeuristics.pendingPlan(in: session.messages)
             {
-                PlanApprovalBar(
-                    plan: plan,
-                    tokens: tokens,
-                    onKeepPlanning: { PlanFlow.keepPlanning(plan: plan, session: session) },
-                    onApproveBuild: {
-                        PlanFlow.approveBuild(plan: plan, session: session, store: environment.agentStore)
-                    }
+                SageDecisionBar(
+                    content: .plan(plan),
+                    actions: [
+                        .init(title: "Keep planning", tint: tokens.accentTertiary, filled: false) {
+                            PlanFlow.keepPlanning(plan: plan, session: session)
+                        },
+                        .init(title: "Approve & Build", tint: tokens.accentPrimary, filled: true) {
+                            PlanFlow.approveBuild(plan: plan, session: session, store: environment.agentStore)
+                        },
+                    ],
+                    tokens: tokens
                 )
                 .transition(reduceMotion ? .identity : .move(edge: .bottom).combined(with: .opacity))
             }
@@ -265,7 +274,7 @@ struct SageRootView: View {
                             // Render the pending tool as an in-rail node (running
                             // marker + spine), so an approval reads as the current
                             // step of the timeline. The Approve/Deny/Always buttons
-                            // stay in the docked SageApprovalBar below.
+                            // stay in the docked SageDecisionBar below.
                             HStack(alignment: .top, spacing: 10) {
                                 TimelineRailGutter(status: .running, tokens: tokens, reduceMotion: reduceMotion)
                                 ToolCallCardView(

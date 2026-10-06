@@ -169,19 +169,7 @@ struct GeneratedVideoView: View {
     }
 
     private func download(_ url: URL) {
-        let panel = NSSavePanel()
-        panel.nameFieldStringValue = "generated-video.\(url.pathExtension.isEmpty ? "mp4" : url.pathExtension)"
-        panel.canCreateDirectories = true
-        panel.begin { response in
-            guard response == .OK, let dest = panel.url else { return }
-            do {
-                try FileManager.default.copyItem(at: url, to: dest)
-            } catch {
-                Log.app.error(
-                    "Failed to copy \(url.lastPathComponent, privacy: .public) to \(dest.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
-                )
-            }
-        }
+        saveCopy(of: url, suggestedName: "generated-video.\(url.pathExtension.isEmpty ? "mp4" : url.pathExtension)")
     }
 }
 
@@ -290,18 +278,25 @@ struct GeneratedAudioView: View {
     }
 
     private func download(_ url: URL) {
-        let panel = NSSavePanel()
-        panel.nameFieldStringValue = "speech.\(url.pathExtension.isEmpty ? "caf" : url.pathExtension)"
-        panel.canCreateDirectories = true
-        panel.begin { response in
-            guard response == .OK, let dest = panel.url else { return }
-            do {
-                try FileManager.default.copyItem(at: url, to: dest)
-            } catch {
-                Log.app.error(
-                    "Failed to copy \(url.lastPathComponent, privacy: .public) to \(dest.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
-                )
-            }
+        saveCopy(of: url, suggestedName: "speech.\(url.pathExtension.isEmpty ? "caf" : url.pathExtension)")
+    }
+}
+
+/// Offers a save panel for a generated media file and copies it to the chosen
+/// destination. Shared by the video and speech cards' Download.
+@MainActor
+private func saveCopy(of url: URL, suggestedName: String) {
+    let panel = NSSavePanel()
+    panel.nameFieldStringValue = suggestedName
+    panel.canCreateDirectories = true
+    panel.begin { response in
+        guard response == .OK, let dest = panel.url else { return }
+        do {
+            try FileManager.default.copyItem(at: url, to: dest)
+        } catch {
+            Log.app.error(
+                "Failed to copy \(url.lastPathComponent, privacy: .public) to \(dest.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
+            )
         }
     }
 }
