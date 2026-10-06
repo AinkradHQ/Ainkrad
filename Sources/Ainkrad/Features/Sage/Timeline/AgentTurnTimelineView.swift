@@ -72,7 +72,7 @@ struct AgentTurnTimelineView: View {
         case .thinking(let text):
             TimelineThinkingRow(
                 text: text, isExpanded: expandedThinking.contains(step.id),
-                tokens: tokens, reduceMotion: reduceMotion
+                tokens: tokens
             ) {
                 if expandedThinking.contains(step.id) {
                     expandedThinking.remove(step.id)
@@ -150,7 +150,7 @@ struct LiveStepView: View {
                 if !streamingThinking.isEmpty {
                     TimelineThinkingRow(
                         text: streamingThinking, isExpanded: thinkingExpanded,
-                        tokens: tokens, reduceMotion: reduceMotion
+                        tokens: tokens
                     ) { thinkingExpanded.toggle() }
                 }
                 if isStreaming || !streamingText.isEmpty {

@@ -14,6 +14,7 @@ struct SageRootView: View {
     // uses for its cross-file-read state).
     @Environment(AppEnvironment.self) var environment
     @Environment(\.ainkradReduceMotion) private var reduceMotion
+    @Environment(\.ainkradSkin) private var skin
     var showsHeader: Bool = true
     var autoFocusComposer: Bool = false
     /// Whether the transcript should keep pinning to the newest content.
@@ -96,13 +97,13 @@ struct SageRootView: View {
                 SageDecisionBar(
                     content: .toolApproval(toolName: pending.call.name, title: pending.preview.title),
                     actions: [
-                        .init(title: "Deny", tint: tokens.accentTertiary, filled: false) {
+                        .init(title: "Deny", style: .ghost) {
                             session.deny(reason: "Denied by user.")
                         },
-                        .init(title: "Allow always", tint: tokens.accentSecondary, filled: false) {
+                        .init(title: "Allow always", style: .secondary) {
                             session.approve(always: true)
                         },
-                        .init(title: "Approve", tint: tokens.accentPrimary, filled: true) { session.approve() },
+                        .init(title: "Approve", style: .primary) { session.approve() },
                     ],
                     tokens: tokens
                 )
@@ -113,10 +114,10 @@ struct SageRootView: View {
                 SageDecisionBar(
                     content: .plan(plan),
                     actions: [
-                        .init(title: "Keep planning", tint: tokens.accentTertiary, filled: false) {
+                        .init(title: "Keep planning", style: .ghost) {
                             PlanFlow.keepPlanning(plan: plan, session: session)
                         },
-                        .init(title: "Approve & Build", tint: tokens.accentPrimary, filled: true) {
+                        .init(title: "Approve & Build", style: .primary) {
                             PlanFlow.approveBuild(plan: plan, session: session, store: environment.agentStore)
                         },
                     ],
@@ -175,7 +176,7 @@ struct SageRootView: View {
 
     private func header(tokens: DesignTokens) -> some View {
         HStack(spacing: 12) {
-            HoverSidebarToggle(tokens: tokens) {
+            AinkradIconButton(systemName: "sidebar.left", size: skin.size.s24, tooltip: "Toggle history") {
                 withAnimation(reduceMotion ? nil : AinkradMotion.present) {
                     isSidebarVisible.toggle()
                 }
@@ -401,7 +402,7 @@ struct SageRootView: View {
                 .textSelection(.enabled)  // never truncated — an unreadable error is useless
             HStack {
                 Spacer()
-                ErrorRetryButton(tokens: tokens) { session.retryLastTurn() }
+                AinkradButton(title: "Retry", style: .ghost, icon: "arrow.clockwise") { session.retryLastTurn() }
             }
         }
         .padding(.horizontal, 12).padding(.vertical, 9)

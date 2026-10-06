@@ -21,6 +21,7 @@ struct SageComposerBar: View {
     // least `internal`).
     @Environment(AppEnvironment.self) var environment
     @Environment(\.ainkradToastCenter) var toastCenter
+    @Environment(\.ainkradSkin) private var skin
     let session: AgentSession
     let tokens: DesignTokens
     let modelPicker: SageModelPickerModel
@@ -81,8 +82,8 @@ struct SageComposerBar: View {
     @State var isOverflowVisible = false
 
     /// Wave 3e: the ONE uniform height every control in the bottom strip is
-    /// pinned to — icon buttons (`size:`), the model select (`.frame`), and
-    /// `SendButton`'s footprint. Not `private` — read from
+    /// pinned to — icon buttons (`size:`, send included) and the model select
+    /// (`.frame`). Not `private` — read from
     /// `SageComposerBar+Overflow.swift`'s `overflowTrigger`.
     static let controlHeight: CGFloat = 30
 
@@ -151,7 +152,9 @@ struct SageComposerBar: View {
                     status: environment.voiceService.pushToTalk.status, tokens: tokens,
                     notice: environment.voiceService.lastNotice)
 
-                SendButton(enabled: canSend(isBusy: isBusy), tokens: tokens) { send() }
+                AinkradIconButton(systemName: "arrow.up", size: Self.controlHeight, tooltip: "Send") { send() }
+                    .disabled(!canSend(isBusy: isBusy))
+                    .opacity(canSend(isBusy: isBusy) ? 1 : skin.opacity.o40)
             }
             .frame(height: Self.controlHeight)
         }
@@ -328,41 +331,5 @@ enum ComposerTriggers {
     static func trailingToken(of text: String) -> String {
         guard let idx = text.lastIndex(where: { $0.isWhitespace }) else { return text }
         return String(text[text.index(after: idx)...])
-    }
-}
-
-/// Send affordance: a chamfered Cardinal HUD button (matching the kit's
-/// filled tool-card / `AinkradIconButton` idiom) with hover/press feedback
-/// and an enabled-state glow — square footprint matching the composer's
-/// `SageComposerBar.controlHeight`-sized icon buttons.
-private struct SendButton: View {
-    let enabled: Bool
-    let tokens: DesignTokens
-    let action: () -> Void
-    @State private var isHovering = false
-    @Environment(\.ainkradReduceMotion) private var reduceMotion
-
-    private static let footprint: CGFloat = SageComposerBar.controlHeight
-
-    var body: some View {
-        Button(action: action) {
-            Image(systemName: "arrow.up")
-                .font(.system(size: 15, weight: .bold))
-                .foregroundStyle(enabled ? tokens.accentSecondary.hostContrastingText : tokens.foreground.opacity(0.3))
-                .frame(width: Self.footprint, height: Self.footprint)
-                .background(
-                    ChamferShape(cut: 6).fill(
-                        enabled ? tokens.accentSecondary.opacity(0.9) : tokens.surfaceElevated.opacity(0.5))
-                )
-                .contentShape(ChamferShape(cut: 6))
-                .scaleEffect(isHovering && enabled && !reduceMotion ? 1.06 : 1.0)
-                .shadow(
-                    color: enabled ? tokens.accentSecondary.opacity(isHovering ? 0.55 : 0.3) : .clear,
-                    radius: enabled ? 6 : 0)
-        }
-        .buttonStyle(.plain)
-        .disabled(!enabled)
-        .onHover { isHovering = $0 }
-        .animation(reduceMotion ? nil : AinkradMotion.hover, value: isHovering)
     }
 }

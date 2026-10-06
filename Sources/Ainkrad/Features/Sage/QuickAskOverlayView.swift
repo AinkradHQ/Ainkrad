@@ -1,3 +1,4 @@
+import AinkradAppKit
 import AinkradHostRuntime
 import SwiftUI
 
@@ -38,20 +39,11 @@ struct QuickAskOverlayView: View {
 
             Spacer()
 
-            Button {
+            AinkradButton(title: "Open in Sage", style: .ghost, icon: "arrow.up.forward.app") {
                 // Same session, so "open" just reveals the thread in a pane.
                 environment.workspaceManager.activeWorkspace.tileLayout.openApp(SageApp.id)
                 onDismiss()
-            } label: {
-                HStack(spacing: 5) {
-                    Text("Open in Sage")
-                        .font(AinkradFont.display(11))
-                    Image(systemName: "arrow.up.forward.app")
-                        .font(.system(size: 10))
-                }
-                .foregroundStyle(tokens.foreground.opacity(0.6))
             }
-            .buttonStyle(.plain)
             .help("Open this conversation in the Sage pane")
         }
         .padding(.horizontal, 16)

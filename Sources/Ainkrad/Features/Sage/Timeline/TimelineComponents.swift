@@ -35,27 +35,18 @@ struct TimelineThinkingRow: View {
     let text: String
     let isExpanded: Bool
     let tokens: DesignTokens
-    let reduceMotion: Bool
     let onToggle: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Button {
-                withAnimation(reduceMotion ? nil : AinkradMotion.present) { onToggle() }
-            } label: {
-                HStack(spacing: 5) {
-                    Image(systemName: isExpanded ? "chevron.down" : "chevron.right").font(.system(size: 9))
-                    Text("Thinking").font(AinkradFont.display(11, weight: .medium)).kerning(1)
-                }
-                .foregroundStyle(tokens.accentSecondary.opacity(0.85))
-            }
-            .buttonStyle(.plain)
-            if isExpanded {
-                Text(text)
-                    .font(AinkradFont.mono(11))
-                    .foregroundStyle(tokens.foreground.opacity(0.5))
-                    .textSelection(.enabled)
-            }
+        // The kit disclosure animates its own expansion; the caller still owns
+        // the state, so the binding only reads it and reports a toggle.
+        AinkradDisclosureGroup(
+            title: "Thinking", isExpanded: Binding(get: { isExpanded }, set: { _ in onToggle() })
+        ) {
+            Text(text)
+                .font(AinkradFont.mono(11))
+                .foregroundStyle(tokens.foreground.opacity(0.5))
+                .textSelection(.enabled)
         }
     }
 }

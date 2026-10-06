@@ -32,12 +32,11 @@ struct SageDecisionBarContent: Equatable {
 /// without scrolling. Seamless elevated surface with an accent cue — matches
 /// the composer it sits above.
 struct SageDecisionBar: View {
-    /// One button on the bar. `filled` renders the primary affordance as a solid
-    /// accent chip; the others are text buttons that gain a soft fill on hover.
+    /// One button on the bar, drawn as a kit `AinkradButton` in `style` —
+    /// `.primary` for the affirmative decision, `.ghost` for the others.
     struct Action {
         let title: String
-        let tint: Color
-        let filled: Bool
+        let style: AinkradButtonStyle
         let perform: () -> Void
     }
 
@@ -62,7 +61,7 @@ struct SageDecisionBar: View {
             }
             Spacer(minLength: 12)
             ForEach(actions.indices, id: \.self) { index in
-                DecisionButton(action: actions[index])
+                AinkradButton(title: actions[index].title, style: actions[index].style, action: actions[index].perform)
             }
         }
         .padding(.horizontal, 14).padding(.vertical, 9)
@@ -73,30 +72,5 @@ struct SageDecisionBar: View {
         }
         .padding(.horizontal, 14)
         .padding(.bottom, 4)
-    }
-}
-
-/// A decision-bar button with a hover highlight.
-private struct DecisionButton: View {
-    let action: SageDecisionBar.Action
-    @State private var isHovering = false
-    @Environment(\.ainkradReduceMotion) private var reduceMotion
-
-    var body: some View {
-        let tint = action.tint
-        Button(action: action.perform) {
-            Text(action.title)
-                .font(AinkradFont.display(12, weight: action.filled ? .semibold : .regular))
-                .foregroundStyle(action.filled ? tint.hostContrastingText : tint.opacity(isHovering ? 1 : 0.85))
-                .padding(.horizontal, 12).padding(.vertical, 5)
-                .background(
-                    ChamferShape(cut: AinkradRadius.sm)
-                        .fill(action.filled ? tint.opacity(0.9) : tint.opacity(isHovering ? 0.18 : 0))
-                )
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .onHover { isHovering = $0 }
-        .animation(reduceMotion ? nil : AinkradMotion.hover, value: isHovering)
     }
 }

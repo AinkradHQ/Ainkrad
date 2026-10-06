@@ -2,53 +2,6 @@ import AinkradAppKit
 import AinkradHostRuntime
 import SwiftUI
 
-/// Leading history-sidebar toggle with a hover highlight (motion is first-class in the HUD).
-struct HoverSidebarToggle: View {
-    let tokens: DesignTokens
-    let action: () -> Void
-    @State private var isHovering = false
-    @Environment(\.ainkradReduceMotion) private var reduceMotion
-
-    var body: some View {
-        Button(action: action) {
-            Image(systemName: "sidebar.left")
-                .font(.system(size: 12))
-                .foregroundStyle(tokens.foreground.opacity(isHovering ? 0.9 : 0.6))
-                .padding(6)
-                .background(Circle().fill(tokens.surfaceElevated.opacity(isHovering ? 0.75 : 0.5)))
-        }
-        .buttonStyle(.plain)
-        .help("Toggle history")
-        .onHover { isHovering = $0 }
-        .animation(reduceMotion ? nil : AinkradMotion.hover, value: isHovering)
-    }
-}
-
-/// Retry control for the failed-turn error card. Hover-lit, chamfered — no native button chrome.
-struct ErrorRetryButton: View {
-    let tokens: DesignTokens
-    let action: () -> Void
-    @State private var isHovering = false
-    @Environment(\.ainkradReduceMotion) private var reduceMotion
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 5) {
-                Image(systemName: "arrow.clockwise").font(.system(size: 10, weight: .semibold))
-                Text("Retry").font(AinkradFont.display(11, weight: .medium))
-            }
-            .foregroundStyle(tokens.accentTertiary.opacity(isHovering ? 1 : 0.85))
-            .padding(.horizontal, 10).padding(.vertical, 5)
-            .background(
-                ChamferShape(cut: AinkradRadius.sm)
-                    .fill(tokens.accentTertiary.opacity(isHovering ? 0.18 : 0.1)))
-        }
-        .buttonStyle(.plain)
-        .onHover { isHovering = $0 }
-        .animation(reduceMotion ? nil : AinkradMotion.hover, value: isHovering)
-    }
-}
-
 /// Copy-to-pasteboard for a whole assistant turn, revealed on hover.
 struct SageTurnCopyButton: View {
     let text: String
