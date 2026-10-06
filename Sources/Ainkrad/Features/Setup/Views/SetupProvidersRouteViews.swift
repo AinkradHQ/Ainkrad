@@ -174,10 +174,7 @@ struct SetupPasteFallback: View {
                 }
             }
             HStack(spacing: 10) {
-                NeonSecureField(
-                    text: $pasteText,
-                    placeholder: "Paste the redirect URL or code",
-                    tokens: tokens)
+                AinkradSecureField(text: $pasteText, placeholder: "Paste the redirect URL or code")
                 Button {
                     let raw = pasteText
                     pasteText = ""
@@ -226,7 +223,7 @@ struct SetupAPIKeyRoute: View {
             .fixedSize()
 
             if preset.allowsBaseURLEdit {
-                NeonSecureField(text: $baseURL, placeholder: "Base URL", tokens: tokens)
+                AinkradSecureField(text: $baseURL, placeholder: "Base URL")
             }
 
             // Says so when the SELECTED provider is already connected. Without
@@ -252,7 +249,7 @@ struct SetupAPIKeyRoute: View {
 
             HStack(spacing: 10) {
                 if preset.requiresKey {
-                    NeonSecureField(text: $token, placeholder: "API key", tokens: tokens)
+                    AinkradSecureField(text: $token, placeholder: "API key")
                 } else {
                     Text("No API key required")
                         .font(AinkradFont.display(11))

@@ -12,7 +12,7 @@ import SwiftUI
 ///    bind).
 /// 3. Paste an API key for any `ProviderPreset`.
 ///
-/// The token is never rendered back (`NeonSecureField` only), never logged, and
+/// The token is never rendered back (`AinkradSecureField` only), never logged, and
 /// never interpolated into a message — every message shown here is either a
 /// literal or `ConnectionTestResult.message`, which is documented to redact the
 /// key.
@@ -284,27 +284,6 @@ struct SetupProvidersStepView: View {
                     .accessibilityIdentifier("setup.providers.isConnected.requirement")
             }
         }
-    }
-
-    private func routeButton(
-        tokens: DesignTokens, icon: String, title: String,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            HStack(spacing: 10) {
-                Image(systemName: icon)
-                    .font(.system(size: 12))
-                    .foregroundStyle(tokens.foreground.opacity(0.6))
-                Text(title)
-                    .font(AinkradFont.display(12, weight: .medium))
-                    .foregroundStyle(tokens.foreground.opacity(0.85))
-                Spacer(minLength: 8)
-            }
-            .padding(.horizontal, 12).padding(.vertical, 9)
-            .background(ChamferShape(cut: AinkradRadius.sm).fill(tokens.surfaceElevated.opacity(0.35)))
-        }
-        .buttonStyle(.plain)
-        .disabled(isBusy)
     }
 
     // MARK: - Routes
