@@ -171,8 +171,9 @@ func defaultHostCacheRoot(bundleID: String = Bundle.main.bundleIdentifier ?? "co
     return AinkradHome.defaultCacheRoot(bundleID: bundleID)
 }
 
-/// The hosted App Store catalog (the central AinkradCatalog).
-let remoteCatalogURL = URL(string: "https://raw.githubusercontent.com/AinkradHQ/AinkradCatalog/main/catalog.json")!
+/// The hosted App Store catalog (the central AinkradCatalog). A compile-time-constant
+/// literal, the one force-unwrap S-ERR-1 accepts: `URL(string:)` cannot fail on it.
+let remoteCatalogURL = URL(string: "https://raw.githubusercontent.com/AinkradHQ/AinkradCatalog/main/catalog.json")!  // design-lint: allow force-unwrap compile-time-constant URL literal
 
 /// The App Store catalog location: `<fixture root>/catalog.json` in a DEBUG fixture launch
 /// (no network, identical content in every capture; a missing file just leaves the store
