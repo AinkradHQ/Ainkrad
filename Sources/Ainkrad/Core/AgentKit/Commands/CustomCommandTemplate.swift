@@ -31,8 +31,8 @@ enum CustomCommandTemplate {
                 i += "$ARGUMENTS".count
                 continue
             }
-            if let digit = rest.first, digit.isNumber, digit != "0" {
-                let idx = digit.wholeNumberValue! - 1
+            if let number = rest.first?.wholeNumberValue, number > 0 {
+                let idx = number - 1
                 if idx < positional.count { out.append(positional[idx]) }
                 i += 2
                 continue  // else -> empty

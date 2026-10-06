@@ -67,7 +67,9 @@ final class WebhookServer {
 
     func start() throws {
         let params = NWParameters.tcp
-        params.requiredLocalEndpoint = .hostPort(host: "127.0.0.1", port: NWEndpoint.Port(rawValue: port)!)
+        // `Port(rawValue:)` is failable in its signature only; every UInt16 is a valid port.
+        guard let localPort = NWEndpoint.Port(rawValue: port) else { throw NWError.posix(.EINVAL) }
+        params.requiredLocalEndpoint = .hostPort(host: "127.0.0.1", port: localPort)
         let listener = try NWListener(using: params)
         listener.newConnectionHandler = { [weak self] connection in
             connection.start(queue: .global())
