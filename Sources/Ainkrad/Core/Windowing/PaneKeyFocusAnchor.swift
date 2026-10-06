@@ -79,9 +79,10 @@ struct PaneKeyFocusAnchor: NSViewRepresentable {
         ///    so this only has to clear the reveal frame.
         private static let retryDelays: [TimeInterval] = [0.06, 0.12, 0.22, 0.4]
 
-        /// Rising counter so a stale retry chain — from a pane that has since
-        /// been unfocused — cannot fire and steal the keyboard back.
-        private var claimGeneration = 0
+        /// The live retry chain. A new claim cancels the previous one, so a
+        /// stale chain cannot fire and steal the keyboard back; each attempt
+        /// also re-checks that the pane is still the focused one.
+        private var claimTask: Task<Void, Never>?
         private var isAwaitingKeyWindow = false
 
         /// The focused pane should own the keyboard from the moment it appears,
@@ -98,16 +99,13 @@ struct PaneKeyFocusAnchor: NSViewRepresentable {
         }
 
         func beginClaimingKeyboard() {
-            claimGeneration += 1
-            attempt(index: 0, generation: claimGeneration)
-        }
-
-        private func attempt(index: Int, generation: Int) {
-            guard index < Self.retryDelays.count else { return }
-            DispatchQueue.main.asyncAfter(deadline: .now() + Self.retryDelays[index]) { [weak self] in
-                guard let self, self.claimGeneration == generation, self.isFocusedPane else { return }
-                guard !self.claimKeyboard() else { return }
-                self.attempt(index: index + 1, generation: generation)
+            claimTask?.cancel()
+            claimTask = Task { @MainActor [weak self] in
+                for delay in Self.retryDelays {
+                    do { try await Task.sleep(for: .seconds(delay)) } catch { return }
+                    guard let self, self.isFocusedPane else { return }
+                    if self.claimKeyboard() { return }
+                }
             }
         }
 

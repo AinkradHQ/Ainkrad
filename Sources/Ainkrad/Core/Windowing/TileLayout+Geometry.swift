@@ -43,9 +43,8 @@ extension TileLayout {
             let dx = frame.midX - origin.midX
             let dy = frame.midY - origin.midY
             let distance = dx * dx + dy * dy
-            if best == nil || distance < best!.distance {
-                best = (id, distance)
-            }
+            if let current = best, current.distance <= distance { continue }
+            best = (id, distance)
         }
         if let best {
             focus(best.id)

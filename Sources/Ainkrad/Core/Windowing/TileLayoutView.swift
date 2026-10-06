@@ -43,11 +43,11 @@ struct TileLayoutView: View {
     let registry: BuiltInAppRegistry
 
     /// The pane the floating shortcut badge is currently announcing, and the
-    /// token that lets a later switch cancel an earlier badge's dismissal (so
-    /// switching twice quickly shows the second badge for its full time rather
-    /// than having the first one's timer close it early).
+    /// pending dismissal a later switch cancels (so switching twice quickly
+    /// shows the second badge for its full time rather than having the first
+    /// one's timer close it early).
     @State private var badgeBlockID: UUID?
-    @State private var badgeToken = 0
+    @State private var badgeDismissal: Task<Void, Never>?
 
     private var tileLayout: TileLayout { workspace.tileLayout }
 
@@ -145,17 +145,16 @@ struct TileLayoutView: View {
     // MARK: - Shortcut badge
 
     /// Shows the badge for the pane that just came forward, then dismisses it.
-    /// The token guards against an earlier switch's dismissal closing a later
-    /// badge: only the most recent announcement is allowed to clear the state.
+    /// Each announcement cancels the previous one's dismissal: only the most
+    /// recent announcement is allowed to clear the state.
     private func announceShortcut(for blockID: UUID?) {
         guard let blockID else { return }
-        badgeToken += 1
-        let token = badgeToken
+        badgeDismissal?.cancel()
         withAnimation(reduceMotion ? nil : .easeOut(duration: 0.14)) {
             badgeBlockID = blockID
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
-            guard badgeToken == token else { return }
+        badgeDismissal = Task { @MainActor in
+            do { try await Task.sleep(for: .seconds(1.4)) } catch { return }
             withAnimation(reduceMotion ? nil : .easeIn(duration: 0.22)) {
                 badgeBlockID = nil
             }

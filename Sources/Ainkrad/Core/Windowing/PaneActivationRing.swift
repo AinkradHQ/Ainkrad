@@ -37,6 +37,9 @@ struct PaneActivationRing: View {
             guard focused, !reduceMotion else { return }
             // Set the start value, then animate to rest on the next tick, so
             // the flare actually renders at full strength before it decays.
+            // `DispatchQueue.main.async` on purpose (S-CON-5): the decay must
+            // start on the next run-loop turn, after the full-strength frame
+            // has been committed.
             pulse = 1
             DispatchQueue.main.async {
                 withAnimation(.easeOut(duration: 0.32)) { pulse = 0 }

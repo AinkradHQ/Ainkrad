@@ -332,13 +332,14 @@ struct WorkspaceOverviewView: View {
         .buttonStyle(.plain)
     }
 
-    // MARK: - Detail pane
-    /// button, and its context menu.
+    // MARK: - Footer
+
     /// The keyboard hints only. The mouse hints that used to share this row
     /// ("drag an app onto a workspace… double-click to rename…") were the FIRST
     /// thing to be truncated away when the panel narrowed — advice that vanishes
     /// exactly when the window is small is not advice. Every one of those actions
     /// now says what it is where it happens: the row's own tooltips, its pencil
+    /// button, and its context menu.
     private func footer(tokens: DesignTokens) -> some View {
         HStack(spacing: 14) {
             Spacer()
