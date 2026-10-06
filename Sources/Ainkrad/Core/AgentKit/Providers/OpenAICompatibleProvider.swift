@@ -74,7 +74,7 @@ struct OpenAICompatibleProvider: LLMProvider {
 
                     if finishReason == "tool_calls" {
                         for index in calls.keys.sorted() {
-                            let entry = calls[index]!
+                            guard let entry = calls[index] else { continue }
                             let input = JSONValue.parse(entry.args) ?? .object([:])
                             continuation.yield(.toolUseComplete(id: entry.id, name: entry.name, input: input))
                         }

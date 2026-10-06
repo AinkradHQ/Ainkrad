@@ -81,9 +81,20 @@ final class OAuthCredentialStore {
     }
 
     private func writeToken(_ token: OAuthToken, for connectionID: UUID) {
-        guard let data = try? JSONEncoder().encode(token),
-            let json = String(data: data, encoding: .utf8)
-        else { return }
+        let data: Data
+        do {
+            data = try JSONEncoder().encode(token)
+        } catch {
+            // The sign-in succeeded but the token can't be kept: say so instead of dropping it silently.
+            Log.settings.error(
+                "OAuth token for \(connectionID, privacy: .public) was not saved: \(String(describing: error), privacy: .public)"
+            )
+            return
+        }
+        guard let json = String(data: data, encoding: .utf8) else {
+            Log.settings.error("OAuth token for \(connectionID, privacy: .public) was not saved: encoded token is not UTF-8")
+            return
+        }
         secrets.setSecret(json, for: oauthSecretID(connectionID))
     }
 
