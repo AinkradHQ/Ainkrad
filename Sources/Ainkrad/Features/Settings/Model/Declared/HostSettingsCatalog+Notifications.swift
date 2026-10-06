@@ -78,24 +78,23 @@ extension HostSettingsCatalog {
             ]
         }
         let now = Date()
-        let snoozed = suppression.snoozedUntil.map { $0 > now } ?? false
         let time = DateFormatter()
         time.dateFormat = "HH:mm"
+        // The end of a live snooze, formatted; nil when there is none or it lapsed.
+        let quietUntil = suppression.snoozedUntil.flatMap { $0 > now ? time.string(from: $0) : nil }
+        let snoozed = quietUntil != nil
         fields.append(
             SettingsField(
                 path: group.appending("snooze"), label: "Snooze",
-                help: snoozed
-                    ? "Quiet until \(time.string(from: suppression.snoozedUntil!))."
-                    : "Pause interruptions for a while.",
+                help: quietUntil.map { "Quiet until \($0)." } ?? "Pause interruptions for a while.",
                 keywords: ["snooze", "pause", "quiet"],
                 kind: .select(
-                    options: (snoozed
-                        ? [
-                            SettingsOption(
-                                id: "snoozed", title: "Quiet until \(time.string(from: suppression.snoozedUntil!))"),
+                    options: (quietUntil.map {
+                        [
+                            SettingsOption(id: "snoozed", title: "Quiet until \($0)"),
                             SettingsOption(id: "off", title: "Resume now"),
                         ]
-                        : [SettingsOption(id: "off", title: "Not snoozed")])
+                    } ?? [SettingsOption(id: "off", title: "Not snoozed")])
                         + SignalSnooze.allCases.map { SettingsOption(id: $0.rawValue, title: $0.label) },
                     selection: Binding(
                         get: { snoozed ? "snoozed" : "off" },
