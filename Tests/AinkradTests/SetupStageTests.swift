@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import Testing
 
 @testable import Ainkrad
@@ -70,6 +71,18 @@ struct SetupStageTests {
         for layer in SetupStageMotion.Layer.allCases {
             #expect(SetupStageMotion.animation(reduceMotion: true, layer: layer) == nil)
             #expect(SetupStageMotion.animation(reduceMotion: false, layer: layer) != nil)
+        }
+    }
+
+    // The stage's feel: one spring, and each layer a fixed beat behind the one
+    // above it. Pinned before the spring moves onto a skin token, so the token
+    // has to resolve to exactly today's response, damping and stagger.
+    @Test func theStageSpringAndStaggerKeepTheirFeel() {
+        for layer in SetupStageMotion.Layer.allCases {
+            #expect(
+                SetupStageMotion.animation(reduceMotion: false, layer: layer)
+                    == Animation.spring(response: 0.42, dampingFraction: 0.82)
+                    .delay(Double(layer.rawValue) * 0.055))
         }
     }
 
