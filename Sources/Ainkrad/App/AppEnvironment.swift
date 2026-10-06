@@ -8,18 +8,6 @@ import SwiftUI
 @MainActor
 @Observable
 final class AppEnvironment {
-    /// True when the process was launched by the XCTest / swift-testing runner.
-    /// `xcodebuild test` hosts the test bundle INSIDE this app, so `@main` →
-    /// `bootstrap()` boots the full app before any test runs. This flag gates
-    /// launch-time external I/O — the local-model reachability probe loop, MCP
-    /// server connect, and LSP autodetect — which under a hosted test run
-    /// otherwise hang on 30s network timeouts (Ollama `:11434`) or block on a
-    /// TCC permission prompt nobody can dismiss, starving the test bundle of the
-    /// main loop. Production launches never set `XCTestConfigurationFilePath`,
-    /// so this is `false` in the shipped app and startup is byte-identical.
-    static let isRunningUnderTests: Bool =
-        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-
     let persistence: PersistenceStore
     let secrets: SecretStore
     let registry: BuiltInAppRegistry

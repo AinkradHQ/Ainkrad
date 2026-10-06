@@ -235,6 +235,11 @@ enum LaunchHomeResolver {
     }
 
     /// True when this process is hosting a test bundle rather than a real launch.
+    /// The one test-host check: launch picks a provisional Home with it, and bootstrap
+    /// skips launch-time external I/O with it — the local-model probe loop, MCP
+    /// connect and LSP autodetect, which under `xcodebuild test` (the bundle is
+    /// hosted INSIDE this app) hang on network timeouts or a TCC prompt nobody can
+    /// dismiss. Production launches never set the variable, so startup is unchanged.
     ///
     /// The environment variable ALONE, deliberately. A `NSClassFromString("XCTestCase")`
     /// probe would also answer true in any shipped build that ever linked XCTest —

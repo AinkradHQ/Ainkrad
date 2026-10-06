@@ -11,7 +11,7 @@ extension AppEnvironment {
     /// `UserDefaults` suite, so callers never see another call's state and
     /// nothing touches the developer's real `~/Library/Application Support`
     /// or `.standard` defaults. Reuses the production `bootstrap()` wiring
-    /// rather than a bespoke stub graph — `isRunningUnderTests` already gates
+    /// rather than a bespoke stub graph — `LaunchHomeResolver.isRunningTests` already gates
     /// the network/TCC-prompting I/O (model probe, MCP connect, LSP
     /// autodetect) when hosted under `xcodebuild test`, so this is safe and
     /// fast in that context; call sites outside tests should expect that

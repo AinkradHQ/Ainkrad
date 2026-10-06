@@ -34,9 +34,9 @@ extension AppEnvironment {
         // autodetect) is skipped when the app is hosting a test bundle: under
         // `xcodebuild test` these otherwise hang the shared process on network
         // timeouts / a TCC prompt, starving the tests. See
-        // `AppEnvironment.isRunningUnderTests`. Guarded as one block since all
+        // `LaunchHomeResolver.isRunningTests`. Guarded as one block since all
         // three are the same "background external I/O off the launch path" class.
-        if !AppEnvironment.isRunningUnderTests {
+        if !LaunchHomeResolver.isRunningTests {
             // Kick the local-reachability cache: an immediate refresh so the very
             // first turn already reflects reality (best-effort — a turn started
             // before this completes just sees the cache's initial empty state,
@@ -210,7 +210,7 @@ extension AppEnvironment {
         // MUST stay below `AppMCPDiscovery.refresh` above: it connects whatever configs
         // exist at that moment, so app-server configs have to be synthesized first.
         // Skipped under a hosted test run for the same reason as the block above.
-        if !AppEnvironment.isRunningUnderTests {
+        if !LaunchHomeResolver.isRunningTests {
             Task { [weak mcpServerRegistry] in
                 await mcpServerRegistry?.connectEnabled()
             }
