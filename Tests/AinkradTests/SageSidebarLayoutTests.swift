@@ -9,7 +9,7 @@ import Testing
     private let threshold = SageSidebarLayout.width + SageSidebarLayout.chatMinWidth
 
     @Test func narrowPaneOverlaysSidebar() {
-        #expect(SageSidebarLayout.overlays(paneWidth: 500))
+        #expect(SageSidebarLayout.overlays(paneWidth: 620))
         #expect(SageSidebarLayout.overlays(paneWidth: threshold - 1))
     }
 

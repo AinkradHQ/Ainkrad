@@ -327,7 +327,7 @@ struct SageConnectionModelPicker: View {
                 groupedSelect(sections: sections, binding: binding).fixedSize()
                 groupedSelect(sections: sections, binding: binding)
                     .lineLimit(1)
-                    .frame(minWidth: 60, maxWidth: 180)
+                    .frame(minWidth: 120, maxWidth: 180)
             }
             // Bordered trigger's own padding (AinkradSpacing.sm vertical) runs
             // taller than the composer's icon buttons; pin the row height so

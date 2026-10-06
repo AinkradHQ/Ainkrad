@@ -98,7 +98,7 @@ private struct HistoryRow: View {
 /// overlays the chat column instead, so Sage never exceeds its pane.
 enum SageSidebarLayout {
     static let width: CGFloat = 240
-    static let chatMinWidth: CGFloat = 360
+    static let chatMinWidth: CGFloat = 475
 
     static func overlays(paneWidth: CGFloat) -> Bool {
         paneWidth < width + chatMinWidth
