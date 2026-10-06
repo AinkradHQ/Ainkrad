@@ -523,7 +523,7 @@ private enum PaneGlassImageCache {
 /// half of this pane is tracked (for the highlight); dropping performs
 /// `TileLayout.move` — joining as an equal sibling on parallel edges, or
 /// wrapping this pane into a stacked pair on perpendicular ones.
-private struct PaneEdgeDropDelegate: DropDelegate {
+struct PaneEdgeDropDelegate: DropDelegate {
     let targetBlockID: UUID
     let tileLayout: TileLayout
     let size: () -> CGSize
@@ -558,7 +558,7 @@ private struct PaneEdgeDropDelegate: DropDelegate {
         return true
     }
 
-    private func nearestEdge(to location: CGPoint) -> PaneEdge {
+    func nearestEdge(to location: CGPoint) -> PaneEdge {
         let bounds = size()
         guard bounds.width > 0, bounds.height > 0 else { return .trailing }
         let dx = location.x / bounds.width - 0.5
