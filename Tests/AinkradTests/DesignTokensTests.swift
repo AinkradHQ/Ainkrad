@@ -53,9 +53,23 @@ struct DesignTokensTests {
         #expect(tokens.foreground == Color(hex: "EDE9FE"))
     }
 
-    @Test("Theme.tokens resolves to the matching static palette")
+    /// The bridge (`DesignTokens(skin:)` over each theme file) must equal the
+    /// literal palettes the host shipped before the skin, for all 7 themes —
+    /// every area still reads colours through `DesignTokens` (5A §1c).
+    @Test("Theme.tokens, bridged from the skin, equals today's palette for all 7 themes")
     func themeResolvesToMatchingPalette() {
-        #expect(Theme.neonBlue.tokens == LegacyDesignTokens.neonBlue)
-        #expect(Theme.cyberPurple.tokens == LegacyDesignTokens.cyberPurple)
+        let legacy: [Theme: DesignTokens] = [
+            .neonBlue: LegacyDesignTokens.neonBlue,
+            .cyberPurple: LegacyDesignTokens.cyberPurple,
+            .dracula: LegacyDesignTokens.dracula,
+            .nord: LegacyDesignTokens.nord,
+            .tokyoNight: LegacyDesignTokens.tokyoNight,
+            .gruvbox: LegacyDesignTokens.gruvbox,
+            .solarizedDark: LegacyDesignTokens.solarizedDark,
+        ]
+        #expect(Set(legacy.keys) == Set(Theme.allCases))
+        for theme in Theme.allCases {
+            #expect(theme.tokens == legacy[theme], "\(theme.rawValue)")
+        }
     }
 }

@@ -15,18 +15,14 @@ import os
 /// The lock is **recursive** because `load` calls `save` to persist a schema
 /// upgrade while already holding it. A plain `NSLock` would deadlock on the
 /// first document that migrates.
+///
+/// `@unchecked Sendable` invariant: `cache` is the only mutable state and is
+/// touched only while holding `lock`; every other stored property is a `let`.
 public final class FileDocumentStore: PersistenceStore, @unchecked Sendable {
     private let rootURL: URL
     private let fileManager: FileManager
     private let lock = NSRecursiveLock()
     private var cache: [String: any PersistableDocument] = [:]
-    private weak var _syncEngine: SyncEngine?
-
-    /// Optional sync seam; notified after each successful write. Not owned.
-    public var syncEngine: SyncEngine? {
-        get { lock.withLock { _syncEngine } }
-        set { lock.withLock { _syncEngine = newValue } }
-    }
 
     public init(rootURL: URL, fileManager: FileManager = .default) {
         self.rootURL = rootURL
@@ -113,7 +109,6 @@ public final class FileDocumentStore: PersistenceStore, @unchecked Sendable {
         do {
             try data.write(to: fileURL(for: T.documentID), options: .atomic)
             cache[T.documentID] = document
-            _syncEngine?.documentDidChange(id: T.documentID, data: data)
         } catch {
             Log.persistence.error(
                 "Failed to write \(T.documentID, privacy: .public): \(error.localizedDescription, privacy: .public)")
@@ -150,7 +145,6 @@ public final class FileDocumentStore: PersistenceStore, @unchecked Sendable {
         do {
             try data.write(to: fileURL(for: id), options: .atomic)
             cache[id] = nil  // no concrete type to cache under; drop any stale entry
-            _syncEngine?.documentDidChange(id: id, data: data)
         } catch {
             Log.persistence.error(
                 "Failed to write \(id, privacy: .public): \(error.localizedDescription, privacy: .public)")

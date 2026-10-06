@@ -1,3 +1,4 @@
+import AinkradHostRuntime
 import Foundation
 import MetricKit
 
@@ -12,7 +13,12 @@ import MetricKit
 /// That asymmetry is why Plan F removes the avoidable trap sites rather than
 /// trying to catch them.
 enum CrashSentinel {
+    // `nonisolated(unsafe)`: written only by `install()` (once at launch; the
+    // serialized tests re-install), before the exception handler and MetricKit
+    // subscriber that read it are registered. The writer locks its own I/O.
     nonisolated(unsafe) private static var writer: CrashLogWriter?
+    // `nonisolated(unsafe)`: an immutable reference to a stateless subscriber;
+    // MetricKit is the only caller, on its own queue.
     nonisolated(unsafe) private static let subscriber = MetricSubscriber()
 
     static func install(
@@ -34,12 +40,6 @@ enum CrashSentinel {
         }
         MXMetricManager.shared.add(subscriber)
         Log.diagnostics.info("Crash sentinel installed at \(writer.fileURL.path, privacy: .public)")
-    }
-
-    /// Records written by earlier runs. Read at launch so a crash the user hit
-    /// yesterday is still visible today.
-    static func pendingReports() -> [CrashReport] {
-        (writer ?? CrashLogWriter(directory: CrashLogWriter.defaultDirectory)).readAll()
     }
 
     private static var appVersion: String {

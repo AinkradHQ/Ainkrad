@@ -1,3 +1,4 @@
+import AinkradHostRuntime
 import Foundation
 
 protocol CatalogSource {

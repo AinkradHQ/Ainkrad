@@ -1,3 +1,4 @@
+import AinkradHostRuntime
 import AppKit
 // Sources/Ainkrad/Core/AgentKit/Auth/ClaudeOAuthLoginController.swift
 import Foundation

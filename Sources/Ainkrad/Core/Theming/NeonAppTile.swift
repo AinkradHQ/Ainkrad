@@ -28,6 +28,9 @@ struct NeonAppTile: View {
     var badgeStatus: AinkradStatus? = nil
 
     @Environment(\.ainkradStatusColors) private var statusColors
+    /// Opacity, cut and motion come from the skin. Colours stay on `tokens`
+    /// until the callers' area PRs drop that parameter (§1c).
+    @Environment(\.ainkradSkin) private var skin
 
     private var badgeTint: Color {
         // Mapped here rather than through `AinkradStatus.color(in:)`: that
@@ -47,12 +50,12 @@ struct NeonAppTile: View {
 
     var body: some View {
         Image(systemName: symbol)
-            .font(.system(size: size * 0.82, weight: .medium))
+            .font(.system(size: size * 0.82, weight: .medium))  // design-lint: allow font-size token-gap neonGlyphRatio
             .foregroundStyle(tokens.accentSecondary)
             // Glow scales with the render size so the bloom reads the same at
             // 18pt or 88pt — kept subtle.
-            .shadow(color: tokens.accentSecondary.opacity(0.35), radius: size * 0.09)
-            .shadow(color: tokens.accentSecondary.opacity(0.16), radius: size * 0.22)
+            .shadow(color: tokens.accentSecondary.opacity(skin.opacity.o35), radius: size * 0.09)
+            .shadow(color: tokens.accentSecondary.opacity(skin.opacity.o16), radius: size * 0.22)
             .frame(width: size, height: size)
             // Overlaid rather than in an HStack: the badge must not change the
             // tile's footprint, or a notification would nudge the launcher grid.
@@ -63,12 +66,12 @@ struct NeonAppTile: View {
                         .foregroundStyle(tokens.background)
                         .padding(.horizontal, size * 0.10)
                         .padding(.vertical, size * 0.03)
-                        .background(ChamferShape(cut: size * 0.10).fill(badgeTint))
-                        .shadow(color: badgeTint.opacity(0.6), radius: size * 0.08)
+                        .background(ChamferShape(cut: size * skin.cut.r0_10).fill(badgeTint))
+                        .shadow(color: badgeTint.opacity(skin.opacity.o60), radius: size * 0.08)
                         .offset(x: size * 0.22, y: -size * 0.12)
                         .transition(.scale.combined(with: .opacity))
                 }
             }
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: badge)
+            .animation(skin.motion.springs["sp30_70"].map { skin.animation($0) }, value: badge)
     }
 }

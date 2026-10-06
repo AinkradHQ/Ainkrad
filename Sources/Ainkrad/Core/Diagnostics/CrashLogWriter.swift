@@ -1,3 +1,4 @@
+import AinkradHostRuntime
 import Foundation
 
 /// Append-only NDJSON diagnostics log with a hard size cap.
@@ -10,6 +11,9 @@ import Foundation
 /// Rotation keeps exactly one previous generation (`diagnostics.ndjson.1`).
 /// Two files bounded at `maxBytes` each is the whole retention policy: enough
 /// to survive a crash loop, small enough never to matter on disk.
+///
+/// `@unchecked Sendable` invariant: every stored property is a `let`, and all
+/// file I/O on `fileURL` (append, rotate, read) runs while holding `lock`.
 final class CrashLogWriter: @unchecked Sendable {
     private let directory: URL
     private let maxBytes: Int

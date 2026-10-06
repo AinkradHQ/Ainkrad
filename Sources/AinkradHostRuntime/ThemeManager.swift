@@ -26,7 +26,8 @@ public final class ThemeManager {
 
     /// The current theme's tokens with the custom accent (if any) applied.
     public var tokens: DesignTokens {
-        currentTheme.tokens.overridingAccentPrimary(accentColorHex.map { Color(hex: $0) })
+        let accent = accentColorHex.map { Color(hex: $0) }  // design-lint: allow hex-color user data, the custom accent
+        return currentTheme.tokens.overridingAccentPrimary(accent)
     }
 
     /// Fired after a theme change is applied + persisted. Used by the app-icon

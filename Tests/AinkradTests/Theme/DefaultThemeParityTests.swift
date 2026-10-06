@@ -1,10 +1,10 @@
 import AinkradAppKitUI
-import AinkradHostRuntime
 import Foundation
 import SwiftUI
 import Testing
 
 @testable import Ainkrad
+@testable import AinkradHostRuntime
 
 @Suite("DefaultThemeParityTests")
 struct DefaultThemeParityTests {
