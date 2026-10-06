@@ -17,6 +17,7 @@ struct SignalFeedOverlayView: View {
     let onDismiss: () -> Void
 
     @Environment(\.ainkradTheme) private var theme
+    @Environment(\.ainkradSkin) private var skin
     @State private var searchResults: [SignalEvent]?
     @State private var pendingDestructive: (SignalEvent, SignalAction)?
     @State private var viewState = SignalViewState()
@@ -60,7 +61,7 @@ struct SignalFeedOverlayView: View {
                 // The shared backdrop value, not a private 0.32: the feed sat
                 // visibly lighter than the Launcher and Settings scrims for no
                 // reason anyone recorded.
-                Color.black.opacity(OverlayChrome.backdropOpacity)
+                skin.color(.palette("black", skin.chrome.overlay.backdropOpacity))
                     .ignoresSafeArea()
                     .onTapGesture(perform: onDismiss)
 
@@ -113,22 +114,20 @@ struct SignalFeedOverlayView: View {
             let trimmed = new.trimmingCharacters(in: .whitespacesAndNewlines)
             searchResults = trimmed.isEmpty ? nil : center.search(trimmed)
         }
-        .confirmationDialog(
-            pendingDestructive.map { "\($0.1.label)?" } ?? "",
+        // The kit's confirm dialog, not the system sheet (design bar): it dims
+        // and centres within this overlay, and Cancel or the scrim clears it.
+        .ainkradConfirmDialog(
             isPresented: Binding(
                 get: { pendingDestructive != nil },
                 set: { if !$0 { pendingDestructive = nil } }),
-            titleVisibility: .visible
+            title: pendingDestructive.map { "\($0.1.label)?" } ?? "",
+            message: "This action was published by the app and cannot be undone from here.",
+            confirmTitle: pendingDestructive?.1.label ?? "Confirm",
+            isDestructive: true
         ) {
-            if let (event, action) = pendingDestructive {
-                Button(action.label, role: .destructive) {
-                    if let hub { SignalActionRouter(hub: hub).dispatch(event, action) }
-                    pendingDestructive = nil
-                }
+            if let (event, action) = pendingDestructive, let hub {
+                SignalActionRouter(hub: hub).dispatch(event, action)
             }
-            Button("Cancel", role: .cancel) { pendingDestructive = nil }
-        } message: {
-            Text("This action was published by the app and cannot be undone from here.")
         }
     }
 

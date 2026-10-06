@@ -34,23 +34,30 @@ struct SubscriptionApprovalView: View {
     var onDeny: () -> Void = {}
 
     @Environment(\.ainkradTheme) private var theme
+    @Environment(\.ainkradSkin) private var skin
 
+    /// The kit modal: it dims and blurs the window behind the prompt and pads
+    /// the panel itself. Always presented while this view exists — the caller
+    /// removes the view once the user answers — so the scrim and Esc, which
+    /// try to dismiss, change nothing: only the two buttons answer.
     var body: some View {
-        AinkradPanel(showsBrackets: true) {
-            VStack(alignment: .leading, spacing: 0) {
-                header
-                rows
-                footer
+        Color.clear
+            .ainkradModal(
+                isPresented: .constant(true), contentWidth: skin.size.s420 - 2 * skin.spacing.lg
+            ) {
+                VStack(alignment: .leading, spacing: 0) {
+                    header
+                    rows
+                    footer
+                }
             }
-            .frame(width: 420)
-        }
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: skin.size.s6) {
             HStack(spacing: AinkradSpacing.sm - 1) {
                 Image(systemName: "bell.badge")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(skin.font(AinkradFontToken(sizeKey: "t12", weight: "medium", scaled: false)))
                     .foregroundStyle(theme.accentSecondary)
                 Text(isReapproval ? "Updated notification access" : "Notification access")
                     .font(AinkradFont.display(11.5, weight: .semibold))
@@ -66,44 +73,41 @@ struct SubscriptionApprovalView: View {
                     : "\(appName) wants to read notifications from other apps."
             )
             .font(AinkradFont.display(12))
-            .foregroundStyle(theme.foreground.opacity(0.85))
+            .foregroundStyle(theme.foreground.opacity(skin.opacity.o85))
             .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 14)
-        .padding(.bottom, 10)
+        .padding(.bottom, skin.size.s10)
     }
 
     /// One row per subscription, in the app's own words via
     /// `approvalDescription`. Listed rather than summarised as a count: "3
     /// subscriptions" is not something anyone can consent to.
     private var rows: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: skin.size.s2) {
             ForEach(Array(subscriptions.enumerated()), id: \.offset) { _, subscription in
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                HStack(alignment: .firstTextBaseline, spacing: skin.spacing.sm) {
                     Image(systemName: "arrow.turn.down.right")
-                        .font(.system(size: 9, weight: .semibold))
-                        .foregroundStyle(theme.accentPrimary.opacity(0.7))
-                        .frame(width: 12)
+                        .font(skin.font(AinkradFontToken(sizeKey: "t9", weight: "semibold", scaled: false)))
+                        .foregroundStyle(theme.accentPrimary.opacity(skin.opacity.o70))
+                        .frame(width: skin.size.s12)
                     Text(label(for: subscription))
                         // Mono, because it is a readout of a declared value
                         // rather than prose — the same rule the feed's
                         // timestamps and source labels follow.
                         .font(AinkradFont.mono(11))
-                        .foregroundStyle(theme.foreground.opacity(0.9))
+                        .foregroundStyle(theme.foreground.opacity(skin.opacity.o90))
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 0)
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 7)
+                .padding(.horizontal, skin.spacing.md)
+                .padding(.vertical, skin.size.s7)
                 // A tint band per row, never a separator: the design language
                 // forbids rules, and the rows still have to read as a list.
                 .background(
-                    ChamferShape(cut: AinkradRadius.sm)
-                        .fill(theme.surfaceElevated.opacity(0.45)))
+                    ChamferShape(cut: skin.radius.sm)
+                        .fill(theme.surfaceElevated.opacity(skin.opacity.o45)))
             }
         }
-        .padding(.horizontal, 12)
     }
 
     /// "Raven: build.* notifications" — the source named as the user knows
@@ -121,47 +125,20 @@ struct SubscriptionApprovalView: View {
     }
 
     private var footer: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: skin.size.s10) {
             Text("You can change this later in Settings › Notifications.")
                 .font(AinkradFont.display(10.5))
-                .foregroundStyle(theme.foreground.opacity(0.55))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o55))
 
             HStack(spacing: AinkradSpacing.sm) {
                 Spacer()
                 // Deny first in reading order and NOT styled as the primary
                 // action: the safe answer must never be the one that takes
                 // more effort to choose.
-                Button(action: onDeny) {
-                    Text("Don't allow")
-                        .font(AinkradFont.display(11, weight: .medium))
-                        .foregroundStyle(theme.foreground.opacity(0.75))
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 7)
-                        .background(
-                            ChamferShape(cut: AinkradRadius.sm)
-                                .fill(theme.surfaceElevated.opacity(0.6))
-                        )
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-
-                Button(action: onAllow) {
-                    Text("Allow")
-                        .font(AinkradFont.display(11, weight: .semibold))
-                        .foregroundStyle(theme.background)
-                        .padding(.horizontal, 18)
-                        .padding(.vertical, 7)
-                        .background(
-                            ChamferShape(cut: AinkradRadius.sm)
-                                .fill(theme.accentPrimary)
-                        )
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
+                AinkradButton(title: "Don't allow", style: .ghost, action: onDeny)
+                AinkradButton(title: "Allow", style: .primary, action: onAllow)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 14)
-        .padding(.bottom, 14)
+        .padding(.top, skin.size.s14)
     }
 }

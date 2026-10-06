@@ -35,6 +35,7 @@ struct SignalBellDropdown: View {
     @Environment(\.ainkradTheme) private var theme
     @Environment(\.ainkradSignalIdentity) private var identities
     @Environment(\.ainkradReduceMotion) private var reduceMotion
+    @Environment(\.ainkradSkin) private var skin
     @State private var hoveringFooter = false
     @State private var readFilter: ReadFilter = .all
     @State private var appFilter: SignalSource?
@@ -99,12 +100,12 @@ struct SignalBellDropdown: View {
                 }
                 footer
             }
-            .frame(width: 380)
+            .frame(width: skin.size.s380)
         }
     }
 
     private var list: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: skin.spacing.xs) {
             ForEach(groups, id: \.source) { group in
                 // Filtered to one app, its events are the whole list: grouping
                 // them behind a stack would hide exactly what was asked for.
@@ -119,16 +120,17 @@ struct SignalBellDropdown: View {
                             Spacer()
                             countChip("Show less", systemName: "chevron.up") { toggle(group.source) }
                         }
-                        .padding(.trailing, 4)
+                        .padding(.trailing, skin.spacing.xs)
                     }
                 } else {
                     stack(group)
                 }
             }
         }
-        .padding(.horizontal, 6)
-        .padding(.bottom, 6)
-        .animation(reduceMotion ? nil : .spring(response: 0.32, dampingFraction: 0.84), value: expandedGroups)
+        .padding(.horizontal, skin.size.s6)
+        .padding(.bottom, skin.size.s6)
+        .animation(
+            reduceMotion ? nil : skin.motion.springs["sp32_84"].map { skin.animation($0) }, value: expandedGroups)
     }
 
     private func glanceRow(_ event: SignalEvent) -> some View {
@@ -151,41 +153,51 @@ struct SignalBellDropdown: View {
         let layers = min(hidden, 2)
         return ZStack(alignment: .top) {
             ForEach((1...max(layers, 1)).reversed(), id: \.self) { depth in
-                ChamferShape(cut: 6)
-                    .fill(theme.surfaceElevated.opacity(depth == 1 ? 0.55 : 0.32))
-                    .overlay(ChamferShape(cut: 6).strokeBorder(theme.accentSecondary.opacity(0.14), lineWidth: 1))
-                    .padding(.horizontal, CGFloat(depth) * 7)
-                    .offset(y: CGFloat(depth) * 5)
+                ChamferShape(cut: skin.cut.c6)
+                    .fill(theme.surfaceElevated.opacity(depth == 1 ? skin.opacity.o55 : skin.opacity.o32))
+                    .overlay(
+                        ChamferShape(cut: skin.cut.c6)
+                            .strokeBorder(theme.accentSecondary.opacity(skin.opacity.o14), lineWidth: 1)
+                    )
+                    .padding(.horizontal, CGFloat(depth) * skin.size.s7)
+                    .offset(y: CGFloat(depth) * skin.size.s5)
                     .opacity(depth <= layers ? 1 : 0)
                     .contentShape(Rectangle())
                     .onTapGesture { toggle(group.source) }
             }
             glanceRow(group.events[0])
-                .background(ChamferShape(cut: 6).fill(theme.surfaceElevated.opacity(0.9)))
+                .background(ChamferShape(cut: skin.cut.c6).fill(theme.surfaceElevated.opacity(skin.opacity.o90)))
         }
-        .padding(.bottom, CGFloat(layers) * 5 + 4)
+        .padding(.bottom, CGFloat(layers) * skin.size.s5 + skin.spacing.xs)
         .overlay(alignment: .bottomTrailing) {
             countChip("+\(hidden)", systemName: "chevron.down") { toggle(group.source) }
-                .padding(.trailing, 10)
-                .offset(y: 2)
+                .padding(.trailing, skin.size.s10)
+                .offset(y: skin.size.s2)
         }
     }
 
     /// The group count, and "Show less", as one small chamfered chip in the
     /// accent, rather than a line of link text under the row.
+    ///
+    /// Local, not `AinkradChip`: the kit chip has no tap action, only a
+    /// remove button (kit gap "action chip").
     private func countChip(_ text: String, systemName: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 3) {
+        Button(action: action) {  // design-lint: allow raw-control kit gap, action chip
+            HStack(spacing: skin.size.s3) {
                 Text(text).font(AinkradFont.display(9.5, weight: .semibold)).monospacedDigit()
-                Image(systemName: systemName).font(.system(size: 7, weight: .bold))
+                Image(systemName: systemName)
+                    .font(skin.font(AinkradFontToken(sizeKey: "t7", weight: "bold", scaled: false)))
             }
             .foregroundStyle(theme.accentSecondary)
-            .padding(.horizontal, 7)
-            .padding(.vertical, 2.5)
-            .background(ChamferShape(cut: 3).fill(theme.surface))
-            .background(ChamferShape(cut: 3).fill(theme.accentSecondary.opacity(0.16)))
-            .overlay(ChamferShape(cut: 3).strokeBorder(theme.accentSecondary.opacity(0.4), lineWidth: 1))
-            .contentShape(ChamferShape(cut: 3))
+            .padding(.horizontal, skin.size.s7)
+            .padding(.vertical, skin.size.s2_5)
+            .background(ChamferShape(cut: skin.cut.c3).fill(theme.surface))
+            .background(ChamferShape(cut: skin.cut.c3).fill(theme.accentSecondary.opacity(skin.opacity.o16)))
+            .overlay(
+                ChamferShape(cut: skin.cut.c3)
+                    .strokeBorder(theme.accentSecondary.opacity(skin.opacity.o40), lineWidth: 1)
+            )
+            .contentShape(ChamferShape(cut: skin.cut.c3))
         }
         .buttonStyle(.plain)
         .help(text == "Show less" ? "Show less" : "Show \(text.dropFirst()) more")
@@ -210,7 +222,7 @@ struct SignalBellDropdown: View {
                 headerButton("checkmark.circle", help: "Mark all read", action: onMarkAllRead)
             }
             if isMuted {
-                headerButton("bell.slash.fill", help: "Resume now", tint: theme.accentSecondary, action: onResume)
+                headerButton("bell.slash.fill", help: "Resume now", action: onResume)
             } else {
                 // The kit's own menu, not SwiftUI's `Menu`, which renders a
                 // stock AppKit menu in the middle of the HUD.
@@ -226,27 +238,23 @@ struct SignalBellDropdown: View {
             }
             headerButton("gearshape", help: "Notification settings", action: onOpenSettings)
         }
-        .padding(.horizontal, 14)
-        .padding(.top, 12)
-        .padding(.bottom, 8)
+        .padding(.horizontal, skin.size.s14)
+        .padding(.top, skin.spacing.md)
+        .padding(.bottom, skin.spacing.sm)
     }
 
-    private func headerGlyph(_ symbol: String, tint: Color? = nil) -> some View {
+    /// The snooze menu's label: `AinkradMenuButton` takes a custom label.
+    private func headerGlyph(_ symbol: String) -> some View {
         Image(systemName: symbol)
-            .font(.system(size: 11, weight: .medium))
-            .foregroundStyle(tint ?? theme.foreground.opacity(0.5))
-            .frame(width: 20, height: 20)
+            .font(skin.font(AinkradFontToken(sizeKey: "t11", weight: "medium", scaled: false)))
+            .foregroundStyle(theme.foreground.opacity(skin.opacity.o50))
+            .frame(width: skin.size.s20, height: skin.size.s20)
             .contentShape(Rectangle())
     }
 
-    private func headerButton(
-        _ symbol: String, help: String, tint: Color? = nil,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) { headerGlyph(symbol, tint: tint) }
-            .buttonStyle(.plain)
-            .help(help)
-            // Icon-only, so `help` is not enough: a listener never gets a tooltip.
+    private func headerButton(_ symbol: String, help: String, action: @escaping () -> Void) -> some View {
+        AinkradIconButton(systemName: symbol, size: skin.size.s20, tooltip: help, action: action)
+            // Icon-only, so a tooltip is not enough: a listener never gets one.
             .accessibilityLabel(help)
     }
 
@@ -255,15 +263,17 @@ struct SignalBellDropdown: View {
     private var filters: some View {
         HStack(spacing: AinkradSpacing.sm) {
             AinkradSegmentedPicker(items: ReadFilter.allCases, selection: $readFilter) { $0.rawValue }
-                .frame(width: 128)
+                .frame(width: skin.size.s128)
             Spacer(minLength: AinkradSpacing.xs)
             if sources.count > 1 {
                 ForEach(sources, id: \.self) { source in
                     let identity = identities.identity(for: source)
-                    Button {
+                    // The label is the kit's app tile, which has no action of its own.
+                    Button {  // design-lint: allow raw-control kit gap, content label
                         appFilter = appFilter == source ? nil : source
                     } label: {
-                        AinkradAppTile(symbol: identity?.symbol ?? "app", size: 22, isSelected: appFilter == source)
+                        AinkradAppTile(
+                            symbol: identity?.symbol ?? "app", size: skin.size.s22, isSelected: appFilter == source)
                     }
                     .buttonStyle(.plain)
                     .help(identity?.name ?? SignalPresentation.sourceLabel(source))
@@ -271,35 +281,41 @@ struct SignalBellDropdown: View {
                 }
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.bottom, 8)
+        .padding(.horizontal, skin.size.s14)
+        .padding(.bottom, skin.spacing.sm)
     }
 
     /// The hand-off. Chevron rather than an ellipsis: it goes somewhere.
+    ///
+    /// Local, not `AinkradButton`: the kit button hugs its label, and this is
+    /// a full-width strip whose hover glow rises from the panel's bottom edge
+    /// (kit gap "full-width footer action").
     private var footer: some View {
-        Button(action: onViewAll) {
-            HStack(spacing: 5) {
+        Button(action: onViewAll) {  // design-lint: allow raw-control kit gap, full-width footer action
+            HStack(spacing: skin.size.s5) {
                 Text(events.count > 1 ? "View all \(events.count) notifications" : "View all notifications")
                     .font(AinkradFont.display(10.5, weight: .medium))
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 8, weight: .bold))
-                    .offset(x: hoveringFooter && !reduceMotion ? 2 : 0)
+                    .font(skin.font(AinkradFontToken(sizeKey: "t8", weight: "bold", scaled: false)))
+                    .offset(x: hoveringFooter && !reduceMotion ? skin.size.s2 : 0)
             }
-            .foregroundStyle(theme.accentPrimary.opacity(hoveringFooter ? 1 : 0.82))
+            .foregroundStyle(theme.accentPrimary.opacity(hoveringFooter ? 1 : skin.opacity.o82))
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 11)
+            .padding(.vertical, skin.size.s11)
             // A gradient that starts at nothing: no edge to read as a rule.
             .background {
                 LinearGradient(
-                    colors: [.clear, theme.surfaceElevated.opacity(hoveringFooter ? 0.85 : 0.55)],
+                    colors: [
+                        .clear, theme.surfaceElevated.opacity(hoveringFooter ? skin.opacity.o85 : skin.opacity.o55),
+                    ],
                     startPoint: .top, endPoint: .bottom)
             }
             .background(alignment: .bottom) {
                 LinearGradient(
-                    colors: [.clear, theme.accentPrimary.opacity(0.22)],
+                    colors: [.clear, theme.accentPrimary.opacity(skin.opacity.o22)],
                     startPoint: .top, endPoint: .bottom
                 )
-                .frame(height: 14)
+                .frame(height: skin.size.s14)
                 .opacity(hoveringFooter ? 1 : 0)
             }
             .contentShape(Rectangle())
@@ -310,16 +326,16 @@ struct SignalBellDropdown: View {
     }
 
     private var empty: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: skin.spacing.xs) {
             Image(systemName: readFilter == .unread || appFilter != nil ? "checkmark.circle" : "bell.slash")
-                .font(.system(size: 15, weight: .light))
-                .foregroundStyle(theme.foreground.opacity(0.3))
+                .font(skin.font(AinkradFontToken(sizeKey: "t15", weight: "light", scaled: false)))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o30))
             Text(readFilter == .unread || appFilter != nil ? "All caught up" : "Nothing yet")
                 .font(AinkradFont.display(11, weight: .medium))
-                .foregroundStyle(theme.foreground.opacity(0.5))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o50))
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 22)
+        .padding(.vertical, skin.size.s22)
     }
 }
 

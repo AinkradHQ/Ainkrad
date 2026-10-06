@@ -17,6 +17,7 @@ struct SignalBellDropdownOverlay: View {
     var onOpenSettings: () -> Void = {}
 
     @Environment(\.ainkradReduceMotion) private var reduceMotion
+    @Environment(\.ainkradSkin) private var skin
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
@@ -60,8 +61,8 @@ struct SignalBellDropdownOverlay: View {
             // free. A popover is a separate window and would escape it,
             // reintroducing exactly the escape-the-gate problem the old
             // menu-bar status item had to suppress by hand.
-            .padding(.top, HUDBar.height + 4)
-            .padding(.trailing, 10)
+            .padding(.top, HUDBar.height + skin.spacing.xs)
+            .padding(.trailing, skin.size.s10)
             // Reduce-motion drops the slide but keeps the fade: appearing
             // and disappearing with no change at all is a worse outcome
             // than a short one, because the panel then seems to teleport.
