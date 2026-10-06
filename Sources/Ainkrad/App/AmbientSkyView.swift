@@ -1,3 +1,4 @@
+// design-lint: allow-file opacity-literal token-gap colors.sky — the horizon glows' breathing alphas
 import AinkradAppKit
 import AinkradHostRuntime
 import SwiftUI

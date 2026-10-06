@@ -4,11 +4,10 @@ import SwiftUI
 
 /// Slice 3's floating host overlay for `.overlay`-presentation plugin apps —
 /// summoned from the Launcher instead of tiling into the workspace layout.
-/// Mirrors `LauncherView`'s scrim + `hudPanelChrome` panel composition, but
+/// Mirrors `LauncherView`'s scrim + kit overlay-chrome panel composition, but
 /// hosts a `RegisteredApp`'s own root view rather than the app-picker UI.
 struct PluginOverlayView: View {
     let app: RegisteredApp
-    let tokens: DesignTokens
     /// The mode this overlay opens in — the app's resolved default. An overlay
     /// is one transient surface rather than a managed pane, so there is no
     /// `Block` to hold a switched mode; it opens in the default every time.
@@ -21,12 +20,14 @@ struct PluginOverlayView: View {
     var size: PluginOverlaySize = .default
     let onDismiss: () -> Void
 
+    @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradSkin) private var skin
     @FocusState private var isFocused: Bool
 
     var body: some View {
         GeometryReader { geo in
             ZStack {
-                Color.black.opacity(OverlayChrome.backdropOpacity)
+                skin.color(.palette("black", skin.chrome.overlay.backdropOpacity))
                     .ignoresSafeArea()
                     .onTapGesture { onDismiss() }
 
@@ -35,7 +36,11 @@ struct PluginOverlayView: View {
                         width: size.resolved(in: geo.size).width,
                         height: size.resolved(in: geo.size).height
                     )
-                    .hudPanelChrome(tokens: tokens)
+                    .ainkradOverlayChrome(
+                        backgroundOpacity: environment.generalSettingsStore.overlayBackgroundOpacity,
+                        blurEnabled: environment.generalSettingsStore.overlayBlurEnabled,
+                        blending: .withinWindow
+                    )
                     .focusable()
                     .focused($isFocused)
                     .focusEffectDisabled()

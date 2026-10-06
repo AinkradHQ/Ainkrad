@@ -76,6 +76,9 @@ struct KeyboardShortcutMonitor: NSViewRepresentable {
                     if let environment = self?.environment {
                         let layout = environment.workspaceManager.activeWorkspace.tileLayout
                         if layout.draggingBlockID != nil {
+                            // `DispatchQueue.main.async` on purpose (S-CON-5):
+                            // clear on the next run-loop turn, after any drop
+                            // delegate handling this same mouse-up has run.
                             DispatchQueue.main.async {
                                 layout.draggingBlockID = nil
                             }

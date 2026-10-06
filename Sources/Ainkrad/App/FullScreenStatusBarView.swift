@@ -8,19 +8,32 @@ import SwiftUI
 /// skipped when there is none) in the HUD's mono/small-symbol language, so a
 /// future item (e.g. CPU/memory) only needs a new `StatusBarItem` case and a
 /// branch in `itemView`, not a one-off view.
+///
+/// Not `AinkradStatusBar`: the kit's status bar is a segmented gauge for one
+/// value, with no clock, network or battery readout — a kit gap ("status
+/// readout strip"). Local, on skin tokens.
 struct FullScreenStatusBarView: View {
     let monitor: SystemStatusMonitor
-    let tokens: DesignTokens
+
+    @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradSkin) private var skin
+
+    /// Colours stay on `DesignTokens`, which carry the user's custom accent;
+    /// every scalar comes from the skin.
+    private var tokens: DesignTokens { environment.themeManager.tokens }
 
     var body: some View {
-        HStack(spacing: AinkradSpacing.sm) {
+        HStack(spacing: skin.spacing.sm) {
             ForEach(items) { item in
                 itemView(item)
-                    .padding(.horizontal, AinkradSpacing.sm)
-                    .padding(.vertical, AinkradSpacing.xs)
-                    .background(ChamferShape(cut: AinkradRadius.sm).fill(tokens.surfaceElevated.opacity(0.32)))
+                    .padding(.horizontal, skin.spacing.sm)
+                    .padding(.vertical, skin.spacing.xs)
+                    .background(
+                        ChamferShape(cut: skin.radius.sm).fill(tokens.surfaceElevated.opacity(skin.opacity.o32))
+                    )
                     .overlay(
-                        ChamferShape(cut: AinkradRadius.sm).strokeBorder(tokens.surface.opacity(0.4), lineWidth: 1))
+                        ChamferShape(cut: skin.radius.sm).strokeBorder(
+                            tokens.surface.opacity(skin.opacity.o40), lineWidth: 1))
             }
         }
     }
@@ -41,11 +54,11 @@ struct FullScreenStatusBarView: View {
     private func itemView(_ item: StatusBarItem) -> some View {
         switch item {
         case .clock(let time, let date):
-            HStack(spacing: 6) {
+            HStack(spacing: skin.size.s6) {
                 Text(time)
-                    .foregroundStyle(tokens.foreground.opacity(0.85))
+                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o85))
                 Text(date)
-                    .foregroundStyle(tokens.foreground.opacity(0.5))
+                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
             }
             .font(AinkradFont.mono(11, weight: .medium))
         case .network(let status):
@@ -59,13 +72,13 @@ struct FullScreenStatusBarView: View {
     /// status bar reads as part of the current theme rather than flat neutral.
     /// The clock stays in `foreground` (see `itemView`) as the legible anchor.
     private func symbolReadout(_ symbolName: String, text: String) -> some View {
-        HStack(spacing: 4) {
+        HStack(spacing: skin.spacing.xs) {
             Image(systemName: symbolName)
-                .font(.system(size: 10))
-                .foregroundStyle(tokens.accentSecondary.opacity(0.95))
+                .font(skin.font(AinkradFontToken(sizeKey: "t10", scaled: false)))
+                .foregroundStyle(tokens.accentSecondary.opacity(skin.opacity.o95))
             Text(text)
                 .font(AinkradFont.mono(11))
-                .foregroundStyle(tokens.accentSecondary.opacity(0.85))
+                .foregroundStyle(tokens.accentSecondary.opacity(skin.opacity.o85))
         }
     }
 }
