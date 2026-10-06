@@ -288,6 +288,7 @@ struct SageConnectionModelPicker: View {
     @Environment(AppEnvironment.self) private var environment
     let model: SageModelPickerModel
     @Environment(\.ainkradTheme) private var theme
+    @Environment(\.ainkradSkin) private var skin
     var onManageConnections: () -> Void
 
     /// The flattened option space: a real connection+model pair, the "Manage
@@ -327,7 +328,7 @@ struct SageConnectionModelPicker: View {
                 groupedSelect(sections: sections, binding: binding).fixedSize()
                 groupedSelect(sections: sections, binding: binding)
                     .lineLimit(1)
-                    .frame(minWidth: 120, maxWidth: 180)
+                    .frame(minWidth: skin.size.s120, maxWidth: skin.size.s180)
             }
             // Bordered trigger's own padding (AinkradSpacing.sm vertical) runs
             // taller than the composer's icon buttons; pin the row height so

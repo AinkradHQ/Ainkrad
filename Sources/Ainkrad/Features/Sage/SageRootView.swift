@@ -52,17 +52,9 @@ struct SageRootView: View {
         GeometryReader { geo in
             let overlays = SageSidebarLayout.overlays(paneWidth: geo.size.width)
             let sidebarShown = showsHeader && isSidebarVisible
-            ZStack(alignment: .leading) {
-                HStack(spacing: 0) {
-                    if sidebarShown && !overlays { sidebar(store: store, session: session) }
-                    chatColumn(session: session)
-                }
-                // Narrow pane: float the sidebar over the chat column instead of
-                // squeezing it, so Sage never exceeds its pane.
-                if sidebarShown && overlays {
-                    sidebar(store: store, session: session)
-                        .background(theme.background)
-                }
+            HStack(spacing: 0) {
+                if sidebarShown && !overlays { sidebar(store: store, session: session) }
+                chatColumn(session: session, overlaysSidebar: sidebarShown && overlays)
             }
             .frame(width: geo.size.width, height: geo.size.height)
         }
@@ -102,13 +94,22 @@ struct SageRootView: View {
     // MARK: - Chat column
 
     @ViewBuilder
-    private func chatColumn(session: AgentSession) -> some View {
+    private func chatColumn(session: AgentSession, overlaysSidebar: Bool) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            if showsHeader {
-                header()
+            // Narrow pane: the sidebar floats over the header + transcript only,
+            // so the composer below keeps the full pane width and stays usable.
+            ZStack(alignment: .topLeading) {
+                VStack(alignment: .leading, spacing: 0) {
+                    if showsHeader {
+                        header()
+                    }
+                    transcript(session: session)
+                }
+                if overlaysSidebar {
+                    sidebar(store: environment.assistantSessionStore, session: session)
+                        .background(theme.background)
+                }
             }
-
-            transcript(session: session)
 
             if case .awaitingApproval(let pending) = session.state {
                 SageDecisionBar(
