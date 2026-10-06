@@ -234,19 +234,19 @@ struct AinkradHostApp: App {
             CommandGroup(after: .newItem) {
                 let isGated = environment.isSetupPresented
 
-                Button("Open Launcher") {
+                Button("Open Launcher") {  // design-lint: allow raw-control app-menu command item, no kit equivalent
                     environment.isLauncherPresented = true
                 }
                 .keyboardShortcut("k", modifiers: .command)
                 .disabled(isGated)
 
-                Button("New Workspace") {
+                Button("New Workspace") {  // design-lint: allow raw-control app-menu command item, no kit equivalent
                     environment.workspaceManager.createWorkspace()
                 }
                 .keyboardShortcut("n", modifiers: [.command, .shift])
                 .disabled(isGated)
 
-                Button("Workspaces…") {
+                Button("Workspaces…") {  // design-lint: allow raw-control app-menu command item, no kit equivalent
                     environment.isLauncherPresented = false
                     environment.isWorkspaceOverviewPresented.toggle()
                 }
@@ -257,13 +257,13 @@ struct AinkradHostApp: App {
                 // ⌘K, ⌘⇧N, ⌥⇥ and ⌘F are all taken. ⌘⇧N in particular is New
                 // Workspace, which an earlier draft of the plan wanted for the
                 // feed.
-                Button("Notifications") {
+                Button("Notifications") {  // design-lint: allow raw-control app-menu command item, no kit equivalent
                     environment.isSignalDropdownPresented.toggle()
                 }
                 .keyboardShortcut("n", modifiers: [.command, .option])
                 .disabled(isGated)
 
-                Button("All Notifications…") {
+                Button("All Notifications…") {  // design-lint: allow raw-control app-menu command item, no kit equivalent
                     environment.isSignalDropdownPresented = false
                     environment.isSignalFeedPresented = true
                 }

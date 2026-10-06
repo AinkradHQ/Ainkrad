@@ -219,6 +219,8 @@ enum LaunchHomeResolver {
     }
 
     /// The production `present`: a modal alert, before any window exists.
+    /// Stays a system `NSAlert` — the one decision-18 exception: no window exists yet,
+    /// so there is nothing for an `AinkradConfirmDialog` to be presented in.
     static func presentAlert(_ prompt: LaunchRecovery.Prompt) -> LaunchRecovery.Action {
         NSApplication.shared.setActivationPolicy(.regular)
         NSApplication.shared.activate(ignoringOtherApps: true)
