@@ -10,6 +10,7 @@ struct ClaudeProvider: LLMProvider {
     }
 
     nonisolated static let claudeCodeVersion = "2.1.74"
+    private nonisolated static let messagesURL = URL(checkedLiteral: "https://api.anthropic.com/v1/messages")
     private nonisolated static let claudeCodeSystemPrefix = "You are Claude Code, Anthropic's official CLI for Claude."
     private nonisolated static let oauthBetas =
         "claude-code-20250219,oauth-2025-04-20,interleaved-thinking-2025-05-14,fine-grained-tool-streaming-2025-05-14"
@@ -164,7 +165,7 @@ struct ClaudeProvider: LLMProvider {
         model: AgentModelConfig,
         credential: ProviderCredential
     ) -> URLRequest {
-        var request = URLRequest(url: URL(string: "https://api.anthropic.com/v1/messages")!)
+        var request = URLRequest(url: Self.messagesURL)
         request.httpMethod = "POST"
         request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         request.setValue("application/json", forHTTPHeaderField: "content-type")

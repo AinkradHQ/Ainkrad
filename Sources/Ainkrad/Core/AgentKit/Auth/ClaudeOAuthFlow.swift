@@ -63,8 +63,8 @@ struct ClaudeOAuthFlow {
     static let redirectURI = "http://localhost:53692/callback"
     static let scopes = "org:create_api_key user:profile user:inference"
     static let tokenURLs = [
-        URL(string: "https://platform.claude.com/v1/oauth/token")!,
-        URL(string: "https://console.anthropic.com/v1/oauth/token")!,
+        URL(checkedLiteral: "https://platform.claude.com/v1/oauth/token"),
+        URL(checkedLiteral: "https://console.anthropic.com/v1/oauth/token"),
     ]
 
     private let transport: OAuthTokenTransport
@@ -91,11 +91,18 @@ struct ClaudeOAuthFlow {
         ]
 
         let queryString = params.map { key, value in
-            let encodedValue = value.addingPercentEncoding(withAllowedCharacters: unreserved)!
+            // Only fails for a string that is not valid Unicode, which a Swift `String` never is.
+            guard let encodedValue = value.addingPercentEncoding(withAllowedCharacters: unreserved) else {
+                preconditionFailure("OAuth authorize: could not percent-encode \(key)")
+            }
             return "\(key)=\(encodedValue)"
         }.joined(separator: "&")
 
-        return URL(string: "https://claude.ai/oauth/authorize?\(queryString)")!
+        // Every value is percent-encoded to the unreserved set above, so the string always parses.
+        guard let url = URL(string: "https://claude.ai/oauth/authorize?\(queryString)") else {
+            preconditionFailure("OAuth authorize: malformed URL")
+        }
+        return url
     }
 
     func exchange(code: String, verifier: String, state: String) async throws -> OAuthToken {
