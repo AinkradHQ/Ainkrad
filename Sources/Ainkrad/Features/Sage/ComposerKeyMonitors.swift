@@ -17,6 +17,14 @@ struct ComposerTabCycleMonitor: NSViewRepresentable {
     let isDraftEmpty: () -> Bool
     let onCycle: () -> Void
 
+    /// Tab (keyCode 48) with no modifiers, or with ONLY Shift — any other
+    /// modifier combo (cmd/opt/ctrl) passes through untouched. Pure so the key
+    /// table is testable without a window.
+    nonisolated static func isCycleKey(keyCode: UInt16, modifiers: NSEvent.ModifierFlags) -> Bool {
+        let flags = modifiers.intersection(.deviceIndependentFlagsMask)
+        return keyCode == 48 && (flags.isEmpty || flags == .shift)
+    }
+
     func makeNSView(context: Context) -> MonitoringView {
         let view = MonitoringView()
         view.isDraftEmpty = isDraftEmpty
@@ -40,13 +48,9 @@ struct ComposerTabCycleMonitor: NSViewRepresentable {
                 guard monitor == nil else { return }
                 monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
                     guard let self else { return event }
-                    // Tab (keyCode 48) with no modifiers, or with ONLY Shift —
-                    // any other modifier combo (cmd/opt/ctrl) passes through
-                    // untouched.
-                    let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-                    let isPlainTab = event.keyCode == 48 && flags.isEmpty
-                    let isShiftTab = event.keyCode == 48 && flags == .shift
-                    if isPlainTab || isShiftTab, self.isDraftEmpty?() == true {
+                    if ComposerTabCycleMonitor.isCycleKey(keyCode: event.keyCode, modifiers: event.modifierFlags),
+                        self.isDraftEmpty?() == true
+                    {
                         self.onCycle?()
                         return nil
                     }
@@ -71,6 +75,20 @@ struct ComposerOverlayKeyMonitor: NSViewRepresentable {
     let onUp: () -> Void
     let onDown: () -> Void
     let onConfirm: () -> Void
+
+    /// The overlay keys this monitor swallows.
+    enum Key: Equatable { case up, down, confirm }
+
+    /// Up arrow (126), Down arrow (125), Return (36) / keypad Enter (76); every
+    /// other key passes through. Pure so the key table is testable.
+    nonisolated static func key(for keyCode: UInt16) -> Key? {
+        switch keyCode {
+        case 126: return .up
+        case 125: return .down
+        case 36, 76: return .confirm
+        default: return nil
+        }
+    }
 
     func makeNSView(context: Context) -> MonitoringView {
         let view = MonitoringView()
@@ -101,18 +119,13 @@ struct ComposerOverlayKeyMonitor: NSViewRepresentable {
                 guard monitor == nil else { return }
                 monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
                     guard let self, self.isActive?() == true else { return event }
-                    switch event.keyCode {
-                    case 126:
-                        self.onUp?()
-                        return nil  // Up arrow
-                    case 125:
-                        self.onDown?()
-                        return nil  // Down arrow
-                    case 36, 76:
-                        self.onConfirm?()
-                        return nil  // Return / keypad Enter
-                    default: return event
+                    switch ComposerOverlayKeyMonitor.key(for: event.keyCode) {
+                    case .up: self.onUp?()
+                    case .down: self.onDown?()
+                    case .confirm: self.onConfirm?()
+                    case nil: return event
                     }
+                    return nil
                 }
             } else if let monitor {
                 NSEvent.removeMonitor(monitor)

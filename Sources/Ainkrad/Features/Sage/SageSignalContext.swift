@@ -145,7 +145,7 @@ struct SageSignalContext {
     /// The count is kept rather than dropped: "17 times" is the most useful
     /// part of a recurring failure, and an assistant told only about the
     /// latest one would describe a persistent outage as a blip.
-    private static func collapsingRepeats(_ events: [SignalEvent]) -> [(SignalEvent, Int)] {
+    static func collapsingRepeats(_ events: [SignalEvent]) -> [(SignalEvent, Int)] {
         var order: [SignalSourceKindKey] = []
         var newest: [SignalSourceKindKey: SignalEvent] = [:]
         var counts: [SignalSourceKindKey: Int] = [:]
