@@ -114,6 +114,4 @@ final class SkillsManagerViewModel {
         store.unbind(command: command)
         resyncCommands()
     }
-
-    func clearBindError() { bindError = nil }
 }
