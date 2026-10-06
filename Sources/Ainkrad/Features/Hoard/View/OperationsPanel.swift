@@ -29,48 +29,45 @@ struct OperationsPanel: View {
     }
 }
 
+/// One job: the kit's progress ring beside its label, count and failures.
 private struct JobRow: View {
     let job: OperationProgress
 
     @Environment(\.ainkradTheme) private var theme
     @Environment(\.ainkradTypography) private var typo
+    @Environment(\.ainkradSkin) private var skin
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text(job.label)
-                    .font(AinkradFontResolver.font(.caption, weight: .medium, typography: typo))
-                    .foregroundStyle(theme.foreground)
-                Spacer()
-                Button {
-                    job.cancel()
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 11))
-                        .foregroundStyle(theme.foreground.opacity(0.5))
+        HStack(spacing: AinkradSpacing.md) {
+            AinkradMeter(value: job.fraction, size: skin.size.s48)
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(job.label)
+                        .font(AinkradFontResolver.font(.caption, weight: .medium, typography: typo))
+                        .foregroundStyle(theme.foreground)
+                    Spacer()
+                    AinkradIconButton(systemName: "xmark.circle.fill", size: skin.size.s16, tooltip: "Cancel") {
+                        job.cancel()
+                    }
+                    .disabled(job.isCancelled)
                 }
-                .buttonStyle(.plain)
-                .disabled(job.isCancelled)
-            }
 
-            ProgressView(value: job.fraction)
-                .progressViewStyle(.linear)
-                .tint(theme.accentPrimary)
+                // Says "items", not a byte count, because that is what is actually
+                // measured — see `OperationProgress`.
+                Text(
+                    job.isCancelled
+                        ? "Cancelling…"
+                        : "\(job.completedItems) of \(job.totalItems) items"
+                )
+                .font(AinkradFontResolver.font(.caption, typography: typo))
+                .foregroundStyle(theme.foreground.opacity(0.5))
 
-            // Says "items", not a byte count, because that is what is actually
-            // measured — see `OperationProgress`.
-            Text(
-                job.isCancelled
-                    ? "Cancelling…"
-                    : "\(job.completedItems) of \(job.totalItems) items"
-            )
-            .font(AinkradFontResolver.font(.caption, typography: typo))
-            .foregroundStyle(theme.foreground.opacity(0.5))
-
-            if !job.failures.isEmpty {
-                Text("\(job.failures.count) failed")
-                    .font(AinkradFontResolver.font(.caption, typography: typo))
-                    .foregroundStyle(theme.foreground.opacity(0.7))
+                if !job.failures.isEmpty {
+                    Text("\(job.failures.count) failed")
+                        .font(AinkradFontResolver.font(.caption, typography: typo))
+                        .foregroundStyle(theme.foreground.opacity(0.7))
+                }
             }
         }
     }
