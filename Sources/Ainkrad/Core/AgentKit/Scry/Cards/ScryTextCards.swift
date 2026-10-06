@@ -10,6 +10,7 @@ import SwiftUI
 /// silently blank on failure.
 @MainActor
 struct ScryTextCard: View {
+    @Environment(\.ainkradSkin) private var skin
     let element: ScryElement
     @Environment(\.ainkradTheme) private var theme
 
@@ -25,7 +26,7 @@ struct ScryTextCard: View {
             let attributed = try AttributedString(markdown: element.body)
             return AnyView(
                 Text(attributed).font(AinkradFont.display(13))
-                    .foregroundStyle(theme.foreground.opacity(0.9))
+                    .foregroundStyle(theme.foreground.opacity(skin.opacity.o90))
             )
         } catch {
             let message = "Markdown parse failed: \(error.localizedDescription)"

@@ -36,6 +36,7 @@ enum ScryDiagramRouting {
 /// never takes any other scry element down with it.
 @MainActor
 struct ScryDiagramView: View {
+    @Environment(\.ainkradSkin) private var skin
     let element: ScryElement
     @Environment(\.ainkradTheme) private var theme
 
@@ -53,8 +54,8 @@ struct ScryDiagramView: View {
     }
 
     private func fallback(caption: String, language: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(caption).font(AinkradFont.display(11)).foregroundStyle(theme.foreground.opacity(0.5))
+        VStack(alignment: .leading, spacing: skin.spacing.xs) {
+            Text(caption).font(AinkradFont.display(11)).foregroundStyle(theme.foreground.opacity(skin.opacity.o50))
             AinkradCodeBlock(element.body, language: language)
         }
     }

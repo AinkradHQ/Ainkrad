@@ -27,6 +27,7 @@ struct ScryErrorCard: View {
 /// and never takes any other element on the canvas down with it.
 @MainActor
 struct ScryElementView: View {
+    @Environment(\.ainkradSkin) private var skin
     let element: ScryElement
     @Environment(\.ainkradTheme) private var theme
 
@@ -80,10 +81,10 @@ struct ScryElementView: View {
     @ViewBuilder
     private func card<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
         AinkradCard {
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: skin.size.s6) {
                 if let title = element.title, !title.isEmpty {
                     Text(title).font(AinkradFont.display(12, weight: .medium)).kerning(0.4)
-                        .foregroundStyle(theme.foreground.opacity(0.8))
+                        .foregroundStyle(theme.foreground.opacity(skin.opacity.o80))
                 }
                 content()
             }

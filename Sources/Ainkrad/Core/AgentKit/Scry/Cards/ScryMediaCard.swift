@@ -33,6 +33,7 @@ enum ScryMediaURL {
 /// CoreMedia XPC connection.
 @MainActor
 struct ScryMediaCard: View {
+    @Environment(\.ainkradSkin) private var skin
     let element: ScryElement
     @Environment(\.ainkradTheme) private var theme
 
@@ -59,7 +60,7 @@ struct ScryMediaCard: View {
                 // genuine failure, not just "hasn't resolved yet".
                 Text(isAudio ? "Audio unavailable" : "Video unavailable")
                     .font(AinkradFont.display(12))
-                    .foregroundStyle(theme.foreground.opacity(0.4))
+                    .foregroundStyle(theme.foreground.opacity(skin.opacity.o40))
             } else {
                 // `.task` runs after the first render, so without this branch
                 // "unavailable" would flash for one confident, wrong frame
@@ -182,6 +183,7 @@ private final class ScryAudioPlayerObserver: ObservableObject, @unchecked Sendab
 /// with an elapsed/duration label — not a decorative bar.
 @MainActor
 private struct ScryAudioTransport: View {
+    @Environment(\.ainkradSkin) private var skin
     let player: AVPlayer
     @Environment(\.ainkradTheme) private var theme
 
@@ -200,7 +202,7 @@ private struct ScryAudioTransport: View {
     }
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: skin.size.s10) {
             AinkradIconButton(
                 systemName: observer.isPlaying ? "pause.fill" : "play.fill",
                 size: 22,
@@ -208,11 +210,11 @@ private struct ScryAudioTransport: View {
             ) {
                 observer.togglePlayPause()
             }
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: skin.size.s3) {
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
-                        Capsule().fill(theme.foreground.opacity(0.12))
-                        Capsule().fill(theme.accentPrimary.opacity(0.85))
+                        Capsule().fill(theme.foreground.opacity(skin.opacity.o12))
+                        Capsule().fill(theme.accentPrimary.opacity(skin.opacity.o85))
                             .frame(width: max(0, geo.size.width * progressFraction))
                     }
                     .contentShape(Rectangle())
@@ -229,13 +231,13 @@ private struct ScryAudioTransport: View {
                             }
                     )
                 }
-                .frame(height: 3)
+                .frame(height: skin.size.s3)
                 Text(timeLabel)
                     .font(AinkradFont.mono(9))
-                    .foregroundStyle(theme.foreground.opacity(0.5))
+                    .foregroundStyle(theme.foreground.opacity(skin.opacity.o50))
             }
         }
-        .frame(height: 44)
+        .frame(height: skin.size.s44)
         .onDisappear { observer.teardown() }
     }
 

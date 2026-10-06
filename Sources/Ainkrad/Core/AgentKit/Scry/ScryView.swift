@@ -140,6 +140,7 @@ struct ScryPlayingCardsKey: PreferenceKey {
 /// One draggable/resizable card wrapping a `ScryElementView`.
 @MainActor
 private struct ScryCard: View {
+    @Environment(\.ainkradSkin) private var skin
     let element: ScryElement
     let store: ScryStore
     @Environment(\.ainkradTheme) private var theme
@@ -190,11 +191,11 @@ private struct ScryCard: View {
             .overlay(alignment: .topTrailing) { if isHovering { controls } }
             .overlay(alignment: .bottomTrailing) { if isHovering { resizeHandle } }
             .shadow(
-                color: theme.accentSecondary.opacity(isHovering ? 0.18 : 0.08),
+                color: theme.accentSecondary.opacity(isHovering ? skin.opacity.o18 : skin.opacity.o08),
                 radius: isHovering ? 12 : 6
             )
             .onHover { isHovering = $0 }
-            .animation(reduceMotion ? nil : .easeOut(duration: 0.14), value: isHovering)
+            .animation(reduceMotion ? nil : skin.animation(skin.motion.hover), value: isHovering)
             .gesture(
                 DragGesture()
                     .updating($dragStart) { _, state, _ in
@@ -220,7 +221,7 @@ private struct ScryCard: View {
     }
 
     private var controls: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: skin.size.s6) {
             AinkradIconButton(
                 systemName: element.pinned ? "pin.fill" : "pin", size: 20,
                 tooltip: element.pinned ? "Unpin" : "Pin"
@@ -231,12 +232,12 @@ private struct ScryCard: View {
                 store.remove(id: element.id)
             }
         }
-        .padding(6)
+        .padding(skin.size.s6)
     }
 
     private var resizeHandle: some View {
-        Image(systemName: "arrow.down.right").font(.system(size: 10))
-            .foregroundStyle(theme.foreground.opacity(0.4)).padding(4)
+        Image(systemName: "arrow.down.right").font(skin.font(AinkradFontToken(sizeKey: "t10", scaled: false)))
+            .foregroundStyle(theme.foreground.opacity(skin.opacity.o40)).padding(skin.spacing.xs)
             .gesture(
                 DragGesture()
                     .updating($resizeStart) { _, state, _ in

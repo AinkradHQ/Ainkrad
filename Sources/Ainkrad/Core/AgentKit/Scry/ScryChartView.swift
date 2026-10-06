@@ -33,6 +33,7 @@ enum ScryChartParse {
 /// stays visible rather than vanishing.
 @MainActor
 struct ScryChartView: View {
+    @Environment(\.ainkradSkin) private var skin
     let bars: [ScryChartBar]
     @Environment(\.ainkradTheme) private var theme
 
@@ -41,7 +42,7 @@ struct ScryChartView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: skin.spacing.sm) {
             ForEach(Array(bars.enumerated()), id: \.offset) { index, bar in
                 row(index: index, bar: bar)
             }
@@ -49,11 +50,11 @@ struct ScryChartView: View {
     }
 
     private func row(index: Int, bar: ScryChartBar) -> some View {
-        HStack(spacing: 8) {
+        HStack(spacing: skin.spacing.sm) {
             Text(bar.label)
                 .font(AinkradFont.mono(10))
-                .foregroundStyle(theme.foreground.opacity(0.7))
-                .frame(width: 64, alignment: .leading)
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o70))
+                .frame(width: 64, alignment: .leading)  // design-lint: allow frame-literal chart geometry, label column width is data layout
                 .lineLimit(1)
             GeometryReader { geo in
                 Capsule()
@@ -63,11 +64,11 @@ struct ScryChartView: View {
                         height: 14
                     )
             }
-            .frame(height: 14)
+            .frame(height: 14)  // design-lint: allow frame-literal chart geometry, bar thickness is data layout
             Text(formatted(bar.value))
                 .font(AinkradFont.mono(10))
-                .foregroundStyle(theme.foreground.opacity(0.5))
-                .frame(width: 44, alignment: .trailing)
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o50))
+                .frame(width: 44, alignment: .trailing)  // design-lint: allow frame-literal chart geometry, value column width is data layout
         }
     }
 
