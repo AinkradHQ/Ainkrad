@@ -242,7 +242,7 @@ struct AppStoreOverlayView: View {
                 .frame(width: 220)
             Spacer()
             if let error = store.error {
-                Text(errorText(error)).font(.system(size: 10)).foregroundStyle(tokens.accentTertiary)
+                Text(error.message).font(.system(size: 10)).foregroundStyle(tokens.accentTertiary)
                     .lineLimit(1)
                 AinkradIconButton(systemName: "xmark.circle") { store.error = nil }
             }
@@ -334,7 +334,8 @@ struct AppStoreOverlayView: View {
                 AinkradSpinner(size: 36)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                AinkradEmptyState(icon: emptyIcon, title: emptyTitle, message: emptyText)
+                let empty = store.emptyState
+                AinkradEmptyState(icon: empty.icon, title: empty.title, message: empty.message)
             }
         } else {
             ScrollView {
@@ -360,47 +361,6 @@ struct AppStoreOverlayView: View {
                 }
                 .padding(18)
             }
-        }
-    }
-
-    private var emptyText: String {
-        let trimmedQuery = store.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !trimmedQuery.isEmpty { return "No apps match \"\(trimmedQuery)\"." }
-        switch store.filter {
-        case .all: return "No apps available — check back later."
-        case .installed: return "Nothing installed yet."
-        case .updates: return "Everything is up to date."
-        }
-    }
-
-    private var emptyTitle: String {
-        let trimmedQuery = store.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !trimmedQuery.isEmpty { return "No Matches" }
-        switch store.filter {
-        case .all: return "No Apps"
-        case .installed: return "Nothing Installed"
-        case .updates: return "Up to Date"
-        }
-    }
-
-    private var emptyIcon: String {
-        let trimmedQuery = store.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !trimmedQuery.isEmpty { return "magnifyingglass" }
-        switch store.filter {
-        case .all: return "square.grid.2x2"
-        case .installed: return "shippingbox"
-        case .updates: return "checkmark.seal"
-        }
-    }
-
-    private func errorText(_ e: AppStoreError) -> String {
-        switch e {
-        case .download: return "Download failed."
-        case .checksumMismatch: return "Integrity check failed."
-        case .unpack: return "Could not unpack."
-        case .invalidBundle: return "Invalid app bundle."
-        case .notInstalled(let id): return "\(id) is not available."
-        case .notNewer: return "Already up to date."
         }
     }
 }

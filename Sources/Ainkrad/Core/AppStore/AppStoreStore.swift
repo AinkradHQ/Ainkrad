@@ -2,7 +2,7 @@ import AinkradHostRuntime
 import Foundation
 import Observation
 
-/// View-model for the App Store overlay. Owns all UI state and derives a flat
+/// State owner for the App Store overlay. Owns all UI state and derives a flat
 /// `[AppStoreRow]` from the cached catalog + installed-state + the registry.
 @MainActor
 @Observable
@@ -72,6 +72,32 @@ final class AppStoreStore {
     static func failureText(_ failure: PluginLoadFailure) -> String {
         let name = failure.url.deletingPathExtension().lastPathComponent
         return "\(name) — \(failure.reason)"
+    }
+
+    /// The icon and copy the grid shows when no row is visible.
+    struct EmptyState: Equatable {
+        let icon: String
+        let title: String
+        let message: String
+    }
+
+    /// What an empty grid says: a search that matched nothing, or the
+    /// current filter having nothing in it.
+    var emptyState: EmptyState {
+        let trimmedQuery = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedQuery.isEmpty {
+            return EmptyState(
+                icon: "magnifyingglass", title: "No Matches", message: "No apps match \"\(trimmedQuery)\".")
+        }
+        switch filter {
+        case .all:
+            return EmptyState(
+                icon: "square.grid.2x2", title: "No Apps", message: "No apps available — check back later.")
+        case .installed:
+            return EmptyState(icon: "shippingbox", title: "Nothing Installed", message: "Nothing installed yet.")
+        case .updates:
+            return EmptyState(icon: "checkmark.seal", title: "Up to Date", message: "Everything is up to date.")
+        }
     }
 
     /// The row for whichever app's detail page is open (AIN-147), if any.
