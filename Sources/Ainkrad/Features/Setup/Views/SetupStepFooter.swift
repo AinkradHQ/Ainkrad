@@ -30,6 +30,8 @@ struct SetupStepFooter: View {
     var centersPrimary: Bool = false
     let primaryAction: () -> Void
 
+    @Environment(\.ainkradSkin) private var skin
+
     var body: some View {
         HStack {
             if coordinator.canGoBack {
@@ -47,7 +49,7 @@ struct SetupStepFooter: View {
                 Spacer(minLength: 0)
             }
         }
-        .padding(20)
+        .padding(skin.size.s20)
     }
 }
 
@@ -58,10 +60,12 @@ struct SetupRequirementNote: View {
     let message: String
     let tokens: DesignTokens
 
+    @Environment(\.ainkradSkin) private var skin
+
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 6) {
+        HStack(alignment: .firstTextBaseline, spacing: skin.size.s6) {
             Image(systemName: "exclamationmark.circle")
-                .font(.system(size: 10))
+                .font(skin.font(AinkradFontToken(sizeKey: "t10", scaled: false)))
             Text(message)
                 .font(AinkradFont.display(11))
                 .fixedSize(horizontal: false, vertical: true)

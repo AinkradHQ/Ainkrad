@@ -12,13 +12,14 @@ import SwiftUI
 ///    bind).
 /// 3. Paste an API key for any `ProviderPreset`.
 ///
-/// The token is never rendered back (`NeonSecureField` only), never logged, and
+/// The token is never rendered back (`AinkradSecureField` only), never logged, and
 /// never interpolated into a message — every message shown here is either a
 /// literal or `ConnectionTestResult.message`, which is documented to redact the
 /// key.
 struct SetupProvidersStepView: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.setupGroupWidth) private var groupWidth
+    @Environment(\.ainkradSkin) private var skin
 
     let coordinator: SetupCoordinator
 
@@ -100,15 +101,17 @@ struct SetupProvidersStepView: View {
 
         VStack(alignment: .leading, spacing: 0) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: skin.size.s18) {
                     intro(tokens: tokens)
-                    connectedList(tokens: tokens)
+                    SetupConnectedList(connections: savedConnections, tokens: tokens) {
+                        environment.connectionStore.removeConnection($0)
+                    }
                     claudeRoutes(tokens: tokens)
                     apiKeyRoute(tokens: tokens)
                     status(tokens: tokens)
                     deferAffordance(tokens: tokens)
                 }
-                .padding(20)
+                .padding(skin.size.s20)
                 // FILLS the group, exactly as the Home step's folder listing
                 // does. Capping the whole column instead left every panel hard
                 // against the left edge with a void beside it — the layout read
@@ -159,7 +162,7 @@ struct SetupProvidersStepView: View {
                 + "so nothing broken gets stored."
         )
         .font(AinkradFont.display(12))
-        .foregroundStyle(tokens.foreground.opacity(0.6))
+        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o60))
         .fixedSize(horizontal: false, vertical: true)
         // Prose is capped even though the column fills, so the provider rows
         // below can use the room without the intro running with them.
@@ -168,294 +171,48 @@ struct SetupProvidersStepView: View {
             alignment: .leading)
     }
 
-    /// What the user has actually connected, listed.
-    ///
-    /// This is the answer to the question the step could not previously answer:
-    /// connect OpenRouter, connect OpenAI, come back to OpenRouter, and nothing
-    /// on screen said the first one was still there. The routes below are about
-    /// ADDING a connection; this is the record of what exists, and it is read
-    /// from the store so it survives every switch, Back and return.
-    @ViewBuilder
-    private func connectedList(tokens: DesignTokens) -> some View {
-        if !savedConnections.isEmpty {
-            AinkradSettingsPanel(
-                title: "Connected",
-                hint: "Providers you've already linked — remove one below to disconnect it."
-            ) {
-                VStack(alignment: .leading, spacing: 8) {
-                    ForEach(savedConnections) { connection in
-                        connectedRow(connection, tokens: tokens)
-                    }
-                }
-            }
-            .accessibilityElement(children: .contain)
-            .accessibilityLabel("Connected providers")
-        }
+    /// Switching preset resets the key field and the base URL to the new
+    /// preset's, and clears the last attempt's MESSAGE only. It used to clear
+    /// the connected state with it, so switching provider silently un-did a
+    /// working connection and disabled Continue. What survives is
+    /// `hasVerifiedConnection` and the store itself.
+    private var presetSelection: Binding<String> {
+        Binding(
+            get: { preset.id },
+            set: { id in
+                let p = ProviderPreset.preset(id: id)
+                preset = p
+                baseURL = p.defaultBaseURL
+                token = ""
+                outcome = nil
+            })
     }
 
-    private func connectedRow(_ connection: Connection, tokens: DesignTokens) -> some View {
-        HStack(spacing: 10) {
-            Image(systemName: "checkmark.seal.fill")
-                .font(.system(size: 13))
-                .foregroundStyle(tokens.accentSecondary)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(connection.displayName)
-                    .font(AinkradFont.display(13, weight: .medium))
-                    .foregroundStyle(tokens.foreground.opacity(0.92))
-                // The host, not the whole URL: it identifies WHICH endpoint
-                // without turning the row into a path nobody reads.
-                Text(URL(string: connection.baseURL)?.host ?? connection.baseURL)
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(tokens.foreground.opacity(0.45))
-            }
-            Spacer(minLength: 0)
-            Button {
-                environment.connectionStore.removeConnection(connection)
-            } label: {
-                Image(systemName: "trash")
-                    .font(.system(size: 11))
-                    .foregroundStyle(tokens.foreground.opacity(0.4))
-            }
-            .buttonStyle(.plain)
-            .help("Remove this connection")
-            .accessibilityLabel("Remove \(connection.displayName)")
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .combine)
-    }
-
-    /// The Claude routes, as two explained CHOICES rather than a stack of
-    /// controls.
-    ///
-    /// The previous version put an unlabelled icon-button, a primary button and
-    /// a pair of paste fields in one column with no indication that they were
-    /// alternatives to each other, and rendered any failure in a shared status
-    /// row far below — so a sign-in error appeared nowhere near the thing that
-    /// failed, under an unrelated section.
-    ///
-    /// Each route now says what it does and what it costs the user (a browser
-    /// round trip, or nothing at all), and the failure lands inside this section
-    /// with the alternatives still on screen beside it.
-    @ViewBuilder
     private func claudeRoutes(tokens: DesignTokens) -> some View {
-        AinkradSettingsPanel(
-            title: "Claude subscription",
-            hint: "Use a Claude Pro or Max plan you already pay for, instead of an API "
-                + "key billed per token."
-        ) {
-            VStack(alignment: .leading, spacing: 12) {
-                if oauthController?.canImportFromClaudeCode == true {
-                    // Listed FIRST and marked as the quick one: it needs no browser
-                    // and no typing, and it is the route that still works when the
-                    // sign-in endpoint is refusing.
-                    claudeRoute(
-                        tokens: tokens,
-                        icon: "arrow.down.doc.fill",
-                        title: "Use your existing Claude Code login",
-                        detail: "Found on this Mac. Nothing to type — reuses the login "
-                            + "Claude Code already has.",
-                        isRecommended: true
-                    ) {
-                        Task { await runImport() }
-                    }
-                }
-
-                claudeRoute(
-                    tokens: tokens,
-                    icon: "person.badge.key.fill",
-                    title: "Sign in with Claude",
-                    detail: "Opens your browser to approve Ainkrad, then comes back here.",
-                    isRecommended: false
-                ) {
-                    Task { await runSignIn() }
-                }
-
-                if flow.awaitingPaste {
-                    pasteFallback(tokens: tokens)
-                }
-
-                // The failure belongs HERE, beside the routes it is about — not in a
-                // shared status row under the API-key section.
-                if let routeError {
-                    statusRow(
-                        tokens: tokens, icon: "exclamationmark.triangle.fill",
-                        text: routeError, color: tokens.accentTertiary
-                    )
-                    .accessibilityIdentifier("setup.providers.routeError")
-                }
-            }
-        }
-    }
-
-    /// One Claude route: what it is, what it will do, and whether it is the easy
-    /// one. A whole-row button, so the target is the card rather than the words.
-    private func claudeRoute(
-        tokens: DesignTokens, icon: String, title: String,
-        detail: String, isRecommended: Bool,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            HStack(alignment: .top, spacing: 11) {
-                Image(systemName: icon)
-                    .font(.system(size: 15))
-                    .foregroundStyle(
-                        isRecommended
-                            ? tokens.accentSecondary
-                            : tokens.foreground.opacity(0.55)
-                    )
-                    .frame(width: 20)
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 7) {
-                        Text(title)
-                            .font(AinkradFont.display(13, weight: .medium))
-                            .foregroundStyle(tokens.foreground.opacity(0.92))
-                        if isRecommended {
-                            Text("FASTEST")
-                                .font(AinkradFont.display(9, weight: .medium)).kerning(0.6)
-                                .foregroundStyle(tokens.accentSecondary)
-                        }
-                    }
-                    Text(detail)
-                        .font(AinkradFont.display(11))
-                        .foregroundStyle(tokens.foreground.opacity(0.5))
-                        .fixedSize(horizontal: false, vertical: true)
-                        .multilineTextAlignment(.leading)
-                }
-                Spacer(minLength: 8)
-                if isBusy {
-                    ProgressView().controlSize(.small)
-                } else {
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(tokens.foreground.opacity(0.3))
-                }
-            }
-            .padding(12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                ChamferShape(cut: AinkradRadius.sm)
-                    .fill(tokens.surfaceElevated.opacity(isRecommended ? 0.62 : 0.42))
-            )
-            .overlay(
-                ChamferShape(cut: AinkradRadius.sm).strokeBorder(
-                    isRecommended ? tokens.accentSecondary.opacity(0.3) : .clear, lineWidth: 1)
-            )
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .disabled(isBusy)
-        .accessibilityHint(detail)
-    }
-
-    /// Shown only when the loopback port could not bind, so the browser has
-    /// nowhere to redirect back to and the user has to carry the code across by
-    /// hand.
-    private func pasteFallback(tokens: DesignTokens) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Paste the code from your browser")
-                .font(AinkradFont.display(12, weight: .medium))
-                .foregroundStyle(tokens.foreground.opacity(0.85))
-            if let url = oauthController?.authorizeURL {
-                // The loopback couldn't bind, so this URL is the only way back
-                // to the consent screen if the tab was closed or
-                // NSWorkspace.open failed.
-                Link(destination: url) {
-                    Text("Open the Claude sign-in page again")
-                        .font(AinkradFont.display(11, weight: .medium))
-                        .foregroundStyle(tokens.accentSecondary)
-                }
-            }
-            HStack(spacing: 10) {
-                NeonSecureField(
-                    text: $pasteText,
-                    placeholder: "Paste the redirect URL or code",
-                    tokens: tokens)
-                Button {
-                    let raw = pasteText
-                    pasteText = ""
-                    Task { await runPaste(raw) }
-                } label: {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 20))
-                        .foregroundStyle(tokens.accentSecondary)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Submit the pasted code")
-            }
-        }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: AinkradRadius.sm).fill(tokens.surfaceElevated.opacity(0.5)))
+        SetupClaudeRoutes(
+            tokens: tokens,
+            canImport: oauthController?.canImportFromClaudeCode == true,
+            isBusy: isBusy,
+            awaitingPaste: flow.awaitingPaste,
+            authorizeURL: oauthController?.authorizeURL,
+            routeError: routeError,
+            pasteText: $pasteText,
+            onImport: { Task { await runImport() } },
+            onSignIn: { Task { await runSignIn() } },
+            onPaste: { raw in Task { await runPaste(raw) } })
     }
 
     private func apiKeyRoute(tokens: DesignTokens) -> some View {
-        AinkradSettingsPanel(
-            title: "API key",
-            hint: "Paste a key for any supported provider — it's tested before it's saved."
-        ) {
-            AinkradSegmentedPicker(
-                items: ProviderPreset.all.map(\.id),
-                selection: Binding(
-                    get: { preset.id },
-                    set: { id in
-                        let p = ProviderPreset.preset(id: id)
-                        preset = p
-                        baseURL = p.defaultBaseURL
-                        token = ""
-                        // Clears the last attempt's MESSAGE only. It used to
-                        // clear the connected state with it, so switching
-                        // provider silently un-did a working connection and
-                        // disabled Continue. What survives is
-                        // `hasVerifiedConnection` and the store itself.
-                        outcome = nil
-                    }
-                ),
-                label: { ProviderPreset.preset(id: $0).displayName }
-            )
-            .fixedSize()
-
-            if preset.allowsBaseURLEdit {
-                NeonSecureField(text: $baseURL, placeholder: "Base URL", tokens: tokens)
-            }
-
-            // Says so when the SELECTED provider is already connected. Without
-            // it, returning to a provider you connected five minutes ago shows
-            // an empty key field and no acknowledgement — which reads as having
-            // lost the connection.
-            if connectedPresetIDs.contains(preset.id) {
-                HStack(spacing: 7) {
-                    Image(systemName: "checkmark.seal.fill")
-                        .font(.system(size: 12))
-                        .foregroundStyle(tokens.accentSecondary)
-                    Text(
-                        "\(preset.displayName) is connected. Enter a key below only to "
-                            + "replace it."
-                    )
-                    .font(AinkradFont.display(11))
-                    .foregroundStyle(tokens.foreground.opacity(0.6))
-                    .fixedSize(horizontal: false, vertical: true)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .accessibilityIdentifier("setup.providers.presetConnected")
-            }
-
-            HStack(spacing: 10) {
-                if preset.requiresKey {
-                    NeonSecureField(text: $token, placeholder: "API key", tokens: tokens)
-                } else {
-                    Text("No API key required")
-                        .font(AinkradFont.display(11))
-                        .foregroundStyle(tokens.foreground.opacity(0.45))
-                }
-                AinkradButton(
-                    title: connectedPresetIDs.contains(preset.id) ? "Replace" : "Connect",
-                    style: .secondary, isLoading: isBusy
-                ) {
-                    Task { await runAPIKey() }
-                }
-                .disabled(isBusy || !canConnect)
-            }
-        }
+        SetupAPIKeyRoute(
+            tokens: tokens,
+            preset: preset,
+            presetSelection: presetSelection,
+            baseURL: $baseURL,
+            token: $token,
+            isPresetConnected: connectedPresetIDs.contains(preset.id),
+            isBusy: isBusy,
+            canConnect: canConnect,
+            onConnect: { Task { await runAPIKey() } })
     }
 
     /// A keyless preset (ollama) needs only a base URL; everything else needs a key.
@@ -480,7 +237,7 @@ struct SetupProvidersStepView: View {
     @ViewBuilder
     private func deferAffordance(tokens: DesignTokens) -> some View {
         if escape.taken {
-            statusRow(
+            SetupProviderStatusRow(
                 tokens: tokens, icon: "clock.badge.exclamationmark",
                 text: adoptionWarning
                     ?? "Set up later. Ainkrad's AI features stay off until you connect a "
@@ -489,10 +246,10 @@ struct SetupProvidersStepView: View {
             )
             .accessibilityIdentifier("setup.providers.deferred")
         } else if canDefer {
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: skin.size.s6) {
                 Text(escape.offerCopy)
                     .font(AinkradFont.display(11))
-                    .foregroundStyle(tokens.foreground.opacity(0.55))
+                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o55))
                 AinkradButton(title: "Set this up later", style: .secondary) {
                     // One act: walked past AND recorded as still owed.
                     escape.take()
@@ -507,11 +264,11 @@ struct SetupProvidersStepView: View {
     private func status(tokens: DesignTokens) -> some View {
         switch outcome {
         case .connected(let message):
-            statusRow(
+            SetupProviderStatusRow(
                 tokens: tokens, icon: "checkmark.seal.fill",
                 text: message, color: tokens.accentSecondary)
         case .failed(let message, _):
-            statusRow(
+            SetupProviderStatusRow(
                 tokens: tokens, icon: "exclamationmark.triangle.fill",
                 text: message, color: tokens.accentTertiary)
         case nil:
@@ -527,40 +284,6 @@ struct SetupProvidersStepView: View {
                 SetupRequirementNote(message: message, tokens: tokens)
                     .accessibilityIdentifier("setup.providers.isConnected.requirement")
             }
-        }
-    }
-
-    private func routeButton(
-        tokens: DesignTokens, icon: String, title: String,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            HStack(spacing: 10) {
-                Image(systemName: icon)
-                    .font(.system(size: 12))
-                    .foregroundStyle(tokens.foreground.opacity(0.6))
-                Text(title)
-                    .font(AinkradFont.display(12, weight: .medium))
-                    .foregroundStyle(tokens.foreground.opacity(0.85))
-                Spacer(minLength: 8)
-            }
-            .padding(.horizontal, 12).padding(.vertical, 9)
-            .background(ChamferShape(cut: AinkradRadius.sm).fill(tokens.surfaceElevated.opacity(0.35)))
-        }
-        .buttonStyle(.plain)
-        .disabled(isBusy)
-    }
-
-    private func statusRow(
-        tokens: DesignTokens, icon: String,
-        text: String, color: Color
-    ) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: icon).font(.system(size: 13)).foregroundStyle(color)
-            Text(text)
-                .font(AinkradFont.display(12))
-                .foregroundStyle(tokens.foreground.opacity(0.85))
-                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
