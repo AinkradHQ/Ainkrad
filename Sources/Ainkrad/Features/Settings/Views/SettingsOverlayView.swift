@@ -15,6 +15,7 @@ import SwiftUI
 struct SettingsOverlayView: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.ainkradReduceMotion) private var reduceMotion
+    @Environment(\.ainkradSkin) private var skin
     let onDismiss: () -> Void
 
     @State private var navigator: SettingsNavigator
@@ -92,17 +93,33 @@ struct SettingsOverlayView: View {
 
         GeometryReader { geo in
             ZStack {
-                Color.black.opacity(OverlayChrome.backdropOpacity)
+                skin.color(.palette("black", skin.chrome.overlay.backdropOpacity))
                     .ignoresSafeArea()
                     .onTapGesture { onDismiss() }
                     // A shortcut still recording when Settings closes would
-                    // rebind whatever key is pressed next, anywhere.
-                    .onDisappear { environment.settingsDrafts.recorder.stop() }
+                    // rebind whatever key is pressed next, anywhere. A confirm
+                    // left open must not reappear on the next visit either.
+                    .onDisappear {
+                        environment.settingsDrafts.recorder.stop()
+                        environment.settingsDrafts.pendingConfirm = nil
+                    }
 
                 let size = SettingsGeometry.panelSize(in: geo.size)
                 panel(tokens: tokens)
                     .frame(width: size.width, height: size.height)
                     .offset(y: SettingsMetrics.panelYOffset)
+                    .ainkradConfirmDialog(
+                        isPresented: Binding(
+                            get: { environment.settingsDrafts.pendingConfirm != nil },
+                            set: { if !$0 { environment.settingsDrafts.pendingConfirm = nil } }),
+                        title: environment.settingsDrafts.pendingConfirm?.title ?? "",
+                        message: environment.settingsDrafts.pendingConfirm?.message ?? "",
+                        confirmTitle: environment.settingsDrafts.pendingConfirm?.action ?? "Confirm",
+                        isDestructive: true
+                    ) {
+                        // Read at tap time: the request the dialog is showing.
+                        environment.settingsDrafts.pendingConfirm?.onConfirm()
+                    }
             }
         }
     }
@@ -111,22 +128,8 @@ struct SettingsOverlayView: View {
         VStack(alignment: .leading, spacing: 0) {
             header(tokens: tokens)
 
-            LinearGradient(
-                colors: [.clear, tokens.accentPrimary.opacity(0.5), .clear],
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-            .frame(height: 1)
-
             HStack(spacing: 0) {
                 sidebar(tokens: tokens)
-
-                LinearGradient(
-                    colors: [.clear, tokens.accentPrimary.opacity(0.35), .clear],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .frame(width: 1)
 
                 detail(tokens: tokens)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -140,7 +143,7 @@ struct SettingsOverlayView: View {
             // with `.keyboardShortcut` is registered with the window's key
             // equivalent system instead of the responder/focus chain, so it
             // fires regardless of what — if anything — is focused.
-            Button {
+            Button {  // design-lint: allow raw-control kit gap, keyboard-shortcut carrier
                 searchFocused = true
             } label: {
                 EmptyView()
@@ -149,6 +152,11 @@ struct SettingsOverlayView: View {
             .hidden()
         )
         .onKeyPress(.escape) {
+            // An open confirm answers Esc first, as Cancel.
+            if environment.settingsDrafts.pendingConfirm != nil {
+                environment.settingsDrafts.pendingConfirm = nil
+                return .handled
+            }
             // Agree with `SettingsSearchMode`'s own notion of "empty" — a
             // whitespace-only query is `.browsing`, so it must dismiss on
             // the first press rather than silently eating the whitespace.
@@ -168,22 +176,22 @@ struct SettingsOverlayView: View {
     }
 
     private func header(tokens: DesignTokens) -> some View {
-        HStack(spacing: 12) {
-            ChevronMark()
+        HStack(spacing: skin.spacing.md) {
+            AinkradBrandChevron()
                 .fill(tokens.accentSecondary)
-                .frame(width: 16, height: 14)
-                .shadow(color: tokens.accentSecondary.opacity(0.9), radius: 6)
+                .frame(width: skin.size.s16, height: skin.size.s14)
+                .shadow(color: tokens.accentSecondary.opacity(skin.opacity.o90), radius: skin.size.s6)
             Text("SETTINGS")
                 .font(AinkradFont.display(13, weight: .semibold))
                 .kerning(4)
-                .foregroundStyle(tokens.foreground.opacity(0.9))
+                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o90))
             Spacer()
             Text("esc")
                 .font(AinkradFont.mono(9))
-                .foregroundStyle(tokens.foreground.opacity(0.35))
+                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o35))
         }
-        .padding(.horizontal, 18)
-        .frame(height: 52)
+        .padding(.horizontal, skin.size.s18)
+        .frame(height: skin.size.s52)
     }
 
     // MARK: - Sidebar
@@ -237,87 +245,67 @@ struct SettingsOverlayView: View {
 
     private func sidebarList(tokens: DesignTokens) -> some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: skin.spacing.xs) {
                 ForEach(SettingsPageGroup.allCases, id: \.self) { group in
                     let pages = catalog.pages(in: group)
                     if !pages.isEmpty {
-                        groupLabel(group.title, tokens: tokens)
-                            .padding(.top, group == .workspace ? 0 : 12)
+                        AinkradSectionHeader(title: group.title)
+                            .padding(.top, group == .workspace ? 0 : skin.spacing.md)
                         ForEach(pages) { page in
                             sidebarRow(page: page, tokens: tokens)
                         }
                     }
                 }
             }
-            .padding(12)
+            .padding(skin.spacing.md)
         }
         .scrollContentBackground(.hidden)
-    }
-
-    /// A group header in the HUD language: a short accent tick beside an
-    /// uppercase, letter-spaced label. This is shell chrome (the sidebar's own
-    /// group labels), not a settings pane, so it stays a bespoke row rather
-    /// than the kit's `AinkradSectionHeader` or `AinkradSettingsPanel`.
-    private func groupLabel(_ text: String, tokens: DesignTokens) -> some View {
-        HStack(spacing: 6) {
-            RoundedRectangle(cornerRadius: 1)
-                .fill(tokens.accentSecondary.opacity(0.85))
-                .frame(width: 2, height: 9)
-                .shadow(color: tokens.accentSecondary.opacity(0.7), radius: 3)
-            Text(text)
-                .font(AinkradFont.mono(9, weight: .medium))
-                .kerning(2.5)
-                .foregroundStyle(tokens.foreground.opacity(0.4))
-        }
-        .padding(.horizontal, 8)
-        .padding(.bottom, 2)
     }
 
     /// A catalog-driven sidebar row for any page in any group.
     private func sidebarRow(page: SettingsPage, tokens: DesignTokens) -> some View {
         let isSelected = displayedPage?.path == page.path
-        return Button {
-            navigator.selection = page.path
-            navigator.clearHighlight()
-            pendingDeepLink = nil
-            // A sidebar tap is an unambiguous "take me to this page"
-            // instruction — it must always show that page, in BOTH the
-            // palette and filtering modes, not just leave the palette
-            // sitting inertly on screen. Routed through the real
-            // SettingsSearchMode.afterSidebarTap transition so production
-            // and the sidebar-tap tests exercise the same code path.
-            hasNavigatedWithQuery = searchMode.afterSidebarTap().query != nil
-        } label: {
-            HStack(spacing: 10) {
+        return AinkradListRow(
+            isSelected: isSelected,
+            onTap: { selectPage(page) },
+            leading: {
                 appTile(
-                    appID: page.appID, systemIcon: page.icon, size: 22,
-                    isSelected: isSelected, tokens: tokens)
-                Text(page.title)
-                    .font(AinkradFont.display(13, weight: .medium))
-                    .foregroundStyle(tokens.foreground.opacity(isSelected ? 0.95 : 0.7))
-                Spacer(minLength: 0)
+                    appID: page.appID, systemIcon: page.icon, size: skin.size.s22, isSelected: isSelected,
+                    tokens: tokens)
+            },
+            title: page.title,
+            trailing: {
                 // Read here rather than at catalog-build time so the count
                 // stays live while the overlay is open (Skills proposals).
                 if let badgeCount = page.badge?(), badgeCount > 0 {
                     AinkradBadge(text: "\(badgeCount)", tint: tokens.accentSecondary)
                 }
             }
-            .padding(.horizontal, 8)
-            .frame(height: 38)
-            .background(
-                ChamferShape(cut: AinkradRadius.md)
-                    .fill(isSelected ? tokens.accentPrimary.opacity(0.14) : .clear)
-            )
-            .overlay(
-                TargetingBrackets(length: 7)
-                    .stroke(isSelected ? tokens.accentSecondary.opacity(0.9) : .clear, lineWidth: 1.3)
-                    .padding(1)
-            )
-            .settingsRowHover(isActive: isSelected)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: isSelected)
+        )
+        .overlay(
+            AinkradCornerBrackets(length: skin.size.s7)
+                .stroke(isSelected ? tokens.accentSecondary.opacity(skin.opacity.o90) : .clear, lineWidth: 1.3)
+                .padding(skin.size.s1)
+        )
+        // The kit row takes its tap as a gesture; these keep the row one
+        // pressable accessibility element, as the plain button it replaced was.
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+        .accessibilityAction { selectPage(page) }
+        .animation(reduceMotion ? nil : .easeOut(duration: skin.motion.durations.d0_12), value: isSelected)
+    }
+
+    private func selectPage(_ page: SettingsPage) {
+        navigator.selection = page.path
+        navigator.clearHighlight()
+        pendingDeepLink = nil
+        // A sidebar tap is an unambiguous "take me to this page"
+        // instruction — it must always show that page, in BOTH the
+        // palette and filtering modes, not just leave the palette
+        // sitting inertly on screen. Routed through the real
+        // SettingsSearchMode.afterSidebarTap transition so production
+        // and the sidebar-tap tests exercise the same code path.
+        hasNavigatedWithQuery = searchMode.afterSidebarTap().query != nil
     }
 
     /// Shared tile renderer: the theme's neon artwork for a registered app, or
@@ -333,8 +321,8 @@ struct SettingsOverlayView: View {
         } else {
             // A fixed settings section (General, Sound, …): a tinted SF Symbol.
             Image(systemName: systemIcon)
-                .font(.system(size: size * 0.6))
-                .foregroundStyle(isSelected ? tokens.accentSecondary : tokens.foreground.opacity(0.55))
+                .font(.system(size: size * 0.6))  // design-lint: allow font-size token-gap settingsGlyphRatio
+                .foregroundStyle(isSelected ? tokens.accentSecondary : tokens.foreground.opacity(skin.opacity.o55))
                 .frame(width: size, height: size)
         }
     }
@@ -389,21 +377,18 @@ struct SettingsOverlayView: View {
     /// disorienting part of System Settings' version, which we're
     /// deliberately not copying.
     private func filterBanner(query: String, tokens: DesignTokens) -> some View {
-        HStack(spacing: 8) {
+        HStack(spacing: skin.spacing.sm) {
             Image(systemName: "line.3.horizontal.decrease")
-                .font(.system(size: 10))
-                .foregroundStyle(tokens.accentSecondary.opacity(0.85))
+                .font(skin.font(AinkradFontToken(sizeKey: "t10", scaled: false)))
+                .foregroundStyle(tokens.accentSecondary.opacity(skin.opacity.o85))
             Text("Filtering by \u{201C}\(query)\u{201D} — non-matching settings are dimmed")
                 .font(AinkradFont.display(11))
-                .foregroundStyle(tokens.foreground.opacity(0.6))
-            Spacer(minLength: 8)
-            Button("Clear") { self.query = "" }
-                .buttonStyle(.plain)
-                .font(AinkradFont.display(11, weight: .medium))
-                .foregroundStyle(tokens.accentSecondary)
+                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o60))
+            Spacer(minLength: skin.spacing.sm)
+            AinkradButton(title: "Clear", style: .ghost) { self.query = "" }
         }
-        .padding(.horizontal, 18)
-        .frame(height: 34)
+        .padding(.horizontal, skin.size.s18)
+        .frame(height: skin.size.s34)
     }
 
 }

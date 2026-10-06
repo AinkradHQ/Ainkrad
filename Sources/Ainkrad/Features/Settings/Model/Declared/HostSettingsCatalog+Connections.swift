@@ -35,10 +35,11 @@ extension HostSettingsCatalog {
                             switch choice {
                             case "test": testConnection(connection, environment)
                             case "remove":
-                                if confirm(
+                                confirm(
+                                    environment.settingsDrafts,
                                     "Remove \(connection.displayName)?",
-                                    "Its saved key or sign-in is deleted.", action: "Remove")
-                                {
+                                    "Its saved key or sign-in is deleted.", action: "Remove"
+                                ) {
                                     store.removeConnection(connection)
                                     if drafts.connectionSelection == connection.id.uuidString {
                                         drafts.connectionSelection = ""

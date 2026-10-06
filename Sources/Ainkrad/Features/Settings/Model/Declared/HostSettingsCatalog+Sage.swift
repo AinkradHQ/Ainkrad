@@ -120,7 +120,10 @@ extension HostSettingsCatalog {
                     path: group.appending("allowed-clear"), label: "Clear always-allowed tools",
                     help: "Every tool asks again, per the default mode.",
                     kind: .action(title: "Clear all") {
-                        if confirm("Clear always-allowed tools?", "Every tool will ask again.", action: "Clear") {
+                        confirm(
+                            environment.settingsDrafts, "Clear always-allowed tools?", "Every tool will ask again.",
+                            action: "Clear"
+                        ) {
                             store.clearAllowlist()
                         }
                     }))

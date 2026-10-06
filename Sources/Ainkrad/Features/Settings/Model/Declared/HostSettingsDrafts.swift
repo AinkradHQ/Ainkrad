@@ -92,6 +92,10 @@ final class HostSettingsDrafts {
         videoStore = made
         return made
     }
+    /// A destructive declared action waiting for the user's answer. The
+    /// overlay presents it as an `AinkradConfirmDialog`; the catalog that
+    /// asked has been rebuilt by then, so the request lives here.
+    var pendingConfirm: SettingsConfirmRequest?
     /// The one shortcut recorder the Keyboard rows share. Stopped when the
     /// settings overlay closes, so a key pressed later never rebinds anything.
     let recorder = ShortcutRecorder()
@@ -113,6 +117,15 @@ final class HostSettingsDrafts {
     }
 }
 
+/// A confirm the settings overlay shows for a destructive declared action.
+/// `onConfirm` runs only when the user confirms.
+struct SettingsConfirmRequest {
+    let title: String
+    let message: String
+    let action: String
+    let onConfirm: () -> Void
+}
+
 /// Drives the shared `NSColorPanel` for one declared color row at a time.
 @MainActor
 final class SettingsColorPanel: NSObject {
@@ -130,6 +143,6 @@ final class SettingsColorPanel: NSObject {
     }
 
     @objc private func changed(_ sender: NSColorPanel) {
-        onChange?(Color(nsColor: sender.color))
+        onChange?(Color(nsColor: sender.color))  // design-lint: allow raw-color kit gap, declared color row
     }
 }

@@ -335,10 +335,11 @@ extension HostSettingsCatalog {
                     help: "\(center.eventCount) events stored. Pinned events are kept.",
                     keywords: ["clear", "feed", "delete"],
                     kind: .action(title: "Clear…") {
-                        if confirm(
+                        confirm(
+                            environment.settingsDrafts,
                             "Clear the notification feed?", "Pinned events are kept. This cannot be undone.",
-                            action: "Clear")
-                        {
+                            action: "Clear"
+                        ) {
                             center.clearFeed()
                         }
                     }),
