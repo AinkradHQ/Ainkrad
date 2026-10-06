@@ -7,7 +7,7 @@ import SwiftUI
 /// that card floats above the flow, which re-packs around it.
 ///
 /// No pointer parallax: it depended on `z` (now gone) and re-animated every
-/// card on every pointer move. Hover lift and shadow remain.
+/// card on every pointer move. Hover lift (the kit card's) and shadow remain.
 @MainActor
 struct ScryView: View {
     @Environment(\.ainkradTheme) private var theme
@@ -110,13 +110,9 @@ struct ScryView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "square.on.square.dashed").font(.system(size: 26))
-                .foregroundStyle(theme.foreground.opacity(0.25))
-            Text("The assistant will lay results out here")
-                .font(AinkradFont.display(12)).foregroundStyle(theme.foreground.opacity(0.35))
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        AinkradEmptyState(
+            icon: "square.on.square.dashed", title: "No cards yet",
+            message: "The assistant will lay results out here")
     }
 }
 
@@ -193,7 +189,6 @@ private struct ScryCard: View {
         ScryElementView(element: element)
             .overlay(alignment: .topTrailing) { if isHovering { controls } }
             .overlay(alignment: .bottomTrailing) { if isHovering { resizeHandle } }
-            .scaleEffect(isHovering ? 1.01 : 1.0)
             .shadow(
                 color: theme.accentSecondary.opacity(isHovering ? 0.18 : 0.08),
                 radius: isHovering ? 12 : 6

@@ -8,23 +8,17 @@ struct ScryElementRenderError: Error {
     let message: String
 }
 
-/// The inline error card shape, shared by `ScryElementView` (for any kind
+/// The inline error card, drawn as the kit `AinkradErrorState` and shared by `ScryElementView` (for any kind
 /// whose `buildContent()` throws) and `ScryTextCard` (whose markdown parse
 /// failure is caught internally so it stays a real `View`, per the uniform
 /// `(element:)` dispatcher contract), and by the mermaid host (with
 /// its own "Diagram render error" label).
 struct ScryErrorCard: View {
-    @Environment(\.ainkradStatusColors) private var statusColors
     let message: String
     var label = "Render error"
 
     var body: some View {
-        HStack(alignment: .top, spacing: 6) {
-            Circle().fill(statusColors.danger).frame(width: 7, height: 7).padding(.top, 3)
-            Text("\(label): \(message)")
-                .font(AinkradFont.display(11))
-                .foregroundStyle(statusColors.danger.opacity(0.9))
-        }
+        AinkradErrorState(message: "\(label): \(message)")
     }
 }
 
@@ -81,17 +75,19 @@ struct ScryElementView: View {
 
     // MARK: - card chrome
 
+    /// The kit card (fill, edge, hover brackets and lift), stretched to the
+    /// rect `ScryLayout` gave this element.
     @ViewBuilder
     private func card<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            if let title = element.title, !title.isEmpty {
-                Text(title).font(AinkradFont.display(12, weight: .medium)).kerning(0.4)
-                    .foregroundStyle(theme.foreground.opacity(0.8))
+        AinkradCard {
+            VStack(alignment: .leading, spacing: 6) {
+                if let title = element.title, !title.isEmpty {
+                    Text(title).font(AinkradFont.display(12, weight: .medium)).kerning(0.4)
+                        .foregroundStyle(theme.foreground.opacity(0.8))
+                }
+                content()
             }
-            content()
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
-        .padding(12)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(ChamferShape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(0.45)))
     }
 }

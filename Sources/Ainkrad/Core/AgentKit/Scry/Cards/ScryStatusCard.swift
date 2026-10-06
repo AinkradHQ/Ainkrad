@@ -2,7 +2,9 @@ import AinkradAppKit
 import AinkradHostRuntime
 import SwiftUI
 
-/// `.status` — a small colored dot plus a status line.
+/// `.status` — a small colored dot plus a status line (local: the kit has no
+/// status dot); `.card` — a plain body line; anything else — the kit empty
+/// state.
 @MainActor
 struct ScryStatusCard: View {
     let element: ScryElement
@@ -20,9 +22,9 @@ struct ScryStatusCard: View {
             Text(element.body).font(AinkradFont.display(13))
                 .foregroundStyle(theme.foreground.opacity(0.85))
         default:
-            Text("Unsupported element type")
-                .font(AinkradFont.display(12))
-                .foregroundStyle(theme.foreground.opacity(0.4))
+            AinkradEmptyState(
+                icon: "questionmark.square.dashed", title: "Unsupported element type",
+                message: "This version of Ainkrad can't draw it.")
         }
     }
 }
