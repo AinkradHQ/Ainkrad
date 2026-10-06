@@ -49,7 +49,7 @@ enum SetupAppearance {
 ///    may return here with Back).
 ///
 /// What did NOT change, deliberately: the controls themselves are still the
-/// shared kit's, matching `AppearanceSettingsView` component for component.
+/// shared kit's, the same ones Settings uses for these preferences.
 /// Art direction is framing and copy — inventing a wizard-only theme picker
 /// would split one product into two visual languages for the same setting.
 ///
@@ -215,7 +215,7 @@ struct SetupAppearanceStepView: View {
     // MARK: - Accent
 
     /// Preset swatches (one per theme's accent) plus a color-well for
-    /// anything else — the same pattern `AppearanceSettingsView` uses, so the
+    /// anything else — the same color well Settings' accent row uses, so the
     /// wizard and Settings agree on how an accent is picked. A well over a
     /// palette-only picker is required here because the accent is a
     /// free-form 6-digit hex, not one of a fixed set — restricting the

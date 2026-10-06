@@ -66,7 +66,7 @@ final class NotificationSoundStore: SoundSettingsProviding {
     ///
     /// The EFFECT is a different question, and the old note here — "the
     /// notification cues are not in General → Sound's per-event list" — stopped
-    /// being true. `SoundSettingsView` iterates `UISound.allCases`, so all five
+    /// being true. The Sound & Voice page iterates `UISound.allCases`, so all five
     /// notification cues appear there with names like "Notification — Urgent".
     /// The user picked an effect, heard the ▶ preview play it, and then heard
     /// the default when a notification arrived, because this returned the

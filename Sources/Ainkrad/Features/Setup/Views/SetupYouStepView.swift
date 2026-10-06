@@ -98,7 +98,7 @@ struct SetupYouStepView: View {
             // already has a profile. Without this a replay shows blank fields
             // as if nothing had ever been entered, even though nothing was
             // lost (`SetupYou.apply` skips blanks on commit). Matches the
-            // idiom in `UserProfileSettingsView.onAppear`.
+            // Settings You page, which seeds its drafts from the same store.
             for (key, value) in environment.userProfileStore.all() where !value.isEmpty {
                 values[key] = value
             }

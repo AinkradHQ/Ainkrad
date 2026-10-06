@@ -248,7 +248,7 @@ struct SetupMotionSoundStepView: View {
                     .foregroundStyle(tokens.foreground.opacity(0.5))
                 // Bounded to 0...1 in the view: `setSoundVolume` does not clamp,
                 // so `AinkradSlider`'s own `in:` range is what keeps this safe.
-                // Same control, same range as `SoundSettingsView`.
+                // Same range as the Sound & Voice page's volume row.
                 AinkradSlider(
                     value: Binding(
                         get: { store.soundVolume },
