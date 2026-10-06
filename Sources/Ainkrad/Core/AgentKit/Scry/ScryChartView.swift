@@ -34,7 +34,7 @@ enum ScryChartParse {
 @MainActor
 struct ScryChartView: View {
     let bars: [ScryChartBar]
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
 
     private var maxValue: Double {
         max(bars.map(\.value).max() ?? 0, 0.0001)
@@ -52,7 +52,7 @@ struct ScryChartView: View {
         HStack(spacing: 8) {
             Text(bar.label)
                 .font(AinkradFont.mono(10))
-                .foregroundStyle(tokens.foreground.opacity(0.7))
+                .foregroundStyle(theme.foreground.opacity(0.7))
                 .frame(width: 64, alignment: .leading)
                 .lineLimit(1)
             GeometryReader { geo in
@@ -66,13 +66,13 @@ struct ScryChartView: View {
             .frame(height: 14)
             Text(formatted(bar.value))
                 .font(AinkradFont.mono(10))
-                .foregroundStyle(tokens.foreground.opacity(0.5))
+                .foregroundStyle(theme.foreground.opacity(0.5))
                 .frame(width: 44, alignment: .trailing)
         }
     }
 
     private func barColor(for index: Int) -> Color {
-        index.isMultiple(of: 2) ? tokens.accentPrimary : tokens.accentSecondary
+        index.isMultiple(of: 2) ? theme.accentPrimary : theme.accentSecondary
     }
 
     private func formatted(_ value: Double) -> String {

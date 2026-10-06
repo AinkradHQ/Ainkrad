@@ -34,7 +34,7 @@ enum ScryMediaURL {
 @MainActor
 struct ScryMediaCard: View {
     let element: ScryElement
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
 
     @State private var current: (url: URL, player: AVPlayer)?
     @State private var hasResolved = false
@@ -48,7 +48,7 @@ struct ScryMediaCard: View {
         Group {
             if let player {
                 if isAudio {
-                    ScryAudioTransport(player: player, tokens: tokens)
+                    ScryAudioTransport(player: player)
                 } else {
                     VideoPlayer(player: player)
                         .aspectRatio(16.0 / 9.0, contentMode: .fit)
@@ -59,7 +59,7 @@ struct ScryMediaCard: View {
                 // genuine failure, not just "hasn't resolved yet".
                 Text(isAudio ? "Audio unavailable" : "Video unavailable")
                     .font(AinkradFont.display(12))
-                    .foregroundStyle(tokens.foreground.opacity(0.4))
+                    .foregroundStyle(theme.foreground.opacity(0.4))
             } else {
                 // `.task` runs after the first render, so without this branch
                 // "unavailable" would flash for one confident, wrong frame
@@ -183,15 +183,14 @@ private final class ScryAudioPlayerObserver: ObservableObject, @unchecked Sendab
 @MainActor
 private struct ScryAudioTransport: View {
     let player: AVPlayer
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
 
     @StateObject private var observer: ScryAudioPlayerObserver
     @State private var isDragging = false
     @State private var dragFraction: Double = 0
 
-    init(player: AVPlayer, tokens: DesignTokens) {
+    init(player: AVPlayer) {
         self.player = player
-        self.tokens = tokens
         _observer = StateObject(wrappedValue: ScryAudioPlayerObserver(player: player))
     }
 
@@ -212,8 +211,8 @@ private struct ScryAudioTransport: View {
             VStack(alignment: .leading, spacing: 3) {
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
-                        Capsule().fill(tokens.foreground.opacity(0.12))
-                        Capsule().fill(tokens.accentPrimary.opacity(0.85))
+                        Capsule().fill(theme.foreground.opacity(0.12))
+                        Capsule().fill(theme.accentPrimary.opacity(0.85))
                             .frame(width: max(0, geo.size.width * progressFraction))
                     }
                     .contentShape(Rectangle())
@@ -233,7 +232,7 @@ private struct ScryAudioTransport: View {
                 .frame(height: 3)
                 Text(timeLabel)
                     .font(AinkradFont.mono(9))
-                    .foregroundStyle(tokens.foreground.opacity(0.5))
+                    .foregroundStyle(theme.foreground.opacity(0.5))
             }
         }
         .frame(height: 44)

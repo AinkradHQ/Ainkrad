@@ -3,7 +3,7 @@ import AinkradHostRuntime
 import SwiftUI
 
 /// `.text` / `.markdown`. Like every other card, this is a plain `View`
-/// constructed uniformly as `(element:tokens:)` by the dispatcher — a
+/// constructed uniformly as `(element:)` by the dispatcher — a
 /// markdown parse failure is caught internally and degrades to the shared
 /// `ScryErrorCard`, rather than being discarded by a `try?` that would leave
 /// any ordinary use of this view (a preview, a container, another card)
@@ -11,7 +11,7 @@ import SwiftUI
 @MainActor
 struct ScryTextCard: View {
     let element: ScryElement
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
 
     var body: some View {
         // Evaluated as a plain expression (not inside the `ViewBuilder`
@@ -25,11 +25,11 @@ struct ScryTextCard: View {
             let attributed = try AttributedString(markdown: element.body)
             return AnyView(
                 Text(attributed).font(AinkradFont.display(13))
-                    .foregroundStyle(tokens.foreground.opacity(0.9))
+                    .foregroundStyle(theme.foreground.opacity(0.9))
             )
         } catch {
             let message = "Markdown parse failed: \(error.localizedDescription)"
-            return AnyView(ScryErrorCard(tokens: tokens, message: message))
+            return AnyView(ScryErrorCard(message: message))
         }
     }
 }
@@ -38,7 +38,6 @@ struct ScryTextCard: View {
 @MainActor
 struct ScryCodeCard: View {
     let element: ScryElement
-    let tokens: DesignTokens
 
     var body: some View {
         AinkradCodeBlock(element.body, language: element.language)

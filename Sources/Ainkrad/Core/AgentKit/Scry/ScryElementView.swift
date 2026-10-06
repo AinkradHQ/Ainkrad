@@ -11,19 +11,19 @@ struct ScryElementRenderError: Error {
 /// The inline error card shape, shared by `ScryElementView` (for any kind
 /// whose `buildContent()` throws) and `ScryTextCard` (whose markdown parse
 /// failure is caught internally so it stays a real `View`, per the uniform
-/// `(element:tokens:)` dispatcher contract), and by the mermaid host (with
+/// `(element:)` dispatcher contract), and by the mermaid host (with
 /// its own "Diagram render error" label).
 struct ScryErrorCard: View {
-    let tokens: DesignTokens
+    @Environment(\.ainkradStatusColors) private var statusColors
     let message: String
     var label = "Render error"
 
     var body: some View {
         HStack(alignment: .top, spacing: 6) {
-            Circle().fill(tokens.danger).frame(width: 7, height: 7).padding(.top, 3)
+            Circle().fill(statusColors.danger).frame(width: 7, height: 7).padding(.top, 3)
             Text("\(label): \(message)")
                 .font(AinkradFont.display(11))
-                .foregroundStyle(tokens.danger.opacity(0.9))
+                .foregroundStyle(statusColors.danger.opacity(0.9))
         }
     }
 }
@@ -34,7 +34,7 @@ struct ScryErrorCard: View {
 @MainActor
 struct ScryElementView: View {
     let element: ScryElement
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
 
     var body: some View {
         card {
@@ -54,28 +54,28 @@ struct ScryElementView: View {
             let message =
                 (error as? ScryElementRenderError)?.message
                 ?? String(describing: error)
-            return AnyView(ScryErrorCard(tokens: tokens, message: message))
+            return AnyView(ScryErrorCard(message: message))
         }
     }
 
     private func buildContent() throws -> AnyView {
         switch element.kind {
         case .text, .markdown:
-            return AnyView(ScryTextCard(element: element, tokens: tokens))
+            return AnyView(ScryTextCard(element: element))
         case .table:
-            return AnyView(ScryTableCard(element: element, tokens: tokens))
+            return AnyView(ScryTableCard(element: element))
         case .code:
-            return AnyView(ScryCodeCard(element: element, tokens: tokens))
+            return AnyView(ScryCodeCard(element: element))
         case .status, .card:
-            return AnyView(ScryStatusCard(element: element, tokens: tokens))
+            return AnyView(ScryStatusCard(element: element))
         case .image:
-            return AnyView(ScryImageCard(element: element, tokens: tokens))
+            return AnyView(ScryImageCard(element: element))
         case .video, .audio:
-            return AnyView(ScryMediaCard(element: element, tokens: tokens))
+            return AnyView(ScryMediaCard(element: element))
         case .diagram, .chart:
-            return AnyView(ScryDiagramView(element: element, tokens: tokens))
+            return AnyView(ScryDiagramView(element: element))
         case .unknown:
-            return AnyView(ScryStatusCard(element: element, tokens: tokens))
+            return AnyView(ScryStatusCard(element: element))
         }
     }
 
@@ -86,12 +86,12 @@ struct ScryElementView: View {
         VStack(alignment: .leading, spacing: 6) {
             if let title = element.title, !title.isEmpty {
                 Text(title).font(AinkradFont.display(12, weight: .medium)).kerning(0.4)
-                    .foregroundStyle(tokens.foreground.opacity(0.8))
+                    .foregroundStyle(theme.foreground.opacity(0.8))
             }
             content()
         }
         .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(ChamferShape(cut: AinkradRadius.md).fill(tokens.surfaceElevated.opacity(0.45)))
+        .background(ChamferShape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(0.45)))
     }
 }

@@ -25,7 +25,7 @@ enum ScryTableParse {
 @MainActor
 struct ScryTableCard: View {
     let element: ScryElement
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
 
     var body: some View {
         let rows = ScryTableParse.rows(from: element.body)
@@ -34,7 +34,7 @@ struct ScryTableCard: View {
                 HStack(spacing: 10) {
                     ForEach(Array(row.enumerated()), id: \.offset) { _, cell in
                         Text(cell).font(AinkradFont.mono(11))
-                            .foregroundStyle(tokens.foreground.opacity(i == 0 ? 0.9 : 0.65))
+                            .foregroundStyle(theme.foreground.opacity(i == 0 ? 0.9 : 0.65))
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }

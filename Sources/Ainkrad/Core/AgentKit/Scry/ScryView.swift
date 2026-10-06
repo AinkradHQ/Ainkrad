@@ -10,7 +10,7 @@ import SwiftUI
 /// card on every pointer move. Hover lift and shadow remain.
 @MainActor
 struct ScryView: View {
-    @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradTheme) private var theme
     @Environment(\.ainkradReduceMotion) private var reduceMotion
     let store: ScryStore
 
@@ -24,7 +24,6 @@ struct ScryView: View {
     @State private var playingIDs: Set<String> = []
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
         GeometryReader { proxy in
             let elements = store.model.elements
             let overrides = store.overrides
@@ -39,7 +38,7 @@ struct ScryView: View {
                             isVisible(rect, id: element.id, viewportHeight: proxy.size.height)
                         {
                             ScryCard(
-                                element: element, store: store, tokens: tokens,
+                                element: element, store: store,
                                 rect: rect, isFloating: false,
                                 containerSize: proxy.size,
                                 reduceMotion: reduceMotion)
@@ -52,7 +51,7 @@ struct ScryView: View {
                             isVisible(rect, id: element.id, viewportHeight: proxy.size.height)
                         {
                             ScryCard(
-                                element: element, store: store, tokens: tokens,
+                                element: element, store: store,
                                 rect: rect, isFloating: true,
                                 containerSize: proxy.size,
                                 reduceMotion: reduceMotion)
@@ -80,7 +79,7 @@ struct ScryView: View {
             .onPreferenceChange(ScryScrollOffsetKey.self) { visibleTop = $0 }
             .onPreferenceChange(ScryPlayingCardsKey.self) { playingIDs = $0 }
             .overlay {
-                if elements.isEmpty { emptyState(tokens: tokens) }
+                if elements.isEmpty { emptyState }
             }
         }
     }
@@ -110,12 +109,12 @@ struct ScryView: View {
         return CGFloat(rect.y + rect.height) >= top && CGFloat(rect.y) <= bottom
     }
 
-    private func emptyState(tokens: DesignTokens) -> some View {
+    private var emptyState: some View {
         VStack(spacing: 8) {
             Image(systemName: "square.on.square.dashed").font(.system(size: 26))
-                .foregroundStyle(tokens.foreground.opacity(0.25))
+                .foregroundStyle(theme.foreground.opacity(0.25))
             Text("The assistant will lay results out here")
-                .font(AinkradFont.display(12)).foregroundStyle(tokens.foreground.opacity(0.35))
+                .font(AinkradFont.display(12)).foregroundStyle(theme.foreground.opacity(0.35))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -147,7 +146,7 @@ struct ScryPlayingCardsKey: PreferenceKey {
 private struct ScryCard: View {
     let element: ScryElement
     let store: ScryStore
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
     let rect: ScryRect
     let isFloating: Bool
     let containerSize: CGSize
@@ -191,12 +190,12 @@ private struct ScryCard: View {
     }
 
     var body: some View {
-        ScryElementView(element: element, tokens: tokens)
+        ScryElementView(element: element)
             .overlay(alignment: .topTrailing) { if isHovering { controls } }
             .overlay(alignment: .bottomTrailing) { if isHovering { resizeHandle } }
             .scaleEffect(isHovering ? 1.01 : 1.0)
             .shadow(
-                color: tokens.accentSecondary.opacity(isHovering ? 0.18 : 0.08),
+                color: theme.accentSecondary.opacity(isHovering ? 0.18 : 0.08),
                 radius: isHovering ? 12 : 6
             )
             .onHover { isHovering = $0 }
@@ -242,7 +241,7 @@ private struct ScryCard: View {
 
     private var resizeHandle: some View {
         Image(systemName: "arrow.down.right").font(.system(size: 10))
-            .foregroundStyle(tokens.foreground.opacity(0.4)).padding(4)
+            .foregroundStyle(theme.foreground.opacity(0.4)).padding(4)
             .gesture(
                 DragGesture()
                     .updating($resizeStart) { _, state, _ in
