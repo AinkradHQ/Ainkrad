@@ -58,6 +58,7 @@ struct HoardToast: View {
     @Environment(\.ainkradTypography) private var typo
     @Environment(\.ainkradStatusColors) private var statusColors
     @Environment(\.ainkradReduceMotion) private var reduceMotion
+    @Environment(\.ainkradSkin) private var skin
 
     private var tokens: DesignTokens { environment.themeManager.tokens }
 
@@ -91,22 +92,12 @@ struct HoardToast: View {
             }
 
             if !message.failures.isEmpty, let onShowDetails {
-                Button(action: onShowDetails) {
-                    Text("Details")
-                        .font(AinkradFontResolver.font(.caption, weight: .medium, typography: typo))
-                        .foregroundStyle(accent)
-                }
-                .buttonStyle(.plain)
-                .padding(.leading, AinkradSpacing.xs)
+                AinkradButton(title: "Details", style: .ghost, action: onShowDetails)
+                    .padding(.leading, AinkradSpacing.xs)
             }
 
-            Button(action: onDismiss) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 8, weight: .bold))
-                    .foregroundStyle(tokens.foreground.opacity(0.4))
-            }
-            .buttonStyle(.plain)
-            .padding(.leading, AinkradSpacing.xs)
+            AinkradIconButton(systemName: "xmark", size: skin.size.s16, tooltip: "Dismiss", action: onDismiss)
+                .padding(.leading, AinkradSpacing.xs)
         }
         .padding(.horizontal, AinkradSpacing.md)
         .padding(.vertical, AinkradSpacing.sm)

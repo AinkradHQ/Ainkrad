@@ -21,6 +21,7 @@ struct HoardFilterField: View {
     @Environment(\.ainkradTheme) private var theme
     @Environment(\.ainkradTypography) private var typo
     @Environment(\.ainkradReduceMotion) private var reduceMotion
+    @Environment(\.ainkradSkin) private var skin
 
     var body: some View {
         HStack(spacing: AinkradSpacing.xs) {
@@ -39,14 +40,9 @@ struct HoardFilterField: View {
                 }
 
             if search.isScoped {
-                Button {
+                AinkradIconButton(systemName: "xmark.circle.fill", size: skin.size.s14, tooltip: "Clear search") {
                     search.clearScoped()
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 9))
-                        .foregroundStyle(theme.foreground.opacity(0.45))
                 }
-                .buttonStyle(.plain)
                 .transition(.opacity)
             }
         }

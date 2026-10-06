@@ -51,6 +51,7 @@ private struct TabChip: View {
     @Environment(\.ainkradTheme) private var theme
     @Environment(\.ainkradTypography) private var typo
     @Environment(\.ainkradReduceMotion) private var reduceMotion
+    @Environment(\.ainkradSkin) private var skin
     @State private var hovering = false
 
     var body: some View {
@@ -68,13 +69,8 @@ private struct TabChip: View {
             // so a row of inactive tabs stays legible instead of being half
             // occupied by ✕ glyphs.
             if isActive || hovering {
-                Button(action: onClose) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 7, weight: .bold))
-                        .foregroundStyle(theme.foreground.opacity(0.55))
-                }
-                .buttonStyle(.plain)
-                .transition(.opacity.combined(with: .scale(scale: 0.7)))
+                AinkradIconButton(systemName: "xmark", size: skin.size.s14, tooltip: "Close Tab", action: onClose)
+                    .transition(.opacity.combined(with: .scale(scale: 0.7)))
             }
         }
         .padding(.horizontal, AinkradSpacing.sm)
