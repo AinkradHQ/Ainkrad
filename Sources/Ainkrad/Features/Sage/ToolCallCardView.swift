@@ -14,7 +14,8 @@ struct ToolCallCardView: View {
     let title: String
     let summary: String
     let diff: String?
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
+    @Environment(\.ainkradStatusColors) private var statusColors
     /// True for the inline card of a tool currently awaiting approval: forces the
     /// body open and draws an accent frame.
     var pendingApproval: Bool = false
@@ -41,7 +42,7 @@ struct ToolCallCardView: View {
     @Environment(\.ainkradReduceMotion) private var reduceMotion
 
     private var presentation: ToolPresentation { ToolPresentation.for(toolName: toolName) }
-    private var tint: Color { presentation.tint == .primary ? tokens.accentPrimary : tokens.accentSecondary }
+    private var tint: Color { presentation.tint == .primary ? theme.accentPrimary : theme.accentSecondary }
     private var isError: Bool { result?.isError == true }
     private var isPending: Bool { result?.isPending == true }
 
@@ -54,25 +55,25 @@ struct ToolCallCardView: View {
     /// (part of the running motion) and whenever the body is open.
     private var showsChevron: Bool { (isHovering && canExpand) || isPending || isExpanded }
 
-    private var iconColor: Color { isError ? tokens.danger : tint }
-    private var textColor: Color { isError ? tokens.danger : tokens.foreground.opacity(0.85) }
+    private var iconColor: Color { isError ? statusColors.danger : tint }
+    private var textColor: Color { isError ? statusColors.danger : theme.foreground.opacity(0.85) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             header
             if pendingApproval, let fileDiff, let rejectedHunkIDs, !fileDiff.hunks.isEmpty {
-                DiffReviewView(fileDiff: fileDiff, rejectedHunkIDs: rejectedHunkIDs, tokens: tokens)
+                DiffReviewView(fileDiff: fileDiff, rejectedHunkIDs: rejectedHunkIDs)
             } else if showsBody {
                 codeBlock
             }
             if let imageDataURL {
-                GeneratedImageView(dataURL: imageDataURL, tokens: tokens, onOpen: onOpenImage)
+                GeneratedImageView(dataURL: imageDataURL, onOpen: onOpenImage)
             }
             if let videoURL {
-                GeneratedVideoView(urlString: videoURL, tokens: tokens, onOpen: onOpenVideo)
+                GeneratedVideoView(urlString: videoURL, onOpen: onOpenVideo)
             }
             if let audioURL {
-                GeneratedAudioView(urlString: audioURL, title: "Speech", tokens: tokens)
+                GeneratedAudioView(urlString: audioURL, title: "Speech")
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -91,7 +92,7 @@ struct ToolCallCardView: View {
             if showsChevron {
                 Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                     .font(.system(size: 9))
-                    .foregroundStyle(tokens.foreground.opacity(0.45))
+                    .foregroundStyle(theme.foreground.opacity(0.45))
                     .transition(.opacity)
             }
             Spacer(minLength: 0)
@@ -129,7 +130,7 @@ struct ToolCallCardView: View {
             } else if !summary.isEmpty {
                 Text(summary)
                     .font(AinkradFont.mono(11))
-                    .foregroundStyle(tokens.foreground.opacity(isError ? 0.9 : 0.7))
+                    .foregroundStyle(theme.foreground.opacity(isError ? 0.9 : 0.7))
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -137,11 +138,11 @@ struct ToolCallCardView: View {
         .padding(.horizontal, 10).padding(.vertical, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
         .frame(maxHeight: 260)
-        .background(ChamferShape(cut: AinkradRadius.sm).fill(tokens.background.opacity(0.45)))
+        .background(ChamferShape(cut: AinkradRadius.sm).fill(theme.background.opacity(0.45)))
         .overlay {
             ChamferShape(cut: AinkradRadius.sm)
                 .stroke(
-                    (isError ? tokens.danger : (pendingApproval ? tokens.accentPrimary : tint)).opacity(
+                    (isError ? statusColors.danger : (pendingApproval ? theme.accentPrimary : tint)).opacity(
                         pendingApproval ? 0.5 : 0.22),
                     lineWidth: 1)
         }
@@ -156,11 +157,11 @@ struct ToolCallCardView: View {
             var seg = AttributedString(
                 (i == 0 ? "" : "\n") + gutter + line.dropFirst(sign == "+" || sign == "-" ? 1 : 0))
             if sign == "+" {
-                seg.foregroundColor = tokens.success
+                seg.foregroundColor = statusColors.success
             } else if sign == "-" {
-                seg.foregroundColor = tokens.danger
+                seg.foregroundColor = statusColors.danger
             } else {
-                seg.foregroundColor = tokens.foreground.opacity(0.6)
+                seg.foregroundColor = theme.foreground.opacity(0.6)
             }
             out += seg
         }

@@ -11,7 +11,7 @@ import SwiftUI
 /// and can't host a window-covering overlay itself).
 struct GeneratedImageView: View {
     let dataURL: String
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
     var onOpen: ((NSImage) -> Void)? = nil
 
     @State private var isHovering = false
@@ -30,7 +30,7 @@ struct GeneratedImageView: View {
                 .scaledToFit()
                 .frame(maxWidth: 320, maxHeight: 320, alignment: .leading)
                 .clipShape(ChamferShape(cut: AinkradRadius.md))
-                .overlay(ChamferShape(cut: AinkradRadius.md).stroke(tokens.accentSecondary.opacity(0.22), lineWidth: 1))
+                .overlay(ChamferShape(cut: AinkradRadius.md).stroke(theme.accentSecondary.opacity(0.22), lineWidth: 1))
                 .overlay(alignment: .topTrailing) { actionBar(d).padding(6) }
                 .contentShape(Rectangle())
                 .onHover { isHovering = $0 }
@@ -70,7 +70,7 @@ struct GeneratedImageView: View {
             }
         }
         .padding(3)
-        .background(ChamferShape(cut: AinkradRadius.sm).fill(tokens.background.opacity(0.7)))
+        .background(ChamferShape(cut: AinkradRadius.sm).fill(theme.background.opacity(0.7)))
         .opacity(isHovering ? 0.95 : 0)
         .animation(reduceMotion ? nil : AinkradMotion.hover, value: isHovering)
     }
@@ -112,7 +112,7 @@ struct GeneratedImageView: View {
 /// Renders nothing if the URL is undecodable.
 struct GeneratedVideoView: View {
     let urlString: String
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
     var onOpen: ((URL) -> Void)? = nil
 
     @State private var isHovering = false
@@ -134,7 +134,7 @@ struct GeneratedVideoView: View {
             .aspectRatio(16.0 / 9.0, contentMode: .fit)
             .frame(maxWidth: 360, maxHeight: 240, alignment: .leading)
             .clipShape(ChamferShape(cut: AinkradRadius.md))
-            .overlay(ChamferShape(cut: AinkradRadius.md).stroke(tokens.accentSecondary.opacity(0.22), lineWidth: 1))
+            .overlay(ChamferShape(cut: AinkradRadius.md).stroke(theme.accentSecondary.opacity(0.22), lineWidth: 1))
             .overlay(alignment: .topTrailing) { actionBar(url).padding(6) }
             .onHover { isHovering = $0 }
             .ainkradContextMenu([
@@ -164,7 +164,7 @@ struct GeneratedVideoView: View {
             AinkradIconButton(systemName: "square.and.arrow.down", size: 22, tooltip: "Download") { download(url) }
         }
         .padding(3)
-        .background(ChamferShape(cut: AinkradRadius.sm).fill(tokens.background.opacity(0.7)))
+        .background(ChamferShape(cut: AinkradRadius.sm).fill(theme.background.opacity(0.7)))
         .opacity(isHovering ? 0.95 : 0)
         .animation(reduceMotion ? nil : AinkradMotion.hover, value: isHovering)
     }
@@ -185,7 +185,7 @@ struct GeneratedVideoView: View {
 struct GeneratedAudioView: View {
     let urlString: String
     let title: String
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
 
     @State private var player: AVAudioPlayer?
     @State private var isPlaying = false
@@ -206,7 +206,7 @@ struct GeneratedAudioView: View {
                         tooltip: isPlaying ? "Pause" : "Play"
                     ) { toggle(url) }
                     Text(timeString(current)).font(AinkradFont.mono(10))
-                        .foregroundStyle(tokens.foreground.opacity(0.6)).monospacedDigit()
+                        .foregroundStyle(theme.foreground.opacity(0.6)).monospacedDigit()
                     AinkradSlider(
                         value: Binding(
                             get: { current },
@@ -215,16 +215,16 @@ struct GeneratedAudioView: View {
                                 player?.currentTime = $0
                             }), in: 0...max(duration, 0.01))
                     Text(timeString(duration)).font(AinkradFont.mono(10))
-                        .foregroundStyle(tokens.foreground.opacity(0.6)).monospacedDigit()
+                        .foregroundStyle(theme.foreground.opacity(0.6)).monospacedDigit()
                 }
                 HStack(spacing: 8) {
                     Image(systemName: "waveform").font(.system(size: 11))
-                        .foregroundStyle(tokens.accentSecondary.opacity(0.7))
-                    Text(title).font(AinkradFont.display(11)).foregroundStyle(tokens.foreground.opacity(0.75))
+                        .foregroundStyle(theme.accentSecondary.opacity(0.7))
+                    Text(title).font(AinkradFont.display(11)).foregroundStyle(theme.foreground.opacity(0.75))
                     Spacer(minLength: 8)
                     AinkradIconButton(systemName: "speedometer", size: 20, tooltip: "Playback speed") { cycleRate() }
                     Text("\(speedLabel)").font(AinkradFont.mono(10))
-                        .foregroundStyle(tokens.foreground.opacity(0.7)).monospacedDigit()
+                        .foregroundStyle(theme.foreground.opacity(0.7)).monospacedDigit()
                     AinkradIconButton(systemName: "square.and.arrow.down", size: 20, tooltip: "Download") {
                         download(url)
                     }
@@ -232,8 +232,8 @@ struct GeneratedAudioView: View {
             }
             .padding(.horizontal, 10).padding(.vertical, 8)
             .frame(maxWidth: 360, alignment: .leading)
-            .background(ChamferShape(cut: AinkradRadius.md).fill(tokens.surfaceElevated.opacity(0.4)))
-            .overlay(ChamferShape(cut: AinkradRadius.md).stroke(tokens.accentSecondary.opacity(0.22), lineWidth: 1))
+            .background(ChamferShape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(0.4)))
+            .overlay(ChamferShape(cut: AinkradRadius.md).stroke(theme.accentSecondary.opacity(0.22), lineWidth: 1))
             .onAppear { ensurePlayer(url) }
             .onReceive(ticker) { _ in
                 guard isPlaying, let p = player else { return }
@@ -311,7 +311,7 @@ private func saveCopy(of url: URL, suggestedName: String) {
 /// to fit, click-outside or Esc to dismiss.
 struct VideoLightboxView: View {
     let url: URL
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
     let onDismiss: () -> Void
 
     @State private var current: (url: URL, player: AVPlayer)?
@@ -348,7 +348,7 @@ struct VideoLightboxView: View {
 /// a window-covering overlay.
 struct ImageLightboxView: View {
     let image: NSImage
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
     let onDismiss: () -> Void
 
     var body: some View {

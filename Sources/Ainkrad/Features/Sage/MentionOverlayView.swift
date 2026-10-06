@@ -11,15 +11,14 @@ import SwiftUI
 struct MentionOverlayView: View {
     let matches: [FileMatch]
     @Binding var selectedIndex: Int
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
     let onSelect: (FileMatch) -> Void
 
     var body: some View {
         SageOverlayList(
             isEmpty: matches.isEmpty,
             emptyIcon: "doc.text.magnifyingglass",
-            emptyText: "No matching files",
-            tokens: tokens
+            emptyText: "No matching files"
         ) {
             ForEach(Array(matches.enumerated()), id: \.element.path) { index, match in
                 AinkradListRow(
@@ -28,7 +27,7 @@ struct MentionOverlayView: View {
                     leading: {
                         Image(systemName: FileGlyph.symbol(forPath: match.path))
                             .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(tokens.accentSecondary)
+                            .foregroundStyle(theme.accentSecondary)
                     },
                     title: match.name,
                     subtitle: match.path,

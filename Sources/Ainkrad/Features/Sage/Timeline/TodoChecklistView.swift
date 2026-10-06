@@ -24,26 +24,27 @@ enum TodoStepPresentation {
 /// (the builder keeps only the latest `todo_write`).
 struct TodoChecklistView: View {
     let items: [TodoItem]
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
+    @Environment(\.ainkradStatusColors) private var statusColors
     @Environment(\.ainkradReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
-                Image(systemName: "checklist").font(.system(size: 11)).foregroundStyle(tokens.accentSecondary)
+                Image(systemName: "checklist").font(.system(size: 11)).foregroundStyle(theme.accentSecondary)
                 Text("Tasks").font(AinkradFont.display(11, weight: .semibold)).kerning(1)
-                    .foregroundStyle(tokens.accentSecondary.opacity(0.85))
+                    .foregroundStyle(theme.accentSecondary.opacity(0.85))
                 Spacer(minLength: 8)
                 Text(TodoStepPresentation.summary(items))
-                    .font(AinkradFont.mono(10)).foregroundStyle(tokens.foreground.opacity(0.5))
+                    .font(AinkradFont.mono(10)).foregroundStyle(theme.foreground.opacity(0.5))
             }
             ForEach(items) { item in row(item) }
         }
         .padding(.horizontal, 10).padding(.vertical, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: AinkradRadius.sm).fill(tokens.background.opacity(0.45)))
+        .background(ChamferShape(cut: AinkradRadius.sm).fill(theme.background.opacity(0.45)))
         .overlay {
-            ChamferShape(cut: AinkradRadius.sm).stroke(tokens.accentSecondary.opacity(0.22), lineWidth: 1)
+            ChamferShape(cut: AinkradRadius.sm).stroke(theme.accentSecondary.opacity(0.22), lineWidth: 1)
         }
     }
 
@@ -54,8 +55,8 @@ struct TodoChecklistView: View {
             .font(.system(size: 11))
             .foregroundStyle(
                 done
-                    ? tokens.success
-                    : (item.status == .inProgress ? tokens.accentSecondary : tokens.foreground.opacity(0.4)))
+                    ? statusColors.success
+                    : (item.status == .inProgress ? theme.accentSecondary : theme.foreground.opacity(0.4)))
         HStack(alignment: .firstTextBaseline, spacing: 7) {
             if item.status == .inProgress && !reduceMotion {
                 BudgetedTimelineView { date in
@@ -67,8 +68,8 @@ struct TodoChecklistView: View {
             }
             Text(item.content)
                 .font(AinkradFont.display(12, weight: done ? .regular : .medium))
-                .strikethrough(done, color: tokens.foreground.opacity(0.4))
-                .foregroundStyle(tokens.foreground.opacity(done ? 0.45 : 0.85))
+                .strikethrough(done, color: theme.foreground.opacity(0.4))
+                .foregroundStyle(theme.foreground.opacity(done ? 0.45 : 0.85))
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
     }

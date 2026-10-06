@@ -23,7 +23,8 @@ struct SageComposerBar: View {
     @Environment(\.ainkradToastCenter) var toastCenter
     @Environment(\.ainkradSkin) private var skin
     let session: AgentSession
-    let tokens: DesignTokens
+    // Not `private` — read from `SageComposerBar+Overflow.swift`.
+    @Environment(\.ainkradTheme) var theme
     let modelPicker: SageModelPickerModel
     @Binding var draft: String
     var autoFocusOnAppear: Bool = false
@@ -132,7 +133,6 @@ struct SageComposerBar: View {
 
                 SageConnectionModelPicker(
                     model: modelPicker,
-                    tokens: tokens,
                     onManageConnections: { environment.isSettingsPresented = true }
                 )
 
@@ -149,7 +149,7 @@ struct SageComposerBar: View {
                 micTrigger
 
                 RecordingIndicatorView(
-                    status: environment.voiceService.pushToTalk.status, tokens: tokens,
+                    status: environment.voiceService.pushToTalk.status,
                     notice: environment.voiceService.lastNotice)
 
                 AinkradIconButton(systemName: "arrow.up", size: Self.controlHeight, tooltip: "Send") { send() }
@@ -159,7 +159,7 @@ struct SageComposerBar: View {
             .frame(height: Self.controlHeight)
         }
         .padding(.horizontal, 12).padding(.vertical, 10)
-        .background(ChamferShape(cut: AinkradRadius.md).fill(tokens.surfaceElevated.opacity(0.45)))
+        .background(ChamferShape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(0.45)))
         .background(
             // Tab-cycle affordance (M7 Slice 5a Task 5): swallows a plain Tab
             // keyDown to advance the active agent, but ONLY when the draft is
@@ -191,7 +191,6 @@ struct SageComposerBar: View {
                 commands: environment.commandRegistry.all(),
                 query: paletteQuery,
                 selectedIndex: $paletteSelectedIndex,
-                tokens: tokens,
                 onSelect: insertCommand
             )
         }
@@ -199,7 +198,6 @@ struct SageComposerBar: View {
             MentionOverlayView(
                 matches: mentionMatches,
                 selectedIndex: $mentionSelectedIndex,
-                tokens: tokens,
                 onSelect: insertMention
             )
         }

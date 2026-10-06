@@ -11,7 +11,7 @@ struct SageOverlayList<Content: View>: View {
     let isEmpty: Bool
     let emptyIcon: String
     let emptyText: String
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
     var showsHint: Bool = true
     @ViewBuilder let content: () -> Content
 
@@ -30,9 +30,9 @@ struct SageOverlayList<Content: View>: View {
         // content MUST draw its own panel chrome — same chamfer fill + accent
         // stroke + glow the kit's own dropdowns use (`MultiSelectPanelView`).
         // Without this the overlay renders see-through over the transcript.
-        .background(ChamferShape(cut: 8).fill(tokens.surfaceElevated.opacity(0.97)))
-        .overlay(ChamferShape(cut: 8).strokeBorder(tokens.accentSecondary.opacity(0.55), lineWidth: 1.25))
-        .shadow(color: tokens.accentSecondary.opacity(0.35), radius: 10, y: 4)
+        .background(ChamferShape(cut: 8).fill(theme.surfaceElevated.opacity(0.97)))
+        .overlay(ChamferShape(cut: 8).strokeBorder(theme.accentSecondary.opacity(0.55), lineWidth: 1.25))
+        .shadow(color: theme.accentSecondary.opacity(0.35), radius: 10, y: 4)
         .frame(minWidth: 280)
     }
 
@@ -43,10 +43,10 @@ struct SageOverlayList<Content: View>: View {
         VStack(spacing: 6) {
             Image(systemName: emptyIcon)
                 .font(.system(size: 18, weight: .regular))
-                .foregroundStyle(tokens.foreground.opacity(0.4))
+                .foregroundStyle(theme.foreground.opacity(0.4))
             Text(emptyText)
                 .font(AinkradFont.display(12))
-                .foregroundStyle(tokens.foreground.opacity(0.5))
+                .foregroundStyle(theme.foreground.opacity(0.5))
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 14)
@@ -56,7 +56,7 @@ struct SageOverlayList<Content: View>: View {
     private var hintFooter: some View {
         Text("↑↓ navigate · ↵ select · esc dismiss")
             .font(AinkradFont.display(10))
-            .foregroundStyle(tokens.foreground.opacity(0.35))
+            .foregroundStyle(theme.foreground.opacity(0.35))
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 6)
             .padding(.top, 2)

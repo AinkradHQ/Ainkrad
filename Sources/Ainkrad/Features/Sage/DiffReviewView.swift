@@ -42,7 +42,8 @@ enum DiffReviewPresentation {
 struct DiffReviewView: View {
     let fileDiff: FileDiff
     @Binding var rejectedHunkIDs: Set<Int>
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
+    @Environment(\.ainkradStatusColors) private var statusColors
     @State private var sideBySide = false
     @Environment(\.ainkradReduceMotion) private var reduceMotion
 
@@ -56,7 +57,7 @@ struct DiffReviewView: View {
 
     private var header: some View {
         HStack(spacing: 8) {
-            Text(fileDiff.path).font(AinkradFont.mono(10)).foregroundStyle(tokens.foreground.opacity(0.55))
+            Text(fileDiff.path).font(AinkradFont.mono(10)).foregroundStyle(theme.foreground.opacity(0.55))
                 .lineLimit(1).truncationMode(.middle)
             Spacer(minLength: 8)
             AinkradToggleButton(
@@ -70,7 +71,7 @@ struct DiffReviewView: View {
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 6) {
                 Text("@@ -\(hunk.oldStart),\(hunk.oldCount) +\(hunk.newStart),\(hunk.newCount)")
-                    .font(AinkradFont.mono(9)).foregroundStyle(tokens.foreground.opacity(0.4))
+                    .font(AinkradFont.mono(9)).foregroundStyle(theme.foreground.opacity(0.4))
                 Spacer(minLength: 6)
                 AinkradToggleButton(isOn: acceptedBinding(hunk.id), title: rejected ? "Rejected" : "Accepted")
             }
@@ -78,7 +79,7 @@ struct DiffReviewView: View {
         }
         .opacity(rejected ? 0.5 : 1)
         .padding(.horizontal, 8).padding(.vertical, 6)
-        .background(ChamferShape(cut: AinkradRadius.sm).fill(tokens.background.opacity(0.4)))
+        .background(ChamferShape(cut: AinkradRadius.sm).fill(theme.background.opacity(0.4)))
     }
 
     @ViewBuilder private func unifiedRows(_ hunk: DiffHunk) -> some View {
@@ -97,10 +98,10 @@ struct DiffReviewView: View {
             ForEach(Array(DiffReviewPresentation.sideBySideRows(hunk).enumerated()), id: \.offset) { _, pair in
                 HStack(alignment: .top, spacing: 8) {
                     Text(pair.left?.text ?? "").font(AinkradFont.mono(11))
-                        .foregroundStyle(pair.left.map(color) ?? tokens.foreground.opacity(0.2))
+                        .foregroundStyle(pair.left.map(color) ?? theme.foreground.opacity(0.2))
                         .frame(maxWidth: .infinity, alignment: .leading)
                     Text(pair.right?.text ?? "").font(AinkradFont.mono(11))
-                        .foregroundStyle(pair.right.map(color) ?? tokens.foreground.opacity(0.2))
+                        .foregroundStyle(pair.right.map(color) ?? theme.foreground.opacity(0.2))
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
@@ -119,9 +120,9 @@ struct DiffReviewView: View {
 
     private func color(_ line: DiffLine) -> Color {
         switch line.kind {
-        case .insertion: return tokens.success
-        case .deletion: return tokens.danger
-        case .context: return tokens.foreground.opacity(0.6)
+        case .insertion: return statusColors.success
+        case .deletion: return statusColors.danger
+        case .context: return theme.foreground.opacity(0.6)
         }
     }
 }

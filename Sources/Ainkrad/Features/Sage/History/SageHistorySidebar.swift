@@ -4,7 +4,7 @@ import SwiftUI
 
 struct SageHistorySidebar: View {
     let store: SageSessionStore
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
     /// The app's surface opacity for the Sage pane. The sidebar paints the
     /// SAME opacity-tinted base as the chat column so the two read as one
     /// seamless surface at every opacity setting (no separator line, no
@@ -41,8 +41,8 @@ struct SageHistorySidebar: View {
             // plus a faint elevation tint. The host renders the blur behind the
             // whole pane, so this only paints the tint.
             ZStack {
-                tokens.background.opacity(surfaceOpacity)
-                tokens.surfaceElevated.opacity(0.06)
+                theme.background.opacity(surfaceOpacity)
+                theme.surfaceElevated.opacity(0.06)
             }
         }
     }
@@ -51,7 +51,7 @@ struct SageHistorySidebar: View {
         HStack {
             Text("HISTORY")
                 .font(AinkradFont.display(11, weight: .medium)).kerning(1.5)
-                .foregroundStyle(tokens.foreground.opacity(0.5))
+                .foregroundStyle(theme.foreground.opacity(0.5))
             Spacer()
             AinkradIconButton(
                 systemName: "square.and.pencil", size: 26,

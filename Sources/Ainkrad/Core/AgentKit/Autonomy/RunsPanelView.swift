@@ -13,7 +13,7 @@ import SwiftUI
 /// no native SwiftUI controls, mirroring `UsageDashboardView`.
 struct RunsPanelView: View {
     let manager: RunManager
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
 
     var body: some View {
         let runningCount = manager.active.filter { $0.status == .running }.count
@@ -35,10 +35,10 @@ struct RunsPanelView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Runs")
                     .font(AinkradFont.display(15, weight: .semibold))
-                    .foregroundStyle(tokens.foreground)
+                    .foregroundStyle(theme.foreground)
                 Text("\(manager.active.count) active · \(manager.history.count) history")
                     .font(AinkradFont.display(11))
-                    .foregroundStyle(tokens.foreground.opacity(0.5))
+                    .foregroundStyle(theme.foreground.opacity(0.5))
             }
             Spacer(minLength: 0)
             // Concurrency gauge: running slots filled vs. the active queue depth.
@@ -55,12 +55,12 @@ struct RunsPanelView: View {
             Text("\(title.uppercased()) (\(runs.count))")
                 .font(AinkradFont.display(11, weight: .semibold))
                 .tracking(0.8)
-                .foregroundStyle(tokens.accentSecondary.opacity(0.85))
+                .foregroundStyle(theme.accentSecondary.opacity(0.85))
 
             if runs.isEmpty {
                 Text(showControls ? "No active runs." : "No completed runs yet.")
                     .font(AinkradFont.display(11))
-                    .foregroundStyle(tokens.foreground.opacity(0.45))
+                    .foregroundStyle(theme.foreground.opacity(0.45))
             } else {
                 LazyVStack(alignment: .leading, spacing: 2) {
                     ForEach(runs) { run in

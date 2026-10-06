@@ -12,7 +12,7 @@ struct CommandPaletteView: View {
     let commands: [SlashCommand]
     let query: String
     @Binding var selectedIndex: Int
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
     let onSelect: (SlashCommand) -> Void
 
     var body: some View {
@@ -20,8 +20,7 @@ struct CommandPaletteView: View {
         SageOverlayList(
             isEmpty: sections.isEmpty,
             emptyIcon: "magnifyingglass",
-            emptyText: "No matching commands",
-            tokens: tokens
+            emptyText: "No matching commands"
         ) {
             ForEach(Array(sections.enumerated()), id: \.element.category) { sectionIndex, section in
                 // Flat index base = total commands in all earlier sections, so
@@ -37,7 +36,7 @@ struct CommandPaletteView: View {
                         leading: {
                             Image(systemName: "chevron.right.circle")
                                 .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(tokens.accentSecondary)
+                                .foregroundStyle(theme.accentSecondary)
                         },
                         title: "/\(command.name)",
                         subtitle: command.usage,
@@ -52,7 +51,7 @@ struct CommandPaletteView: View {
         Text(category.title.uppercased())
             .font(AinkradFont.display(10, weight: .medium))
             .kerning(0.6)
-            .foregroundStyle(tokens.foreground.opacity(0.5))
+            .foregroundStyle(theme.foreground.opacity(0.5))
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 10)
             .padding(.top, 6)

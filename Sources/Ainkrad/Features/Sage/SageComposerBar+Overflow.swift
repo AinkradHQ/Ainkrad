@@ -23,9 +23,9 @@ extension SageComposerBar {
                 selection: Binding(get: { nil }, set: { if let item = $0 { openOverflowItem(item) } }),
                 icon: \.icon, label: \.title, uppercased: false)
             .padding(AinkradSpacing.xs)
-            .background(ChamferShape(cut: 8).fill(tokens.surfaceElevated.opacity(0.97)))
-            .overlay(ChamferShape(cut: 8).strokeBorder(tokens.accentSecondary.opacity(0.55), lineWidth: 1.25))
-            .shadow(color: tokens.accentSecondary.opacity(0.35), radius: 10, y: 4)
+            .background(ChamferShape(cut: 8).fill(theme.surfaceElevated.opacity(0.97)))
+            .overlay(ChamferShape(cut: 8).strokeBorder(theme.accentSecondary.opacity(0.55), lineWidth: 1.25))
+            .shadow(color: theme.accentSecondary.opacity(0.35), radius: 10, y: 4)
             .frame(minWidth: 160)
         }
     }

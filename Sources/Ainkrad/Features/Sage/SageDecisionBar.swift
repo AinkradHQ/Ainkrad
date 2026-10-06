@@ -42,21 +42,21 @@ struct SageDecisionBar: View {
 
     let content: SageDecisionBarContent
     let actions: [Action]
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
 
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: content.icon)
                 .font(.system(size: 12))
-                .foregroundStyle(content.iconTint == .primary ? tokens.accentPrimary : tokens.accentSecondary)
+                .foregroundStyle(content.iconTint == .primary ? theme.accentPrimary : theme.accentSecondary)
             VStack(alignment: .leading, spacing: 1) {
                 Text(content.caption)
                     .font(AinkradFont.display(10, weight: .semibold))
                     .kerning(0.6)
-                    .foregroundStyle(tokens.accentPrimary.opacity(0.85))
+                    .foregroundStyle(theme.accentPrimary.opacity(0.85))
                 Text(content.title)
                     .font(AinkradFont.display(12, weight: .medium))
-                    .foregroundStyle(tokens.foreground.opacity(0.85))
+                    .foregroundStyle(theme.foreground.opacity(0.85))
                     .lineLimit(1)
             }
             Spacer(minLength: 12)
@@ -66,9 +66,9 @@ struct SageDecisionBar: View {
         }
         .padding(.horizontal, 14).padding(.vertical, 9)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: AinkradRadius.md).fill(tokens.surfaceElevated.opacity(0.6)))
+        .background(ChamferShape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(0.6)))
         .overlay {
-            ChamferShape(cut: AinkradRadius.md).stroke(tokens.accentPrimary.opacity(0.55), lineWidth: 1)
+            ChamferShape(cut: AinkradRadius.md).stroke(theme.accentPrimary.opacity(0.55), lineWidth: 1)
         }
         .padding(.horizontal, 14)
         .padding(.bottom, 4)

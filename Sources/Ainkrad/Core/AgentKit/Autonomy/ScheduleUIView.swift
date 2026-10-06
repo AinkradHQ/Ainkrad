@@ -14,6 +14,8 @@ import SwiftUI
 @MainActor
 struct ScheduleUIView: View {
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradTheme) private var theme
+    @Environment(\.ainkradStatusColors) private var statusColors
     let store: ScheduleStore
 
     private enum TriggerKind: String, CaseIterable, Hashable {
@@ -31,22 +33,20 @@ struct ScheduleUIView: View {
     @State private var draftGlob = ""
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
-
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 AinkradSettingsPanel(
                     title: "New schedule",
                     hint: "Have the agent run on a timer, a file change, a git change, or an incoming webhook."
                 ) {
-                    editor(tokens: tokens)
+                    editor()
                 }
 
                 AinkradSettingsPanel(
                     title: "Schedules (\(store.schedules.count))",
                     hint: "Existing schedules, with enable/disable and last-run status."
                 ) {
-                    list(tokens: tokens)
+                    list()
                 }
             }
             .padding(18)
@@ -60,7 +60,7 @@ struct ScheduleUIView: View {
         draftKind == .time ? NaturalLanguageCronCompiler.compile(draftWhen) : nil
     }
 
-    private func editor(tokens: DesignTokens) -> some View {
+    private func editor() -> some View {
         VStack(alignment: .leading, spacing: 8) {
             AinkradTextField(text: $draftName, placeholder: "Name")
 
@@ -72,11 +72,11 @@ struct ScheduleUIView: View {
                 if let cron = compiledCron {
                     Text("Compiled: \(cron.text)")
                         .font(AinkradFont.mono(9))
-                        .foregroundStyle(tokens.foreground.opacity(0.55))
+                        .foregroundStyle(theme.foreground.opacity(0.55))
                 } else if !draftWhen.isEmpty {
                     Text("Couldn't understand that schedule.")
                         .font(AinkradFont.mono(9))
-                        .foregroundStyle(tokens.danger.opacity(0.9))
+                        .foregroundStyle(statusColors.danger.opacity(0.9))
                 }
             case .fileChange:
                 AinkradTextField(text: $draftPath, placeholder: "Directory to watch (absolute path)")
@@ -86,7 +86,7 @@ struct ScheduleUIView: View {
             case .webhook:
                 Text("Fires when the webhook endpoint receives an authenticated request.")
                     .font(AinkradFont.mono(9))
-                    .foregroundStyle(tokens.foreground.opacity(0.55))
+                    .foregroundStyle(theme.foreground.opacity(0.55))
             }
 
             AinkradTextArea(
@@ -97,7 +97,7 @@ struct ScheduleUIView: View {
                 .disabled(!canAdd)
         }
         .padding(14)
-        .background(ChamferShape(cut: AinkradRadius.md).fill(tokens.surfaceElevated.opacity(0.4)))
+        .background(ChamferShape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(0.4)))
     }
 
     private var canAdd: Bool {
@@ -138,7 +138,7 @@ struct ScheduleUIView: View {
     // MARK: - List
 
     @ViewBuilder
-    private func list(tokens: DesignTokens) -> some View {
+    private func list() -> some View {
         if store.schedules.isEmpty {
             AinkradEmptyState(
                 icon: "clock.badge",
@@ -149,20 +149,20 @@ struct ScheduleUIView: View {
         } else {
             LazyVStack(alignment: .leading, spacing: 8) {
                 ForEach(store.schedules) { schedule in
-                    scheduleRow(schedule, tokens: tokens)
+                    scheduleRow(schedule)
                 }
             }
         }
     }
 
-    private func scheduleRow(_ schedule: AgentSchedule, tokens: DesignTokens) -> some View {
+    private func scheduleRow(_ schedule: AgentSchedule) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             AinkradListRow(
                 leading: {
                     Image(systemName: schedule.enabled ? "clock.fill" : "clock")
                         .font(.system(size: 13))
                         .foregroundStyle(
-                            (schedule.enabled ? tokens.accentSecondary : tokens.foreground.opacity(0.4)).opacity(0.85)
+                            (schedule.enabled ? theme.accentSecondary : theme.foreground.opacity(0.4)).opacity(0.85)
                         )
                         .frame(width: 18)
                 },
@@ -179,7 +179,7 @@ struct ScheduleUIView: View {
             )
 
             if schedule.lastFired != nil || schedule.lastRunID != nil {
-                lastRunRow(schedule, tokens: tokens)
+                lastRunRow(schedule)
             }
         }
     }
@@ -188,29 +188,29 @@ struct ScheduleUIView: View {
     /// timestamp and, when a run was recorded, a link that jumps straight to
     /// it in `environment.runManager`'s history rather than making the user
     /// hunt for it.
-    private func lastRunRow(_ schedule: AgentSchedule, tokens: DesignTokens) -> some View {
+    private func lastRunRow(_ schedule: AgentSchedule) -> some View {
         let lastRun = schedule.lastRunID.flatMap { id in environment.runManager.runs.first { $0.id == id } }
 
         return HStack(spacing: 8) {
             if let lastFired = schedule.lastFired {
                 Text("Last fired \(lastFired.formatted())")
                     .font(AinkradFont.mono(9))
-                    .foregroundStyle(tokens.foreground.opacity(0.45))
+                    .foregroundStyle(theme.foreground.opacity(0.45))
             }
             if let lastRun {
                 Text("· \(lastRun.status.rawValue)")
                     .font(AinkradFont.mono(9))
-                    .foregroundStyle(statusColor(lastRun.status, tokens: tokens).opacity(0.85))
+                    .foregroundStyle(statusColor(lastRun.status).opacity(0.85))
             }
         }
         .padding(.horizontal, AinkradSpacing.md)
     }
 
-    private func statusColor(_ status: AgentRunStatus, tokens: DesignTokens) -> Color {
+    private func statusColor(_ status: AgentRunStatus) -> Color {
         switch status {
-        case .done: return tokens.accentSecondary
-        case .failed, .interrupted: return tokens.danger
-        default: return tokens.foreground
+        case .done: return theme.accentSecondary
+        case .failed, .interrupted: return statusColors.danger
+        default: return theme.foreground
         }
     }
 }

@@ -32,7 +32,7 @@ struct SageTurnCopyButton: View {
 
 /// Blinking caret shown at the tail of streaming output; steady under reduce-motion.
 struct StreamingCursor: View {
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
     @Environment(\.ainkradReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -47,7 +47,7 @@ struct StreamingCursor: View {
     }
 
     private func caret(opacity: Double) -> some View {
-        Text("▍").font(AinkradFont.display(13)).foregroundStyle(tokens.accentSecondary.opacity(opacity))
+        Text("▍").font(AinkradFont.display(13)).foregroundStyle(theme.accentSecondary.opacity(opacity))
     }
 }
 
@@ -55,7 +55,7 @@ struct StreamingCursor: View {
 /// tool call is spinning up before its card commits. Steady under Reduce Motion
 /// (mirrors `StreamingCursor`).
 struct WorkingIndicator: View {
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
     var label: String = "Thinking"
     @Environment(\.ainkradReduceMotion) private var reduceMotion
 
@@ -64,7 +64,7 @@ struct WorkingIndicator: View {
             dots
             Text("\(label)…")
                 .font(AinkradFont.display(12))
-                .foregroundStyle(tokens.foreground.opacity(0.45))
+                .foregroundStyle(theme.foreground.opacity(0.45))
         }
     }
 
@@ -89,6 +89,6 @@ struct WorkingIndicator: View {
     }
 
     private func dot(_ opacity: Double) -> some View {
-        Circle().fill(tokens.accentSecondary.opacity(opacity)).frame(width: 4, height: 4)
+        Circle().fill(theme.accentSecondary.opacity(opacity)).frame(width: 4, height: 4)
     }
 }

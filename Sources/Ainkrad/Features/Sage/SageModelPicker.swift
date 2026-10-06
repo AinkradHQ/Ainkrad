@@ -50,7 +50,7 @@ func modelOptionRowLabel(connectionName: String, model: String, isCurated: Bool)
 }
 
 /// The provider swatch color for a connection's `ProviderKind` — a fixed,
-/// theme-independent brand accent (not `tokens.*`, since it identifies the
+/// theme-independent brand accent (not `theme.*`, since it identifies the
 /// PROVIDER, not the app theme) shown as the grouped picker row's leading
 /// dot. Pure.
 func providerSwatchColor(for kind: ProviderKind) -> Color {
@@ -287,7 +287,7 @@ final class SageModelPickerModel {
 struct SageConnectionModelPicker: View {
     @Environment(AppEnvironment.self) private var environment
     let model: SageModelPickerModel
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
     var onManageConnections: () -> Void
 
     /// The flattened option space: a real connection+model pair, the "Manage
@@ -349,7 +349,7 @@ struct SageConnectionModelPicker: View {
     private var routingBadge: some View {
         let pinned = environment.runtimeOptionsStore.options.pinnedModel
         if pinned != nil {
-            AinkradBadge(text: "Pinned", tint: tokens.accentPrimary)
+            AinkradBadge(text: "Pinned", tint: theme.accentPrimary)
         }
     }
 

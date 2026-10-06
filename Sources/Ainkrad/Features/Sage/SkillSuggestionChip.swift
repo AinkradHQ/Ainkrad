@@ -8,17 +8,17 @@ import SwiftUI
 /// hides it. Presentation-only; all safety lives on `AgentSession`.
 struct SkillSuggestionChip: View {
     let session: AgentSession
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
 
     var body: some View {
         if let suggestion = session.pendingSkillSuggestion {
             HStack(spacing: 10) {
                 Image(systemName: "wand.and.stars")
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(tokens.accentSecondary)
+                    .foregroundStyle(theme.accentSecondary)
                 Text("This looked reusable — capture it as a skill?")
                     .font(AinkradFont.display(12, weight: .medium))
-                    .foregroundStyle(tokens.foreground.opacity(0.9))
+                    .foregroundStyle(theme.foreground.opacity(0.9))
                 Spacer(minLength: 8)
                 AinkradButton(title: "Capture", style: .primary) {
                     session.acceptSkillSuggestion()
@@ -32,7 +32,7 @@ struct SkillSuggestionChip: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(ChamferShape().fill(tokens.surfaceElevated))
+            .background(ChamferShape().fill(theme.surfaceElevated))
         }
     }
 }

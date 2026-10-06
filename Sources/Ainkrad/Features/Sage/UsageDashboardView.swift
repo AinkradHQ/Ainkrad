@@ -31,7 +31,7 @@ func formattedRouterSavings(_ savings: Double?) -> String? {
 /// trigger beside the model pill).
 struct UsageDashboardView: View {
     let tracker: UsageTracker
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
 
     /// True when any usage has ever been tracked. Gated on ALL-TIME totals so a
     /// fresh session with prior history still shows the populated dashboard (its
@@ -103,7 +103,7 @@ struct UsageDashboardView: View {
             AinkradIconGlyph(systemName: "gauge.with.dots.needle.67percent", filled: true)
             Text("Usage")
                 .font(AinkradFont.display(15, weight: .semibold))
-                .foregroundStyle(tokens.foreground)
+                .foregroundStyle(theme.foreground)
             Spacer(minLength: 0)
         }
     }
@@ -114,10 +114,10 @@ struct UsageDashboardView: View {
             Text(title.uppercased())
                 .font(AinkradFont.display(11, weight: .semibold))
                 .tracking(0.8)
-                .foregroundStyle(tokens.accentSecondary.opacity(0.85))
+                .foregroundStyle(theme.accentSecondary.opacity(0.85))
             VStack(alignment: .leading, spacing: 2) { content() }
                 .padding(AinkradSpacing.md)
-                .background(ChamferShape(cut: AinkradRadius.md).fill(tokens.surfaceElevated.opacity(0.4)))
+                .background(ChamferShape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(0.4)))
         }
     }
 }

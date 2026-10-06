@@ -21,7 +21,7 @@ enum TimelineLiveOutput {
 /// / markdown / tool card) to its right. Reuses `ToolCallCardView` for tool steps.
 struct AgentTurnTimelineView: View {
     let steps: [TurnStep]
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
     let typography: AinkradTypography
     let reduceMotion: Bool
     /// Live streaming buffers for in-flight tool calls (Task 1's store). Optional
@@ -50,7 +50,7 @@ struct AgentTurnTimelineView: View {
         VStack(alignment: .leading, spacing: AinkradSpacing.xl) {
             ForEach(Array(steps.enumerated()), id: \.element.id) { index, step in
                 HStack(alignment: .top, spacing: 10) {
-                    TimelineRailGutter(status: step.status, tokens: tokens, reduceMotion: reduceMotion)
+                    TimelineRailGutter(status: step.status, reduceMotion: reduceMotion)
                     stepBody(step)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -71,8 +71,7 @@ struct AgentTurnTimelineView: View {
         switch step.kind {
         case .thinking(let text):
             TimelineThinkingRow(
-                text: text, isExpanded: expandedThinking.contains(step.id),
-                tokens: tokens
+                text: text, isExpanded: expandedThinking.contains(step.id)
             ) {
                 if expandedThinking.contains(step.id) {
                     expandedThinking.remove(step.id)
@@ -81,7 +80,7 @@ struct AgentTurnTimelineView: View {
                 }
             }
         case .text(let text):
-            SageMarkdownText(text: text, tokens: tokens, typography: typography)
+            SageMarkdownText(text: text, typography: typography)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .overlay(alignment: .topTrailing) {
                     SageTurnCopyButton(text: text, isVisible: hoveredTextStep == step.id)
@@ -111,7 +110,6 @@ struct AgentTurnTimelineView: View {
                 title: ToolPresentation.humanize(payload.name),
                 summary: liveText,
                 diff: nil,
-                tokens: tokens,
                 result: payload.result,
                 imageDataURL: imageDataURL,
                 onOpenImage: onOpenImage,
@@ -119,10 +117,10 @@ struct AgentTurnTimelineView: View {
                 onOpenVideo: onOpenVideo,
                 audioURL: audioURL)
         case .todo(let items):
-            TodoChecklistView(items: items, tokens: tokens)
+            TodoChecklistView(items: items)
                 .frame(maxWidth: .infinity, alignment: .leading)
         case .plan(let plan):
-            PlanCardView(plan: plan, tokens: tokens)
+            PlanCardView(plan: plan)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
@@ -138,28 +136,27 @@ struct LiveStepView: View {
     let streamingBlocks: [MarkdownBlock]
     let streamingThinking: String
     let isStreaming: Bool
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
     let typography: AinkradTypography
     let reduceMotion: Bool
     @State private var thinkingExpanded = true
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
-            TimelineRailGutter(status: .running, tokens: tokens, reduceMotion: reduceMotion)
+            TimelineRailGutter(status: .running, reduceMotion: reduceMotion)
             VStack(alignment: .leading, spacing: 8) {
                 if !streamingThinking.isEmpty {
                     TimelineThinkingRow(
-                        text: streamingThinking, isExpanded: thinkingExpanded,
-                        tokens: tokens
+                        text: streamingThinking, isExpanded: thinkingExpanded
                     ) { thinkingExpanded.toggle() }
                 }
                 if isStreaming || !streamingText.isEmpty {
                     VStack(alignment: .leading, spacing: 2) {
-                        SageMarkdownText(blocks: streamingBlocks, tokens: tokens, typography: typography)
-                        if isStreaming { StreamingCursor(tokens: tokens) }
+                        SageMarkdownText(blocks: streamingBlocks, typography: typography)
+                        if isStreaming { StreamingCursor() }
                     }
                 } else if streamingThinking.isEmpty {
-                    WorkingIndicator(tokens: tokens)
+                    WorkingIndicator()
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

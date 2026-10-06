@@ -10,32 +10,31 @@ import SwiftUI
 /// in-flight request keeps running in the shared session.
 struct QuickAskOverlayView: View {
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradTheme) private var theme
     let onDismiss: () -> Void
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
-
         VStack(spacing: 0) {
-            bar(tokens: tokens)
+            bar()
             SageRootView(showsHeader: false, autoFocusComposer: true)
         }
         .frame(width: 640)
         .frame(maxHeight: 560)
-        .hudPanelChrome(tokens: tokens)
+        .hudPanelChrome(tokens: environment.themeManager.tokens)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .padding(.top, 120)
         .onExitCommand { onDismiss() }
     }
 
-    private func bar(tokens: DesignTokens) -> some View {
+    private func bar() -> some View {
         HStack(spacing: 10) {
             Image(systemName: "sparkles")
                 .font(.system(size: 12))
-                .foregroundStyle(tokens.accentSecondary)
+                .foregroundStyle(theme.accentSecondary)
             Text("QUICK ASK")
                 .font(AinkradFont.display(12, weight: .medium))
                 .kerning(0.6)
-                .foregroundStyle(tokens.foreground.opacity(0.7))
+                .foregroundStyle(theme.foreground.opacity(0.7))
 
             Spacer()
 

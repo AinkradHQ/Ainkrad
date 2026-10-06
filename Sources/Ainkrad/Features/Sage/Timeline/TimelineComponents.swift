@@ -8,18 +8,19 @@ import SwiftUI
 /// hand-copied markup).
 struct TimelineRailGutter: View {
     let status: StepStatus
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
+    @Environment(\.ainkradStatusColors) private var statusColors
     let reduceMotion: Bool
 
     var body: some View {
         ZStack(alignment: .top) {
             Rectangle()
-                .fill(tokens.accentPrimary.opacity(0.25))
+                .fill(theme.accentPrimary.opacity(0.25))
                 .frame(width: 1)
                 .frame(maxHeight: .infinity)
             TimelineNodeMarker(
-                status: status, tint: tokens.accentPrimary,
-                errorColor: tokens.danger, reduceMotion: reduceMotion
+                status: status, tint: theme.accentPrimary,
+                errorColor: statusColors.danger, reduceMotion: reduceMotion
             )
             .padding(.top, 3)
         }
@@ -34,7 +35,7 @@ struct TimelineRailGutter: View {
 struct TimelineThinkingRow: View {
     let text: String
     let isExpanded: Bool
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
     let onToggle: () -> Void
 
     var body: some View {
@@ -45,7 +46,7 @@ struct TimelineThinkingRow: View {
         ) {
             Text(text)
                 .font(AinkradFont.mono(11))
-                .foregroundStyle(tokens.foreground.opacity(0.5))
+                .foregroundStyle(theme.foreground.opacity(0.5))
                 .textSelection(.enabled)
         }
     }
