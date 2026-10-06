@@ -3,32 +3,11 @@ import AinkradHostRuntime
 import AppKit
 import SwiftUI
 
-/// Four corner brackets — the targeting-cursor treatment for the selected
-/// Launcher row.
-struct TargetingBrackets: Shape {
-    var length: CGFloat = 8
-
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        // Top-left
-        path.move(to: CGPoint(x: rect.minX, y: rect.minY + length))
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.minX + length, y: rect.minY))
-        // Top-right
-        path.move(to: CGPoint(x: rect.maxX - length, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY + length))
-        // Bottom-right
-        path.move(to: CGPoint(x: rect.maxX, y: rect.maxY - length))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
-        path.addLine(to: CGPoint(x: rect.maxX - length, y: rect.maxY))
-        // Bottom-left
-        path.move(to: CGPoint(x: rect.minX + length, y: rect.maxY))
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY - length))
-        return path
-    }
-}
+/// Four corner brackets — the targeting-cursor treatment for a selection.
+/// The kit's `AinkradCornerBrackets` is the same path; the alias keeps the
+/// callers in other areas compiling until their area PRs move onto the kit
+/// name, and then it goes.
+typealias TargetingBrackets = AinkradCornerBrackets
 
 /// The ⌘K summon: the workspace behind dims and blurs (see RootView), and
 /// a glowing command deck floats above it — command field, Spotlight-style

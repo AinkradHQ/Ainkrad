@@ -15,13 +15,6 @@ protocol MenuBarRunSource: AnyObject {
     func stopRun(_ id: UUID)
 }
 
-/// Used until Slice 3 lands and in tests: reports no runs, stops nothing.
-@MainActor
-final class EmptyMenuBarRunSource: MenuBarRunSource {
-    var activeRunItems: [MenuBarRunItem] { [] }
-    func stopRun(_ id: UUID) {}
-}
-
 /// Adapts the real Slice-3 `RunManager` (queue + active/running set) onto the
 /// menu-bar's `MenuBarRunSource` seam: `RunManager.active` already covers
 /// `.queued`/`.running`/`.paused`, so `isActive` distinguishes "actually
