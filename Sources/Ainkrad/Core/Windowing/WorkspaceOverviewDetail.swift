@@ -244,40 +244,26 @@ extension WorkspaceOverviewView {
         onDismiss()
     }
 
-    @ViewBuilder
+    /// The open apps. Only called for a workspace that has some — an empty one
+    /// shows `emptyWorkspaceState` in place of the preview and this list.
     private func appList(_ workspace: Workspace, tokens: DesignTokens) -> some View {
         let blocks = workspace.tileLayout.blocks
-        if blocks.isEmpty {
-            VStack(spacing: 8) {
-                Image(systemName: "square.dashed").font(.system(size: 26, weight: .light))
-                    .foregroundStyle(tokens.foreground.opacity(0.3))
-                Text("No apps in this workspace")
-                    .font(AinkradFont.display(12)).foregroundStyle(tokens.foreground.opacity(0.4))
-                Text("Drag an app here from another workspace, or open one from the Launcher.")
-                    .font(AinkradFont.display(11)).foregroundStyle(tokens.foreground.opacity(0.3))
-                    .multilineTextAlignment(.center)
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 180)
-            .padding(24)
-        } else {
-            // Three across, not one per line. Each row carries an icon and two
-            // short strings; given to a column ~1100pt wide, one per line spent
-            // the whole width on nothing and the whole height on three rows.
-            //
-            // A FIXED three columns rather than `.adaptive`: the row count is
-            // then knowable, which is what lets the height below be exact
-            // instead of an estimate that leaves slack inside a scroll view.
-            ScrollView {
-                LazyVGrid(columns: Self.appGridColumns, spacing: 6) {
-                    ForEach(Array(blocks.enumerated()), id: \.element.id) { ordinal, block in
-                        appRow(block, ordinal: ordinal, workspace: workspace, tokens: tokens)
-                    }
+        // Three across, not one per line. Each row carries an icon and two
+        // short strings; given to a column ~1100pt wide, one per line spent
+        // the whole width on nothing and the whole height on three rows.
+        //
+        // A FIXED three columns rather than `.adaptive`: the row count is
+        // then knowable, which is what lets the height below be exact
+        // instead of an estimate that leaves slack inside a scroll view.
+        return ScrollView {
+            LazyVGrid(columns: Self.appGridColumns, spacing: 6) {
+                ForEach(Array(blocks.enumerated()), id: \.element.id) { ordinal, block in
+                    appRow(block, ordinal: ordinal, workspace: workspace, tokens: tokens)
                 }
-                .padding(.horizontal, 16).padding(.bottom, 16)
             }
-            .frame(maxHeight: Self.appGridHeight(count: blocks.count))
+            .padding(.horizontal, 16).padding(.bottom, 16)
         }
+        .frame(maxHeight: Self.appGridHeight(count: blocks.count))
     }
 
     private func appRow(
@@ -350,20 +336,6 @@ extension WorkspaceOverviewView {
         .buttonStyle(.plain)
     }
 
-    private func rowButton(_ symbol: String, help: String, tokens: DesignTokens, action: @escaping () -> Void)
-        -> some View
-    {
-        Button(action: action) {
-            Image(systemName: symbol)
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(tokens.foreground.opacity(0.55))
-                .frame(width: 24, height: 24)
-                .background(Circle().fill(tokens.surfaceElevated.opacity(0.5)))
-        }
-        .buttonStyle(.plain)
-        .help(help)
-    }
-
     func accentButton(_ title: String, icon: String, tokens: DesignTokens, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 6) {
@@ -377,10 +349,5 @@ extension WorkspaceOverviewView {
                 RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(tokens.accentSecondary.opacity(0.4)))
         }
         .buttonStyle(.plain)
-    }
-
-    private func appIcon(_ appID: String, tokens: DesignTokens) -> some View {
-        let symbol = environment.registry.allApps.first(where: { $0.id == appID })?.icon ?? "app"
-        return NeonAppTile(symbol: symbol, tokens: tokens, size: 26)
     }
 }
