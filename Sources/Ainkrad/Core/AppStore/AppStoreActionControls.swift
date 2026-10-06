@@ -50,17 +50,7 @@ struct AppStoreActionControls: View {
             case .updateAvailable:
                 actionButton("Update", style: .primary, morphsBusy: true, action: onUpdate)
                     .transition(rowTransition)
-                if style.showsEnableToggle && row.kind != .mcpServer {
-                    enableToggle
-                        .transition(rowTransition)
-                } else if style.showsEnableToggle && row.kind == .mcpServer {
-                    mcpManagerHint
-                        .transition(rowTransition)
-                }
-                if style.showsUninstall && row.isManaged {
-                    actionButton("Uninstall", style: .danger, morphsBusy: false, action: onUninstall)
-                        .transition(rowTransition)
-                }
+                manageControls
             case .installed where row.needsRestart:
                 actionButton(
                     "Restart to Apply", style: .primary, morphsBusy: false,
@@ -71,20 +61,27 @@ struct AppStoreActionControls: View {
             case .installed:
                 installedLabel
                     .transition(rowTransition)
-                if style.showsEnableToggle && row.kind != .mcpServer {
-                    enableToggle
-                        .transition(rowTransition)
-                } else if style.showsEnableToggle && row.kind == .mcpServer {
-                    mcpManagerHint
-                        .transition(rowTransition)
-                }
-                if style.showsUninstall && row.isManaged {
-                    actionButton("Uninstall", style: .danger, morphsBusy: false, action: onUninstall)
-                        .transition(rowTransition)
-                }
+                manageControls
             }
         }
         .animation(reduceMotion ? nil : .snappy(duration: 0.32), value: row.status)
+    }
+
+    /// The detail page's enable toggle (or the MCP-manager hint) and
+    /// Uninstall, shown beside an installed app's primary control. Empty on
+    /// grid cards.
+    @ViewBuilder private var manageControls: some View {
+        if style.showsEnableToggle && row.kind != .mcpServer {
+            enableToggle
+                .transition(rowTransition)
+        } else if style.showsEnableToggle && row.kind == .mcpServer {
+            mcpManagerHint
+                .transition(rowTransition)
+        }
+        if style.showsUninstall && row.isManaged {
+            actionButton("Uninstall", style: .danger, morphsBusy: false, action: onUninstall)
+                .transition(rowTransition)
+        }
     }
 
     private var rowTransition: AnyTransition {

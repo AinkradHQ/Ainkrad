@@ -199,20 +199,15 @@ struct AppStoreOverlayView: View {
 
             if box.urls.count > 1 {
                 HStack {
-                    lightboxArrow("chevron.left", tokens: tokens, help: "Previous (←)") { store.lightboxPrevious() }
+                    AinkradIconButton(systemName: "chevron.left") { store.lightboxPrevious() }
+                        .help("Previous (←)")
                     Spacer()
-                    lightboxArrow("chevron.right", tokens: tokens, help: "Next (→)") { store.lightboxNext() }
+                    AinkradIconButton(systemName: "chevron.right") { store.lightboxNext() }
+                        .help("Next (→)")
                 }
                 .padding(.horizontal, 18)
             }
         }
-    }
-
-    private func lightboxArrow(_ systemImage: String, tokens: DesignTokens, help: String, action: @escaping () -> Void)
-        -> some View
-    {
-        AinkradIconButton(systemName: systemImage, action: action)
-            .help(help)
     }
 
     private func header(tokens: DesignTokens) -> some View {

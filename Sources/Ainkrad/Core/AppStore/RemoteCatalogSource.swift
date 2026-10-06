@@ -1,5 +1,11 @@
 import Foundation
 
+/// Where the App Store's catalog comes from. `RemoteCatalogSource` is the
+/// production conformer; tests supply stubs.
+protocol CatalogSource {
+    func fetchCatalog() async throws -> [CatalogEntry]
+}
+
 /// The hosted `catalog.json` document (the central AinkradCatalog).
 struct RemoteCatalog: Decodable {
     let schemaVersion: Int?
