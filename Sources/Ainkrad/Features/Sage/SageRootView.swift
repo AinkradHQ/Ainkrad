@@ -49,24 +49,22 @@ struct SageRootView: View {
         let session = environment.agentSession
         let store = environment.assistantSessionStore
 
-        HStack(spacing: 0) {
-            if showsHeader && isSidebarVisible {
-                SageHistorySidebar(
-                    store: store,
-                    surfaceOpacity: environment.appAppearanceStore.surfaceOpacity("sage"),
-                    onNewChat: {
-                        store.syncActive(messages: session.messages)
-                        store.startNewSession()
-                        session.reset()
-                    },
-                    onSelect: { id in
-                        store.syncActive(messages: session.messages)
-                        session.replaceMessages(store.activate(id))
-                    }
-                )
-                .transition(reduceMotion ? .identity : .move(edge: .leading))
+        GeometryReader { geo in
+            let overlays = SageSidebarLayout.overlays(paneWidth: geo.size.width)
+            let sidebarShown = showsHeader && isSidebarVisible
+            ZStack(alignment: .leading) {
+                HStack(spacing: 0) {
+                    if sidebarShown && !overlays { sidebar(store: store, session: session) }
+                    chatColumn(session: session)
+                }
+                // Narrow pane: float the sidebar over the chat column instead of
+                // squeezing it, so Sage never exceeds its pane.
+                if sidebarShown && overlays {
+                    sidebar(store: store, session: session)
+                        .background(theme.background)
+                }
             }
-            chatColumn(session: session)
+            .frame(width: geo.size.width, height: geo.size.height)
         }
         .onChange(of: session.messages) { _, newValue in
             environment.assistantSessionStore.syncActive(messages: newValue)
@@ -82,6 +80,23 @@ struct SageRootView: View {
         }
         .animation(reduceMotion ? nil : AinkradMotion.present, value: lightboxImage != nil)
         .animation(reduceMotion ? nil : AinkradMotion.present, value: lightboxVideoURL != nil)
+    }
+
+    private func sidebar(store: SageSessionStore, session: AgentSession) -> some View {
+        SageHistorySidebar(
+            store: store,
+            surfaceOpacity: environment.appAppearanceStore.surfaceOpacity("sage"),
+            onNewChat: {
+                store.syncActive(messages: session.messages)
+                store.startNewSession()
+                session.reset()
+            },
+            onSelect: { id in
+                store.syncActive(messages: session.messages)
+                session.replaceMessages(store.activate(id))
+            }
+        )
+        .transition(reduceMotion ? .identity : .move(edge: .leading))
     }
 
     // MARK: - Chat column
