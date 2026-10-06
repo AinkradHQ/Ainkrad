@@ -165,28 +165,10 @@ struct LauncherView: View {
                     dismiss()
                     return .handled
                 }
-                .onKeyPress(.downArrow) {
-                    move(by: isGrid ? Self.gridColumns : 1, count: results.count)
-                    return .handled
-                }
-                .onKeyPress(.upArrow) {
-                    move(by: isGrid ? -Self.gridColumns : -1, count: results.count)
-                    return .handled
-                }
-                .onKeyPress(.leftArrow) {
-                    if isGrid {
-                        move(by: -1, count: results.count)
-                        return .handled
-                    }
-                    return .ignored
-                }
-                .onKeyPress(.rightArrow) {
-                    if isGrid {
-                        move(by: 1, count: results.count)
-                        return .handled
-                    }
-                    return .ignored
-                }
+                .onKeyPress(.downArrow) { move(.down, count: results.count) ? .handled : .ignored }
+                .onKeyPress(.upArrow) { move(.up, count: results.count) ? .handled : .ignored }
+                .onKeyPress(.leftArrow) { move(.left, count: results.count) ? .handled : .ignored }
+                .onKeyPress(.rightArrow) { move(.right, count: results.count) ? .handled : .ignored }
                 .onKeyPress(.return) {
                     select(results)
                     return .handled
@@ -292,9 +274,12 @@ struct LauncherView: View {
         .padding(.bottom, 12)
     }
 
-    private func move(by delta: Int, count: Int) {
-        guard count > 0 else { return }
-        selectedIndex = (selectedIndex + delta + count) % count
+    /// Moves the selection for an arrow key; `false` when the key is not the
+    /// Launcher's to take, so the caret gets it.
+    private func move(_ arrow: AinkradArrow, count: Int) -> Bool {
+        guard let delta = launcherArrowStep(arrow, isGrid: isGrid, columns: Self.gridColumns) else { return false }
+        selectedIndex = launcherSelection(selectedIndex, movedBy: delta, count: count)
+        return true
     }
 
     private func select(_ results: [AppRow]) {
