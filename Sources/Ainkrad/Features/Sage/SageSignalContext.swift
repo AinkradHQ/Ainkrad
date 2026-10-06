@@ -151,15 +151,16 @@ struct SageSignalContext {
         var counts: [SignalSourceKindKey: Int] = [:]
         for event in events {
             let key = SignalSourceKindKey(source: event.source, kind: event.kind)
-            if newest[key] == nil {
+            if let current = newest[key] {
+                if event.timestamp > current.timestamp { newest[key] = event }
+            } else {
                 newest[key] = event
                 order.append(key)
-            } else if event.timestamp > newest[key]!.timestamp {
-                newest[key] = event
             }
             counts[key, default: 0] += 1
         }
-        return order.map { (newest[$0]!, counts[$0]!) }
+        // Every key in `order` was inserted into both maps above.
+        return order.compactMap { key in newest[key].map { ($0, counts[key, default: 0]) } }
     }
 
     /// One event as a line.

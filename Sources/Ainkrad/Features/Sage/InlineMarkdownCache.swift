@@ -31,6 +31,8 @@ enum InlineMarkdownCache {
 
     /// Tracked separately: `NSCache` deliberately exposes no count.
     private static let countLock = NSLock()
+    // Safe because every read and write of `keys` goes through `countLock`.
+    // (`Mutex` would drop the opt-out but needs macOS 15; the host deploys lower.)
     nonisolated(unsafe) private static var keys: Set<String> = []
 
     static func attributed(_ source: String) -> AttributedString {

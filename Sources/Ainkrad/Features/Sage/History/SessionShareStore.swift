@@ -85,7 +85,13 @@ final class SessionShareStore {
     func delete(_ id: UUID) {
         guard let idx = shares.firstIndex(where: { $0.id == id }) else { return }
         let dir = baseDirectory.appendingPathComponent(id.uuidString, isDirectory: true)
-        try? FileManager.default.removeItem(at: dir)
+        // The record goes regardless: a share whose folder cannot be removed
+        // is still one the user asked to forget. The failure is logged.
+        do {
+            try FileManager.default.removeItem(at: dir)
+        } catch {
+            Log.app.error("Sage share delete: could not remove the artifact folder: \(error.localizedDescription)")
+        }
         shares.remove(at: idx)
         save()
     }
