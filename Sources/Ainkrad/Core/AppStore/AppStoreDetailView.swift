@@ -23,72 +23,69 @@ struct AppStoreDetailView: View {
     /// Opens the full-screen lightbox on the tapped screenshot (gallery, index).
     let onOpenScreenshot: ([URL], Int) -> Void
 
+    @Environment(\.ainkradSkin) private var skin
+
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
+            VStack(alignment: .leading, spacing: skin.size.s22) {
                 backButton
                 header
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: skin.spacing.sm) {
                     AinkradSectionHeader(title: "Description")
                     Text(longDescriptionText)
-                        .font(.system(size: 13))
-                        .foregroundStyle(tokens.foreground.opacity(0.8))
+                        .font(skin.font(AinkradFontToken(sizeKey: "t13", scaled: false)))
+                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o80))
                         .fixedSize(horizontal: false, vertical: true)
                     Text(informationLine)
-                        .font(.system(size: 11))
-                        .foregroundStyle(tokens.foreground.opacity(0.5))
+                        .font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false)))
+                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
                 }
                 if let secretKeys = requiredSecretKeys {
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: skin.spacing.sm) {
                         AinkradSectionHeader(title: "Requires Secrets")
                         requiredSecretsRow(secretKeys)
                     }
                 }
                 if let screenshots = entry?.screenshots, !screenshots.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: skin.spacing.sm) {
                         AinkradSectionHeader(title: "Screenshots")
                         screenshotGallery(screenshots)
                     }
                 }
                 if let links = entry?.links, !links.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: skin.spacing.sm) {
                         AinkradSectionHeader(title: "Links")
                         linksRow(links)
                     }
                 }
                 Spacer(minLength: 0)
             }
-            .padding(24)
+            .padding(skin.spacing.xl)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
     private var backButton: some View {
-        HStack(spacing: 8) {
-            AinkradIconButton(systemName: "chevron.left", action: onBack)
-            Text("Back")
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(tokens.foreground.opacity(0.7))
-        }
-        .help("Back to catalog")
+        AinkradButton(title: "Back", style: .ghost, icon: "chevron.left", action: onBack)
+            .help("Back to catalog")
     }
 
     private var header: some View {
-        HStack(alignment: .top, spacing: 18) {
-            NeonAppTile(symbol: row.icon, tokens: tokens, size: 88)
-            VStack(alignment: .leading, spacing: 5) {
+        HStack(alignment: .top, spacing: skin.size.s18) {
+            AinkradAppTile(symbol: row.icon, size: 88)
+            VStack(alignment: .leading, spacing: skin.size.s5) {
                 Text(row.displayName)
                     .font(AinkradFont.display(20, weight: .semibold))
                     .foregroundStyle(tokens.foreground)
                 if let author = entry?.author, !author.isEmpty {
                     Text("by \(author)")
-                        .font(.system(size: 12))
-                        .foregroundStyle(tokens.foreground.opacity(0.6))
+                        .font(skin.font(AinkradFontToken(sizeKey: "t12", scaled: false)))
+                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o60))
                 }
                 Text(row.versionLine)
-                    .font(.system(size: 11))
-                    .foregroundStyle(tokens.foreground.opacity(0.5))
-                actions.padding(.top, 4)
+                    .font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false)))
+                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
+                actions.padding(.top, skin.spacing.xs)
             }
             Spacer()
         }
@@ -138,7 +135,7 @@ struct AppStoreDetailView: View {
 
     private func screenshotGallery(_ urls: [URL]) -> some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
+            HStack(spacing: skin.spacing.md) {
                 ForEach(Array(urls.enumerated()), id: \.element) { index, url in
                     screenshot(url, in: urls, at: index)
                 }
@@ -157,19 +154,21 @@ struct AppStoreDetailView: View {
                 screenshotBox(systemImage: nil, tint: tokens.foreground)
             }
         }
-        .frame(width: 260, height: 164)
-        .clipShape(ChamferShape(cut: AinkradRadius.md))
-        .overlay(ChamferShape(cut: AinkradRadius.md).strokeBorder(tokens.foreground.opacity(0.1), lineWidth: 1))
-        .contentShape(ChamferShape(cut: AinkradRadius.md))
+        .frame(width: skin.size.s260, height: skin.size.s164)
+        .clipShape(ChamferShape(cut: skin.radius.md))
+        .overlay(
+            ChamferShape(cut: skin.radius.md).strokeBorder(tokens.foreground.opacity(skin.opacity.o10), lineWidth: 1)
+        )
+        .contentShape(ChamferShape(cut: skin.radius.md))
         .onTapGesture { onOpenScreenshot(urls, index) }
         .help("View full size")
     }
 
     private func screenshotBox(systemImage: String?, tint: Color) -> some View {
         ZStack {
-            ChamferShape(cut: AinkradRadius.md).fill(tokens.surfaceElevated)
+            ChamferShape(cut: skin.radius.md).fill(tokens.surfaceElevated)
             if let systemImage {
-                Image(systemName: systemImage).foregroundStyle(tint.opacity(0.7))
+                Image(systemName: systemImage).foregroundStyle(tint.opacity(skin.opacity.o70))
             } else {
                 AinkradSpinner()
             }
@@ -182,7 +181,7 @@ struct AppStoreDetailView: View {
     /// chips so the user knows what to add in the MCP manager before
     /// enabling it there; values are entered in Settings → MCP Servers, not here.
     private func requiredSecretsRow(_ keys: [String]) -> some View {
-        HStack(spacing: 8) {
+        HStack(spacing: skin.spacing.sm) {
             ForEach(keys, id: \.self) { key in
                 AinkradChip(label: key, systemName: "key.fill")
             }
@@ -192,7 +191,7 @@ struct AppStoreDetailView: View {
     // MARK: - Links
 
     private func linksRow(_ links: [ManifestLink]) -> some View {
-        HStack(spacing: 16) {
+        HStack(spacing: skin.spacing.lg) {
             ForEach(links, id: \.url) { link in
                 Link(destination: link.url) {
                     AinkradChip(label: link.title, systemName: "arrow.up.right")

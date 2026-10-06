@@ -3,13 +3,25 @@ import AinkradHostRuntime
 import CryptoKit
 import Foundation
 
-enum AppStoreError: Error, Equatable {
+enum AppStoreError: Error, Equatable, Sendable {
     case download(String)
     case checksumMismatch
     case unpack(String)
     case invalidBundle(String)
     case notInstalled(String)
     case notNewer
+
+    /// The one-line text the App Store's filter bar shows for this error.
+    var message: String {
+        switch self {
+        case .download: return "Download failed."
+        case .checksumMismatch: return "Integrity check failed."
+        case .unpack: return "Could not unpack."
+        case .invalidBundle: return "Invalid app bundle."
+        case .notInstalled(let id): return "\(id) is not available."
+        case .notNewer: return "Already up to date."
+        }
+    }
 }
 
 /// Installs / updates / uninstalls plugin bundles from catalog entries. All
@@ -180,7 +192,15 @@ final class PluginInstaller {
         let retained = retainedDataDir.appendingPathComponent(appID)
         guard FileManager.default.fileExists(atPath: retained.path) else { return }
         let live = pluginDataDir.appendingPathComponent(appID)
-        try? FileManager.default.createDirectory(at: pluginDataDir, withIntermediateDirectories: true)
+        do {
+            try FileManager.default.createDirectory(at: pluginDataDir, withIntermediateDirectories: true)
+        } catch {
+            // The retained copy stays where it is, so nothing is lost.
+            Log.appStore.error(
+                "Failed to create the plugin data folder to restore \(appID, privacy: .public): \(error.localizedDescription, privacy: .public)"
+            )
+            return
+        }
         try? FileManager.default.removeItem(at: live)
         do {
             try FileManager.default.moveItem(at: retained, to: live)
@@ -202,7 +222,15 @@ final class PluginInstaller {
         let live = pluginDataDir.appendingPathComponent(appID)
         guard FileManager.default.fileExists(atPath: live.path) else { return }
         let retained = retainedDataDir.appendingPathComponent(appID)
-        try? FileManager.default.createDirectory(at: retainedDataDir, withIntermediateDirectories: true)
+        do {
+            try FileManager.default.createDirectory(at: retainedDataDir, withIntermediateDirectories: true)
+        } catch {
+            // The live data stays where it is, so nothing is lost.
+            Log.appStore.error(
+                "Failed to create the retained data folder for \(appID, privacy: .public): \(error.localizedDescription, privacy: .public)"
+            )
+            return
+        }
         try? FileManager.default.removeItem(at: retained)
         do {
             try FileManager.default.moveItem(at: live, to: retained)

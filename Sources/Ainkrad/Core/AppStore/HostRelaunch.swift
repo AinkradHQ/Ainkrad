@@ -1,3 +1,4 @@
+import AinkradHostRuntime
 import AppKit
 
 /// Quits Ainkrad and opens it again — the only way a replaced plugin bundle
@@ -13,7 +14,11 @@ enum HostRelaunch {
         let task = Process()
         task.executableURL = URL(fileURLWithPath: "/bin/sh")
         task.arguments = ["-c", "while kill -0 \(pid) 2>/dev/null; do sleep 0.2; done; open \"$0\"", app]
-        do { try task.run() } catch { return }  // no relaunch → don't quit either
+        do { try task.run() } catch {
+            // No relaunch → don't quit either.
+            Log.appStore.error("Relaunch failed: \(error.localizedDescription, privacy: .public)")
+            return
+        }
         NSApp.terminate(nil)
     }
 }
