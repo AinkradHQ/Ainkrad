@@ -1,3 +1,4 @@
+import AinkradHostRuntime
 import AinkradSignal
 import Foundation
 
@@ -80,7 +81,11 @@ final class SignalSocketServer {
         // group- or world-writable — and on this socket, write access IS the
         // ability to post as any source whose token you can guess. Narrowing it
         // is not defence in depth, it is the door.
-        chmod(path, 0o600)
+        if chmod(path, 0o600) != 0 {
+            // Logged, not fatal: refusing to listen would turn a permissions
+            // quirk into a launch-time outage of external ingress.
+            Log.app.error("Signal socket chmod 0600 failed: errno \(errno, privacy: .public)")
+        }
 
         guard listen(fd, 16) == 0 else {
             let code = errno
@@ -109,7 +114,10 @@ final class SignalSocketServer {
             // here would hold the queue for as long as a peer keeps
             // connecting.
             let client = accept(fd, nil, nil)
-            guard client >= 0 else { return }
+            guard client >= 0 else {
+                Log.app.error("Signal socket accept failed: errno \(errno, privacy: .public)")
+                return
+            }
             defer { close(client) }
             guard let payload = Self.readPayload(from: client) else { return }
             Task { @MainActor in _ = handler(payload) }
