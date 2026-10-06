@@ -8,8 +8,6 @@ import SwiftUI
 enum HoardColumnMetrics {
     static let sizeWidth: CGFloat = 80
     static let modifiedWidth: CGFloat = 140
-    /// Gap between the size and modified columns.
-    static let columnGap = AinkradSpacing.lg
 
     /// Horizontal inset that makes the header line up with row CONTENT.
     /// `AinkradListRow` adds `AinkradSpacing.md` inside itself, and the
