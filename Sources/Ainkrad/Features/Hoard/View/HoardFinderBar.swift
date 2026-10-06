@@ -34,7 +34,7 @@ struct HoardFinderBar: View {
             }
             footer
         }
-        .frame(width: 560)
+        .frame(width: skin.size.s560)
         .hudPanelChrome(tokens: tokens)
         .onAppear {
             fieldFocused = true
@@ -51,7 +51,7 @@ struct HoardFinderBar: View {
                 placeholder, text: $search.queryText, focus: $fieldFocused,
                 leading: {
                     Image(systemName: search.mode == .jump ? "arrow.turn.down.right" : "magnifyingglass")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(skin.font(AinkradFontToken(sizeKey: "t13", weight: "semibold", scaled: false)))
                         .foregroundStyle(tokens.accentSecondary)
                 },
                 onArrow: { arrow in
@@ -77,13 +77,13 @@ struct HoardFinderBar: View {
         if hits.isEmpty && !search.isSearching && !search.queryText.isEmpty {
             Text("No matches")
                 .font(AinkradFontResolver.font(.caption, typography: typo))
-                .foregroundStyle(tokens.foreground.opacity(0.5))
+                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
                 .padding(.horizontal, AinkradSpacing.lg)
                 .padding(.bottom, AinkradSpacing.md)
         } else {
             ScrollViewReader { proxy in
                 ScrollView {
-                    LazyVStack(spacing: 2) {
+                    LazyVStack(spacing: skin.size.s2) {
                         ForEach(Array(hits.enumerated()), id: \.element.id) { index, hit in
                             resultRow(hit, isHighlighted: index == highlighted)
                                 .id(hit.id)
@@ -92,7 +92,7 @@ struct HoardFinderBar: View {
                     }
                     .padding(.horizontal, AinkradSpacing.sm)
                 }
-                .frame(maxHeight: 360)
+                .frame(maxHeight: skin.size.s360)
                 .onChange(of: highlighted) { _, index in
                     guard hits.indices.contains(index) else { return }
                     proxy.scrollTo(hits[index].id, anchor: nil)
@@ -113,7 +113,7 @@ struct HoardFinderBar: View {
             // WHERE it was found is most of the value of a recursive search.
             Text(hit.relativeDirectory)
                 .font(AinkradFontResolver.font(.caption, typography: typo))
-                .foregroundStyle(tokens.foreground.opacity(0.45))
+                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o45))
                 .lineLimit(1)
                 .truncationMode(.head)
         }
@@ -121,7 +121,7 @@ struct HoardFinderBar: View {
         .padding(.vertical, AinkradSpacing.sm)
         .background(
             ChamferShape(cut: AinkradRadius.md)
-                .fill(tokens.accentSecondary.opacity(isHighlighted ? 0.12 : 0))
+                .fill(tokens.accentSecondary.opacity(isHighlighted ? skin.opacity.o12 : 0))
         )
         // The Launcher's targeting brackets on the highlighted row, for the
         // same reason: one selection language across every palette.
@@ -144,10 +144,10 @@ struct HoardFinderBar: View {
             }
             Spacer()
             Text("↑↓ move · ⏎ open · esc close")
-                .foregroundStyle(tokens.foreground.opacity(0.4))
+                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o40))
         }
         .font(AinkradFontResolver.font(.caption, typography: typo))
-        .foregroundStyle(tokens.foreground.opacity(0.55))
+        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o55))
         .padding(.horizontal, AinkradSpacing.lg)
         .padding(.vertical, AinkradSpacing.sm)
     }

@@ -122,7 +122,7 @@ struct HoardRootView: View {
                 .transition(.move(edge: .trailing).combined(with: .opacity))
             }
         }
-        .animation(.easeOut(duration: 0.18), value: settings.showPreview)
+        .animation(.easeOut(duration: skin.motion.durations.d0_18), value: settings.showPreview)
         .filesKeyboardHandling(
             store: store, actions: actions, undoStack: environment.filesUndoStack,
             onUndo: {
@@ -310,7 +310,7 @@ struct HoardRootView: View {
         .onChange(of: isModalPresented(actions: actions)) { _, isUp in
             focus = isUp ? nil : .list
         }
-        .animation(.easeOut(duration: 0.18), value: toast)
+        .animation(.easeOut(duration: skin.motion.durations.d0_18), value: toast)
     }
 
     /// True while any of the pane's modals is up.

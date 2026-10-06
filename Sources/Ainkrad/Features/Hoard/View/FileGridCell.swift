@@ -16,15 +16,16 @@ struct FileGridCell: View {
     @Environment(\.ainkradTheme) private var theme
     @Environment(\.ainkradTypography) private var typo
     @Environment(\.ainkradReduceMotion) private var reduceMotion
+    @Environment(\.ainkradSkin) private var skin
     @State private var hovering = false
 
     var body: some View {
         VStack(spacing: AinkradSpacing.xs) {
             AinkradIconGlyph(systemName: iconName(for: entry), size: iconSize)
-                .opacity(entry.isSymlink ? 0.6 : 1)
+                .opacity(entry.isSymlink ? skin.opacity.o60 : 1)
             Text(entry.name)
                 .font(AinkradFontResolver.font(.caption, typography: typo))
-                .foregroundStyle(theme.foreground.opacity(0.9))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o90))
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
                 .truncationMode(.middle)
@@ -32,22 +33,22 @@ struct FileGridCell: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, AinkradSpacing.sm)
         .padding(.horizontal, AinkradSpacing.xs)
-        .background(ChamferShape(cut: 6).fill(fill))
+        .background(ChamferShape(cut: skin.cut.c6).fill(fill))
         .overlay(
-            ChamferShape(cut: 6)
+            ChamferShape(cut: skin.cut.c6)
                 .strokeBorder(theme.accentSecondary, lineWidth: isCursor ? 1.5 : 0)
         )
-        .opacity(entry.isHidden ? 0.55 : 1)
+        .opacity(entry.isHidden ? skin.opacity.o55 : 1)
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
         .onTapGesture(perform: onTap)
         .simultaneousGesture(TapGesture(count: 2).onEnded { onDoubleTap() })
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: hovering)
+        .animation(reduceMotion ? nil : .easeOut(duration: skin.motion.durations.d0_12), value: hovering)
     }
 
     private var fill: Color {
-        if isSelected { return theme.accentPrimary.opacity(0.22) }
-        if hovering { return theme.foreground.opacity(0.06) }
+        if isSelected { return theme.accentPrimary.opacity(skin.opacity.o22) }
+        if hovering { return theme.foreground.opacity(skin.opacity.o06) }
         return .clear
     }
 }

@@ -29,6 +29,7 @@ struct FileListView: View {
     @Environment(\.ainkradTheme) private var theme
     @Environment(\.ainkradTypography) private var typo
     @Environment(\.ainkradReduceMotion) private var reduceMotion
+    @Environment(\.ainkradSkin) private var skin
 
     /// Captured once, NOT a computed property: a computed `Date()` would be
     /// evaluated per row, so a 5,000-entry directory would allocate 5,000
@@ -71,7 +72,7 @@ struct FileListView: View {
                     if useGrid {
                         gridBody
                     } else {
-                        LazyVStack(spacing: 1) {
+                        LazyVStack(spacing: skin.size.s1) {
                             ForEach(tab.visibleEntries) { entry in
                                 FileRowView(
                                     entry: entry,
@@ -122,7 +123,7 @@ struct FileListView: View {
                     // bring the row into view. Passing `.center` re-centred
                     // the whole list on every arrow press — the list lurched
                     // under you instead of scrolling at the edges.
-                    withAnimation(reduceMotion ? nil : .easeOut(duration: 0.12)) {
+                    withAnimation(reduceMotion ? nil : .easeOut(duration: skin.motion.durations.d0_12)) {
                         proxy.scrollTo(entry.url, anchor: nil)
                     }
                 }
@@ -134,7 +135,7 @@ struct FileListView: View {
     /// the column that makes a recursive search readable.
     private func searchResults(_ hits: [SearchHit]) -> some View {
         ScrollView {
-            LazyVStack(spacing: 1) {
+            LazyVStack(spacing: skin.size.s1) {
                 ForEach(hits) { hit in
                     HStack(spacing: 0) {
                         FileRowView(
@@ -154,10 +155,10 @@ struct FileListView: View {
                         .fileRowMenu(entry: hit.entry, tab: tab, actions: menuActions)
                         Text(hit.relativeDirectory)
                             .font(AinkradFontResolver.font(.caption, typography: typo))
-                            .foregroundStyle(theme.foreground.opacity(0.4))
+                            .foregroundStyle(theme.foreground.opacity(skin.opacity.o40))
                             .lineLimit(1)
                             .truncationMode(.head)
-                            .frame(width: 180, alignment: .trailing)
+                            .frame(width: skin.size.s180, alignment: .trailing)
                             .padding(.trailing, AinkradSpacing.sm)
                     }
                 }
@@ -212,10 +213,10 @@ struct FileListView: View {
     }
 
     private func headerButton(_ title: String, key: FileSortKey) -> some View {
-        Button {
+        Button {  // design-lint: allow raw-control kit gap, sortable column header
             // Mirrors `nextSort(current:column:)` from the kit: a new column
             // starts ascending, the active column toggles direction.
-            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.15)) {
+            withAnimation(reduceMotion ? nil : .easeOut(duration: skin.motion.fast)) {
                 if tab.sortKey == key {
                     tab.sortAscending.toggle()
                 } else {
@@ -224,21 +225,21 @@ struct FileListView: View {
                 }
             }
         } label: {
-            HStack(spacing: 3) {
+            HStack(spacing: skin.size.s3) {
                 Text(title.uppercased())
                     .font(AinkradFontResolver.font(.caption, weight: .medium, typography: typo))
                     .tracking(0.9)
                 Image(systemName: "chevron.up")
-                    .font(.system(size: 7, weight: .bold))
+                    .font(skin.font(AinkradFontToken(sizeKey: "t7", weight: "bold", scaled: false)))
                     // Kept in the layout at zero opacity when inactive, so
                     // sorting a column doesn't shift the header text sideways.
                     .opacity(tab.sortKey == key ? 1 : 0)
                     .rotationEffect(.degrees(tab.sortAscending ? 0 : 180))
                     .animation(
-                        reduceMotion ? nil : .easeInOut(duration: 0.18),
+                        reduceMotion ? nil : .easeInOut(duration: skin.motion.durations.d0_18),
                         value: tab.sortAscending)
             }
-            .foregroundStyle(theme.foreground.opacity(tab.sortKey == key ? 0.75 : 0.4))
+            .foregroundStyle(theme.foreground.opacity(tab.sortKey == key ? skin.opacity.o75 : skin.opacity.o40))
         }
         .buttonStyle(.plain)
     }

@@ -102,15 +102,16 @@ struct HoardContextMenuList: View {
 
     @Environment(\.ainkradTypography) private var typo
     @Environment(\.ainkradStatusColors) private var statusColors
+    @Environment(\.ainkradSkin) private var skin
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 1) {
+        VStack(alignment: .leading, spacing: skin.size.s1) {
             ForEach(actions) { action in
                 row(action)
             }
         }
         .padding(AinkradSpacing.xs)
-        .frame(width: 232)
+        .frame(width: skin.size.s232)
         // `.behindWindow`: this panel is its own window, so a `.withinWindow`
         // blur has nothing to sample and the menu reads as a flat opaque slab
         // instead of matching the app's other overlays.
@@ -130,21 +131,22 @@ private struct HoardContextMenuRow: View {
     @Environment(\.ainkradTypography) private var typo
     @Environment(\.ainkradStatusColors) private var statusColors
     @Environment(\.ainkradReduceMotion) private var reduceMotion
+    @Environment(\.ainkradSkin) private var skin
     @State private var hovering = false
 
     private var tint: Color {
-        action.isDestructive ? statusColors.danger : tokens.foreground.opacity(0.9)
+        action.isDestructive ? statusColors.danger : tokens.foreground.opacity(skin.opacity.o90)
     }
 
     var body: some View {
-        Button {
+        Button {  // design-lint: allow raw-control kit gap, context menu open hook
             action.run()
             onSelect()
         } label: {
             HStack(spacing: AinkradSpacing.sm) {
                 Image(systemName: action.symbol)
-                    .font(.system(size: 11, weight: .semibold))
-                    .frame(width: 15)
+                    .font(skin.font(AinkradFontToken(sizeKey: "t11", weight: "semibold", scaled: false)))
+                    .frame(width: skin.size.s15)
                 Text(action.title)
                     .font(AinkradFontResolver.font(.body, typography: typo))
                 Spacer(minLength: AinkradSpacing.md)
@@ -159,8 +161,8 @@ private struct HoardContextMenuRow: View {
             .padding(.horizontal, AinkradSpacing.sm)
             .padding(.vertical, AinkradSpacing.xs)
             .background(
-                ChamferShape(cut: 4).fill(
-                    hovering ? tokens.accentSecondary.opacity(0.14) : .clear)
+                ChamferShape(cut: skin.cut.c4).fill(
+                    hovering ? tokens.accentSecondary.opacity(skin.opacity.o14) : .clear)
             )
             .contentShape(Rectangle())
         }
@@ -170,7 +172,7 @@ private struct HoardContextMenuRow: View {
         // with this design language. Hover is the only highlight here.
         .focusEffectDisabled()
         .onHover { hovering = $0 }
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.08), value: hovering)
+        .animation(reduceMotion ? nil : .easeOut(duration: skin.motion.durations.d0_08), value: hovering)
     }
 }
 

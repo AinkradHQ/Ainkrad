@@ -12,6 +12,7 @@ struct OperationsPanel: View {
 
     @Environment(\.ainkradTheme) private var theme
     @Environment(\.ainkradTypography) private var typo
+    @Environment(\.ainkradSkin) private var skin
 
     var body: some View {
         if !engine.activeJobs.isEmpty {
@@ -21,10 +22,10 @@ struct OperationsPanel: View {
                 }
             }
             .padding(AinkradSpacing.md)
-            .frame(width: 280)
-            .background(ChamferShape(cut: 8).fill(theme.surfaceElevated.opacity(0.95)))
+            .frame(width: skin.size.s280)
+            .background(ChamferShape(cut: skin.cut.c8).fill(theme.surfaceElevated.opacity(skin.opacity.o95)))
             .transition(.move(edge: .bottom).combined(with: .opacity))
-            .animation(.easeOut(duration: 0.2), value: engine.activeJobs.count)
+            .animation(.easeOut(duration: skin.motion.durations.d0_2), value: engine.activeJobs.count)
         }
     }
 }
@@ -41,7 +42,7 @@ private struct JobRow: View {
         HStack(spacing: AinkradSpacing.md) {
             AinkradMeter(value: job.fraction, size: skin.size.s48)
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: skin.size.s4) {
                 HStack {
                     Text(job.label)
                         .font(AinkradFontResolver.font(.caption, weight: .medium, typography: typo))
@@ -61,12 +62,12 @@ private struct JobRow: View {
                         : "\(job.completedItems) of \(job.totalItems) items"
                 )
                 .font(AinkradFontResolver.font(.caption, typography: typo))
-                .foregroundStyle(theme.foreground.opacity(0.5))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o50))
 
                 if !job.failures.isEmpty {
                     Text("\(job.failures.count) failed")
                         .font(AinkradFontResolver.font(.caption, typography: typo))
-                        .foregroundStyle(theme.foreground.opacity(0.7))
+                        .foregroundStyle(theme.foreground.opacity(skin.opacity.o70))
                 }
             }
         }

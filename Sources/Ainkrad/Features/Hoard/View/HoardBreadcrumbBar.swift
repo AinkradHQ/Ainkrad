@@ -42,7 +42,7 @@ struct HoardBreadcrumbBar: View {
     /// Back/forward beside the path, where a browser puts them. Disabled
     /// states are dimmed rather than hidden, so the controls don't jump.
     private var historyControls: some View {
-        HStack(spacing: 2) {
+        HStack(spacing: skin.size.s2) {
             historyButton("chevron.left", tooltip: "Back", enabled: tab.canGoBack) { tab.goBack() }
             historyButton("chevron.right", tooltip: "Forward", enabled: tab.canGoForward) { tab.goForward() }
         }
@@ -55,7 +55,7 @@ struct HoardBreadcrumbBar: View {
         AinkradIconButton(systemName: symbol, size: skin.size.s20, tooltip: tooltip, action: action)
         .disabled(!enabled)
         .opacity(enabled ? 1 : skin.opacity.o35)
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: enabled)
+        .animation(reduceMotion ? nil : .easeOut(duration: skin.motion.durations.d0_12), value: enabled)
     }
 
     /// The kit's trail: the current folder reads as the accent crumb, every
@@ -79,9 +79,9 @@ struct HoardBreadcrumbBar: View {
     private var editor: some View {
         HStack(spacing: AinkradSpacing.xs) {
             Image(systemName: "arrow.turn.down.right")
-                .font(.system(size: 9))
-                .foregroundStyle(theme.foreground.opacity(0.35))
-            TextField("Path", text: $draft)
+                .font(skin.font(AinkradFontToken(sizeKey: "t9", scaled: false)))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o35))
+            TextField("Path", text: $draft)  // design-lint: allow raw-control kit gap, focus binding
                 .textFieldStyle(.plain)
                 .font(AinkradFontResolver.font(.mono, typography: typo))
                 .focused($fieldFocused)
@@ -98,8 +98,8 @@ struct HoardBreadcrumbBar: View {
                 }
         }
         .padding(.horizontal, AinkradSpacing.sm)
-        .padding(.vertical, 4)
-        .background(ChamferShape(cut: 4).fill(theme.foreground.opacity(0.07)))
+        .padding(.vertical, skin.size.s4)
+        .background(ChamferShape(cut: skin.cut.c4).fill(theme.foreground.opacity(skin.opacity.o07)))
     }
 
     private func commit() {
