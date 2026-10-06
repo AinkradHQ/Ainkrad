@@ -1,3 +1,4 @@
+import AinkradAppKitUI
 import SwiftUI
 
 /// Dev-only host that loads and renders a developer's plugin bundle through
@@ -13,6 +14,7 @@ struct DevHostApp: App {
     /// module's `Log.swift`. `LogTail` reads this via `OSLogStore`.
     private static let pluginSubsystem = "com.ainkrad.app"
 
+    @Environment(\.ainkradSkin) private var skin
     @State private var model = DevHostModel()
     @State private var logTail: LogTail
     private let lifecycleEvents: AsyncStream<LogTail.LifecycleEvent>.Continuation
@@ -31,20 +33,18 @@ struct DevHostApp: App {
                 // over a placeholder invites the reading that the bundle
                 // loaded and its settings are simply blank.
                 if case .loaded = model.state {
-                    Picker("Surface", selection: $model.surface) {
-                        Text("App").tag(DevHostModel.Surface.root)
-                        Text("Settings").tag(DevHostModel.Surface.settings)
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
+                    AinkradSegmentedPicker(
+                        items: DevHostModel.Surface.allCases, selection: $model.surface,
+                        label: { $0 == .root ? "App" : "Settings" }
+                    )
                     .fixedSize()
-                    .padding(6)
+                    .padding(skin.size.s6)
                 }
                 PluginStageView(state: model.state, surface: model.surface)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 ValidationBanner(state: model.state)
                 LogPaneView(logTail: logTail, subsystem: Self.pluginSubsystem)
-                    .frame(height: 160)
+                    .frame(height: skin.size.s160)
             }
             .onAppear {
                 guard case .empty = model.state else { return }
