@@ -92,11 +92,12 @@ extension HostSettingsCatalog {
                     get: { !config.enabled ? "off" : config.trusted ? "trusted" : "on" },
                     set: { choice in
                         if choice == "remove" {
-                            if confirm(
+                            confirm(
+                                environment.settingsDrafts,
                                 "Remove \(config.displayName)?",
                                 "This deletes the server's configuration and any secrets stored for it. This can't be undone.",
-                                action: "Remove")
-                            {
+                                action: "Remove"
+                            ) {
                                 store.remove(id: config.id)
                                 Task { await registry.connectEnabled() }
                             }

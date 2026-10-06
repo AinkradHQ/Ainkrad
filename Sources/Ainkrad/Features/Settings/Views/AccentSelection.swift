@@ -2,11 +2,11 @@ import Foundation
 
 /// Which accent swatch reads as the current one.
 ///
-/// Pure, and shared by Settings and the setup wizard, because the two disagreed:
-/// the wizard accounts for INHERITANCE and Settings did not. `accentColorHex`
-/// is nil until the user picks an accent explicitly, so keying selection only
-/// off the override left the row with nothing selected on arrival — while the
-/// workspace behind it visibly had an accent.
+/// Pure, so the setup wizard's swatch row is testable. It accounts for
+/// INHERITANCE: `accentColorHex` is nil until the user picks an accent
+/// explicitly, so keying selection only off the override left the row with
+/// nothing selected on arrival — while the workspace behind it visibly had an
+/// accent.
 enum AccentSelection {
     /// - Parameters:
     ///   - swatchHex: the swatch being drawn.

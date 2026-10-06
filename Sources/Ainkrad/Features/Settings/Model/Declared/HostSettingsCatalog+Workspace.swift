@@ -89,7 +89,7 @@ extension HostSettingsCatalog {
                 help: "Used for anything live: selection, focus, the things that are currently doing something.",
                 keywords: ["accent", "color", "highlight"],
                 kind: .action(title: accentTitle) {
-                    let current = manager.accentColorHex.map { Color(hex: $0) } ?? tokens.accentPrimary
+                    let current = manager.accentColorHex.map { Color(hex: $0) } ?? tokens.accentPrimary  // design-lint: allow hex-color user data, the stored accent override
                     SettingsColorPanel.shared.edit(current) { manager.setAccentColorHex($0.hexString) }
                 },
                 defaultDescription: "the theme's accent",

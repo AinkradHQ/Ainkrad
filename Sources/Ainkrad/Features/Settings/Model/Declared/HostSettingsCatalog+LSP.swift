@@ -40,11 +40,12 @@ extension HostSettingsCatalog {
                         get: { config.enabled ? "on" : "off" },
                         set: { choice in
                             if choice == "remove" {
-                                if confirm(
+                                confirm(
+                                    environment.settingsDrafts,
                                     "Remove \(config.id)?",
                                     "This deletes this language server's configuration. This can't be undone.",
-                                    action: "Remove")
-                                {
+                                    action: "Remove"
+                                ) {
                                     registry.remove(id: config.id)
                                     if drafts.lspSelection == config.id { selectLSP("", registry, drafts) }
                                 }

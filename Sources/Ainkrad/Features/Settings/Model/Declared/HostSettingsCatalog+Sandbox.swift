@@ -32,11 +32,12 @@ extension HostSettingsCatalog {
                             switch choice {
                             case "edit": editSandbox(profile, drafts)
                             case "delete":
-                                if confirm(
+                                confirm(
+                                    environment.settingsDrafts,
                                     "Delete \(profile.name)?",
                                     "This user-defined profile will be removed. This can't be undone.",
-                                    action: "Delete")
-                                {
+                                    action: "Delete"
+                                ) {
                                     store.delete(id: profile.id)
                                     if drafts.sandboxDraft?.id == profile.id { drafts.sandboxDraft = nil }
                                 }

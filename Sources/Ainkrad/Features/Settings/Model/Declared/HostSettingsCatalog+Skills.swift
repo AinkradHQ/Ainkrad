@@ -48,10 +48,11 @@ extension HostSettingsCatalog {
                             switch choice {
                             case "open": NSWorkspace.shared.open(registry.paths.skillFile(skill.name))
                             case "delete":
-                                if confirm(
+                                confirm(
+                                    environment.settingsDrafts,
                                     "Delete \(skill.name)?", "This removes the skill's folder from disk.",
-                                    action: "Delete")
-                                {
+                                    action: "Delete"
+                                ) {
                                     model.delete(skill)
                                 }
                             default: break
@@ -97,12 +98,14 @@ extension HostSettingsCatalog {
                                     get: { "pending" },
                                     set: { choice in
                                         if choice == "approve" { model.approve(proposal) }
-                                        if choice == "discard",
+                                        if choice == "discard" {
                                             confirm(
+                                                environment.settingsDrafts,
                                                 "Discard \(proposal.name)?",
-                                                "The proposed draft is deleted.", action: "Discard")
-                                        {
-                                            model.discard(proposal)
+                                                "The proposed draft is deleted.", action: "Discard"
+                                            ) {
+                                                model.discard(proposal)
+                                            }
                                         }
                                     })))
                     }))

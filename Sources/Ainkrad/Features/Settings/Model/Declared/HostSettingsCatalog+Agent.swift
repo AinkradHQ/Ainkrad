@@ -1,7 +1,6 @@
 import AinkradAppKit
 import AinkradAppKitContract
 import AinkradHostRuntime
-import AppKit
 import SwiftUI
 
 /// Permissions & Sandbox → Tool hooks and Remote channel as DECLARED rows.
@@ -29,11 +28,12 @@ extension HostSettingsCatalog {
                         get: { hook.enabled ? "on" : "off" },
                         set: { choice in
                             if choice == "remove" {
-                                if confirm(
+                                confirm(
+                                    environment.settingsDrafts,
                                     "Remove this hook?",
                                     "“\(hook.command)” will no longer run \(hook.event == .preToolUse ? "before" : "after") \(hook.match).",
-                                    action: "Remove")
-                                {
+                                    action: "Remove"
+                                ) {
                                     store.remove(id: hook.id)
                                 }
                                 return
@@ -141,14 +141,14 @@ extension HostSettingsCatalog {
         return fields
     }
 
-    /// A native confirmation for a destructive declared action.
-    static func confirm(_ title: String, _ message: String, action: String) -> Bool {
-        let alert = NSAlert()
-        alert.alertStyle = .warning
-        alert.messageText = title
-        alert.informativeText = message
-        alert.addButton(withTitle: action).hasDestructiveAction = true
-        alert.addButton(withTitle: "Cancel")
-        return alert.runModal() == .alertFirstButtonReturn
+    /// Asks the settings overlay to confirm a destructive declared action. The
+    /// request waits in `drafts` until the overlay's `AinkradConfirmDialog`
+    /// answers; `onConfirm` runs only if the user confirms.
+    static func confirm(
+        _ drafts: HostSettingsDrafts, _ title: String, _ message: String, action: String,
+        onConfirm: @escaping () -> Void
+    ) {
+        drafts.pendingConfirm = SettingsConfirmRequest(
+            title: title, message: message, action: action, onConfirm: onConfirm)
     }
 }
