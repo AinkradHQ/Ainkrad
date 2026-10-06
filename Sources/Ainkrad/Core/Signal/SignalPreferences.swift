@@ -41,6 +41,7 @@ struct SignalPreferencesStore {
     let url: URL
 
     func load() -> SignalPreferences {
+        _ = setAsideIfUndecodable(SignalPreferences.self, at: url)
         guard let data = try? Data(contentsOf: url),
             let prefs = try? JSONDecoder().decode(SignalPreferences.self, from: data)
         else { return SignalPreferences() }
@@ -48,6 +49,7 @@ struct SignalPreferencesStore {
     }
 
     func save(_ prefs: SignalPreferences) {
+        guard setAsideIfUndecodable(SignalPreferences.self, at: url) else { return }
         guard let data = try? JSONEncoder().encode(prefs) else { return }
         do {
             try FileManager.default.createDirectory(

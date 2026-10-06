@@ -15,6 +15,7 @@ final class SignalSubscriptionStore {
 
     /// Approved patterns per appID, as their canonical string form.
     func load() -> [String: Set<String>] {
+        _ = setAsideIfUndecodable([String: [String]].self, at: url)
         guard let data = try? Data(contentsOf: url),
             let raw = try? JSONDecoder().decode([String: [String]].self, from: data)
         else { return [:] }
@@ -22,6 +23,7 @@ final class SignalSubscriptionStore {
     }
 
     func save(_ approved: [String: Set<String>]) {
+        guard setAsideIfUndecodable([String: [String]].self, at: url) else { return }
         do {
             try FileManager.default.createDirectory(
                 at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
