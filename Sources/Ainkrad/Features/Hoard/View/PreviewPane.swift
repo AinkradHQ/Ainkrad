@@ -19,8 +19,10 @@ struct PreviewPane: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
             if let entry {
+                // Spaced off the content by a step, never a rule — the design
+                // forbids separator lines.
                 header(entry)
-                Divider().opacity(0)  // spacing only — the design forbids rules
+                    .padding(.bottom, AinkradSpacing.sm)
                 content(for: entry)
             } else {
                 AinkradEmptyState(
