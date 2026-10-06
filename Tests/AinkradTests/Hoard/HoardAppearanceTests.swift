@@ -1,4 +1,5 @@
 import AinkradAppKit
+import AinkradAppKitUI
 import SwiftUI
 import Testing
 
@@ -109,5 +110,23 @@ struct HoardAppearanceTests {
         let small = store.rowVerticalPadding
         store.iconSize = 22
         #expect(store.rowVerticalPadding > small)
+    }
+
+    @Test("typography follows the global setting until Hoard overrides it")
+    func typographyFallsBackToGlobal() {
+        let typography = HoardApp.typography(
+            family: nil, scale: nil, globalFamily: .jetBrainsMono, globalScale: .large)
+        #expect(typography == AinkradTypography(fontFamilyName: "JetBrains Mono", scale: 1.15))
+    }
+
+    @Test("a per-app override wins, and each half falls back on its own")
+    func typographyOverrideWinsPerHalf() {
+        let both = HoardApp.typography(
+            family: .system, scale: .small, globalFamily: .exo2, globalScale: .large)
+        #expect(both == AinkradTypography(fontFamilyName: nil, scale: 0.9))
+
+        let sizeOnly = HoardApp.typography(
+            family: nil, scale: .small, globalFamily: .exo2, globalScale: .large)
+        #expect(sizeOnly == AinkradTypography(fontFamilyName: "Exo 2", scale: 0.9))
     }
 }

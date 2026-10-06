@@ -35,6 +35,15 @@ struct HoardRootView: View {
     private var engine: FileOperationEngine { environment.filesOperationEngine }
     private var git: GitStatusProvider { environment.filesGitStatusProvider }
 
+    /// Hoard's per-app font override over the global Appearance setting.
+    private var typography: AinkradTypography {
+        let appearance = environment.appAppearanceStore
+        let manager = environment.themeManager
+        return HoardApp.typography(
+            family: appearance.fontFamily(HoardApp.id), scale: appearance.fontScale(HoardApp.id),
+            globalFamily: manager.uiFontFamily, globalScale: manager.uiFontScale)
+    }
+
     var body: some View {
         Group {
             if let store, let actions {
@@ -44,7 +53,7 @@ struct HoardRootView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .filesTypography(environment)
+        .environment(\.ainkradTypography, typography)
         .task { activate() }
         .onDisappear(perform: deactivate)
     }
