@@ -1,3 +1,4 @@
+import AinkradAppKit
 import SwiftUI
 
 // MARK: - Motion policy
@@ -78,9 +79,13 @@ enum SetupStageMotion {
 
     /// `nil` under reduce-motion, which makes every `withAnimation` /
     /// `.animation` call site a no-op without a branch at each one.
+    ///
+    /// The spring is the skin's `sp42_82`, read from `AinkradSkin.standard`
+    /// because this policy is static and has no environment to read a skin
+    /// from (the same arrangement as `OverlayChrome`).
     static func animation(reduceMotion: Bool, layer: Layer = .rail) -> Animation? {
-        guard !reduceMotion else { return nil }
-        return .spring(response: 0.42, dampingFraction: 0.82)
+        guard !reduceMotion, let spring = AinkradSkin.standard.motion.springs["sp42_82"] else { return nil }
+        return AinkradSkin.standard.animation(spring)
             .delay(Double(layer.rawValue) * 0.055)
     }
 

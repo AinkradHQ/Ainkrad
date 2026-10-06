@@ -140,6 +140,8 @@ struct SetupBrandMark: View {
     let reduceMotion: Bool
     var style: Style = .hero(diameter: 236)
 
+    @Environment(\.ainkradSkin) private var skin
+
     /// The box the composition is laid out in.
     private var diameter: CGFloat {
         switch style {
@@ -304,8 +306,8 @@ struct SetupBrandMark: View {
             .fill(
                 RadialGradient(
                     colors: [
-                        tokens.accentPrimary.opacity(0.42),
-                        tokens.accentPrimary.opacity(0.10),
+                        tokens.accentPrimary.opacity(skin.opacity.o42),
+                        tokens.accentPrimary.opacity(skin.opacity.o10),
                         .clear,
                     ],
                     center: .center,
@@ -335,14 +337,14 @@ struct SetupBrandMark: View {
             AinkradChevronMark()
                 .fill(
                     LinearGradient(
-                        colors: [tokens.foreground, tokens.foreground.opacity(0.72)],
+                        colors: [tokens.foreground, tokens.foreground.opacity(skin.opacity.o72)],
                         startPoint: .top,
                         endPoint: .bottom
                     )
                 )
                 .frame(width: chevronWidth, height: chevronHeight)
-                .shadow(color: tokens.accentSecondary.opacity(0.55), radius: 8)
-                .shadow(color: tokens.accentPrimary.opacity(0.75), radius: 26)
+                .shadow(color: tokens.accentSecondary.opacity(skin.opacity.o55), radius: skin.size.s8)
+                .shadow(color: tokens.accentPrimary.opacity(skin.opacity.o75), radius: skin.size.s26)
 
             crystal(width: crystalW, height: crystalH)
                 .offset(y: chevronHeight * MarkProportions.crystalTop)
@@ -364,11 +366,11 @@ struct SetupBrandMark: View {
                     )
                 )
             AinkradCrystalFacet()
-                .fill(tokens.foreground.opacity(0.28))
+                .fill(tokens.foreground.opacity(skin.opacity.o28))
         }
         .frame(width: width, height: height)
-        .shadow(color: tokens.accentSecondary.opacity(0.95), radius: 6)
-        .shadow(color: tokens.accentSecondary.opacity(0.7), radius: 16)
-        .shadow(color: tokens.accentSecondary.opacity(0.4), radius: 34)
+        .shadow(color: tokens.accentSecondary.opacity(skin.opacity.o95), radius: skin.size.s6)
+        .shadow(color: tokens.accentSecondary.opacity(skin.opacity.o70), radius: skin.size.s16)
+        .shadow(color: tokens.accentSecondary.opacity(skin.opacity.o40), radius: skin.size.s34)
     }
 }

@@ -19,6 +19,7 @@ import SwiftUI
 struct SetupProvidersStepView: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.setupGroupWidth) private var groupWidth
+    @Environment(\.ainkradSkin) private var skin
 
     let coordinator: SetupCoordinator
 
@@ -100,7 +101,7 @@ struct SetupProvidersStepView: View {
 
         VStack(alignment: .leading, spacing: 0) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: skin.size.s18) {
                     intro(tokens: tokens)
                     SetupConnectedList(connections: savedConnections, tokens: tokens) {
                         environment.connectionStore.removeConnection($0)
@@ -110,7 +111,7 @@ struct SetupProvidersStepView: View {
                     status(tokens: tokens)
                     deferAffordance(tokens: tokens)
                 }
-                .padding(20)
+                .padding(skin.size.s20)
                 // FILLS the group, exactly as the Home step's folder listing
                 // does. Capping the whole column instead left every panel hard
                 // against the left edge with a void beside it — the layout read
@@ -161,7 +162,7 @@ struct SetupProvidersStepView: View {
                 + "so nothing broken gets stored."
         )
         .font(AinkradFont.display(12))
-        .foregroundStyle(tokens.foreground.opacity(0.6))
+        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o60))
         .fixedSize(horizontal: false, vertical: true)
         // Prose is capped even though the column fills, so the provider rows
         // below can use the room without the intro running with them.
@@ -245,10 +246,10 @@ struct SetupProvidersStepView: View {
             )
             .accessibilityIdentifier("setup.providers.deferred")
         } else if canDefer {
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: skin.size.s6) {
                 Text(escape.offerCopy)
                     .font(AinkradFont.display(11))
-                    .foregroundStyle(tokens.foreground.opacity(0.55))
+                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o55))
                 AinkradButton(title: "Set this up later", style: .secondary) {
                     // One act: walked past AND recorded as still owed.
                     escape.take()

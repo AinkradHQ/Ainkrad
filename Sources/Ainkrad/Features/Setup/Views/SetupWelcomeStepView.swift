@@ -29,6 +29,7 @@ struct SetupWelcomeStepView: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.ainkradReduceMotion) private var reduceMotion
     @Environment(\.setupGroupWidth) private var groupWidth
+    @Environment(\.ainkradSkin) private var skin
 
     let coordinator: SetupCoordinator
 
@@ -49,7 +50,7 @@ struct SetupWelcomeStepView: View {
                 .frame(maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth) * 0.8)
                 .frame(maxWidth: .infinity)
 
-            Spacer(minLength: 20)
+            Spacer(minLength: skin.size.s20)
 
             // No Back appears here: `SetupStepFooter` omits it on the first step
             // shown, which for a fresh install is this one — which is also what
@@ -86,7 +87,7 @@ struct SetupWelcomeStepView: View {
                 + "another machine."
         )
         .font(AinkradFont.display(size))
-        .foregroundStyle(tokens.foreground.opacity(0.82))
+        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o82))
         .lineSpacing(size * 0.36)
         .multilineTextAlignment(.center)
         .fixedSize(horizontal: false, vertical: true)

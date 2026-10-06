@@ -77,7 +77,7 @@ enum SetupOrbitField {
         var random = SeededGenerator(seed: 0x51F0_A2C7)
         return (0..<count).map { _ in
             Spark(
-                radius: 0.19 + random.next() * 0.29,
+                radius: 0.19 + random.next() * 0.29,  // design-lint: allow radius-literal brand geometry, orbit radius as a share of width
                 tilt: random.next() * .pi,
                 squash: 0.18 + random.next() * 0.46,
                 // Slow. These drift; they do not orbit at speed.

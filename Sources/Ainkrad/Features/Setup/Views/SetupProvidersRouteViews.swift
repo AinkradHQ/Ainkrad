@@ -32,13 +32,15 @@ struct SetupClaudeRoutes: View {
     /// Handed the pasted text; the field is already cleared.
     let onPaste: (String) -> Void
 
+    @Environment(\.ainkradSkin) private var skin
+
     var body: some View {
         AinkradSettingsPanel(
             title: "Claude subscription",
             hint: "Use a Claude Pro or Max plan you already pay for, instead of an API "
                 + "key billed per token."
         ) {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: skin.spacing.md) {
                 if canImport {
                     // Listed FIRST and marked as the quick one: it needs no browser
                     // and no typing, and it is the route that still works when the
@@ -94,22 +96,26 @@ struct SetupClaudeRoute: View {
     let isBusy: Bool
     let action: () -> Void
 
+    @Environment(\.ainkradSkin) private var skin
+
+    /// A raw `Button` on purpose: `AinkradListRow` holds one line of title and
+    /// one of subtitle, and this card's detail wraps and carries a FASTEST tag.
     var body: some View {
-        Button(action: action) {
-            HStack(alignment: .top, spacing: 11) {
+        Button(action: action) {  // design-lint: allow raw-control kit gap, list row with multi-line detail
+            HStack(alignment: .top, spacing: skin.size.s11) {
                 Image(systemName: icon)
-                    .font(.system(size: 15))
+                    .font(skin.font(AinkradFontToken(sizeKey: "t15", scaled: false)))
                     .foregroundStyle(
                         isRecommended
                             ? tokens.accentSecondary
-                            : tokens.foreground.opacity(0.55)
+                            : tokens.foreground.opacity(skin.opacity.o55)
                     )
-                    .frame(width: 20)
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 7) {
+                    .frame(width: skin.size.s20)
+                VStack(alignment: .leading, spacing: skin.size.s3) {
+                    HStack(spacing: skin.size.s7) {
                         Text(title)
                             .font(AinkradFont.display(13, weight: .medium))
-                            .foregroundStyle(tokens.foreground.opacity(0.92))
+                            .foregroundStyle(tokens.foreground.opacity(skin.opacity.o92))
                         if isRecommended {
                             Text("FASTEST")
                                 .font(AinkradFont.display(9, weight: .medium)).kerning(0.6)
@@ -118,28 +124,28 @@ struct SetupClaudeRoute: View {
                     }
                     Text(detail)
                         .font(AinkradFont.display(11))
-                        .foregroundStyle(tokens.foreground.opacity(0.5))
+                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
                         .fixedSize(horizontal: false, vertical: true)
                         .multilineTextAlignment(.leading)
                 }
-                Spacer(minLength: 8)
+                Spacer(minLength: skin.spacing.sm)
                 if isBusy {
-                    ProgressView().controlSize(.small)
+                    AinkradSpinner(size: skin.size.s16)
                 } else {
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(tokens.foreground.opacity(0.3))
+                        .font(skin.font(AinkradFontToken(sizeKey: "t11", weight: "semibold", scaled: false)))
+                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o30))
                 }
             }
-            .padding(12)
+            .padding(skin.spacing.md)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
-                ChamferShape(cut: AinkradRadius.sm)
-                    .fill(tokens.surfaceElevated.opacity(isRecommended ? 0.62 : 0.42))
+                ChamferShape(cut: skin.radius.sm)
+                    .fill(tokens.surfaceElevated.opacity(isRecommended ? skin.opacity.o62 : skin.opacity.o42))
             )
             .overlay(
-                ChamferShape(cut: AinkradRadius.sm).strokeBorder(
-                    isRecommended ? tokens.accentSecondary.opacity(0.3) : .clear, lineWidth: 1)
+                ChamferShape(cut: skin.radius.sm).strokeBorder(
+                    isRecommended ? tokens.accentSecondary.opacity(skin.opacity.o30) : .clear, lineWidth: 1)
             )
             .contentShape(Rectangle())
         }
@@ -158,11 +164,13 @@ struct SetupPasteFallback: View {
     @Binding var pasteText: String
     let onSubmit: (String) -> Void
 
+    @Environment(\.ainkradSkin) private var skin
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: skin.spacing.sm) {
             Text("Paste the code from your browser")
                 .font(AinkradFont.display(12, weight: .medium))
-                .foregroundStyle(tokens.foreground.opacity(0.85))
+                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o85))
             if let url = authorizeURL {
                 // The loopback couldn't bind, so this URL is the only way back
                 // to the consent screen if the tab was closed or
@@ -173,24 +181,19 @@ struct SetupPasteFallback: View {
                         .foregroundStyle(tokens.accentSecondary)
                 }
             }
-            HStack(spacing: 10) {
+            HStack(spacing: skin.size.s10) {
                 AinkradSecureField(text: $pasteText, placeholder: "Paste the redirect URL or code")
-                Button {
+                AinkradIconButton(systemName: "checkmark.circle.fill", tooltip: "Submit the pasted code") {
                     let raw = pasteText
                     pasteText = ""
                     onSubmit(raw)
-                } label: {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 20))
-                        .foregroundStyle(tokens.accentSecondary)
                 }
-                .buttonStyle(.plain)
                 .accessibilityLabel("Submit the pasted code")
             }
         }
-        .padding(12)
+        .padding(skin.spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: AinkradRadius.sm).fill(tokens.surfaceElevated.opacity(0.5)))
+        .background(ChamferShape(cut: skin.radius.sm).fill(tokens.surfaceElevated.opacity(skin.opacity.o50)))
     }
 }
 
@@ -209,6 +212,8 @@ struct SetupAPIKeyRoute: View {
     let isBusy: Bool
     let canConnect: Bool
     let onConnect: () -> Void
+
+    @Environment(\.ainkradSkin) private var skin
 
     var body: some View {
         AinkradSettingsPanel(
@@ -231,29 +236,29 @@ struct SetupAPIKeyRoute: View {
             // an empty key field and no acknowledgement — which reads as having
             // lost the connection.
             if isPresetConnected {
-                HStack(spacing: 7) {
+                HStack(spacing: skin.size.s7) {
                     Image(systemName: "checkmark.seal.fill")
-                        .font(.system(size: 12))
+                        .font(skin.font(AinkradFontToken(sizeKey: "t12", scaled: false)))
                         .foregroundStyle(tokens.accentSecondary)
                     Text(
                         "\(preset.displayName) is connected. Enter a key below only to "
                             + "replace it."
                     )
                     .font(AinkradFont.display(11))
-                    .foregroundStyle(tokens.foreground.opacity(0.6))
+                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o60))
                     .fixedSize(horizontal: false, vertical: true)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .accessibilityIdentifier("setup.providers.presetConnected")
             }
 
-            HStack(spacing: 10) {
+            HStack(spacing: skin.size.s10) {
                 if preset.requiresKey {
                     AinkradSecureField(text: $token, placeholder: "API key")
                 } else {
                     Text("No API key required")
                         .font(AinkradFont.display(11))
-                        .foregroundStyle(tokens.foreground.opacity(0.45))
+                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o45))
                 }
                 AinkradButton(
                     title: isPresetConnected ? "Replace" : "Connect",

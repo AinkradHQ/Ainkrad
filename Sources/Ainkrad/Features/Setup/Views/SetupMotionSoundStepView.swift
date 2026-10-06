@@ -70,6 +70,7 @@ struct SetupMotionSoundStepView: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.ainkradReduceMotion) private var reduceMotion
     @Environment(\.setupGroupWidth) private var groupWidth
+    @Environment(\.ainkradSkin) private var skin
 
     let coordinator: SetupCoordinator
 
@@ -82,12 +83,12 @@ struct SetupMotionSoundStepView: View {
 
         VStack(alignment: .leading, spacing: 0) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
+                VStack(alignment: .leading, spacing: skin.size.s22) {
                     reduceMotionPanel(tokens: tokens)
                     skySection(tokens: tokens)
                     soundSection(tokens: tokens)
                 }
-                .padding(20)
+                .padding(skin.size.s20)
                 // FILLS the group, exactly as the Home step's folder listing
                 // does. Capping the whole column instead left every panel hard
                 // against the left edge with a void beside it — the layout read
@@ -115,8 +116,8 @@ struct SetupMotionSoundStepView: View {
     private func reduceMotionPanel(tokens: DesignTokens) -> some View {
         let store = environment.generalSettingsStore
         return staged(index: 0) {
-            HStack(alignment: .top, spacing: 14) {
-                VStack(alignment: .leading, spacing: 7) {
+            HStack(alignment: .top, spacing: skin.size.s14) {
+                VStack(alignment: .leading, spacing: skin.size.s7) {
                     // Names the STATE the switch produces when it is on, not an
                     // instruction. "Turn the motion off" shipped first and read
                     // well as prose and badly as a control: on meant off. It is
@@ -125,7 +126,7 @@ struct SetupMotionSoundStepView: View {
                     // screen-reader users now hear the same word.
                     Text("Reduce motion")
                         .font(AinkradFont.display(16, weight: .medium))
-                        .foregroundStyle(tokens.foreground.opacity(0.95))
+                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o95))
                     Text(
                         "Ainkrad drifts, parallaxes and springs by default. If that kind of "
                             + "movement makes you queasy, turn this on — the rest of this setup "
@@ -134,7 +135,7 @@ struct SetupMotionSoundStepView: View {
                             + "Settings → Appearance afterwards."
                     )
                     .font(AinkradFont.display(13))
-                    .foregroundStyle(tokens.foreground.opacity(0.72))
+                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o72))
                     .lineSpacing(4)
                     .fixedSize(horizontal: false, vertical: true)
                     // Prose is capped even though the column fills — see the
@@ -152,13 +153,13 @@ struct SetupMotionSoundStepView: View {
                 )
                 .accessibilityLabel("Reduce motion")
             }
-            .padding(16)
+            .padding(skin.spacing.lg)
             .frame(maxWidth: .infinity, alignment: .leading)
             // Tint, no border and no rule — the emphasis is the surface itself,
             // per the no-separator design language.
             .background(
-                ChamferShape(cut: AinkradRadius.md)
-                    .fill(tokens.accentPrimary.opacity(0.10))
+                ChamferShape(cut: skin.radius.md)
+                    .fill(tokens.accentPrimary.opacity(skin.opacity.o10))
             )
             .accessibilityIdentifier("setup.motion.reduceMotion")
         }
@@ -169,7 +170,7 @@ struct SetupMotionSoundStepView: View {
     private func skySection(tokens: DesignTokens) -> some View {
         let store = environment.skySettingsStore
         return staged(index: 1) {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: skin.spacing.md) {
                 // Points at the window, not at the switch. The sentence is the
                 // only place the sky gets described, and it describes where to
                 // look rather than what it does.
@@ -195,10 +196,10 @@ struct SetupMotionSoundStepView: View {
     /// the same `SkySettingsStore.speedPresets`. Every preset is inside
     /// `speedRange`, so the clamp in `setMotionSpeed` never fires from here.
     private func speedRow(tokens: DesignTokens, store: SkySettingsStore) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: skin.size.s10) {
             Text("How fast")
                 .font(AinkradFont.display(13, weight: .medium))
-                .foregroundStyle(tokens.foreground.opacity(0.9))
+                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o90))
             AinkradSegmentedPicker(
                 items: SkySettingsStore.speedPresets.map(\.value),
                 selection: Binding(
@@ -208,9 +209,9 @@ struct SetupMotionSoundStepView: View {
                 label: { SkySettingsStore.presetTitle($0) }
             )
         }
-        .padding(14)
+        .padding(skin.size.s14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: AinkradRadius.md).fill(tokens.surfaceElevated.opacity(0.45)))
+        .background(ChamferShape(cut: skin.radius.md).fill(tokens.surfaceElevated.opacity(skin.opacity.o45)))
     }
 
     // MARK: - Sound
@@ -218,7 +219,7 @@ struct SetupMotionSoundStepView: View {
     private func soundSection(tokens: DesignTokens) -> some View {
         let store = environment.generalSettingsStore
         return staged(index: 2) {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: skin.spacing.md) {
                 sectionIntro(
                     title: "Sound",
                     hint: "Short cues when something opens, closes, or finishes. "
@@ -238,14 +239,14 @@ struct SetupMotionSoundStepView: View {
     }
 
     private func volumeRow(tokens: DesignTokens, store: GeneralSettingsStore) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: skin.size.s10) {
             Text("Volume")
                 .font(AinkradFont.display(13, weight: .medium))
-                .foregroundStyle(tokens.foreground.opacity(0.9))
-            HStack(spacing: 10) {
+                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o90))
+            HStack(spacing: skin.size.s10) {
                 Image(systemName: "speaker.fill")
-                    .font(.system(size: 11))
-                    .foregroundStyle(tokens.foreground.opacity(0.5))
+                    .font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false)))
+                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
                 // Bounded to 0...1 in the view: `setSoundVolume` does not clamp,
                 // so `AinkradSlider`'s own `in:` range is what keeps this safe.
                 // Same range as the Sound & Voice page's volume row.
@@ -257,13 +258,13 @@ struct SetupMotionSoundStepView: View {
                     in: 0...1
                 )
                 Image(systemName: "speaker.wave.3.fill")
-                    .font(.system(size: 11))
-                    .foregroundStyle(tokens.foreground.opacity(0.5))
+                    .font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false)))
+                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
             }
         }
-        .padding(14)
+        .padding(skin.size.s14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: AinkradRadius.md).fill(tokens.surfaceElevated.opacity(0.45)))
+        .background(ChamferShape(cut: skin.radius.md).fill(tokens.surfaceElevated.opacity(skin.opacity.o45)))
     }
 
     // MARK: - Shared pieces
@@ -272,13 +273,13 @@ struct SetupMotionSoundStepView: View {
     /// headers this step used to carry. Same shape as the Appearance step's
     /// groups, so the two live-preview screens read as a pair.
     private func sectionIntro(title: String, hint: String, tokens: DesignTokens) -> some View {
-        VStack(alignment: .leading, spacing: 5) {
+        VStack(alignment: .leading, spacing: skin.size.s5) {
             Text(title)
                 .font(AinkradFont.display(15, weight: .medium))
-                .foregroundStyle(tokens.foreground.opacity(0.95))
+                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o95))
             Text(hint)
                 .font(AinkradFont.display(12))
-                .foregroundStyle(tokens.foreground.opacity(0.55))
+                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o55))
                 .lineSpacing(3)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -291,16 +292,16 @@ struct SetupMotionSoundStepView: View {
         tokens: DesignTokens, title: String,
         isOn: Bool, action: @escaping (Bool) -> Void
     ) -> some View {
-        HStack(alignment: .center, spacing: 12) {
+        HStack(alignment: .center, spacing: skin.spacing.md) {
             Text(title)
                 .font(AinkradFont.display(13, weight: .medium))
-                .foregroundStyle(tokens.foreground.opacity(0.9))
-            Spacer(minLength: 12)
+                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o90))
+            Spacer(minLength: skin.spacing.md)
             AinkradToggle(isOn: Binding(get: { isOn }, set: action))
         }
-        .padding(14)
+        .padding(skin.size.s14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: AinkradRadius.md).fill(tokens.surfaceElevated.opacity(0.45)))
+        .background(ChamferShape(cut: skin.radius.md).fill(tokens.surfaceElevated.opacity(skin.opacity.o45)))
     }
 
     /// Staging, routed through `SetupStageMotion` — never a bare

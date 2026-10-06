@@ -16,21 +16,14 @@ import SwiftUI
 /// never covers the setup gate it summons.
 struct SetupDeferredProvidersBanner: View {
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradSkin) private var skin
 
+    /// The kit banner states the problem; the route back sits beside it,
+    /// because `AinkradBanner` carries a message and an optional dismiss but no
+    /// action of its own.
     var body: some View {
-        let tokens = environment.themeManager.tokens
-
-        HStack(spacing: 10) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 12))
-                .foregroundStyle(tokens.accentTertiary)
-
-            Text("AI features are off — no provider is connected yet.")
-                .font(AinkradFont.display(12))
-                .foregroundStyle(tokens.foreground.opacity(0.85))
-                .fixedSize(horizontal: false, vertical: true)
-
-            Spacer(minLength: 8)
+        HStack(spacing: skin.spacing.sm) {
+            AinkradBanner(message: "AI features are off — no provider is connected yet.", status: .warning)
 
             AinkradButton(title: "Connect a provider", style: .secondary) {
                 // Re-raising the gate is the whole route back: the coordinator
@@ -39,11 +32,8 @@ struct SetupDeferredProvidersBanner: View {
             }
             .accessibilityIdentifier("workspace.providersDeferred.resume")
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .background(ChamferShape(cut: AinkradRadius.sm).fill(tokens.surfaceElevated.opacity(0.55)))
-        .padding(.horizontal, 16)
-        .padding(.bottom, 8)
+        .padding(.horizontal, skin.spacing.lg)
+        .padding(.bottom, skin.spacing.sm)
         .accessibilityIdentifier("workspace.providersDeferred.banner")
     }
 }

@@ -65,6 +65,7 @@ struct SetupHomeStepView: View {
 
     @Environment(\.ainkradReduceMotion) private var reduceMotion
     @Environment(\.setupGroupWidth) private var groupWidth
+    @Environment(\.ainkradSkin) private var skin
 
     /// Asked BEFORE the user chooses, which is the entire point of this task:
     /// `VaultMigration.needsMigration(container:)` is answerable up front, so a
@@ -86,7 +87,7 @@ struct SetupHomeStepView: View {
         VStack(alignment: .leading, spacing: 0) {
             content
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(20)
+                .padding(skin.size.s20)
                 .onAppear { migrationNotice = SetupHomeMigrationNotice.make() }
             // The footer has two shapes, because this step has two states.
             //
@@ -124,29 +125,29 @@ struct SetupHomeStepView: View {
     /// so to check or change the folder, and the first thing they need is which
     /// one it currently is.
     private func selectedFolder(_ path: String, tokens: DesignTokens) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 9) {
+        HStack(alignment: .firstTextBaseline, spacing: skin.size.s9) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 12))
+                .font(skin.font(AinkradFontToken(sizeKey: "t12", scaled: false)))
                 .foregroundStyle(tokens.accentSecondary)
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: skin.size.s3) {
                 Text("Your Ainkrad Home")
                     .font(AinkradFont.display(11, weight: .medium))
-                    .foregroundStyle(tokens.foreground.opacity(0.5))
+                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
                 Text(path)
                     // Monospaced: this is a path, and a path set in the UI face
                     // is harder to read back character by character — which is
                     // exactly what someone verifying a folder is doing.
-                    .font(.system(size: 13, weight: .medium, design: .monospaced))
+                    .font(skin.font(AinkradFontToken(sizeKey: "t13", weight: "medium", mono: "system", scaled: false)))
                     .foregroundStyle(tokens.foreground)
                     .textSelection(.enabled)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(14)
+        .padding(skin.size.s14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            ChamferShape(cut: AinkradRadius.md)
-                .fill(tokens.accentSecondary.opacity(0.09))
+            ChamferShape(cut: skin.radius.md)
+                .fill(tokens.accentSecondary.opacity(skin.opacity.o09))
         )
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Your Ainkrad Home is \(path)")
@@ -215,7 +216,7 @@ struct SetupHomeStepView: View {
             AinkradButton(title: "Continue", style: .primary) { coordinator.advance() }
                 .accessibilityIdentifier("setup.continue")
         }
-        .padding(20)
+        .padding(skin.size.s20)
     }
 
     /// The folder is the idea, so the folder is what is drawn: a listing of
@@ -225,14 +226,14 @@ struct SetupHomeStepView: View {
         let tokens = environment.themeManager.tokens
 
         return ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: skin.size.s18) {
                 Text(
                     "Pick an empty folder, or make a new one anywhere you like — "
                         + "your Documents, an external drive, a synced folder. Ainkrad "
                         + "will never take over a folder that already has files in it."
                 )
                 .font(AinkradFont.display(14))
-                .foregroundStyle(tokens.foreground.opacity(0.78))
+                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o78))
                 .lineSpacing(4)
                 .fixedSize(horizontal: false, vertical: true)
                 // Prose, so the READING measure — the folder listing below
@@ -259,7 +260,7 @@ struct SetupHomeStepView: View {
                 }
 
             }
-            .padding(.bottom, 4)
+            .padding(.bottom, skin.spacing.xs)
         }
     }
 
@@ -268,28 +269,28 @@ struct SetupHomeStepView: View {
     /// arrives a beat after the one above it so the list assembles rather than
     /// appearing as a block. Flat under reduce-motion.
     private func folderPreview(tokens: DesignTokens) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: skin.spacing.md) {
+            HStack(spacing: skin.spacing.sm) {
                 Image(systemName: "folder.fill")
-                    .font(.system(size: 12))
+                    .font(skin.font(AinkradFontToken(sizeKey: "t12", scaled: false)))
                     .foregroundStyle(tokens.accentPrimary)
                 Text("Inside it")
                     .font(AinkradFont.display(12, weight: .medium))
-                    .foregroundStyle(tokens.foreground.opacity(0.5))
+                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
             }
 
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: skin.size.s14) {
                 ForEach(Array(SetupHomePreview.entries.enumerated()), id: \.element.id) {
                     index, entry in
                     entryRow(entry, index: index, tokens: tokens)
                 }
             }
         }
-        .padding(16)
+        .padding(skin.spacing.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            ChamferShape(cut: AinkradRadius.md)
-                .fill(tokens.surfaceElevated.opacity(0.35))
+            ChamferShape(cut: skin.radius.md)
+                .fill(tokens.surfaceElevated.opacity(skin.opacity.o35))
         )
         .accessibilityElement(children: .contain)
         .accessibilityLabel("What Ainkrad will create in the folder you choose")
@@ -321,18 +322,18 @@ struct SetupHomeStepView: View {
         // the reduce-motion seam.
         let delay = geometry.map { _ in Double(index) * 0.05 } ?? 0
 
-        return HStack(alignment: .top, spacing: 10) {
+        return HStack(alignment: .top, spacing: skin.size.s10) {
             Image(systemName: entry.icon)
-                .font(.system(size: 12))
+                .font(skin.font(AinkradFontToken(sizeKey: "t12", scaled: false)))
                 .foregroundStyle(tokens.accentSecondary)
-                .frame(width: 16)
-            VStack(alignment: .leading, spacing: 3) {
+                .frame(width: skin.size.s16)
+            VStack(alignment: .leading, spacing: skin.size.s3) {
                 Text(entry.name)
                     .font(AinkradFont.mono(12))
-                    .foregroundStyle(tokens.foreground.opacity(0.9))
+                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o90))
                 Text(entry.detail)
                     .font(AinkradFont.display(12))
-                    .foregroundStyle(tokens.foreground.opacity(0.55))
+                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o55))
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -367,26 +368,26 @@ struct SetupHomeStepView: View {
         title: String, message: String, icon: String,
         tint: Color, tokens: DesignTokens
     ) -> some View {
-        HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .top, spacing: skin.size.s10) {
             Image(systemName: icon)
-                .font(.system(size: 12))
+                .font(skin.font(AinkradFontToken(sizeKey: "t12", scaled: false)))
                 .foregroundStyle(tint)
-                .frame(width: 16)
-            VStack(alignment: .leading, spacing: 5) {
+                .frame(width: skin.size.s16)
+            VStack(alignment: .leading, spacing: skin.size.s5) {
                 Text(title)
                     .font(AinkradFont.display(12, weight: .medium))
                     .foregroundStyle(tint)
                 Text(message)
                     .font(AinkradFont.display(12))
-                    .foregroundStyle(tokens.foreground.opacity(0.72))
+                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o72))
                     .lineSpacing(3)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
-        .padding(14)
+        .padding(skin.size.s14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: AinkradRadius.md).fill(tint.opacity(0.09)))
+        .background(ChamferShape(cut: skin.radius.md).fill(tint.opacity(skin.opacity.o09)))
     }
 
     private func choose() {

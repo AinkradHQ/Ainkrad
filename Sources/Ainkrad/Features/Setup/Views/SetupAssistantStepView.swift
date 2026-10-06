@@ -67,6 +67,7 @@ enum SetupAssistant {
 struct SetupAssistantStepView: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.setupGroupWidth) private var groupWidth
+    @Environment(\.ainkradSkin) private var skin
 
     let coordinator: SetupCoordinator
 
@@ -115,13 +116,13 @@ struct SetupAssistantStepView: View {
 
         VStack(alignment: .leading, spacing: 0) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: skin.size.s18) {
                     intro(tokens: tokens)
                     builtins(tokens: tokens)
                     custom(tokens: tokens)
                     modelAndEffort(tokens: tokens)
                 }
-                .padding(20)
+                .padding(skin.size.s20)
                 // FILLS the group, exactly as the Home step's folder listing
                 // does. Capping the whole column instead left every panel hard
                 // against the left edge with a void beside it — the layout read
@@ -173,7 +174,7 @@ struct SetupAssistantStepView: View {
                 + "agents later."
         )
         .font(AinkradFont.display(12))
-        .foregroundStyle(tokens.foreground.opacity(0.6))
+        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o60))
         .fixedSize(horizontal: false, vertical: true)
         // Prose is capped even though the column fills, so the agent rows
         // below can use the room without the intro running with them.
@@ -195,68 +196,68 @@ struct SetupAssistantStepView: View {
 
     private func builtinRow(_ agent: AgentProfile, tokens: DesignTokens) -> some View {
         let isSelected = !isCustom && selection.id == agent.id
-        return Button {
+        // A raw `Button`: the agent's instructions are the point of the row and
+        // run to several lines, and `AinkradListRow` truncates its subtitle to one.
+        return Button {  // design-lint: allow raw-control kit gap, list row with multi-line detail
             isCustom = false
             selection = agent
         } label: {
-            HStack(alignment: .top, spacing: 10) {
+            HStack(alignment: .top, spacing: skin.size.s10) {
                 Image(systemName: agent.icon)
-                    .font(.system(size: 13))
-                    .foregroundStyle(isSelected ? tokens.accentSecondary : tokens.foreground.opacity(0.6))
-                VStack(alignment: .leading, spacing: 4) {
+                    .font(skin.font(AinkradFontToken(sizeKey: "t13", scaled: false)))
+                    .foregroundStyle(isSelected ? tokens.accentSecondary : tokens.foreground.opacity(skin.opacity.o60))
+                VStack(alignment: .leading, spacing: skin.spacing.xs) {
                     Text(agent.name)
                         .font(AinkradFont.display(13, weight: .medium))
-                        .foregroundStyle(tokens.foreground.opacity(0.9))
+                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o90))
                     Text(agent.instructions)
                         .font(AinkradFont.display(11))
-                        .foregroundStyle(tokens.foreground.opacity(0.5))
+                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                Spacer(minLength: 8)
+                Spacer(minLength: skin.spacing.sm)
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 14))
+                        .font(skin.font(AinkradFontToken(sizeKey: "t14", scaled: false)))
                         .foregroundStyle(tokens.accentSecondary)
                 }
             }
-            .padding(12)
-            .background(ChamferShape(cut: AinkradRadius.md).fill(tokens.surfaceElevated.opacity(0.5)))
+            .padding(skin.spacing.md)
+            .background(ChamferShape(cut: skin.radius.md).fill(tokens.surfaceElevated.opacity(skin.opacity.o50)))
             .overlay(
-                ChamferShape(cut: AinkradRadius.md)
-                    .strokeBorder(isSelected ? tokens.accentSecondary.opacity(0.5) : Color.clear, lineWidth: 1))
+                ChamferShape(cut: skin.radius.md)
+                    .strokeBorder(
+                        isSelected ? tokens.accentSecondary.opacity(skin.opacity.o50) : Color.clear, lineWidth: 1))
         }
         .buttonStyle(.plain)
     }
 
     private func custom(tokens: DesignTokens) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Button {
-                isCustom = true
-            } label: {
-                HStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: skin.size.s10) {
+            AinkradListRow(
+                isSelected: isCustom,
+                onTap: { isCustom = true },
+                leading: {
                     Image(systemName: "sparkles")
-                        .font(.system(size: 12))
-                        .foregroundStyle(isCustom ? tokens.accentSecondary : tokens.foreground.opacity(0.6))
-                    Text("Write your own persona instead")
-                        .font(AinkradFont.display(12, weight: .medium))
-                        .foregroundStyle(tokens.foreground.opacity(0.85))
-                    Spacer(minLength: 0)
+                        .font(skin.font(AinkradFontToken(sizeKey: "t12", scaled: false)))
+                        .foregroundStyle(
+                            isCustom ? tokens.accentSecondary : tokens.foreground.opacity(skin.opacity.o60))
+                },
+                title: "Write your own persona instead",
+                trailing: {
                     if isCustom {
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 14))
+                            .font(skin.font(AinkradFontToken(sizeKey: "t14", scaled: false)))
                             .foregroundStyle(tokens.accentSecondary)
                     }
                 }
-                .padding(12)
-                .background(ChamferShape(cut: AinkradRadius.md).fill(tokens.surfaceElevated.opacity(0.35)))
-            }
-            .buttonStyle(.plain)
+            )
 
             if isCustom {
                 // Each unmet requirement is rendered directly under the field
                 // it is about. A disabled Continue at the far corner with no
                 // explanation is the failure mode this avoids.
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: skin.spacing.xs) {
                     AinkradTextField(text: $customName, placeholder: "Name (e.g. Scribe)")
                         .onChange(of: customName) { _, _ in touched.insert("personaName") }
                     if let message = message(for: "personaName") {
@@ -264,7 +265,7 @@ struct SetupAssistantStepView: View {
                             .accessibilityIdentifier("setup.assistant.personaName.requirement")
                     }
                 }
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: skin.spacing.xs) {
                     AinkradTextField(text: $customInstructions, placeholder: "Instructions")
                         .onChange(of: customInstructions) { _, _ in
                             touched.insert("personaInstructions")
@@ -283,15 +284,17 @@ struct SetupAssistantStepView: View {
             title: "Model",
             hint: "Which model handles requests, and how much effort it spends on each one."
         ) {
-            HStack(spacing: 18) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Model").font(AinkradFont.display(11)).foregroundStyle(tokens.foreground.opacity(0.5))
+            HStack(spacing: skin.size.s18) {
+                VStack(alignment: .leading, spacing: skin.size.s6) {
+                    Text("Model").font(AinkradFont.display(11)).foregroundStyle(
+                        tokens.foreground.opacity(skin.opacity.o50))
                     Text(model).font(AinkradFont.display(12, weight: .medium))
-                        .foregroundStyle(tokens.foreground.opacity(0.9))
+                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o90))
                 }
                 if activeConnectionIsClaude {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Effort").font(AinkradFont.display(11)).foregroundStyle(tokens.foreground.opacity(0.5))
+                    VStack(alignment: .leading, spacing: skin.size.s6) {
+                        Text("Effort").font(AinkradFont.display(11)).foregroundStyle(
+                            tokens.foreground.opacity(skin.opacity.o50))
                         AinkradSegmentedPicker(
                             items: Self.efforts,
                             selection: $effort,

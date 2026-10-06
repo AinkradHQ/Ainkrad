@@ -46,6 +46,7 @@ enum SetupYou {
 struct SetupYouStepView: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.setupGroupWidth) private var groupWidth
+    @Environment(\.ainkradSkin) private var skin
 
     let coordinator: SetupCoordinator
 
@@ -69,7 +70,7 @@ struct SetupYouStepView: View {
 
         VStack(alignment: .leading, spacing: 0) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: skin.size.s18) {
                     intro(tokens: tokens)
                     AinkradSettingsPanel(
                         title: "About you",
@@ -78,7 +79,7 @@ struct SetupYouStepView: View {
                         fieldGrid(tokens: tokens)
                     }
                 }
-                .padding(20)
+                .padding(skin.size.s20)
                 // FILLS the group, like every other step. The FIELDS are what
                 // hold their own width — see `fieldGrid`.
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -137,7 +138,7 @@ struct SetupYouStepView: View {
                 + "Memory."
         )
         .font(AinkradFont.display(12))
-        .foregroundStyle(tokens.foreground.opacity(0.6))
+        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o60))
         .fixedSize(horizontal: false, vertical: true)
         // Prose is capped even though the column fills.
         .frame(
@@ -155,7 +156,7 @@ struct SetupYouStepView: View {
     /// The cards therefore take the whole column, which on a wide window means a
     /// wide text field. That is the accepted trade.
     private func fieldGrid(tokens: DesignTokens) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: skin.size.s10) {
             ForEach(UserProfileField.all) { profileField in
                 field(
                     tokens: tokens, title: profileField.title,
@@ -179,11 +180,11 @@ struct SetupYouStepView: View {
         tokens: DesignTokens, title: String, subtitle: String,
         placeholder: String, text: Binding<String>, key: String
     ) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: skin.size.s6) {
+            HStack(spacing: skin.size.s6) {
                 Text(title)
                     .font(AinkradFont.display(13, weight: .medium))
-                    .foregroundStyle(tokens.foreground.opacity(0.9))
+                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o90))
                 // Visible from arrival, for required fields only. This is what
                 // keeps the rule on screen without greeting a blank form with
                 // warnings — see `message(for:)`.
@@ -197,7 +198,7 @@ struct SetupYouStepView: View {
             }
             Text(subtitle)
                 .font(AinkradFont.display(11))
-                .foregroundStyle(tokens.foreground.opacity(0.5))
+                .foregroundStyle(tokens.foreground.opacity(skin.opacity.o50))
             AinkradTextField(text: text, placeholder: placeholder)
                 .onChange(of: text.wrappedValue) { _, new in
                     touched.insert(key)
@@ -209,10 +210,12 @@ struct SetupYouStepView: View {
                     .accessibilityIdentifier("setup.you.\(key).requirement")
             }
         }
-        .padding(14)
+        .padding(skin.size.s14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: AinkradRadius.md).fill(tokens.surfaceElevated.opacity(0.5)))
-        .overlay(ChamferShape(cut: AinkradRadius.md).strokeBorder(tokens.accentPrimary.opacity(0.15), lineWidth: 1))
+        .background(ChamferShape(cut: skin.radius.md).fill(tokens.surfaceElevated.opacity(skin.opacity.o50)))
+        .overlay(
+            ChamferShape(cut: skin.radius.md).strokeBorder(tokens.accentPrimary.opacity(skin.opacity.o15), lineWidth: 1)
+        )
     }
 
     /// Belt-and-braces: `onChange` already commits every keystroke, but a field

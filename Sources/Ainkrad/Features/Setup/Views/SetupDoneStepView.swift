@@ -17,6 +17,7 @@ import SwiftUI
 struct SetupDoneStepView: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.setupGroupWidth) private var groupWidth
+    @Environment(\.ainkradSkin) private var skin
 
     let coordinator: SetupCoordinator
 
@@ -41,7 +42,7 @@ struct SetupDoneStepView: View {
 
         VStack(alignment: .leading, spacing: 0) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: skin.spacing.lg) {
                     Text("Everything is set up. Here is where your things live.")
                         .font(AinkradFont.display(14))
                         .foregroundStyle(tokens.foreground)
@@ -55,7 +56,7 @@ struct SetupDoneStepView: View {
                     // the You step: the wizard reads as a single top-to-bottom
                     // sequence, and a second column asks the reader to work out
                     // an order that carries no meaning.
-                    VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: skin.spacing.md) {
                         point(
                             title: "In your Home folder",
                             body: "Workspaces, notes, skills, commands, agent history and "
@@ -92,13 +93,13 @@ struct SetupDoneStepView: View {
 
                     Text("You can change any of these choices later in Settings.")
                         .font(AinkradFont.display(12))
-                        .foregroundStyle(tokens.foreground.opacity(0.6))
+                        .foregroundStyle(tokens.foreground.opacity(skin.opacity.o60))
                         .fixedSize(horizontal: false, vertical: true)
                         .frame(
                             maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth),
                             alignment: .leading)
                 }
-                .padding(20)
+                .padding(skin.size.s20)
                 // FILLS the group, like every other step. The point cards hold
                 // their own width through the grid above.
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -145,23 +146,23 @@ struct SetupDoneStepView: View {
         title: String, body: String, icon: String,
         tokens: DesignTokens
     ) -> some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: skin.spacing.md) {
             Image(systemName: icon)
-                .font(.system(size: 13))
+                .font(skin.font(AinkradFontToken(sizeKey: "t13", scaled: false)))
                 .foregroundStyle(tokens.accentSecondary)
-                .frame(width: 18)
-            VStack(alignment: .leading, spacing: 4) {
+                .frame(width: skin.size.s18)
+            VStack(alignment: .leading, spacing: skin.spacing.xs) {
                 Text(title)
                     .font(AinkradFont.display(13, weight: .medium))
-                    .foregroundStyle(tokens.foreground.opacity(0.9))
+                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o90))
                 Text(body)
                     .font(AinkradFont.display(12))
-                    .foregroundStyle(tokens.foreground.opacity(0.6))
+                    .foregroundStyle(tokens.foreground.opacity(skin.opacity.o60))
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(12)
+        .padding(skin.spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: AinkradRadius.md).fill(tokens.surfaceElevated.opacity(0.4)))
+        .background(ChamferShape(cut: skin.radius.md).fill(tokens.surfaceElevated.opacity(skin.opacity.o40)))
     }
 }
