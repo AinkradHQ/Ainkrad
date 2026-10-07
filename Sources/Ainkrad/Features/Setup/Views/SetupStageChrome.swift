@@ -356,7 +356,7 @@ struct SetupStage<Content: View>: View {
             }
             .frame(maxWidth: .infinity)
         } else {
-            HStack(alignment: .firstTextBaseline, spacing: 13) {  // design-lint: allow spacing-literal token-gap size.s13
+            HStack(alignment: .firstTextBaseline, spacing: skin.size.s13) {
                 SetupBrandMark(
                     tokens: tokens,
                     reduceMotion: reduceMotion,

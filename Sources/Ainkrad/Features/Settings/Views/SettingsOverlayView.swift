@@ -326,7 +326,7 @@ struct SettingsOverlayView: View {
         } else {
             // A fixed settings section (General, Sound, …): a tinted SF Symbol.
             Image(systemName: systemIcon)
-                .font(.system(size: size * 0.6))  // design-lint: allow font-size token-gap settingsGlyphRatio
+                .font(.system(size: size * 0.6))  // design-lint: allow font-size kit-gap settingsGlyphRatio
                 .foregroundStyle(isSelected ? tokens.color(\.accentSecondary) : tokens.color(\.foreground).opacity(skin.opacity.o55))
                 .frame(width: size, height: size)
         }

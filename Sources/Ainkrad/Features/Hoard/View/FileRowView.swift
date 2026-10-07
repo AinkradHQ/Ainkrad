@@ -53,7 +53,7 @@ struct FileRowView: View {
             // bullet-point list rather than a status.
             if let gitStatus {
                 Image(systemName: gitStatus.glyph)
-                    .font(.system(size: iconSize * 0.5))  // design-lint: allow font-size token-gap gitGlyphRatio
+                    .font(.system(size: iconSize * 0.5))  // design-lint: allow font-size kit-gap gitGlyphRatio
                     .foregroundStyle(color(for: gitStatus))
                     .help(gitStatusLabel(gitStatus))
             }

@@ -1,4 +1,4 @@
-// design-lint: allow-file opacity-literal token-gap colors.sky — the sky's colour data (per-effect alphas)
+// design-lint: allow-file opacity-literal render-maths colors.sky — the sky's colour data (per-effect alphas)
 import AinkradAppKitUI
 import AinkradHostRuntime
 import AppKit

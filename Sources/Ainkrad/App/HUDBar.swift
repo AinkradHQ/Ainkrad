@@ -1,4 +1,4 @@
-// design-lint: allow-file raw-color token-gap colors.trafficLight — the full-screen window controls
+// design-lint: allow-file raw-color kit-gap colors.trafficLight — the full-screen window controls
 import AinkradAppKit
 import AinkradHostRuntime
 import AppKit
