@@ -50,7 +50,7 @@ struct NeonAppTile: View {
 
     var body: some View {
         Image(systemName: symbol)
-            .font(.system(size: size * 0.82, weight: .medium))  // design-lint: allow font-size token-gap neonGlyphRatio
+            .font(.system(size: size * 0.82, weight: .medium))  // design-lint: allow font-size kit-gap neonGlyphRatio
             .foregroundStyle(tokens.color(\.accentSecondary))
             // Glow scales with the render size so the bloom reads the same at
             // 18pt or 88pt — kept subtle.
