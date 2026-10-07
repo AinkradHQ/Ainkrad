@@ -63,6 +63,22 @@ struct HoardAppearanceTests {
         #expect(Array(labels.prefix(4)) == ["Open as", "Open in", "Transparency", "Blur"])
     }
 
+    @Test("the Transparency slider reads as transparency: right is more see-through")
+    func transparencySliderDirection() throws {
+        let environment = AppEnvironment.preview()
+        let groups = HoardSettingsCatalog.groups(
+            root: SettingsPath(["app", HoardApp.id]), environment: environment)
+        let field = try #require(groups.flatMap(\.fields).first { $0.label == "Transparency" })
+        guard case .slider(let range, _, let value) = field.kind else { Issue.record("not a slider"); return }
+        #expect(range == 0.0...0.7)
+        // Opaque (the default) sits at the LEFT end.
+        #expect(value.wrappedValue == 0)
+        value.wrappedValue = 0.5
+        #expect(abs(environment.appAppearanceStore.surfaceOpacity(HoardApp.id) - 0.5) < 1e-9)
+        value.wrappedValue = 0.7
+        #expect(abs(environment.appAppearanceStore.surfaceOpacity(HoardApp.id) - 0.3) < 1e-9)
+    }
+
     @Test("Hoard is exempt from the host's auto-appended blur group")
     func noDuplicateBlurGroup() {
         let environment = AppEnvironment.preview()

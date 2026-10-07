@@ -56,13 +56,14 @@ enum HoardSettingsCatalog {
                     path: group.appending("opacity"),
                     label: "Transparency",
                     help:
-                        "Lower values reveal the workspace island behind the pane. The title bar follows the same value, so the window stays one continuous surface.",
+                        "Higher values reveal more of the workspace island behind the pane. The title bar follows the same value, so the window stays one continuous surface.",
                     keywords: ["transparency", "opacity", "translucent", "island", "glass"],
+                    // Stored as opacity, shown as transparency: right = more see-through.
                     kind: .slider(
-                        range: 0.3...1.0, step: 0.05,
+                        range: 0.0...0.7, step: 0.05,
                         value: Binding(
-                            get: { appearance.surfaceOpacity(HoardApp.id) },
-                            set: { appearance.setSurfaceOpacity(HoardApp.id, $0) })),
+                            get: { 1 - appearance.surfaceOpacity(HoardApp.id) },
+                            set: { appearance.setSurfaceOpacity(HoardApp.id, 1 - $0) })),
                     defaultDescription: "Opaque",
                     isModified: { appearance.surfaceOpacity(HoardApp.id) != 1.0 },
                     reset: { appearance.setSurfaceOpacity(HoardApp.id, 1.0) }),

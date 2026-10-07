@@ -146,4 +146,18 @@ struct AppSettingsCatalogTests {
             }
         }
     }
+
+    @Test("the host's Blur toggle goes only to apps with a transparency slider")
+    func blurNeedsTransparency() {
+        let path = SettingsPath(["app", "x", "appearance"])
+        let slider = SettingsField(
+            path: path.appending("transparency"), label: "Background transparency", keywords: ["transparency"],
+            kind: .slider(range: 0...1, step: 0.05, value: .constant(0.5)))
+        let fontSize = SettingsField(
+            path: path.appending("font-size"), label: "Font size", keywords: ["font"],
+            kind: .slider(range: 9...28, step: 1, value: .constant(12)))
+        #expect(AppSettingsCatalog.hasTransparencySlider([fontSize, slider]))
+        #expect(!AppSettingsCatalog.hasTransparencySlider([fontSize]))
+        #expect(!AppSettingsCatalog.hasTransparencySlider([]))
+    }
 }
