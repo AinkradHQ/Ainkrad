@@ -30,6 +30,13 @@
       "yOffset" : -30
     }
   },
+  "colors" : {
+    "graphLanes" : [
+      "#61CC85",
+      "#EB9E52",
+      "#9985EB"
+    ]
+  },
   "components" : {
     "appTile" : {
       "fill" : "surfaceElevated@0.85",
@@ -2058,7 +2065,8 @@
       "d0_18" : 0.18,
       "d0_2" : 0.2,
       "d0_22" : 0.22,
-      "d0_32" : 0.32
+      "d0_32" : 0.32,
+      "d1_4" : 1.4
     },
     "fast" : 0.15,
     "hover" : {
@@ -2394,6 +2402,7 @@
     "s120" : 120,
     "s124" : 124,
     "s128" : 128,
+    "s13" : 13,
     "s14" : 14,
     "s140" : 140,
     "s15" : 15,
@@ -2479,6 +2488,24 @@
     "xxl" : 32
   },
   "syntax" : {
+    "callout" : {
+      "abstract" : 175,
+      "bug" : 350,
+      "example" : 275,
+      "failure" : 0,
+      "note" : 210,
+      "onDark" : {
+        "brightness" : 0.95,
+        "saturation" : 0.55
+      },
+      "onLight" : {
+        "brightness" : 0.7,
+        "saturation" : 0.75
+      },
+      "success" : 140,
+      "todo" : 45,
+      "warning" : 30
+    },
     "comment" : "foreground@0.45",
     "keywordHue" : 285,
     "numberHue" : 30,
@@ -2523,6 +2550,18 @@
     "primary" : "foreground"
   },
   "type" : {
+    "editor" : {
+      "headingRatios" : [
+        1.8,
+        1.6,
+        1.4,
+        1.25,
+        1.125,
+        1.05
+      ],
+      "labelRatio" : 0.85,
+      "lineHeight" : 1.5
+    },
     "monoFamily" : "JetBrains Mono",
     "roles" : {
       "body" : 14,
