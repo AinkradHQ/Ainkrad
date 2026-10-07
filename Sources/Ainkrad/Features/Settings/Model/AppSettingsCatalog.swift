@@ -164,13 +164,22 @@ enum AppSettingsCatalog {
             : []
         fields += own?.fields ?? []
         let declaresBlur = fields.contains { $0.path.segments.last == "blur" }
-        if !declaresBlur && !ownsItsAppearance.contains(appID) {
+        if !declaresBlur && !ownsItsAppearance.contains(appID) && hasTransparencySlider(fields) {
             fields.append(blurField(appID: appID, group: path, environment: environment))
         }
         return SettingsGroup(
             path: path, title: "Appearance",
             footerNote: own?.footerNote ?? "How \(appName) opens, and how it looks.",
             fields: fields)
+    }
+
+    /// Blur only shows through a translucent pane, so an app with no
+    /// transparency slider gets no Blur toggle — it would do nothing.
+    static func hasTransparencySlider(_ fields: [SettingsField]) -> Bool {
+        fields.contains {
+            guard case .slider = $0.kind else { return false }
+            return $0.keywords.contains("transparency")
+        }
     }
 
     /// The blur toggle every app but the Sage gets — the host renders

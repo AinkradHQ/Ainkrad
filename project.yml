@@ -290,8 +290,8 @@ packages:
     # 28773ab: Epic 3 complete: every AppKit component reads the skin (T3.5.0-T3.5.9, #69-#80);
     #   AppKitUI ABI since ebeeb02: 0 removed, 4639 added (abi-ui-diff). default.theme regenerated.
     # 3618e86: Epic 4 promotions: AinkradRailItem, AinkradCornerBrackets, AinkradBrandChevron, .ainkradRowBackground, .ainkradOverlayChrome, AinkradCommandField (#81-#86).
-    # f4fcb8f: Epic 6.0 token-gap batch: size.s13, motion d1_4, type.editor, syntax.callout, colors.graphLanes (#88). default.theme regenerated.
-    revision: f4fcb8f5d6fe3c0b49a14b72fd7ed6cb219d45be
+    # 73662dd: settings slider thumb follows its value (#89).
+    revision: 73662dd800eb501c5fa53b5cb42785db9944f3ed
 
 targets:
   AinkradHostRuntime:
