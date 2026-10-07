@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("CrashLogWriter")
@@ -12,32 +13,39 @@ struct CrashLogWriterTests {
     }
 
     private func report(_ summary: String) -> CrashReport {
-        CrashReport(kind: .uncaughtException, timestamp: Date(timeIntervalSince1970: 0),
-                    appVersion: "1.0", summary: summary, detail: "d", stack: [])
+        CrashReport(
+            kind: .uncaughtException, timestamp: Date(timeIntervalSince1970: 0),
+            appVersion: "1.0", summary: summary, detail: "d", stack: [])
     }
 
     @Test func appendCreatesTheFileAndStoresOneRecord() {
-        let dir = tempDir(); defer { try? FileManager.default.removeItem(at: dir) }
+        let dir = tempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
         let writer = CrashLogWriter(directory: dir)
         writer.append(report("first"))
         #expect(writer.readAll().map(\.summary) == ["first"])
     }
 
     @Test func appendsAccumulateInOrder() {
-        let dir = tempDir(); defer { try? FileManager.default.removeItem(at: dir) }
+        let dir = tempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
         let writer = CrashLogWriter(directory: dir)
-        writer.append(report("a")); writer.append(report("b")); writer.append(report("c"))
+        writer.append(report("a"))
+        writer.append(report("b"))
+        writer.append(report("c"))
         #expect(writer.readAll().map(\.summary) == ["a", "b", "c"])
     }
 
     @Test func aSecondWriterSeesRecordsWrittenByTheFirst() {
-        let dir = tempDir(); defer { try? FileManager.default.removeItem(at: dir) }
+        let dir = tempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
         CrashLogWriter(directory: dir).append(report("persisted"))
         #expect(CrashLogWriter(directory: dir).readAll().map(\.summary) == ["persisted"])
     }
 
     @Test func rotatesOnceTheCapIsExceededSoTheLogCannotGrowForever() {
-        let dir = tempDir(); defer { try? FileManager.default.removeItem(at: dir) }
+        let dir = tempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
         // A cap far below one record forces rotation on the second append.
         let writer = CrashLogWriter(directory: dir, maxBytes: 64)
         writer.append(report("old"))
@@ -48,7 +56,8 @@ struct CrashLogWriterTests {
     }
 
     @Test func aCorruptTrailingLineDoesNotLoseTheGoodRecordsBeforeIt() throws {
-        let dir = tempDir(); defer { try? FileManager.default.removeItem(at: dir) }
+        let dir = tempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
         let writer = CrashLogWriter(directory: dir)
         writer.append(report("good"))
         // Simulate a crash mid-write: a truncated final line.
@@ -60,12 +69,14 @@ struct CrashLogWriterTests {
     }
 
     @Test func readAllOnAMissingFileReturnsEmptyRatherThanThrowing() {
-        let dir = tempDir(); defer { try? FileManager.default.removeItem(at: dir) }
+        let dir = tempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
         #expect(CrashLogWriter(directory: dir).readAll().isEmpty)
     }
 
     @Test func appendFailurePreservesEarlierRecordsAndDoesNotTrap() {
-        let dir = tempDir(); defer { try? FileManager.default.removeItem(at: dir) }
+        let dir = tempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
 
         // Write two good records through a normal writer
         let normalWriter = CrashLogWriter(directory: dir)
@@ -75,7 +86,8 @@ struct CrashLogWriterTests {
 
         // Construct a writer with a custom appendBytes that always throws
         let failingAppendBytes: (Data, URL) throws -> Void = { _, _ in
-            throw NSError(domain: "TestError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Simulated write failure"])
+            throw NSError(
+                domain: "TestError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Simulated write failure"])
         }
         let failingWriter = CrashLogWriter(directory: dir, appendBytes: failingAppendBytes)
 

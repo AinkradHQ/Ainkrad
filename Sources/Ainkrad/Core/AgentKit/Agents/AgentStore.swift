@@ -1,7 +1,7 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/Agents/AgentStore.swift
 import Foundation
 import Observation
-import AinkradHostRuntime
 
 struct AgentsDocument: PersistableDocument {
     static let documentID = "agents"
@@ -88,5 +88,8 @@ final class AgentStore {
     }
 
     private func rebuild() { agents = BuiltInAgents.all + document.custom }
-    private func save() { persistence.save(document); rebuild() }
+    private func save() {
+        persistence.save(document)
+        rebuild()
+    }
 }

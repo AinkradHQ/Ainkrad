@@ -1,5 +1,6 @@
-import Foundation
+import AinkradHostRuntime
 import CryptoKit
+import Foundation
 
 enum ClaudeOAuthError: Error, Equatable {
     /// Token endpoint returned a non-200. `body` is the response payload — for a
@@ -62,8 +63,8 @@ struct ClaudeOAuthFlow {
     static let redirectURI = "http://localhost:53692/callback"
     static let scopes = "org:create_api_key user:profile user:inference"
     static let tokenURLs = [
-        URL(string: "https://platform.claude.com/v1/oauth/token")!,
-        URL(string: "https://console.anthropic.com/v1/oauth/token")!,
+        URL(checkedLiteral: "https://platform.claude.com/v1/oauth/token"),
+        URL(checkedLiteral: "https://console.anthropic.com/v1/oauth/token"),
     ]
 
     private let transport: OAuthTokenTransport
@@ -76,7 +77,8 @@ struct ClaudeOAuthFlow {
 
     static func authorizeURL(state: String, challenge: String) -> URL {
         // Build query parameters with proper percent-encoding
-        let unreserved = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
+        let unreserved = CharacterSet(
+            charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
         let params: [(String, String)] = [
             ("code", "true"),
             ("client_id", clientID),
@@ -89,30 +91,39 @@ struct ClaudeOAuthFlow {
         ]
 
         let queryString = params.map { key, value in
-            let encodedValue = value.addingPercentEncoding(withAllowedCharacters: unreserved)!
+            // Only fails for a string that is not valid Unicode, which a Swift `String` never is.
+            guard let encodedValue = value.addingPercentEncoding(withAllowedCharacters: unreserved) else {
+                preconditionFailure("OAuth authorize: could not percent-encode \(key)")
+            }
             return "\(key)=\(encodedValue)"
         }.joined(separator: "&")
 
-        return URL(string: "https://claude.ai/oauth/authorize?\(queryString)")!
+        // Every value is percent-encoded to the unreserved set above, so the string always parses.
+        guard let url = URL(string: "https://claude.ai/oauth/authorize?\(queryString)") else {
+            preconditionFailure("OAuth authorize: malformed URL")
+        }
+        return url
     }
 
     func exchange(code: String, verifier: String, state: String) async throws -> OAuthToken {
-        try await postToken(body: [
-            "grant_type": "authorization_code",
-            "client_id": Self.clientID,
-            "code": code,
-            "state": state,
-            "redirect_uri": Self.redirectURI,
-            "code_verifier": verifier,
-        ], fallbackRefresh: nil)
+        try await postToken(
+            body: [
+                "grant_type": "authorization_code",
+                "client_id": Self.clientID,
+                "code": code,
+                "state": state,
+                "redirect_uri": Self.redirectURI,
+                "code_verifier": verifier,
+            ], fallbackRefresh: nil)
     }
 
     func refresh(refreshToken: String) async throws -> OAuthToken {
-        try await postToken(body: [
-            "grant_type": "refresh_token",
-            "client_id": Self.clientID,
-            "refresh_token": refreshToken,
-        ], fallbackRefresh: refreshToken)
+        try await postToken(
+            body: [
+                "grant_type": "refresh_token",
+                "client_id": Self.clientID,
+                "refresh_token": refreshToken,
+            ], fallbackRefresh: refreshToken)
     }
 
     private func postToken(body: [String: String], fallbackRefresh: String?) async throws -> OAuthToken {
@@ -130,7 +141,9 @@ struct ClaudeOAuthFlow {
                 lastStatus = resp.statusCode
                 // Failure payload is an OAuth error JSON (no token) — keep + log it.
                 lastBody = String(data: data, encoding: .utf8) ?? ""
-                Log.settings.error("OAuth token endpoint \(url.host ?? "?", privacy: .public) → \(resp.statusCode, privacy: .public): \(lastBody, privacy: .public)")
+                Log.settings.error(
+                    "OAuth token endpoint \(url.host ?? "?", privacy: .public) → \(resp.statusCode, privacy: .public): \(lastBody, privacy: .public)"
+                )
                 // Fall through to the fallback host ONLY for host/route-level
                 // problems (5xx, 404). An auth/rate response (400/401/403/429)
                 // is a definitive answer for THIS single-use code — retrying the
@@ -140,17 +153,20 @@ struct ClaudeOAuthFlow {
                 throw ClaudeOAuthError.tokenEndpoint(status: resp.statusCode, body: lastBody)
             }
             guard let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let access = obj["access_token"] as? String else {
+                let access = obj["access_token"] as? String
+            else {
                 throw ClaudeOAuthError.malformedResponse
             }
             let refresh = (obj["refresh_token"] as? String) ?? fallbackRefresh ?? ""
             let expiresIn = (obj["expires_in"] as? Double) ?? 3600
             let scopeStr = (obj["scope"] as? String) ?? Self.scopes
-            return OAuthToken(accessToken: access, refreshToken: refresh,
-                              expiresAt: Date().addingTimeInterval(expiresIn),
-                              scopes: scopeStr.split(separator: " ").map(String.init))
+            return OAuthToken(
+                accessToken: access, refreshToken: refresh,
+                expiresAt: Date().addingTimeInterval(expiresIn),
+                scopes: scopeStr.split(separator: " ").map(String.init))
         }
-        throw lastStatus == 0 ? ClaudeOAuthError.allEndpointsFailed
-                              : ClaudeOAuthError.tokenEndpoint(status: lastStatus, body: lastBody)
+        throw lastStatus == 0
+            ? ClaudeOAuthError.allEndpointsFailed
+            : ClaudeOAuthError.tokenEndpoint(status: lastStatus, body: lastBody)
     }
 }

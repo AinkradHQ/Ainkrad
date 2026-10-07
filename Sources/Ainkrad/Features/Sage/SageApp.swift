@@ -1,5 +1,7 @@
-import SwiftUI
 import AinkradAppKit
+import AinkradAppKitUI
+import AinkradHostRuntime
+import SwiftUI
 
 /// The compiled-in Sage app — the tiled AgentKit chat surface. It is
 /// host-embedded rather than a real plugin: its views read `AppEnvironment`
@@ -26,6 +28,20 @@ enum SageApp: AinkradApp {
     /// is unit-testable without `AppEnvironment`.
     static func surfaceFill(opacity: Double, base: Color) -> Color? {
         opacity < 1 ? base.opacity(opacity) : nil
+    }
+
+    /// The typography the assistant transcript body renders with: Sage's own
+    /// per-app override where the user set one, otherwise the global
+    /// Appearance setting — each half independently. Only the transcript reads
+    /// it, so the rest of the host keeps the global face. Pure, so it is
+    /// testable without `AppEnvironment`.
+    static func typography(
+        family: UIFontFamily?, scale: UIFontScale?,
+        globalFamily: UIFontFamily, globalScale: UIFontScale
+    ) -> AinkradTypography {
+        AinkradTypography(
+            fontFamilyName: (family ?? globalFamily).fontName,
+            scale: (scale ?? globalScale).multiplier)
     }
 }
 

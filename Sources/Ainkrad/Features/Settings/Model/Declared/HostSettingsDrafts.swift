@@ -1,6 +1,6 @@
-import SwiftUI
-import AppKit
 import AinkradHostRuntime
+import AppKit
+import SwiftUI
 
 /// What a declared host page must remember between rebuilds (the settings
 /// overlay rebuilds its catalog on every render): text being typed that is
@@ -37,8 +37,9 @@ final class HostSettingsDrafts {
 
     func skills(_ environment: AppEnvironment) -> SkillsManagerViewModel {
         if let skillsModel { return skillsModel }
-        let made = SkillsManagerViewModel(registry: environment.skillRegistry, store: environment.skillCommandStore,
-                                          resyncCommands: { [weak environment] in environment?.resyncSkillCommands() })
+        let made = SkillsManagerViewModel(
+            registry: environment.skillRegistry, store: environment.skillCommandStore,
+            resyncCommands: { [weak environment] in environment?.resyncSkillCommands() })
         skillsModel = made
         return made
     }
@@ -91,6 +92,10 @@ final class HostSettingsDrafts {
         videoStore = made
         return made
     }
+    /// A destructive declared action waiting for the user's answer. The
+    /// overlay presents it as an `AinkradConfirmDialog`; the catalog that
+    /// asked has been rebuilt by then, so the request lives here.
+    var pendingConfirm: SettingsConfirmRequest?
     /// The one shortcut recorder the Keyboard rows share. Stopped when the
     /// settings overlay closes, so a key pressed later never rebinds anything.
     let recorder = ShortcutRecorder()
@@ -105,8 +110,20 @@ final class HostSettingsDrafts {
     /// Forget the per-provider speech drafts, so switching provider shows that
     /// provider's saved values.
     func resetSpeechDrafts() {
-        speechAPIKey = nil; speechVoice = nil; speechModel = nil; speechBaseURL = nil
+        speechAPIKey = nil
+        speechVoice = nil
+        speechModel = nil
+        speechBaseURL = nil
     }
+}
+
+/// A confirm the settings overlay shows for a destructive declared action.
+/// `onConfirm` runs only when the user confirms.
+struct SettingsConfirmRequest {
+    let title: String
+    let message: String
+    let action: String
+    let onConfirm: () -> Void
 }
 
 /// Drives the shared `NSColorPanel` for one declared color row at a time.
@@ -126,6 +143,6 @@ final class SettingsColorPanel: NSObject {
     }
 
     @objc private func changed(_ sender: NSColorPanel) {
-        onChange?(Color(nsColor: sender.color))
+        onChange?(Color(nsColor: sender.color))  // design-lint: allow raw-color kit gap, declared color row
     }
 }

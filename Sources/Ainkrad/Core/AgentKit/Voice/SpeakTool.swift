@@ -1,6 +1,6 @@
-import Foundation
 import AVFoundation
 import AinkradHostRuntime
+import Foundation
 
 /// Text-to-speech seam. `SystemSpeechSynthesizer` uses on-device AVFoundation
 /// (no key, no network) — reusing the Voice subsystem rather than a provider.
@@ -38,8 +38,10 @@ struct SpeakTool: AgentTool {
         .object([
             "type": .string("object"),
             "properties": .object([
-                "text": .object(["type": .string("string"),
-                                 "description": .string("Text to speak aloud.")]),
+                "text": .object([
+                    "type": .string("string"),
+                    "description": .string("Text to speak aloud."),
+                ])
             ]),
             "required": .array([.string("text")]),
         ])

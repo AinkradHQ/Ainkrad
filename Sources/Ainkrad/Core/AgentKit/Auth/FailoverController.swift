@@ -70,9 +70,11 @@ struct FailoverController {
         keys: [String],
         send: (_ model: String, _ keyIndex: Int) async -> SendOutcome<Success>
     ) async -> RunResult<Success> {
-        guard var current = nextAttempt(
-            models: models, keys: keys, failedModel: nil, failedKeyIndex: nil, errorKind: .providerError
-        ) else {
+        guard
+            var current = nextAttempt(
+                models: models, keys: keys, failedModel: nil, failedKeyIndex: nil, errorKind: .providerError
+            )
+        else {
             return .exhausted(lastMessage: "no candidates configured")
         }
 
@@ -84,11 +86,13 @@ struct FailoverController {
                 return .success(value, model: current.model, keyIndex: current.keyIndex)
             case .failure(let kind, let message):
                 lastMessage = message
-                guard let next = nextAttempt(
-                    models: models, keys: keys,
-                    failedModel: current.model, failedKeyIndex: current.keyIndex,
-                    errorKind: kind
-                ) else {
+                guard
+                    let next = nextAttempt(
+                        models: models, keys: keys,
+                        failedModel: current.model, failedKeyIndex: current.keyIndex,
+                        errorKind: kind
+                    )
+                else {
                     return .exhausted(lastMessage: message)
                 }
                 current = next
@@ -115,17 +119,29 @@ struct FailoverController {
         // Genuine content/user errors — never retryable.
         if m.contains("400") || m.contains("404") || m.contains("bad request")
             || m.contains("invalid request") || m.contains("invalid_request_error")
-            || m.contains("not found") { return nil }
+            || m.contains("not found")
+        {
+            return nil
+        }
 
         if m.contains("429") || m.contains("rate limit") || m.contains("rate_limit")
-            || m.contains("too many requests") { return .rateLimit }
+            || m.contains("too many requests")
+        {
+            return .rateLimit
+        }
 
         if m.contains("quota") || m.contains("insufficient_quota") || m.contains("billing")
-            || m.contains("payment required") || m.contains("402") { return .quota }
+            || m.contains("payment required") || m.contains("402")
+        {
+            return .quota
+        }
 
         if m.contains("401") || m.contains("403") || m.contains("unauthorized")
             || m.contains("authentication") || m.contains("invalid api key")
-            || m.contains("invalid_api_key") || m.contains("forbidden") { return .auth }
+            || m.contains("invalid_api_key") || m.contains("forbidden")
+        {
+            return .auth
+        }
 
         if m.contains("500") || m.contains("502") || m.contains("503") || m.contains("504")
             || m.contains("529") || m.contains("overloaded") || m.contains("timed out")
@@ -139,7 +155,10 @@ struct FailoverController {
             // never advances past a dead local endpoint to a reachable candidate.
             || m.contains("could not connect") || m.contains("cannot connect")
             || m.contains("connection refused") || m.contains("network connection was lost")
-            || m.contains("-1004") || m.contains("-1001") || m.contains("-1009") { return .providerError }
+            || m.contains("-1004") || m.contains("-1001") || m.contains("-1009")
+        {
+            return .providerError
+        }
 
         // Unknown shape: conservative default is non-retryable rather than risk looping
         // through every candidate for an error nobody has recognized as transient.

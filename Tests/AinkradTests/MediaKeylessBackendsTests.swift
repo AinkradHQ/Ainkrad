@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradHostRuntime
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("MediaKeylessBackends")
@@ -8,20 +9,34 @@ struct MediaKeylessBackendsTests {
     /// Returns raw bytes with a chosen status; records the requested URL.
     private final class Recorder: @unchecked Sendable { var url: URL? }
     private struct BytesHTTP: DataHTTPClient {
-        let bytes: [UInt8]; let status: Int; let recorder: Recorder?
+        let bytes: [UInt8]
+        let status: Int
+        let recorder: Recorder?
         init(bytes: [UInt8], status: Int = 200, recorder: Recorder? = nil) {
-            self.bytes = bytes; self.status = status; self.recorder = recorder
+            self.bytes = bytes
+            self.status = status
+            self.recorder = recorder
         }
         func data(for request: URLRequest) async throws -> (Data, HTTPURLResponse) {
             recorder?.url = request.url!
-            return (Data(bytes), HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!)
+            return (
+                Data(bytes),
+                HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!
+            )
         }
     }
     private struct JSONHTTP: DataHTTPClient {
-        let json: String; let status: Int
-        init(json: String, status: Int = 200) { self.json = json; self.status = status }
+        let json: String
+        let status: Int
+        init(json: String, status: Int = 200) {
+            self.json = json
+            self.status = status
+        }
         func data(for request: URLRequest) async throws -> (Data, HTTPURLResponse) {
-            (Data(json.utf8), HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!)
+            (
+                Data(json.utf8),
+                HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!
+            )
         }
     }
 
@@ -34,7 +49,7 @@ struct MediaKeylessBackendsTests {
         #expect(MediaMime.sniff(Data(pngBytes)) == "image/png")
         #expect(MediaMime.sniff(Data(jpegBytes)) == "image/jpeg")
         #expect(MediaMime.sniff(Data([0x47, 0x49, 0x46, 0x38])) == "image/gif")
-        #expect(MediaMime.sniff(Data([0x00, 0x01, 0x02])) == "image/png") // unknown → png default
+        #expect(MediaMime.sniff(Data([0x00, 0x01, 0x02])) == "image/png")  // unknown → png default
     }
 
     // MARK: Pollinations
@@ -76,7 +91,8 @@ struct MediaKeylessBackendsTests {
     }
 
     @Test func localSDHTTPErrorThrows() async {
-        let backend = LocalStableDiffusionBackend(baseURL: "http://127.0.0.1:7860", http: JSONHTTP(json: "err", status: 500))
+        let backend = LocalStableDiffusionBackend(
+            baseURL: "http://127.0.0.1:7860", http: JSONHTTP(json: "err", status: 500))
         await #expect(throws: ToolError.self) { _ = try await backend.generateImage(prompt: "x") }
     }
 }

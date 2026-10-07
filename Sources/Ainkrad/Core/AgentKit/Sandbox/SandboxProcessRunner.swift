@@ -16,10 +16,12 @@ struct SandboxProcessRunner: Sendable {
     // is exceeded, so a flood can't grow memory unbounded. A parallel
     // wall-clock timer force-terminates a process that never produces
     // EOF (`tail -f`, `yes`, a dev server, an interactive REPL).
-    func run(executable: String, arguments: [String],
-             workingDir: String?, timeout: TimeInterval,
-             onOutput: (@Sendable (String) -> Void)? = nil,
-             controller: TerminalProcessController? = nil) async -> ExecutionResult {
+    func run(
+        executable: String, arguments: [String],
+        workingDir: String?, timeout: TimeInterval,
+        onOutput: (@Sendable (String) -> Void)? = nil,
+        controller: TerminalProcessController? = nil
+    ) async -> ExecutionResult {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: executable)
         process.arguments = arguments
@@ -32,8 +34,9 @@ struct SandboxProcessRunner: Sendable {
             try process.run()
             controller?.setActive(process)
         } catch {
-            return ExecutionResult(output: "Could not launch: \(error.localizedDescription)",
-                                   exitCode: -1, timedOut: false, unresponsive: false)
+            return ExecutionResult(
+                output: "Could not launch: \(error.localizedDescription)",
+                exitCode: -1, timedOut: false, unresponsive: false)
         }
 
         let handle = pipe.fileHandleForReading
@@ -114,8 +117,9 @@ struct SandboxProcessRunner: Sendable {
 
         let full = String(decoding: accumulator.snapshot(), as: UTF8.self)
         let output = boundedTail(full)
-        return ExecutionResult(output: output, exitCode: exitStatus,
-                               timedOut: timedOut, unresponsive: unresponsive)
+        return ExecutionResult(
+            output: output, exitCode: exitStatus,
+            timedOut: timedOut, unresponsive: unresponsive)
     }
 
     private func boundedTail(_ raw: String) -> String {
@@ -135,13 +139,17 @@ final class TerminalProcessController: @unchecked Sendable {
     private var active: Process?
 
     func setActive(_ process: Process?) {
-        lock.lock(); active = process; lock.unlock()
+        lock.lock()
+        active = process
+        lock.unlock()
     }
 
     /// SIGTERM the live child, then SIGINT shortly after if it's still running —
     /// the same escalation the timeout path uses. No-op when nothing is running.
     func killActive() {
-        lock.lock(); let process = active; lock.unlock()
+        lock.lock()
+        let process = active
+        lock.unlock()
         guard let process, process.isRunning else { return }
         process.terminate()
         DispatchQueue.global().asyncAfter(deadline: .now() + 0.3) {
@@ -158,6 +166,7 @@ final class TerminalProcessController: @unchecked Sendable {
 /// local `var`) keeps every closure that touches it a plain capture of a
 /// `Sendable` reference, satisfying Swift 6 strict concurrency at the
 /// `@Sendable` closure boundaries `DispatchQueue`/`Process` require.
+/// `@unchecked Sendable`: every mutable property is read and written under `lock`.
 private final class ContinuationGate: @unchecked Sendable {
     private let lock = NSLock()
     private var didResume = false

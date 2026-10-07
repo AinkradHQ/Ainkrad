@@ -1,15 +1,15 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/Memory/MemorySearchTool.swift
 import Foundation
-import AinkradHostRuntime
 
 struct MemorySearchTool: AgentTool {
     let service: MemoryService
 
     let name = "memory_search"
     let description = """
-    Search the assistant's long-term memory (and past-session summaries) for relevant facts. \
-    Call this before assuming you don't know something about the user or project.
-    """
+        Search the assistant's long-term memory (and past-session summaries) for relevant facts. \
+        Call this before assuming you don't know something about the user or project.
+        """
     let permission: ToolPermissionClass = .read
 
     var parametersSchema: JSONValue {

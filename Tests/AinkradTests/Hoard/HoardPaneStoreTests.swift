@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradHostRuntime
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 /// Minimal in-memory `PersistenceStore` for these tests.
@@ -103,10 +104,11 @@ struct HoardPaneStoreTests {
     @Test("a restored tab whose directory has vanished falls back to home")
     func restoreMissingDirectory() {
         let persistence = MemoryPersistence()
-        persistence.save(HoardPaneDocument(
-            tabPaths: ["/Users/test/Documents", "/gone"],
-            activeTabIndex: 1, showHidden: false,
-            sortKey: "name", sortAscending: true))
+        persistence.save(
+            HoardPaneDocument(
+                tabPaths: ["/Users/test/Documents", "/gone"],
+                activeTabIndex: 1, showHidden: false,
+                sortKey: "name", sortAscending: true))
 
         let store = HoardPaneStore(fileSystem: makeFS(), persistence: persistence)
         #expect(store.tabs.count == 2)

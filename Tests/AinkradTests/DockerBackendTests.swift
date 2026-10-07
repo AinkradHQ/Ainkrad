@@ -1,6 +1,7 @@
 // Tests/AinkradTests/DockerBackendTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("DockerBackend")
@@ -31,10 +32,11 @@ struct DockerBackendTests {
         defer { try? FileManager.default.removeItem(at: marker) }
 
         await #expect(throws: BackendError.self) {
-            _ = try await b.run(ExecutionRequest(
-                command: "touch \(marker.path)",
-                workingDir: "/tmp",
-                profile: profile))
+            _ = try await b.run(
+                ExecutionRequest(
+                    command: "touch \(marker.path)",
+                    workingDir: "/tmp",
+                    profile: profile))
         }
 
         #expect(!FileManager.default.fileExists(atPath: marker.path))

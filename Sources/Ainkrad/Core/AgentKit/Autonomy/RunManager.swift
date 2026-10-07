@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 import Foundation
 import Observation
-import AinkradHostRuntime
 
 /// The `@Observable` engine that owns `AgentRun`s end-to-end: a queue, a
 /// bounded active/running set, terminal history, pause/stop, best-effort
@@ -20,8 +20,10 @@ final class RunManager {
     private let maxConcurrent: Int
     private var tasks: [UUID: Task<Void, Never>] = [:]
 
-    init(persistence: PersistenceStore, runner: AgentRunRunner,
-         signalCenter: SignalCenter? = nil, maxConcurrent: Int = 2) {
+    init(
+        persistence: PersistenceStore, runner: AgentRunRunner,
+        signalCenter: SignalCenter? = nil, maxConcurrent: Int = 2
+    ) {
         self.persistence = persistence
         self.runner = runner
         self.signalCenter = signalCenter
@@ -47,8 +49,10 @@ final class RunManager {
     var history: [AgentRun] { runs.filter { [.done, .failed, .interrupted].contains($0.status) } }
 
     @discardableResult
-    func enqueue(prompt: String, origin: AgentRunOrigin = .chat,
-                 posture: SavedExecutionPosture? = nil) -> AgentRun {
+    func enqueue(
+        prompt: String, origin: AgentRunOrigin = .chat,
+        posture: SavedExecutionPosture? = nil
+    ) -> AgentRun {
         let run = AgentRun(origin: origin, prompt: prompt, posture: posture)
         document.runs.append(run)
         save()
@@ -90,7 +94,8 @@ final class RunManager {
     func pump() {
         var runningCount = document.runs.filter { $0.status == .running }.count
         while runningCount < maxConcurrent,
-              let id = document.runs.first(where: { $0.status == .queued })?.id {
+            let id = document.runs.first(where: { $0.status == .queued })?.id
+        {
             start(id)
             runningCount += 1
         }

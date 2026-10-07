@@ -65,8 +65,10 @@ public final class PluginLaunchHub {
     /// that only focused its pane. Kept apart from `pending` so it can never
     /// overwrite a real launch, and short-lived so an app that does not poll
     /// for it never receives it later as some other pane's launch payload.
-    public func enqueueTransient(target appID: String, payload: String,
-                                 lifetime: TimeInterval = 5, now: Date = Date()) {
+    public func enqueueTransient(
+        target appID: String, payload: String,
+        lifetime: TimeInterval = 5, now: Date = Date()
+    ) {
         transient[appID] = (payload, now.addingTimeInterval(lifetime))
     }
 

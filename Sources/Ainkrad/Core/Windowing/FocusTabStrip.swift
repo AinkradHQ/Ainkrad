@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Focus Mode's pane switcher: a horizontal tab strip along the TOP edge of
 /// the canvas — one tab per open panel, the active one filling the canvas
@@ -16,8 +16,13 @@ import AinkradHostRuntime
 /// Selecting a tab moves the host's focus AND hands the keyboard to the app in
 /// the pane that comes forward (see `PaneKeyFocusAnchor`) — the tab you clicked
 /// is the one you can type into.
+///
+/// Not `AinkradTabs`: the kit's tabs are text labels only, and a pane tab also
+/// carries its app tile, its ⌥N chip, a rename field and a close button — an
+/// Epic 4 gap ("pane tab strip"). Local, on skin tokens and kit buttons.
 struct FocusTabStrip: View {
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradSkin) private var skin
     let workspace: Workspace
 
     /// The pane whose tab is being renamed, if any. Held here rather than in
@@ -26,18 +31,15 @@ struct FocusTabStrip: View {
     private var tileLayout: TileLayout { workspace.tileLayout }
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
-
-        HStack(spacing: 4) {
+        HStack(spacing: skin.spacing.xs) {
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 2) {
+                HStack(spacing: skin.size.s2) {
                     ForEach(Array(tileLayout.blocks.enumerated()), id: \.element.id) { index, block in
                         FocusTab(
                             block: block,
                             ordinal: index,
                             appName: appName(for: block),
                             symbol: symbol(for: block),
-                            tokens: tokens,
                             isActive: tileLayout.focusedBlockID == block.id,
                             isRenaming: renamingBlockID == block.id,
                             canClose: tileLayout.blocks.count > 1,
@@ -52,22 +54,16 @@ struct FocusTabStrip: View {
                         )
                     }
                 }
-                .padding(.horizontal, 2)
+                .padding(.horizontal, skin.size.s2)
             }
 
-            Button {
+            AinkradIconButton(
+                systemName: "rectangle.split.2x2", size: skin.size.s24, tooltip: "Back to Split Mode (⌘M)"
+            ) {
                 workspace.viewMode = .split
                 environment.workspaceManager.persist()
                 environment.sounds.play(.focusMode)
-            } label: {
-                Image(systemName: "rectangle.split.2x2")
-                    .font(.system(size: 11))
-                    .foregroundStyle(tokens.foreground.opacity(0.55))
-                    .frame(width: 26, height: 24)
-                    .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
-            .help("Back to Split Mode (⌘M)")
         }
         // A tab being renamed must not be yanked out from under the editor by a
         // pane closing elsewhere; clear the edit if its pane is gone.
@@ -110,7 +106,6 @@ private struct FocusTab: View {
     let ordinal: Int
     let appName: String?
     let symbol: String
-    let tokens: DesignTokens
     let isActive: Bool
     let isRenaming: Bool
     let canClose: Bool
@@ -120,15 +115,22 @@ private struct FocusTab: View {
     let onRename: (String) -> Void
     let onClose: () -> Void
 
+    @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradSkin) private var skin
     @Environment(\.ainkradReduceMotion) private var reduceMotion
     @State private var hovering = false
     @State private var draft = ""
     @FocusState private var fieldFocused: Bool
 
+    /// Colours come from `hostSkin`, which carries the user's custom accent;
+    /// every scalar comes from the environment's skin.
+    private var tokens: AinkradSkin { environment.themeManager.hostSkin }
     private var title: String { block.displayTitle(appName: appName) }
+    /// The pencil and × only show on the active or hovered tab.
+    private var showsTabActions: Bool { isActive || hovering }
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: skin.size.s6) {
             // The tab wears its own shortcut. Only the first nine get one —
             // ⌥1-9 is all the chord has room for, and a tenth tab showing
             // nothing is honest about that.
@@ -138,25 +140,27 @@ private struct FocusTab: View {
                     // container looking for a break — the workspace list's
                     // ACTIVE badge wrapped to "ACT"/"IVE" for exactly this.
                     .font(AinkradFont.mono(9, weight: .medium))
-                    .foregroundStyle(tokens.accentSecondary.opacity(isActive ? 0.95 : 0.5))
+                    .foregroundStyle(tokens.color(\.accentSecondary).opacity(isActive ? skin.opacity.o95 : skin.opacity.o50))
                     .lineLimit(1)
                     .fixedSize()
-                    .padding(.horizontal, 3)
-                    .padding(.vertical, 1)
+                    .padding(.horizontal, skin.size.s3)
+                    .padding(.vertical, skin.size.s1)
                     .background(
-                        ChamferShape(cut: 3)
-                            .fill(tokens.accentSecondary.opacity(isActive ? 0.16 : 0.08))
+                        ChamferShape(cut: skin.cut.c3)
+                            .fill(tokens.color(\.accentSecondary).opacity(isActive ? skin.opacity.o16 : skin.opacity.o08))
                     )
             }
 
-            NeonAppTile(symbol: symbol, tokens: tokens, size: 16)
-                .opacity(isActive ? 1 : 0.6)
+            NeonAppTile(symbol: symbol, tokens: tokens, size: skin.size.s16)
+                .opacity(isActive ? 1 : skin.opacity.o60)
 
             if isRenaming {
-                TextField("", text: $draft)
+                // The kit text field owns its focus state; this one must take
+                // focus the moment the rename starts.
+                TextField("", text: $draft)  // design-lint: allow raw-control kit gap, focus binding
                     .textFieldStyle(.plain)
                     .font(AinkradFont.display(11, weight: .medium))
-                    .foregroundStyle(tokens.foreground)
+                    .foregroundStyle(tokens.color(\.foreground))
                     .frame(maxWidth: .infinity)
                     .focused($fieldFocused)
                     .onSubmit(commit)
@@ -173,7 +177,7 @@ private struct FocusTab: View {
                 Text(title)
                     .font(AinkradFont.display(11, weight: isActive ? .medium : .regular))
                     .kerning(0.4)
-                    .foregroundStyle(tokens.foreground.opacity(isActive ? 0.95 : 0.55))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(isActive ? skin.opacity.o95 : skin.opacity.o55))
                     .lineLimit(1)
                     .truncationMode(.middle)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -183,17 +187,9 @@ private struct FocusTab: View {
             // selecting a tab has no gesture to disambiguate against (see the
             // tap gesture below).
             if !isRenaming {
-                Button(action: onBeginRename) {
-                    Image(systemName: "pencil")
-                        .font(.system(size: 8, weight: .semibold))
-                        .foregroundStyle(tokens.foreground.opacity(0.55))
-                        .frame(width: 14, height: 14)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .help("Rename")
-                .opacity(isActive || hovering ? 1 : 0)
-                .allowsHitTesting(isActive || hovering)
+                AinkradIconButton(systemName: "pencil", size: skin.size.s14, tooltip: "Rename", action: onBeginRename)
+                    .opacity(showsTabActions ? 1 : 0)
+                    .allowsHitTesting(showsTabActions)
             }
 
             // The slot is always reserved and the button fades in and out
@@ -201,27 +197,19 @@ private struct FocusTab: View {
             // title on every hover — a visible text reflow just from moving
             // the mouse across the strip.
             if canClose {
-                Button(action: onClose) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 8, weight: .bold))
-                        .foregroundStyle(tokens.foreground.opacity(0.55))
-                        .frame(width: 14, height: 14)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .help("Close (⌘W)")
-                .opacity((isActive || hovering) && !isRenaming ? 1 : 0)
-                .allowsHitTesting((isActive || hovering) && !isRenaming)
+                AinkradIconButton(systemName: "xmark", size: skin.size.s14, tooltip: "Close (⌘W)", action: onClose)
+                    .opacity(showsTabActions && !isRenaming ? 1 : 0)
+                    .allowsHitTesting(showsTabActions && !isRenaming)
             }
         }
-        .padding(.horizontal, 10)
+        .padding(.horizontal, skin.size.s10)
         // Tabs read as tabs at this width — a name has room to be a real name
         // rather than an ellipsis, and the row stays a stable set of targets
         // instead of resizing tab-by-tab as titles change. `maxWidth` caps a
         // long rename; `minWidth` is what stops a short one from shrinking to
         // a chip.
-        .frame(minWidth: 165, maxWidth: 250, alignment: .leading)
-        .frame(height: 30)
+        .frame(minWidth: skin.size.s165, maxWidth: skin.size.s250, alignment: .leading)
+        .frame(height: skin.size.s30)
         .background {
             // The active fill is drawn on every tab and cross-fades by
             // opacity, rather than one shared fill migrating between tabs via
@@ -230,18 +218,18 @@ private struct FocusTab: View {
             // moving coordinate space, so it flew in from the wrong place — or
             // from off-screen — on switches; that was the jump on every click.
             // Two cross-fading fills cannot fly anywhere.
-            ChamferShape(cut: AinkradRadius.sm)
-                .fill(tokens.accentPrimary.opacity(0.18))
+            ChamferShape(cut: skin.radius.sm)
+                .fill(tokens.color(\.accentPrimary).opacity(skin.opacity.o18))
                 .opacity(isActive ? 1 : 0)
                 .overlay {
-                    ChamferShape(cut: AinkradRadius.sm)
-                        .fill(tokens.foreground.opacity(0.06))
+                    ChamferShape(cut: skin.radius.sm)
+                        .fill(tokens.color(\.foreground).opacity(skin.opacity.o06))
                         .opacity(!isActive && hovering ? 1 : 0)
                 }
         }
         .overlay {
-            ChamferShape(cut: AinkradRadius.sm)
-                .strokeBorder(tokens.accentPrimary.opacity(0.45), lineWidth: 1)
+            ChamferShape(cut: skin.radius.sm)
+                .strokeBorder(tokens.color(\.accentPrimary).opacity(skin.opacity.o45), lineWidth: 1)
                 .opacity(isActive ? 1 : 0)
         }
         // An accent bar along the active tab's top edge, drawn on every tab and
@@ -251,11 +239,11 @@ private struct FocusTab: View {
         // it grows in from the tab's centre, which points at the pane below.
         .overlay(alignment: .top) {
             Capsule()
-                .fill(tokens.accentSecondary)
-                .frame(height: 2)
+                .fill(tokens.color(\.accentSecondary))
+                .frame(height: skin.size.s2)
                 .scaleEffect(x: isActive ? 1 : 0.3, anchor: .center)
                 .opacity(isActive ? 1 : 0)
-                .padding(.horizontal, 6)
+                .padding(.horizontal, skin.size.s6)
         }
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
@@ -278,11 +266,11 @@ private struct FocusTab: View {
             AinkradMenuItem(title: "Close", systemName: "xmark", isDestructive: true) { onClose() },
         ])
         .help(isRenaming ? "" : title)
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: hovering)
+        .animation(reduceMotion ? nil : .easeOut(duration: skin.motion.durations.d0_12), value: hovering)
         // Faster than the pane's 170ms arrival, so the tab confirms the click
         // first and the pane follows it. The other order — pane first, tab
         // catching up — is what makes a tab bar feel laggy even when it isn't.
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.15), value: isActive)
+        .animation(reduceMotion ? nil : .easeOut(duration: skin.motion.fast), value: isActive)
     }
 
     private func commit() {

@@ -88,17 +88,6 @@ final class ScryStore {
         overrideOrderBySession[sessionID] = order
     }
 
-    func clearOverrides() {
-        overridesBySession[sessionID] = [:]
-        overrideOrderBySession[sessionID] = []
-    }
-
-    func clear() {
-        models[sessionID] = ScryModel()
-        overridesBySession[sessionID] = [:]
-        overrideOrderBySession[sessionID] = []
-    }
-
     private func removeFromOverrideOrder(_ id: String) {
         var order = overrideOrder
         order.removeAll { $0 == id }
@@ -121,7 +110,8 @@ final class ScryStore {
         var m = m
         var evictedIDs: [String] = []
         while m.elements.count > Self.cardCap,
-              let victim = m.elements.first(where: { !$0.pinned }) {
+            let victim = m.elements.first(where: { !$0.pinned })
+        {
             m.remove(id: victim.id)
             evictedIDs.append(victim.id)
         }

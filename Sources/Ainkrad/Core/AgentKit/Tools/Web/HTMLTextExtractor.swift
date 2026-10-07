@@ -13,8 +13,10 @@ enum HTMLTextExtractor {
                 options: [.regularExpression, .caseInsensitive])
         }
         s = s.replacingOccurrences(of: "<[^>]+>", with: " ", options: .regularExpression)
-        let entities = ["&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": "\"",
-                        "&#39;": "'", "&nbsp;": " "]
+        let entities = [
+            "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": "\"",
+            "&#39;": "'", "&nbsp;": " ",
+        ]
         for (k, v) in entities { s = s.replacingOccurrences(of: k, with: v) }
         s = s.replacingOccurrences(of: "[ \\t]+", with: " ", options: .regularExpression)
         s = s.replacingOccurrences(of: "(\\s*\\n\\s*){2,}", with: "\n\n", options: .regularExpression)

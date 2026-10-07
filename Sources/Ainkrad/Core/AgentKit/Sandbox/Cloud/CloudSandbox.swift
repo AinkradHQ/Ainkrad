@@ -71,7 +71,8 @@ final class StubCloudSandboxBackend: CloudSandboxBackend {
     func wake() async throws {
         guard credentials.isConfigured(provider) else {
             throw BackendError.unavailable(
-                "Cloud provider \(provider.rawValue) is not configured — add credentials before waking a cloud sandbox.")
+                "Cloud provider \(provider.rawValue) is not configured — add credentials before waking a cloud sandbox."
+            )
         }
         // RESEARCH ITEM (follow-up task): the actual remote-provisioning call
         // for `provider` is not implemented. Fail closed rather than
@@ -93,13 +94,15 @@ final class StubCloudSandboxBackend: CloudSandboxBackend {
     func run(_ request: ExecutionRequest) async throws -> ExecutionResult {
         guard credentials.isConfigured(provider) else {
             return ExecutionResult(
-                output: "Cloud provider \(provider.rawValue) is not configured. Add credentials before running commands in the cloud sandbox. The command was not run.",
+                output:
+                    "Cloud provider \(provider.rawValue) is not configured. Add credentials before running commands in the cloud sandbox. The command was not run.",
                 exitCode: 1,
                 timedOut: false,
                 unresponsive: false)
         }
         return ExecutionResult(
-            output: "Cloud execution for provider \(provider.rawValue) is not yet implemented. The command was not run.",
+            output:
+                "Cloud execution for provider \(provider.rawValue) is not yet implemented. The command was not run.",
             exitCode: 1,
             timedOut: false,
             unresponsive: false)

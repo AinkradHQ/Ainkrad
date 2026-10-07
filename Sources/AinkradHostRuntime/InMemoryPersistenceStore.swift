@@ -9,6 +9,9 @@ import Foundation
 /// `Sendable`, and this store is handed to the same off-main call sites in
 /// tests. An unsynchronized dictionary here would just relocate the race into
 /// the test suite, where it is hardest to see.
+///
+/// `@unchecked Sendable` invariant: `storage` is the only mutable state and is
+/// touched only while holding `lock`.
 public final class InMemoryPersistenceStore: PersistenceStore, @unchecked Sendable {
     private let lock = NSLock()
     private var storage: [String: Data] = [:]

@@ -1,7 +1,7 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitContract
 import AinkradHostRuntime
+import SwiftUI
 
 /// "Open as", "Open in" and "Overlay size" — the first rows of every app's
 /// Appearance tab (`AppSettingsCatalog.appearanceTab`).
@@ -21,10 +21,12 @@ enum BuiltInSurfaceSettings {
 
     /// The "Open in" row is omitted when the app declares no basic mode,
     /// rather than shown inert, matching the kit view's own rule.
-    static func fields(in group: SettingsPath,
-                       appID: String,
-                       appName: String,
-                       environment: AppEnvironment) -> [SettingsField] {
+    static func fields(
+        in group: SettingsPath,
+        appID: String,
+        appName: String,
+        environment: AppEnvironment
+    ) -> [SettingsField] {
         let appearance = environment.appAppearanceStore
         let registered = environment.registry.allApps.first { $0.id == appID }
         let declaredPresentation = registered?.presentation ?? .pane
@@ -37,8 +39,10 @@ enum BuiltInSurfaceSettings {
                 label: "Open as",
                 help: "Applies the next time \(appName) opens.",
                 kind: .select(
-                    options: [SettingsOption(id: PluginPresentation.pane.rawValue, title: "Pane"),
-                              SettingsOption(id: PluginPresentation.overlay.rawValue, title: "Overlay")],
+                    options: [
+                        SettingsOption(id: PluginPresentation.pane.rawValue, title: "Pane"),
+                        SettingsOption(id: PluginPresentation.overlay.rawValue, title: "Overlay"),
+                    ],
                     selection: Binding(
                         get: { (appearance.presentationOverride(appID) ?? declaredPresentation).rawValue },
                         set: { appearance.setPresentationOverride(appID, PluginPresentation(rawValue: $0)) })),
@@ -54,8 +58,10 @@ enum BuiltInSurfaceSettings {
                         + "Applies the next time it opens; you can switch a pane at any "
                         + "time without changing this.",
                     kind: .select(
-                        options: [SettingsOption(id: PluginMode.basic.rawValue, title: "Basic"),
-                                  SettingsOption(id: PluginMode.advanced.rawValue, title: "Advanced")],
+                        options: [
+                            SettingsOption(id: PluginMode.basic.rawValue, title: "Basic"),
+                            SettingsOption(id: PluginMode.advanced.rawValue, title: "Advanced"),
+                        ],
                         selection: Binding(
                             get: { (appearance.modeOverride(appID) ?? declaredMode).rawValue },
                             set: { appearance.setModeOverride(appID, PluginMode(rawValue: $0)) })),

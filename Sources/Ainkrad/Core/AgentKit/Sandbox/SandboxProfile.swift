@@ -8,7 +8,7 @@ enum SandboxBackendKind: String, Codable, Equatable, Sendable, CaseIterable {
 /// Network egress policy for a sandboxed run. Fail-closed default is `.off`.
 enum NetworkPolicy: Codable, Equatable, Sendable {
     case off
-    case allowList([String])   // permitted hostnames/domains
+    case allowList([String])  // permitted hostnames/domains
     case on
 
     // Explicit keyed coding so payloads are stable/human-editable.
@@ -17,7 +17,11 @@ enum NetworkPolicy: Codable, Equatable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         if c.contains(.allowList) {
             self = .allowList(try c.decode([String].self, forKey: .allowList))
-        } else if c.contains(.on) { self = .on } else { self = .off }
+        } else if c.contains(.on) {
+            self = .on
+        } else {
+            self = .off
+        }
     }
     func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
@@ -57,13 +61,19 @@ struct SandboxProfile: Codable, Equatable, Sendable, Identifiable {
     /// Defaults false — fail-closed, no silent escalation.
     var allowHostOverride: Bool
 
-    init(id: String, name: String, backend: SandboxBackendKind,
-         fsPolicy: FilesystemPolicy, networkPolicy: NetworkPolicy,
-         resourceLimits: ResourceLimits, toolAllowList: Set<String>,
-         allowHostOverride: Bool = false) {
-        self.id = id; self.name = name; self.backend = backend
-        self.fsPolicy = fsPolicy; self.networkPolicy = networkPolicy
-        self.resourceLimits = resourceLimits; self.toolAllowList = toolAllowList
+    init(
+        id: String, name: String, backend: SandboxBackendKind,
+        fsPolicy: FilesystemPolicy, networkPolicy: NetworkPolicy,
+        resourceLimits: ResourceLimits, toolAllowList: Set<String>,
+        allowHostOverride: Bool = false
+    ) {
+        self.id = id
+        self.name = name
+        self.backend = backend
+        self.fsPolicy = fsPolicy
+        self.networkPolicy = networkPolicy
+        self.resourceLimits = resourceLimits
+        self.toolAllowList = toolAllowList
         self.allowHostOverride = allowHostOverride
     }
 

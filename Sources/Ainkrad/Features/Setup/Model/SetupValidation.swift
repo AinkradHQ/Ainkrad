@@ -42,12 +42,16 @@ enum SetupValidation {
         case .you:
             var unmet: [Requirement] = []
             if blank("name") {
-                unmet.append(Requirement(field: "name",
-                                         message: "Your assistant needs something to call you."))
+                unmet.append(
+                    Requirement(
+                        field: "name",
+                        message: "Your assistant needs something to call you."))
             }
             if blank("role") {
-                unmet.append(Requirement(field: "role",
-                                         message: "What you do shapes how the assistant helps."))
+                unmet.append(
+                    Requirement(
+                        field: "role",
+                        message: "What you do shapes how the assistant helps."))
             }
             // `timezone` is prefilled from `TimeZone.current` but deliberately
             // not required: a user may clear it, and being unable to continue
@@ -61,8 +65,10 @@ enum SetupValidation {
                 unmet.append(Requirement(field: "personaName", message: "Give your assistant a name."))
             }
             if blank("personaInstructions") {
-                unmet.append(Requirement(field: "personaInstructions",
-                                         message: "Describe how it should work."))
+                unmet.append(
+                    Requirement(
+                        field: "personaInstructions",
+                        message: "Describe how it should work."))
             }
             return unmet
 
@@ -71,8 +77,11 @@ enum SetupValidation {
             // successful adoption), but stated here so `canAdvance` tells the
             // truth for this step rather than waving it through.
             guard values["hasHome"] != "true" else { return [] }
-            return [Requirement(field: "hasHome",
-                                message: "Choose a folder for your Ainkrad Home to continue.")]
+            return [
+                Requirement(
+                    field: "hasHome",
+                    message: "Choose a folder for your Ainkrad Home to continue.")
+            ]
 
         case .providers:
             guard values["isConnected"] != "true" else { return [] }
@@ -84,10 +93,12 @@ enum SetupValidation {
             // `SetupCoordinator.setDeferred` records it in the marker so the
             // gate re-raises on this step at the next launch.
             guard values["isDeferred"] != "true" else { return [] }
-            return [Requirement(
-                field: "isConnected",
-                message: "Connect a provider above to continue — the connection is checked "
-                       + "before Ainkrad accepts it.")]
+            return [
+                Requirement(
+                    field: "isConnected",
+                    message: "Connect a provider above to continue — the connection is checked "
+                        + "before Ainkrad accepts it.")
+            ]
 
         case .welcome, .appearance, .motionAndSound, .done:
             return []

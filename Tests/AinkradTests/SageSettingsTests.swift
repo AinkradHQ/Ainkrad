@@ -1,7 +1,9 @@
+import AinkradAppKitUI
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 // `SageSettingsTabTests` lived here. The Sage's pill bar is gone —
 // its sections are top-level INTELLIGENCE pages now — so the partition
@@ -44,23 +46,27 @@ struct AppAppearanceFontTests {
 }
 
 @Suite("Sage typography resolver")
+@MainActor
 struct SageTypographyTests {
     @Test("nil override inherits global family and scale") func inherits() {
-        let t = SageTypography.resolve(family: nil, scale: nil,
-                                            globalFamily: .exo2, globalScale: .medium)
-        #expect(t.family == .exo2)
-        #expect(t.scale == UIFontScale.medium.multiplier)
+        let t = SageApp.typography(
+            family: nil, scale: nil,
+            globalFamily: .exo2, globalScale: .medium)
+        #expect(
+            t == AinkradTypography(fontFamilyName: UIFontFamily.exo2.fontName, scale: UIFontScale.medium.multiplier))
     }
     @Test("override wins over global") func overrides() {
-        let t = SageTypography.resolve(family: .jetBrainsMono, scale: .large,
-                                            globalFamily: .exo2, globalScale: .small)
-        #expect(t.family == .jetBrainsMono)
-        #expect(t.scale == UIFontScale.large.multiplier)
+        let t = SageApp.typography(
+            family: .jetBrainsMono, scale: .large,
+            globalFamily: .exo2, globalScale: .small)
+        #expect(
+            t == AinkradTypography(
+                fontFamilyName: UIFontFamily.jetBrainsMono.fontName, scale: UIFontScale.large.multiplier))
     }
     @Test("partial override: family only, scale inherits") func partial() {
-        let t = SageTypography.resolve(family: .system, scale: nil,
-                                            globalFamily: .exo2, globalScale: .large)
-        #expect(t.family == .system)
-        #expect(t.scale == UIFontScale.large.multiplier)
+        let t = SageApp.typography(
+            family: .system, scale: nil,
+            globalFamily: .exo2, globalScale: .large)
+        #expect(t == AinkradTypography(fontFamilyName: nil, scale: UIFontScale.large.multiplier))
     }
 }

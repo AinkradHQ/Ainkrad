@@ -1,6 +1,6 @@
-import Foundation
 import AinkradAppKit
 import AinkradHostRuntime
+import Foundation
 
 /// `AppEnvironment.bootstrap(home:defaults:)` split into cohesive helpers
 /// (M7 finalize Wave D, D2) — this file holds the fifth block: subagent
@@ -97,7 +97,8 @@ extension AppEnvironment {
         let oauthStore = OAuthCredentialStore(
             persistence: persistence, secrets: secrets,
             flow: ClaudeOAuthFlow(clientVersion: ClaudeProvider.claudeCodeVersion))
-        let credentialResolver: (Connection) async throws -> [ProviderCredential] = { [oauthStore, authProfileStore] connection in
+        let credentialResolver: (Connection) async throws -> [ProviderCredential] = {
+            [oauthStore, authProfileStore] connection in
             if connection.authMode == .subscription {
                 return [try await oauthStore.liveCredential(for: connection)]
             }
@@ -113,7 +114,8 @@ extension AppEnvironment {
         // gate) with its router-resolved model PINNED (no router/candidatesProvider
         // passed to the child, so it never re-routes per tool-loop turn).
         let subagentRunner = AgentSessionSubagentRunner(
-            allTools: agentTools.filter { !AppEnvironment.isUnattendedNetworkTool($0) }, agents: agentStore, router: modelRouter,
+            allTools: agentTools.filter { !AppEnvironment.isUnattendedNetworkTool($0) }, agents: agentStore,
+            router: modelRouter,
             executionRouter: executionRouter,
             candidatesProvider: candidatesProvider,
             makeSession: AppEnvironment.makeSubagentSession(
@@ -192,10 +194,10 @@ extension AppEnvironment {
                     candidatesProvider: candidatesProvider,
                     isLocalConnection: { [localModelProbe] connection in localModelProbe.isLocal(connection) },
                     permissionModeOverride: permissionModeOverride)
-                session.credentialResolver = credentialResolver   // subscription works in background runs too
+                session.credentialResolver = credentialResolver  // subscription works in background runs too
                 return session
             }),
- maxConcurrent: 2)
+            maxConcurrent: 2)
 
         // Persisted history of Sage chats, surfaced by the block's history
         // sidebar (Sage session-history-sidebar Task 4) — one instance shared
@@ -238,9 +240,9 @@ extension AppEnvironment {
                     triggerDispatcher.fire(event)
                 }
             case .time, .webhook:
-                break   // .time fires via scheduleRunner; .webhook via WebhookServer (off by default)
+                break  // .time fires via scheduleRunner; .webhook via WebhookServer (off by default)
             case .unknown:
-                break   // forward-compat (M7 Wave B): a future trigger kind this build doesn't know yet
+                break  // forward-compat (M7 Wave B): a future trigger kind this build doesn't know yet
             }
         }
         scheduleRunner.start()
@@ -307,17 +309,19 @@ extension AppEnvironment {
         // already refuses builtin names, and re-registration drops stale names first.
         // Custom commands are hand-authored markdown — vault.
         let commandUserRoot = home.shared(.commands)
-        let customCommandStore = CustomCommandStore(paths: CustomCommandPaths(
-            userRoot: commandUserRoot,
-            projectRoot: CustomCommandPaths.projectRoot(forWorkspace: assistantWorkingDirectory)))
+        let customCommandStore = CustomCommandStore(
+            paths: CustomCommandPaths(
+                userRoot: commandUserRoot,
+                projectRoot: CustomCommandPaths.projectRoot(forWorkspace: assistantWorkingDirectory)))
         var liveCustomNames = resyncCustomCommands(
             store: customCommandStore, registry: commandRegistry, previous: [])
         let customCommandWatcher = CustomCommandWatcher(
-            directory: commandUserRoot) {
-                customCommandStore.reload()
-                liveCustomNames = resyncCustomCommands(
-                    store: customCommandStore, registry: commandRegistry, previous: liveCustomNames)
-            }
+            directory: commandUserRoot
+        ) {
+            customCommandStore.reload()
+            liveCustomNames = resyncCustomCommands(
+                store: customCommandStore, registry: commandRegistry, previous: liveCustomNames)
+        }
         customCommandWatcher.start()
 
         // Tool Hooks (M8 assistant-tool-hooks) — the store is a live, persisted
@@ -391,7 +395,8 @@ extension AppEnvironment {
 
         return (
             subagentCoordinator, runManager, assistantSessionStore, scheduleStore, scheduleRunner, triggerDispatcher,
-            fileChangeWatcher, assistantWorkingDirectory, workspaceFileIndex, agentSession, voiceService, menuBarPresence,
+            fileChangeWatcher, assistantWorkingDirectory, workspaceFileIndex, agentSession, voiceService,
+            menuBarPresence,
             oauthStore, toolHooksStore, customCommandStore, customCommandWatcher,
             remoteChannelSettingsStore, remoteChannelService
         )
@@ -452,7 +457,7 @@ extension AppEnvironment {
                 sandboxAllowList: sandboxAllowList,
                 agentAllowList: nil,
                 runtime: pinned)
-            session.credentialResolver = credentialResolver   // subscription works in subagents too
+            session.credentialResolver = credentialResolver  // subscription works in subagents too
             return session
         }
     }

@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 /// `SkillWatcher` wraps a `DispatchSource.makeFileSystemObjectSource` on the
@@ -21,7 +22,7 @@ struct SkillWatcherTests {
         let watcher = SkillWatcher(paths: SkillPaths(root: root)) { fired += 1 }
         watcher.start()
         watcher.stop()
-        #expect(fired >= 0)   // no crash; reload contract itself is proven in SkillRegistryTests
+        #expect(fired >= 0)  // no crash; reload contract itself is proven in SkillRegistryTests
     }
 
     @Test func startIsSafeWhenDirectoryIsMissing() {
@@ -30,7 +31,7 @@ struct SkillWatcherTests {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("swtch-missing-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: root) }
         #expect(!FileManager.default.fileExists(atPath: root.path))
-        let watcher = SkillWatcher(paths: SkillPaths(root: root)) { }
+        let watcher = SkillWatcher(paths: SkillPaths(root: root)) {}
         watcher.start()
         #expect(FileManager.default.fileExists(atPath: root.path))
         watcher.stop()
@@ -40,11 +41,11 @@ struct SkillWatcherTests {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("swtch-\(UUID().uuidString)")
         try? FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
-        let watcher = SkillWatcher(paths: SkillPaths(root: root)) { }
-        watcher.stop()   // never started
+        let watcher = SkillWatcher(paths: SkillPaths(root: root)) {}
+        watcher.stop()  // never started
         watcher.start()
         watcher.stop()
-        watcher.stop()   // idempotent
+        watcher.stop()  // idempotent
     }
 
     @Test(.timeLimit(.minutes(1)))
@@ -58,7 +59,7 @@ struct SkillWatcherTests {
         // Directly invoke the coalescing handler — the unit under test is the
         // debounce logic itself, not kernel FS-event delivery/timing.
         watcher.simulateChange()
-        #expect(fired == 0)   // debounced, not yet fired
+        #expect(fired == 0)  // debounced, not yet fired
 
         await watcher.waitForPendingReload()
         #expect(fired == 1)
@@ -78,7 +79,7 @@ struct SkillWatcherTests {
         #expect(fired == 0)
 
         await watcher.waitForPendingReload()
-        #expect(fired == 1)   // bounded — one reload for the whole burst, not 25
+        #expect(fired == 1)  // bounded — one reload for the whole burst, not 25
     }
 
     @Test

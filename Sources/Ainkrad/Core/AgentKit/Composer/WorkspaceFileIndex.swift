@@ -13,10 +13,14 @@ final class WorkspaceFileIndex {
     private let fm: FileManager
     private let maxFiles: Int
     private var paths: [String] = []
-    nonisolated static let ignoredDirectories: Set<String> = [".git", "node_modules", ".build", "DerivedData", ".swiftpm"]
+    nonisolated static let ignoredDirectories: Set<String> = [
+        ".git", "node_modules", ".build", "DerivedData", ".swiftpm",
+    ]
 
     init(root: URL, fileManager: FileManager = .default, maxFiles: Int = 20_000) {
-        self.root = root; self.fm = fileManager; self.maxFiles = maxFiles
+        self.root = root
+        self.fm = fileManager
+        self.maxFiles = maxFiles
     }
 
     /// Shared traversal so every workspace tool (index, grep, glob) honors the
@@ -25,15 +29,23 @@ final class WorkspaceFileIndex {
     // immutable `ignoredDirectories` set — no instance/actor state touched. Search
     // tools (grep/glob) call it from a detached background task to keep the walk
     // off the @MainActor for large/adversarial trees.
-    nonisolated static func fileURLs(under root: URL, fileManager: FileManager = .default,
-                         maxFiles: Int = 100_000) -> [URL] {
+    nonisolated static func fileURLs(
+        under root: URL, fileManager: FileManager = .default,
+        maxFiles: Int = 100_000
+    ) -> [URL] {
         var out: [URL] = []
         let keys: [URLResourceKey] = [.isDirectoryKey]
         guard let en = fileManager.enumerator(at: root, includingPropertiesForKeys: keys) else { return [] }
         for case let url as URL in en {
-            if ignoredDirectories.contains(url.lastPathComponent) { en.skipDescendants(); continue }
+            if ignoredDirectories.contains(url.lastPathComponent) {
+                en.skipDescendants()
+                continue
+            }
             let isDir = (try? url.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory ?? false
-            if !isDir { out.append(url); if out.count >= maxFiles { break } }
+            if !isDir {
+                out.append(url)
+                if out.count >= maxFiles { break }
+            }
         }
         return out
     }
@@ -71,7 +83,9 @@ final class WorkspaceFileIndex {
         guard !q.isEmpty else { return [] }
         return paths.compactMap { path -> FileMatch? in
             let name = (path as NSString).lastPathComponent
-            guard let score = Self.fuzzyScore(query: q, target: path.lowercased(), basename: name.lowercased()) else { return nil }
+            guard let score = Self.fuzzyScore(query: q, target: path.lowercased(), basename: name.lowercased()) else {
+                return nil
+            }
             return FileMatch(path: path, name: name, score: score)
         }
         .sorted { $0.score > $1.score }
@@ -80,11 +94,18 @@ final class WorkspaceFileIndex {
 
     /// Subsequence match; +bonus for contiguous runs and basename hits.
     private static func fuzzyScore(query: String, target: String, basename: String) -> Int? {
-        var qi = query.startIndex, score = 0, streak = 0
+        var qi = query.startIndex
+        var score = 0
+        var streak = 0
         for ch in target {
             guard qi < query.endIndex else { break }
-            if ch == query[qi] { streak += 1; score += 1 + streak; qi = query.index(after: qi) }
-            else { streak = 0 }
+            if ch == query[qi] {
+                streak += 1
+                score += 1 + streak
+                qi = query.index(after: qi)
+            } else {
+                streak = 0
+            }
         }
         guard qi == query.endIndex else { return nil }
         if basename.contains(query) { score += 10 }

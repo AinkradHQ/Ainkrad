@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 /// The escape hatch, and the debt it records.
 ///
@@ -13,8 +14,9 @@ import AinkradHostRuntime
 @MainActor
 struct SetupProvidersDeferralTests {
     private static func oauthToken(_ access: String) -> OAuthToken {
-        OAuthToken(accessToken: access, refreshToken: "refresh-secret-value",
-                   expiresAt: Date().addingTimeInterval(3600), scopes: ["user:inference"])
+        OAuthToken(
+            accessToken: access, refreshToken: "refresh-secret-value",
+            expiresAt: Date().addingTimeInterval(3600), scopes: ["user:inference"])
     }
 
     // MARK: - Deferring a transient failure (task 8)
@@ -26,10 +28,12 @@ struct SetupProvidersDeferralTests {
         defer { t.cleanup() }
         let env = AppEnvironment.bootstrap(home: t.home, defaults: t.defaults)
 
-        for failure: ConnectionFailure in [.unauthorized(status: 401),
-                                           .unauthorized(status: 403),
-                                           .rejected(status: 400),
-                                           .invalidBaseURL] {
+        for failure: ConnectionFailure in [
+            .unauthorized(status: 401),
+            .unauthorized(status: 403),
+            .rejected(status: 400),
+            .invalidBaseURL,
+        ] {
             let outcome = await SetupProviders.connect(
                 preset: ProviderPreset.preset(id: "openai"), token: "bad",
                 baseURL: "https://example.invalid/v1",
@@ -48,10 +52,12 @@ struct SetupProvidersDeferralTests {
         defer { t.cleanup() }
         let env = AppEnvironment.bootstrap(home: t.home, defaults: t.defaults)
 
-        for failure: ConnectionFailure in [.rateLimited(status: 429),
-                                           .serverError(status: 500),
-                                           .serverError(status: 503),
-                                           .unreachable] {
+        for failure: ConnectionFailure in [
+            .rateLimited(status: 429),
+            .serverError(status: 500),
+            .serverError(status: 503),
+            .unreachable,
+        ] {
             let outcome = await SetupProviders.connect(
                 preset: ProviderPreset.preset(id: "openai"), token: "sk-fine",
                 baseURL: "https://example.invalid/v1",
@@ -68,10 +74,12 @@ struct SetupProvidersDeferralTests {
     /// identical copy, opposite verdicts.
     @Test func theEscapeIsNotDecidedByTheDisplayMessage() {
         let sameCopy = "Rate limited. Please try again later."
-        let blocked = SetupProviders.Outcome.failed(message: sameCopy,
-                                                    failure: .unauthorized(status: 401))
-        let escapable = SetupProviders.Outcome.failed(message: sameCopy,
-                                                     failure: .rateLimited(status: 429))
+        let blocked = SetupProviders.Outcome.failed(
+            message: sameCopy,
+            failure: .unauthorized(status: 401))
+        let escapable = SetupProviders.Outcome.failed(
+            message: sameCopy,
+            failure: .rateLimited(status: 429))
         #expect(!blocked.canDefer)
         #expect(escapable.canDefer)
     }
@@ -84,8 +92,9 @@ struct SetupProvidersDeferralTests {
         c.setDeferred(.providers, true)
         c.complete()
 
-        #expect(store.load(SetupDocument.self)?.completedAt != nil,
-                "setup DID finish — the user must not be walked through the whole wizard again")
+        #expect(
+            store.load(SetupDocument.self)?.completedAt != nil,
+            "setup DID finish — the user must not be walked through the whole wizard again")
         #expect(store.load(SetupDocument.self)?.deferredSteps == ["providers"])
         #expect(!c.isComplete, "a deferred step means setup is not complete")
 
@@ -93,8 +102,9 @@ struct SetupProvidersDeferralTests {
         let next = SetupCoordinator(persistence: store, isProvisionalHome: false)
         #expect(!next.isComplete)
         #expect(SetupGate.raisedAtLaunch(provisionalHome: false, setupIsComplete: next.isComplete))
-        #expect(next.steps == [.providers, .done],
-                "the gate must re-raise on the deferred step alone, not replay the wizard")
+        #expect(
+            next.steps == [.providers, .done],
+            "the gate must re-raise on the deferred step alone, not replay the wizard")
         #expect(next.step == .providers)
         #expect(next.deferredSteps == [.providers])
     }
@@ -112,8 +122,9 @@ struct SetupProvidersDeferralTests {
             baseURL: "https://example.invalid/v1",
             connections: env.connectionStore, agentConfig: env.agentConfigStore,
             verify: { _, _, _ in
-                ConnectionTestResult(ok: false, message: "Rate limited",
-                                     failure: .rateLimited(status: 429))
+                ConnectionTestResult(
+                    ok: false, message: "Rate limited",
+                    failure: .rateLimited(status: 429))
             })
         #expect(outcome.canDefer)
 
@@ -135,7 +146,7 @@ struct SetupProvidersDeferralTests {
 
         let returning = SetupCoordinator(persistence: store, isProvisionalHome: false)
         #expect(returning.steps == [.providers, .done])
-        returning.setDeferred(.providers, false)   // a probe succeeded
+        returning.setDeferred(.providers, false)  // a probe succeeded
         returning.complete()
 
         #expect(store.load(SetupDocument.self)?.deferredSteps == [String]())
@@ -146,14 +157,18 @@ struct SetupProvidersDeferralTests {
     /// The OAuth route reaches the SAME enum from a different subsystem, so one
     /// predicate drives the escape for both routes.
     @Test func theOAuthRouteReachesTheSameClassification() {
-        #expect(ClaudeOAuthLoginController.classify(
-            ClaudeOAuthError.tokenEndpoint(status: 429, body: "{}")) == .rateLimited(status: 429))
-        #expect(ClaudeOAuthLoginController.classify(
-            ClaudeOAuthError.tokenEndpoint(status: 503, body: "{}")) == .serverError(status: 503))
-        #expect(ClaudeOAuthLoginController.classify(
-            ClaudeOAuthError.tokenEndpoint(status: 401, body: "{}")) == .unauthorized(status: 401))
-        #expect(ClaudeOAuthLoginController.classify(
-            ClaudeOAuthError.allEndpointsFailed) == .unreachable)
+        #expect(
+            ClaudeOAuthLoginController.classify(
+                ClaudeOAuthError.tokenEndpoint(status: 429, body: "{}")) == .rateLimited(status: 429))
+        #expect(
+            ClaudeOAuthLoginController.classify(
+                ClaudeOAuthError.tokenEndpoint(status: 503, body: "{}")) == .serverError(status: 503))
+        #expect(
+            ClaudeOAuthLoginController.classify(
+                ClaudeOAuthError.tokenEndpoint(status: 401, body: "{}")) == .unauthorized(status: 401))
+        #expect(
+            ClaudeOAuthLoginController.classify(
+                ClaudeOAuthError.allEndpointsFailed) == .unreachable)
         // A mistyped paste is the user's to redo here and now — not a reason to
         // offer postponing the step.
         #expect(ClaudeOAuthLoginController.classify(LoopbackError.malformedCallback) == nil)
@@ -172,10 +187,14 @@ struct SetupProvidersDeferralTests {
         #expect(message.contains("API key"), "it must point at a route that still works")
 
         // A 5xx says it is temporary too; a 401 does not, because it is not.
-        #expect(ClaudeOAuthLoginController.message(
-            for: ClaudeOAuthError.tokenEndpoint(status: 500, body: body)).contains("temporary"))
-        #expect(!ClaudeOAuthLoginController.message(
-            for: ClaudeOAuthError.tokenEndpoint(status: 401, body: body)).contains("temporary"))
+        #expect(
+            ClaudeOAuthLoginController.message(
+                for: ClaudeOAuthError.tokenEndpoint(status: 500, body: body)
+            ).contains("temporary"))
+        #expect(
+            !ClaudeOAuthLoginController.message(
+                for: ClaudeOAuthError.tokenEndpoint(status: 401, body: body)
+            ).contains("temporary"))
     }
 
     // MARK: - The escape must survive the launch it causes (review finding 1)
@@ -198,14 +217,16 @@ struct SetupProvidersDeferralTests {
         // Seeded exactly as the view seeds it in `onAppear`.
         var escape = SetupEscape()
         escape.alreadyOwed = relaunched.deferredSteps.contains(.providers)
-        #expect(escape.isOffered(isConnected: false),
-                "the escape must be on screen before anything is attempted")
+        #expect(
+            escape.isOffered(isConnected: false),
+            "the escape must be on screen before anything is attempted")
 
         // The full trap: the provider has recovered, the user has no key, types
         // a wrong one, and gets a 401. The offer must still be there.
         escape.note(.unauthorized(status: 401))
-        #expect(escape.isOffered(isConnected: false),
-                "a 401 on a step already permitted to be deferred must not be a dead end")
+        #expect(
+            escape.isOffered(isConnected: false),
+            "a 401 on a step already permitted to be deferred must not be a dead end")
     }
 
     /// The escape, once earned, is not confiscated by a later mistake: an OAuth
@@ -218,27 +239,32 @@ struct SetupProvidersDeferralTests {
         var escape = SetupEscape()
         #expect(!escape.isOffered(isConnected: false))
 
-        escape.note(.rateLimited(status: 429))       // OAuth was rate limited
+        escape.note(.rateLimited(status: 429))  // OAuth was rate limited
         #expect(escape.isOffered(isConnected: false))
 
-        escape.note(.unauthorized(status: 401))      // then a mistyped API key
-        #expect(escape.isOffered(isConnected: false),
-                "a blocking failure after a deferrable one must not erase the offer")
+        escape.note(.unauthorized(status: 401))  // then a mistyped API key
+        #expect(
+            escape.isOffered(isConnected: false),
+            "a blocking failure after a deferrable one must not erase the offer")
 
-        escape.note(nil)                             // and an unclassified failure
+        escape.note(nil)  // and an unclassified failure
         #expect(escape.isOffered(isConnected: false))
     }
 
     /// The latch is set ONLY from a classification, and only a deferrable one.
     @Test func onlyADeferrableClassificationEarnsTheEscape() {
-        for blocking: ConnectionFailure in [.unauthorized(status: 401), .unauthorized(status: 403),
-                                            .rejected(status: 400), .invalidBaseURL] {
+        for blocking: ConnectionFailure in [
+            .unauthorized(status: 401), .unauthorized(status: 403),
+            .rejected(status: 400), .invalidBaseURL,
+        ] {
             var escape = SetupEscape()
             escape.note(blocking)
             #expect(!escape.isOffered(isConnected: false), "\(blocking) must not earn an escape")
         }
-        for deferrable: ConnectionFailure in [.rateLimited(status: 429), .serverError(status: 503),
-                                              .notFound(status: 404), .unreachable] {
+        for deferrable: ConnectionFailure in [
+            .rateLimited(status: 429), .serverError(status: 503),
+            .notFound(status: 404), .unreachable,
+        ] {
             var escape = SetupEscape()
             escape.note(deferrable)
             #expect(escape.isOffered(isConnected: false), "\(deferrable) must earn an escape")
@@ -251,8 +277,9 @@ struct SetupProvidersDeferralTests {
         var escape = SetupEscape()
         escape.alreadyOwed = true
         #expect(escape.isOffered(isConnected: false))
-        #expect(!escape.offerCopy.contains("failure"),
-                "with nothing attempted there is no failure on screen to refer to")
+        #expect(
+            !escape.offerCopy.contains("failure"),
+            "with nothing attempted there is no failure on screen to refer to")
 
         var earned = SetupEscape()
         earned.note(.rateLimited(status: 429))
@@ -268,8 +295,10 @@ struct SetupProvidersDeferralTests {
 
         escape.take()
         #expect(escape.taken)
-        #expect(SetupValidation.canAdvance(from: .providers,
-                                           values: ["isDeferred": escape.taken ? "true" : "false"]))
+        #expect(
+            SetupValidation.canAdvance(
+                from: .providers,
+                values: ["isDeferred": escape.taken ? "true" : "false"]))
         #expect(!escape.isOffered(isConnected: false), "the offer is gone once taken")
 
         escape.resolve()
@@ -286,11 +315,12 @@ struct SetupProvidersDeferralTests {
         #expect(store.load(SetupDocument.self)?.deferredSteps == [String]())
 
         let returning = SetupCoordinator(persistence: store, isProvisionalHome: false)
-        returning.setDeferred(.providers, true)   // ...and the user quits here
+        returning.setDeferred(.providers, true)  // ...and the user quits here
 
         #expect(store.load(SetupDocument.self)?.deferredSteps == ["providers"])
-        #expect(store.load(SetupDocument.self)?.completedAt != nil,
-                "the existing completedAt is carried, never re-minted")
+        #expect(
+            store.load(SetupDocument.self)?.completedAt != nil,
+            "the existing completedAt is carried, never re-minted")
         #expect(!SetupCoordinator(persistence: store, isProvisionalHome: false).isComplete)
     }
 
@@ -347,8 +377,9 @@ struct SetupProvidersDeferralTests {
             connections: env.connectionStore, agentConfig: env.agentConfigStore,
             oauth: env.oauthStore,
             verify: { _, _, _ in
-                ConnectionTestResult(ok: false, message: "HTTP 401",
-                                     failure: .unauthorized(status: 401))
+                ConnectionTestResult(
+                    ok: false, message: "HTTP 401",
+                    failure: .unauthorized(status: 401))
             })
 
         guard case .unverified = adoption else {
@@ -397,7 +428,10 @@ struct SetupProvidersDeferralTests {
         let adoption = await SetupProviders.adoptExistingConnection(
             connections: env.connectionStore, agentConfig: env.agentConfigStore,
             oauth: env.oauthStore,
-            verify: { _, _, _ in probed = true; return ConnectionTestResult(ok: true, message: "x") })
+            verify: { _, _, _ in
+                probed = true
+                return ConnectionTestResult(ok: true, message: "x")
+            })
 
         #expect(adoption == .none)
         #expect(!probed)

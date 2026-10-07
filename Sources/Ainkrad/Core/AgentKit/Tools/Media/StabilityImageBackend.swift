@@ -1,11 +1,12 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Stability AI (Stable Diffusion) image backend. Key in the Keychain via
 /// SecretStore, never a document. Uses the v1 SDXL text-to-image endpoint,
 /// which returns base64 JSON artifacts.
 struct StabilityImageBackend: MediaBackend {
     static let secretID = "media.stability.apiKey"
+    // `nonisolated(unsafe)`: an immutable `let`; `KeychainSecretStore` keeps no mutable state and Keychain calls are thread-safe.
     nonisolated(unsafe) let secrets: SecretStore
     let http: DataHTTPClient
     var engine: String = "stable-diffusion-xl-1024-v1-0"

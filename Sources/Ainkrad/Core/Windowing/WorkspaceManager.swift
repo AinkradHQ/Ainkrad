@@ -27,8 +27,22 @@ final class WorkspaceManager {
         self.activeWorkspaceID = main.id
     }
 
+    /// `activeWorkspaceID` only ever names a workspace in `workspaces`: it is
+    /// set from one, and deleting the active workspace moves it to main first.
     var activeWorkspace: Workspace {
-        workspaces.first(where: { $0.id == activeWorkspaceID })!
+        guard let active = workspaces.first(where: { $0.id == activeWorkspaceID }) else {
+            preconditionFailure("activeWorkspaceID names no workspace")
+        }
+        return active
+    }
+
+    /// The permanent home workspace. There is always exactly one: `init`
+    /// creates it, `deleteWorkspace` refuses it and `restore` re-creates it.
+    private var mainWorkspace: Workspace {
+        guard let main = workspaces.first(where: { $0.isMain }) else {
+            preconditionFailure("the main workspace is missing")
+        }
+        return main
     }
 
     @discardableResult
@@ -48,7 +62,7 @@ final class WorkspaceManager {
         guard let workspace = workspaces.first(where: { $0.id == id }), !workspace.isMain else { return }
         workspaces.removeAll { $0.id == id }
         if activeWorkspaceID == id {
-            activeWorkspaceID = workspaces.first(where: { $0.isMain })!.id
+            activeWorkspaceID = mainWorkspace.id
         }
         onStateChange?()
     }
@@ -64,9 +78,10 @@ final class WorkspaceManager {
     /// isn't found.
     func moveApp(_ blockID: UUID, from sourceID: UUID, to destinationID: UUID) {
         guard sourceID != destinationID,
-              let source = workspaces.first(where: { $0.id == sourceID }),
-              let destination = workspaces.first(where: { $0.id == destinationID }),
-              let block = source.tileLayout.blocks.first(where: { $0.id == blockID }) else { return }
+            let source = workspaces.first(where: { $0.id == sourceID }),
+            let destination = workspaces.first(where: { $0.id == destinationID }),
+            let block = source.tileLayout.blocks.first(where: { $0.id == blockID })
+        else { return }
         source.tileLayout.close(blockID)
         destination.tileLayout.adopt(block)
         onStateChange?()
@@ -103,7 +118,8 @@ final class WorkspaceManager {
     private func cycleActiveWorkspace(by delta: Int) {
         let count = workspaces.count
         guard count > 1,
-              let current = workspaces.firstIndex(where: { $0.id == activeWorkspaceID }) else { return }
+            let current = workspaces.firstIndex(where: { $0.id == activeWorkspaceID })
+        else { return }
         let next = ((current + delta) % count + count) % count
         activeWorkspaceID = workspaces[next].id
         onStateChange?()

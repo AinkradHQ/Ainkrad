@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-import AinkradSignal
 import AinkradHostRuntime
+import AinkradSignal
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 /// Uses the real `InMemorySecretStore` from `AinkradHostRuntime` rather than a
@@ -36,8 +37,9 @@ struct SignalTokenRegistryTests {
         let old = registry.mint(for: .host)
         let new = registry.mint(for: .host)
         #expect(registry.source(for: new) == .host)
-        #expect(registry.source(for: old) == nil,
-                "a rotated credential must stop working immediately")
+        #expect(
+            registry.source(for: old) == nil,
+            "a rotated credential must stop working immediately")
     }
 
     @Test("an unknown token resolves to nothing")
@@ -117,8 +119,9 @@ struct SignalTokenRegistryTests {
             #expect(limiter.allow(.host, now: start.addingTimeInterval(Double(i) * 0.1)) == .allowed)
         }
         #expect(limiter.allow(.host, now: start.addingTimeInterval(2)) == .throttled)
-        #expect(limiter.allow(.host, now: start.addingTimeInterval(11)) == .allowed,
-                "the window rolls; a throttle is not a ban")
+        #expect(
+            limiter.allow(.host, now: start.addingTimeInterval(11)) == .allowed,
+            "the window rolls; a throttle is not a ban")
     }
 
     @Test("one source's flood does not throttle another")

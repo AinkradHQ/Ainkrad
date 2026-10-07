@@ -1,6 +1,7 @@
-import Testing
-@testable import Ainkrad
 import AinkradAppKitContract
+import Testing
+
+@testable import Ainkrad
 
 @Suite("Settings search index")
 @MainActor
@@ -14,8 +15,9 @@ struct SettingsSearchIndexTests {
         let catalog = HostSettingsCatalog.build(environment: .preview())
         let indexed = SettingsCatalogIndex(catalog: catalog).indexedPaths
         for field in catalog.allFields {
-            #expect(indexed.contains(field.path),
-                    "\(field.path) is in the catalog but not the search index")
+            #expect(
+                indexed.contains(field.path),
+                "\(field.path) is in the catalog but not the search index")
         }
     }
 
@@ -92,15 +94,19 @@ struct SettingsSearchIndexTests {
         let page = SettingsPage(
             path: SettingsPath(["test"]),
             title: "Test", icon: "gearshape", group: .workspace, order: 0,
-            groups: [SettingsGroup(path: SettingsPath(["test", "group"]), title: "Secrets",
-                                    fields: [secretField])])
+            groups: [
+                SettingsGroup(
+                    path: SettingsPath(["test", "group"]), title: "Secrets",
+                    fields: [secretField])
+            ])
         let catalog = SettingsCatalog(pages: [page])
         let searchIndex = SettingsCatalogIndex(catalog: catalog)
 
         let results = searchIndex.search("OpenAI API Key", currentPage: nil)
         let hit = results.first { $0.path == path }
         #expect(hit != nil, "expected the secure field's own label to find it")
-        #expect(hit?.valueDescription == nil,
-                "a .secure field must never surface its value in a search result")
+        #expect(
+            hit?.valueDescription == nil,
+            "a .secure field must never surface its value in a search result")
     }
 }

@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("Fuzzy ranking")
@@ -55,7 +56,8 @@ struct FuzzyRankingTests {
 
     @Test("camelCase humps count as word starts")
     func camelCaseHumps() {
-        #expect(fuzzyScore("FileListView", pattern: "flv")!.score
+        #expect(
+            fuzzyScore("FileListView", pattern: "flv")!.score
                 > fuzzyScore("fffllvvv", pattern: "flv")!.score)
     }
 

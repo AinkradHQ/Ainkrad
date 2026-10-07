@@ -17,7 +17,8 @@ enum RemoteReplyResolver {
     /// not enough and yields a body most parsers reject).
     private static func encode(_ object: [String: String]) -> String {
         guard let data = try? JSONSerialization.data(withJSONObject: object),
-              let json = String(data: data, encoding: .utf8) else {
+            let json = String(data: data, encoding: .utf8)
+        else {
             return "{\"status\":\"unknown\"}"
         }
         return json

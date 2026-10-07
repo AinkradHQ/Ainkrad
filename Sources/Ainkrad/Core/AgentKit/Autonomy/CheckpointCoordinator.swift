@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Orchestrates durable rewind points. At the pre-tool interception point in
 /// `AgentSession.execute`, `captureIfMutating` snapshots the workspace before a
@@ -34,9 +34,11 @@ final class CheckpointCoordinator {
     /// Tools whose calls mutate the workspace and thus warrant a checkpoint.
     private static let mutatingTools: Set<String> = ["edit_file", "run_terminal"]
 
-    init(sessionID: String, snapshots: WorkspaceSnapshotStore, git: GitWorkingTreeSnapshotter,
-         persistence: PersistenceStore, transcriptIndex: @escaping @MainActor () -> Int,
-         defaultWorkingDir: String) {
+    init(
+        sessionID: String, snapshots: WorkspaceSnapshotStore, git: GitWorkingTreeSnapshotter,
+        persistence: PersistenceStore, transcriptIndex: @escaping @MainActor () -> Int,
+        defaultWorkingDir: String
+    ) {
         self.sessionID = sessionID
         self.snapshots = snapshots
         self.git = git
@@ -64,15 +66,17 @@ final class CheckpointCoordinator {
         } else if call.name == "run_terminal" {
             let dir = call.input["working_dir"]?.stringValue ?? defaultWorkingDir
             if let snap = await git.snapshot(workingDir: dir) {
-                repoRoot = snap.repoRoot; gitSHA = snap.sha
+                repoRoot = snap.repoRoot
+                gitSHA = snap.sha
             }
             let cmd = call.input["command"]?.stringValue ?? ""
             label = "Before: \(cmd.prefix(48))"
         }
 
-        let checkpoint = Checkpoint(id: id, sessionID: sessionID, createdAt: Date(), label: label,
-                                    toolName: call.name, transcriptIndex: transcriptIndex(),
-                                    fileSnapshots: fileSnapshots, gitStashSHA: gitSHA, gitRepoRoot: repoRoot)
+        let checkpoint = Checkpoint(
+            id: id, sessionID: sessionID, createdAt: Date(), label: label,
+            toolName: call.name, transcriptIndex: transcriptIndex(),
+            fileSnapshots: fileSnapshots, gitStashSHA: gitSHA, gitRepoRoot: repoRoot)
         index.append(checkpoint)
         persistence.save(CheckpointIndexDocument(checkpoints: index))
     }

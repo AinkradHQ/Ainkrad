@@ -1,15 +1,18 @@
+import AinkradHostRuntime
 // Tests/AinkradTests/AgentThinkingPersistenceTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @MainActor
 private final class ThinkingScriptedProvider: LLMProvider {
     var turns: [[AgentEvent]]
     init(_ turns: [[AgentEvent]]) { self.turns = turns }
-    func send(messages: [AgentMessage], system: String, tools: [AgentToolSchema],
-              model: AgentModelConfig, credential: ProviderCredential) -> AsyncThrowingStream<AgentEvent, Error> {
+    func send(
+        messages: [AgentMessage], system: String, tools: [AgentToolSchema],
+        model: AgentModelConfig, credential: ProviderCredential
+    ) -> AsyncThrowingStream<AgentEvent, Error> {
         let batch = turns.isEmpty ? [] : turns.removeFirst()
         return AsyncThrowingStream { cont in
             for e in batch { cont.yield(e) }
@@ -21,10 +24,12 @@ private final class ThinkingScriptedProvider: LLMProvider {
 @MainActor
 @Suite struct AgentThinkingPersistenceTests {
     @Test func thinkingPersistedOnToollessTurn() async {
-        let provider = ThinkingScriptedProvider([[
-            .thinkingDelta("step one, "), .thinkingDelta("step two"),
-            .textDelta("the answer"), .done(stopReason: "end_turn"),
-        ]])
+        let provider = ThinkingScriptedProvider([
+            [
+                .thinkingDelta("step one, "), .thinkingDelta("step two"),
+                .textDelta("the answer"), .done(stopReason: "end_turn"),
+            ]
+        ])
         let session = TestSessionFactory.make(provider: provider)
         session.send("hi")
         await session.currentTask?.value
@@ -39,9 +44,11 @@ private final class ThinkingScriptedProvider: LLMProvider {
 
     @Test func thinkingPersistedOnToolTurn() async {
         let provider = ThinkingScriptedProvider([
-            [.thinkingDelta("must read file"),
-             .toolUseComplete(id: "1", name: "read_file", input: .object(["path": .string("/etc/hosts")])),
-             .done(stopReason: "tool_use")],
+            [
+                .thinkingDelta("must read file"),
+                .toolUseComplete(id: "1", name: "read_file", input: .object(["path": .string("/etc/hosts")])),
+                .done(stopReason: "tool_use"),
+            ],
             [.textDelta("done"), .done(stopReason: "end_turn")],
         ])
         // `.fullAuto` so the `.read` tool auto-approves without parking on the

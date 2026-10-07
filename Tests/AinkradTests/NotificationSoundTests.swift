@@ -1,13 +1,17 @@
-import Testing
-import Foundation
 import AinkradSignal
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 private final class FakePlayback: AudioPlayback {
     var volume: Float = 1.0
     var currentTime: TimeInterval = 0
     private(set) var playCallCount = 0
-    func play() -> Bool { playCallCount += 1; return true }
+    func play() -> Bool {
+        playCallCount += 1
+        return true
+    }
 }
 
 @MainActor
@@ -62,10 +66,12 @@ struct NotificationSoundTests {
 
     @Test("preferences written before notification sound existed still load")
     func decodesPreSoundPreferences() throws {
-        var object = try #require(try JSONSerialization.jsonObject(
-            with: JSONEncoder().encode(SignalPreferences())) as? [String: Any])
-        #expect(object.removeValue(forKey: "sound") != nil,
-                "the field must be present today, or this test proves nothing")
+        var object = try #require(
+            try JSONSerialization.jsonObject(
+                with: JSONEncoder().encode(SignalPreferences())) as? [String: Any])
+        #expect(
+            object.removeValue(forKey: "sound") != nil,
+            "the field must be present today, or this test proves nothing")
 
         let legacy = try JSONSerialization.data(withJSONObject: object)
         let prefs = try JSONDecoder().decode(SignalPreferences.self, from: legacy)

@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Maintains the agent's per-session task checklist. It mutates only display
 /// state (the transcript renders the LATEST call as a live checklist node), never
@@ -11,11 +11,11 @@ import AinkradHostRuntime
 struct TodoWriteTool: AgentTool {
     let name = "todo_write"
     let description = """
-    Maintain a task checklist for the current session. Call with the FULL list \
-    every time (it replaces the previous list in place). Each item has `content` \
-    and `status` (one of: pending, in_progress, completed). Use this to plan and \
-    track multi-step work; it does not touch the workspace.
-    """
+        Maintain a task checklist for the current session. Call with the FULL list \
+        every time (it replaces the previous list in place). Each item has `content` \
+        and `status` (one of: pending, in_progress, completed). Use this to plan and \
+        track multi-step work; it does not touch the workspace.
+        """
     let permission: ToolPermissionClass = .memory
 
     var parametersSchema: JSONValue {
@@ -28,15 +28,19 @@ struct TodoWriteTool: AgentTool {
                     "items": .object([
                         "type": .string("object"),
                         "properties": .object([
-                            "content": .object(["type": .string("string"),
-                                                 "description": .string("Short imperative task description.")]),
-                            "status": .object(["type": .string("string"),
-                                                "enum": .array([.string("pending"), .string("in_progress"), .string("completed")]),
-                                                "description": .string("Task status.")]),
+                            "content": .object([
+                                "type": .string("string"),
+                                "description": .string("Short imperative task description."),
+                            ]),
+                            "status": .object([
+                                "type": .string("string"),
+                                "enum": .array([.string("pending"), .string("in_progress"), .string("completed")]),
+                                "description": .string("Task status."),
+                            ]),
                         ]),
                         "required": .array([.string("content"), .string("status")]),
                     ]),
-                ]),
+                ])
             ]),
             "required": .array([.string("items")]),
         ])

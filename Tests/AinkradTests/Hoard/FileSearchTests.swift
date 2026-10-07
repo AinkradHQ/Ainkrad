@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("File search")
@@ -17,11 +18,13 @@ struct FileSearchTests {
     }
 
     private func search(_ text: String, _ mutate: (inout SearchQuery) -> Void = { _ in })
-        -> [SearchHit] {
+        -> [SearchHit]
+    {
         var query = SearchQuery(text: text)
         mutate(&query)
-        return searchFiles(root: URL(fileURLWithPath: "/root"), query: query,
-                           fileSystem: makeTree())
+        return searchFiles(
+            root: URL(fileURLWithPath: "/root"), query: query,
+            fileSystem: makeTree())
     }
 
     @Test("finds matches recursively")
@@ -104,10 +107,11 @@ struct FileSearchTests {
 
     @Test("cancellation stops the walk")
     func cancellation() {
-        let hits = searchFiles(root: URL(fileURLWithPath: "/root"),
-                               query: SearchQuery(text: "swift"),
-                               fileSystem: makeTree(),
-                               isCancelled: { true })
+        let hits = searchFiles(
+            root: URL(fileURLWithPath: "/root"),
+            query: SearchQuery(text: "swift"),
+            fileSystem: makeTree(),
+            isCancelled: { true })
         #expect(hits.isEmpty)
     }
 
@@ -117,8 +121,9 @@ struct FileSearchTests {
         // "locked/" is listed as a child but has no registered contents, so
         // reading it throws — exactly like a permission failure.
         fs.add(directory: "/root", children: ["locked/", "found.txt"])
-        let hits = searchFiles(root: URL(fileURLWithPath: "/root"),
-                               query: SearchQuery(text: "found"), fileSystem: fs)
+        let hits = searchFiles(
+            root: URL(fileURLWithPath: "/root"),
+            query: SearchQuery(text: "found"), fileSystem: fs)
         #expect(hits.map(\.entry.name) == ["found.txt"])
     }
 
@@ -130,8 +135,9 @@ struct FileSearchTests {
         fs.add(directory: "/root", children: ["deep/", "target-shallow.txt"])
         fs.add(directory: "/root/deep", children: ["target-deep.txt"])
 
-        let hits = searchFiles(root: URL(fileURLWithPath: "/root"),
-                               query: SearchQuery(text: "target"), fileSystem: fs)
+        let hits = searchFiles(
+            root: URL(fileURLWithPath: "/root"),
+            query: SearchQuery(text: "target"), fileSystem: fs)
         #expect(hits.first?.entry.name == "target-shallow.txt")
     }
 }
@@ -145,8 +151,9 @@ struct SearchMatchAllTests {
         fs.add(directory: "/root/sub", children: ["c.txt"])
 
         // An empty search box returning the whole disk would be a bug.
-        let empty = searchFiles(root: URL(fileURLWithPath: "/root"),
-                                query: SearchQuery(text: ""), fileSystem: fs)
+        let empty = searchFiles(
+            root: URL(fileURLWithPath: "/root"),
+            query: SearchQuery(text: ""), fileSystem: fs)
         #expect(empty.isEmpty)
 
         var matchAll = SearchQuery(text: "")
@@ -183,9 +190,10 @@ struct SearchStreamingTests {
         final class Batches: @unchecked Sendable { var all: [[SearchHit]] = [] }
         let batches = Batches()
 
-        let hits = searchFiles(root: URL(fileURLWithPath: "/root"),
-                               query: SearchQuery(text: "match"), fileSystem: fs,
-                               onBatch: { batches.all.append($0) })
+        let hits = searchFiles(
+            root: URL(fileURLWithPath: "/root"),
+            query: SearchQuery(text: "match"), fileSystem: fs,
+            onBatch: { batches.all.append($0) })
 
         #expect(hits.count == 3)
         // Three directories each contributed, so results were delivered
@@ -202,9 +210,10 @@ struct SearchStreamingTests {
         final class Counter: @unchecked Sendable { var count = 0 }
         let counter = Counter()
 
-        _ = searchFiles(root: URL(fileURLWithPath: "/root"),
-                        query: SearchQuery(text: "zzz"), fileSystem: fs,
-                        onBatch: { _ in counter.count += 1 })
+        _ = searchFiles(
+            root: URL(fileURLWithPath: "/root"),
+            query: SearchQuery(text: "zzz"), fileSystem: fs,
+            onBatch: { _ in counter.count += 1 })
         #expect(counter.count == 0)
     }
 }

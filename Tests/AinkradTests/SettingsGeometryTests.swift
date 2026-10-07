@@ -1,7 +1,8 @@
-import Testing
-import CoreGraphics
-@testable import Ainkrad
 import AinkradAppKit
+import CoreGraphics
+import Testing
+
+@testable import Ainkrad
 
 @Suite("Settings panel geometry")
 struct SettingsGeometryTests {

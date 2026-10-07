@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradHostRuntime
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("SpeakAudioCard")
@@ -18,15 +19,17 @@ struct SpeakAudioCardTests {
     private struct NoopPlayer: AudioPlaying { func play(_ data: Data) {} }
 
     private func tempStore() -> GeneratedMediaStore {
-        GeneratedMediaStore(baseDirectory: URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("ainkrad-test-\(UUID().uuidString)", isDirectory: true))
+        GeneratedMediaStore(
+            baseDirectory: URL(fileURLWithPath: NSTemporaryDirectory())
+                .appendingPathComponent("ainkrad-test-\(UUID().uuidString)", isDirectory: true))
     }
 
     @Test func rendersDownloadableAudioElement() async throws {
         let canvas = ScryStore(sessionID: "s")
-        let tool = SpeakTool(synth: NoopSynth(),
-                             producer: StubProducer(data: Data([1, 2, 3]), fail: false),
-                             store: canvas, mediaStore: tempStore(), player: NoopPlayer())
+        let tool = SpeakTool(
+            synth: NoopSynth(),
+            producer: StubProducer(data: Data([1, 2, 3]), fail: false),
+            store: canvas, mediaStore: tempStore(), player: NoopPlayer())
         _ = try await tool.execute(.object(["text": .string("hello")]))
         let element = try #require(canvas.model.elements.first)
         #expect(element.kind == .audio)
@@ -37,12 +40,13 @@ struct SpeakAudioCardTests {
 
     @Test func fallsBackToPlayWhenProductionFails() async throws {
         let canvas = ScryStore(sessionID: "s")
-        let tool = SpeakTool(synth: NoopSynth(),
-                             producer: StubProducer(data: Data(), fail: true),
-                             store: canvas, mediaStore: tempStore(), player: NoopPlayer())
+        let tool = SpeakTool(
+            synth: NoopSynth(),
+            producer: StubProducer(data: Data(), fail: true),
+            store: canvas, mediaStore: tempStore(), player: NoopPlayer())
         let result = try await tool.execute(.object(["text": .string("hello")]))
         #expect(result.isError == false)
-        #expect(canvas.model.elements.isEmpty) // no card on fallback
+        #expect(canvas.model.elements.isEmpty)  // no card on fallback
     }
 
     @Test func noProducerKeepsFireAndForget() async throws {
@@ -58,8 +62,10 @@ struct SpeakAudioCardTests {
 
     @Test func resolvesAudioURLFromResult() {
         let canvas = ScryStore(sessionID: "s")
-        let id = canvas.add(ScryElement(id: UUID().uuidString, kind: .audio, title: "Speech", body: "file:///tmp/x.caf"))
-        #expect(ToolCallImageLookup.canvasAudioURL(resultText: "audio element \(id)", store: canvas) == "file:///tmp/x.caf")
+        let id = canvas.add(
+            ScryElement(id: UUID().uuidString, kind: .audio, title: "Speech", body: "file:///tmp/x.caf"))
+        #expect(
+            ToolCallImageLookup.canvasAudioURL(resultText: "audio element \(id)", store: canvas) == "file:///tmp/x.caf")
     }
 
 }

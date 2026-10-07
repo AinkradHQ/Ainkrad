@@ -1,8 +1,9 @@
-import Foundation
-import Testing
-@testable import Ainkrad
 import AinkradAppKit
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 /// The three invariants the storage-root refactor exists to establish. Each is
 /// written to fail loudly the moment a future change re-introduces the drift it
@@ -87,9 +88,10 @@ struct StorageInvariantTests {
         // so without this the whole check would silently pass while inspecting
         // an empty list. Same guard as the `Sources/` scan below.
         var isDirectory: ObjCBool = false
-        #expect(fm.fileExists(atPath: t.home.cacheRoot.path, isDirectory: &isDirectory)
+        #expect(
+            fm.fileExists(atPath: t.home.cacheRoot.path, isDirectory: &isDirectory)
                 && isDirectory.boolValue,
-                "cacheRoot missing after bootstrap — this guard is not scanning anything")
+            "cacheRoot missing after bootstrap — this guard is not scanning anything")
 
         // Every entry here is regenerated from scratch on next launch:
         // - Plugins / DevPlugins: installed bundles, re-installable from source.
@@ -97,13 +99,16 @@ struct StorageInvariantTests {
         // - Checkpoints: undo history for a session, expressly ephemeral.
         let derivable: Set<String> = ["Plugins", "DevPlugins", "Apps", "Checkpoints"]
 
-        let topLevel = try fm.contentsOfDirectory(at: t.home.cacheRoot,
-                                                  includingPropertiesForKeys: nil)
+        let topLevel = try fm.contentsOfDirectory(
+            at: t.home.cacheRoot,
+            includingPropertiesForKeys: nil)
         let unexpected = topLevel.map(\.lastPathComponent)
             .filter { !$0.hasPrefix(".") && !derivable.contains($0) }
             .sorted()
 
-        #expect(unexpected.isEmpty, """
+        #expect(
+            unexpected.isEmpty,
+            """
             unclassified data under cacheRoot: \(unexpected). \
             Either move it to the vault (if authored or irreplaceable) or add it \
             to `derivable` with a note saying how it is regenerated.
@@ -127,24 +132,31 @@ struct StorageInvariantTests {
         var files: [String] = []
         var seen = 0
         let prefix = t.home.cacheRoot.standardizedFileURL.path
-        let walker = fm.enumerator(at: t.home.cacheRoot,
-                                   includingPropertiesForKeys: [.isRegularFileKey])!
+        let walker = fm.enumerator(
+            at: t.home.cacheRoot,
+            includingPropertiesForKeys: [.isRegularFileKey])!
         for case let url as URL in walker {
             seen += 1
             if seen > budget { break }
             guard !url.lastPathComponent.hasPrefix(".") else { continue }
-            guard (try? url.resourceValues(forKeys: [.isRegularFileKey]))?
-                .isRegularFile == true else { continue }
+            guard
+                (try? url.resourceValues(forKeys: [.isRegularFileKey]))?
+                    .isRegularFile == true
+            else { continue }
             let path = url.standardizedFileURL.path
             files.append(path.hasPrefix(prefix) ? String(path.dropFirst(prefix.count)) : path)
         }
 
-        #expect(seen <= budget, """
+        #expect(
+            seen <= budget,
+            """
             cacheRoot has more than \(budget) entries after a bare bootstrap. \
             The walk was truncated, so this guard is no longer complete — \
             revisit it rather than raising the bound blindly.
             """)
-        #expect(files.sorted().isEmpty, """
+        #expect(
+            files.sorted().isEmpty,
+            """
             a bare bootstrap wrote files into cacheRoot: \(files.sorted()). \
             Nothing authored or irreplaceable may live under cacheRoot — if \
             these are genuinely derivable, say here what regenerates them.
@@ -163,9 +175,10 @@ struct StorageInvariantTests {
         // enumerator over a missing directory would otherwise find no offenders
         // and pass forever.
         var isDirectory: ObjCBool = false
-        #expect(FileManager.default.fileExists(atPath: sources.path, isDirectory: &isDirectory)
+        #expect(
+            FileManager.default.fileExists(atPath: sources.path, isDirectory: &isDirectory)
                 && isDirectory.boolValue,
-                "Sources/ not found at \(sources.path) — this guard is not scanning anything")
+            "Sources/ not found at \(sources.path) — this guard is not scanning anything")
 
         // The migration reader is the one legitimate exception: it must be able
         // to find the pre-Home tree in order to move it into the vault.
@@ -180,8 +193,9 @@ struct StorageInvariantTests {
         // no live offender of the broader kind today (the other
         // "Application Support" occurrences in `Sources/` are all comments).
         var offenders: [String] = []
-        let enumerator = FileManager.default.enumerator(at: sources,
-                                                        includingPropertiesForKeys: nil)!
+        let enumerator = FileManager.default.enumerator(
+            at: sources,
+            includingPropertiesForKeys: nil)!
         for case let url as URL in enumerator where url.pathExtension == "swift" {
             guard !allowed.contains(url.lastPathComponent) else { continue }
             let text = try String(contentsOf: url, encoding: .utf8)
@@ -190,8 +204,9 @@ struct StorageInvariantTests {
             }
         }
 
-        #expect(offenders.isEmpty,
-                "these compute their own storage path: \(offenders.sorted())")
+        #expect(
+            offenders.isEmpty,
+            "these compute their own storage path: \(offenders.sorted())")
     }
 
     // MARK: - Invariant 3: the test suite never touches the real Keychain
@@ -217,15 +232,19 @@ struct StorageInvariantTests {
         }
 
         for (home, _) in made {
-            #expect(home.keychainServiceName != canonical, """
+            #expect(
+                home.keychainServiceName != canonical,
+                """
                 TestHome.make built a vault at \(home.vaultRoot.path) whose Keychain \
                 service is the canonical one — this suite would read and write the \
                 developer's real API keys.
                 """)
-            #expect(home.keychainServiceName.hasPrefix(canonical + ".vault."),
-                    "unexpected service name: \(home.keychainServiceName)")
-            #expect(Home.isThrowawayLocation(home.vaultRoot),
-                    "TestHome vault is not in a throwaway location: \(home.vaultRoot.path)")
+            #expect(
+                home.keychainServiceName.hasPrefix(canonical + ".vault."),
+                "unexpected service name: \(home.keychainServiceName)")
+            #expect(
+                Home.isThrowawayLocation(home.vaultRoot),
+                "TestHome vault is not in a throwaway location: \(home.vaultRoot.path)")
         }
 
         // The guard is only meaningful if the canonical branch is reachable at
@@ -235,9 +254,10 @@ struct StorageInvariantTests {
         // inside a temp directory. Under a redirected `HOME` it would fail — but
         // it fails *loudly*, with the service name in the message, which is the
         // acceptable direction for a sanity check to break.
-        let real = Home(vaultRoot: URL(fileURLWithPath: NSHomeDirectory())
-                            .appendingPathComponent("Ainkrad", isDirectory: true),
-                        cacheRoot: URL(fileURLWithPath: NSHomeDirectory()))
+        let real = Home(
+            vaultRoot: URL(fileURLWithPath: NSHomeDirectory())
+                .appendingPathComponent("Ainkrad", isDirectory: true),
+            cacheRoot: URL(fileURLWithPath: NSHomeDirectory()))
         #expect(real.keychainServiceName == canonical)
     }
 
@@ -247,15 +267,17 @@ struct StorageInvariantTests {
     /// (`Tests/AinkradTests/StorageInvariantTests.swift`).
     private static var repoRoot: URL {
         URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent()   // Tests/AinkradTests
-            .deletingLastPathComponent()   // Tests
-            .deletingLastPathComponent()   // repo root
+            .deletingLastPathComponent()  // Tests/AinkradTests
+            .deletingLastPathComponent()  // Tests
+            .deletingLastPathComponent()  // repo root
     }
 
     /// Every path under `root`, relative to it.
     private static func snapshot(of root: URL) -> Set<String> {
-        guard let enumerator = FileManager.default.enumerator(
-            at: root, includingPropertiesForKeys: nil) else { return [] }
+        guard
+            let enumerator = FileManager.default.enumerator(
+                at: root, includingPropertiesForKeys: nil)
+        else { return [] }
         var out: Set<String> = []
         let prefix = root.standardizedFileURL.path
         for case let url as URL in enumerator {

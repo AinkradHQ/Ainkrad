@@ -1,8 +1,9 @@
+import AinkradHostRuntime
 // Tests/AinkradTests/RouterOutcomeStoreTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("RouterOutcomeStore")
 @MainActor

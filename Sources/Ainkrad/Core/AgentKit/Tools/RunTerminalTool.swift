@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/Tools/RunTerminalTool.swift
 import Foundation
-import AinkradHostRuntime
 
 /// Runs a shell command through the `ExecutionRouter` (M7 Slice 6) — the
 /// router picks the backend + `SandboxProfile` for this tool's `trustTier`.
@@ -54,12 +54,20 @@ struct RunTerminalTool: AgentTool {
         .object([
             "type": .string("object"),
             "properties": .object([
-                "command": .object(["type": .string("string"),
-                                    "description": .string("The shell command to run (via zsh -lc).")]),
-                "working_dir": .object(["type": .string("string"),
-                                        "description": .string("Absolute working directory. Defaults to the user's home.")]),
-                "remote": .object(["type": .string("string"),
-                                   "description": .string("Optional. A saved Leyline SSH connection to run this command ON, instead of running locally — its label OR its id. PREFER THE LABEL (e.g. \"prod-web\"): this exact string is shown to the user on the approval card as the machine the command will run on, and a UUID there is unreadable, so a wrong-host mistake gets approved. Use the id only when list_connections shows two connections sharing a label. Omit for a local run. Every remote command requires the user's approval.")]),
+                "command": .object([
+                    "type": .string("string"),
+                    "description": .string("The shell command to run (via zsh -lc)."),
+                ]),
+                "working_dir": .object([
+                    "type": .string("string"),
+                    "description": .string("Absolute working directory. Defaults to the user's home."),
+                ]),
+                "remote": .object([
+                    "type": .string("string"),
+                    "description": .string(
+                        "Optional. A saved Leyline SSH connection to run this command ON, instead of running locally — its label OR its id. PREFER THE LABEL (e.g. \"prod-web\"): this exact string is shown to the user on the approval card as the machine the command will run on, and a UUID there is unreadable, so a wrong-host mistake gets approved. Use the id only when list_connections shows two connections sharing a label. Omit for a local run. Every remote command requires the user's approval."
+                    ),
+                ]),
             ]),
             "required": .array([.string("command")]),
         ])
@@ -101,12 +109,13 @@ struct RunTerminalTool: AgentTool {
         let backend: any ExecutionBackend
         var profile: SandboxProfile
         do {
-            (backend, profile) = try await router.route(tier: effectiveTier, policy: agentPolicy,
-                                                        remote: remote)
+            (backend, profile) = try await router.route(
+                tier: effectiveTier, policy: agentPolicy,
+                remote: remote)
         } catch {
             return ToolResult(content: "$ \(command)\n[blocked: \(Self.blockedText(error))]", isError: true)
         }
-        if let override = timeout { profile.resourceLimits.timeoutSeconds = Int(override) } // test seam
+        if let override = timeout { profile.resourceLimits.timeoutSeconds = Int(override) }  // test seam
 
         // Bridge background-queue snapshots to the MainActor store. `toolStream`
         // is @MainActor; capture it in a Sendable box that hops each snapshot.
@@ -127,9 +136,10 @@ struct RunTerminalTool: AgentTool {
         }
         let result: ExecutionResult
         do {
-            result = try await backend.run(ExecutionRequest(
-                command: command, workingDir: workingDir, profile: profile, onOutput: onOutput,
-                processController: processController, remote: remote))
+            result = try await backend.run(
+                ExecutionRequest(
+                    command: command, workingDir: workingDir, profile: profile, onOutput: onOutput,
+                    processController: processController, remote: remote))
         } catch {
             return ToolResult(content: "$ \(command)\n[blocked: \(Self.blockedText(error))]", isError: true)
         }

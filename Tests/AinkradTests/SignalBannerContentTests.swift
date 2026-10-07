@@ -1,22 +1,26 @@
-import Testing
-import Foundation
-import UserNotifications
 import AinkradSignal
+import Foundation
+import Testing
+import UserNotifications
+
 @testable import Ainkrad
 
 @MainActor
 @Suite("Signal banner content")
 struct SignalBannerContentTests {
-    private func event(_ severity: SignalSeverity = .failure,
-                       kind: String = "build.failed",
-                       importance: SignalImportance = .normal,
-                       dedupeKey: String? = nil,
-                       actions: [SignalAction] = [],
-                       source: SignalSource = .app(appID: "raven")) -> SignalEvent {
-        SignalEvent(source: source, kind: kind, severity: severity,
-                    title: "Build failed", body: "3 errors",
-                    proposedImportance: importance, actions: actions,
-                    dedupeKey: dedupeKey)
+    private func event(
+        _ severity: SignalSeverity = .failure,
+        kind: String = "build.failed",
+        importance: SignalImportance = .normal,
+        dedupeKey: String? = nil,
+        actions: [SignalAction] = [],
+        source: SignalSource = .app(appID: "raven")
+    ) -> SignalEvent {
+        SignalEvent(
+            source: source, kind: kind, severity: severity,
+            title: "Build failed", body: "3 errors",
+            proposedImportance: importance, actions: actions,
+            dedupeKey: dedupeKey)
     }
 
     @Test("an urgent event asks the system to break through")
@@ -47,7 +51,8 @@ struct SignalBannerContentTests {
     @Test("the event id travels so a click can resolve it")
     func carriesTheEventID() {
         let e = event()
-        #expect(UserNotificationBannerChannel.content(for: e).userInfo["signalEventID"] as? String
+        #expect(
+            UserNotificationBannerChannel.content(for: e).userInfo["signalEventID"] as? String
                 == e.id.uuidString)
     }
 
@@ -73,7 +78,8 @@ struct SignalBannerContentTests {
     @Test("an event with actions is categorised per kind, so buttons match the event")
     func categoryIsPerKind() {
         let e = event(actions: [SignalAction(id: "retry", label: "Retry")])
-        #expect(UserNotificationBannerChannel.content(for: e).categoryIdentifier
+        #expect(
+            UserNotificationBannerChannel.content(for: e).categoryIdentifier
                 == UserNotificationBannerChannel.categoryID(for: e))
         #expect(UserNotificationBannerChannel.categoryID(for: e).contains("build.failed"))
     }

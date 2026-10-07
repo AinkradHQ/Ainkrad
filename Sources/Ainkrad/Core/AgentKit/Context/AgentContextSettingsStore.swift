@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 import Foundation
 import Observation
-import AinkradHostRuntime
 
 /// Per-kind privacy toggles for `AgentContextService` — persisted as explicit
 /// opt-outs only. A missing key means "enabled", so unknown/future kinds

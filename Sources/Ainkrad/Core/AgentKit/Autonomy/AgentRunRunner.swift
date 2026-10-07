@@ -16,6 +16,8 @@ protocol AgentRunRunner: AnyObject {
     /// the session it builds (permission mode narrowing + sandbox profile);
     /// it must never be used to WIDEN beyond whatever the conformer would have
     /// used with no posture at all.
-    func execute(prompt: String, posture: SavedExecutionPosture?,
-                 appendLog: @escaping (String) -> Void) async -> AgentRunOutcome
+    func execute(
+        prompt: String, posture: SavedExecutionPosture?,
+        appendLog: @escaping (String) -> Void
+    ) async -> AgentRunOutcome
 }

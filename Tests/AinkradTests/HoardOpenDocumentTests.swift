@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradAppKit
+import Foundation
+import Testing
+
 @testable import Ainkrad
 @testable import AinkradHostRuntime
 
@@ -10,9 +11,10 @@ import AinkradAppKit
 struct HoardOpenDocumentTests {
 
     private func entry(_ name: String) -> FileEntry {
-        FileEntry(url: URL(fileURLWithPath: "/Users/test/\(name)"), name: name,
-                  isDirectory: false, isSymlink: false, isHidden: false,
-                  size: 0, modified: Date())
+        FileEntry(
+            url: URL(fileURLWithPath: "/Users/test/\(name)"), name: name,
+            isDirectory: false, isSymlink: false, isHidden: false,
+            size: 0, modified: Date())
     }
 
     @Test("Markdown is recognised, by extension, case-insensitively")

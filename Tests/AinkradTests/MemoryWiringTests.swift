@@ -1,8 +1,9 @@
+import AinkradHostRuntime
 // Tests/AinkradTests/MemoryWiringTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("Memory wiring")
 @MainActor

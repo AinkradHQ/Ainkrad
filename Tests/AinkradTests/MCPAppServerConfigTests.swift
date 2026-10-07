@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("MCPServerConfig in-process")
@@ -18,9 +19,11 @@ struct MCPAppServerConfigTests {
 
     @Test("a legacy payload without appID still decodes")
     func legacyPayloadDecodes() throws {
-        let json = #"{"id":"brave","displayName":"Brave","transport":"stdio","args":[],"envKeys":[],"headerKeys":[],"enabled":true,"trusted":false}"#
-        let decoded = try JSONDecoder().decode(MCPServerConfig.self,
-                                               from: try #require(json.data(using: .utf8)))
+        let json =
+            #"{"id":"brave","displayName":"Brave","transport":"stdio","args":[],"envKeys":[],"headerKeys":[],"enabled":true,"trusted":false}"#
+        let decoded = try JSONDecoder().decode(
+            MCPServerConfig.self,
+            from: try #require(json.data(using: .utf8)))
         #expect(decoded.appID == nil)
         #expect(decoded.transport == .stdio)
     }

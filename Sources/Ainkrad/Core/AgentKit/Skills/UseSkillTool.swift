@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/Skills/UseSkillTool.swift
 import Foundation
-import AinkradHostRuntime
 
 /// Loads one skill's full instructions on demand (progressive disclosure). The
 /// model discovers skill names via the index context source (Task 5), then
@@ -12,11 +12,11 @@ struct UseSkillTool: AgentTool {
 
     let name = "use_skill"
     let description = """
-    Load the full step-by-step instructions for a named skill from the "Available Skills" index. \
-    Call this before performing a workflow a skill covers, then follow the returned instructions. \
-    Only pass a name that appears verbatim in that index, and only when the request clearly \
-    matches it — not for greetings, small talk, or when no skill is listed.
-    """
+        Load the full step-by-step instructions for a named skill from the "Available Skills" index. \
+        Call this before performing a workflow a skill covers, then follow the returned instructions. \
+        Only pass a name that appears verbatim in that index, and only when the request clearly \
+        matches it — not for greetings, small talk, or when no skill is listed.
+        """
     let permission: ToolPermissionClass = .read
 
     var parametersSchema: JSONValue {
@@ -26,7 +26,7 @@ struct UseSkillTool: AgentTool {
                 "name": .object([
                     "type": .string("string"),
                     "description": .string("The skill name from the Available Skills index."),
-                ]),
+                ])
             ]),
             "required": .array([.string("name")]),
         ])

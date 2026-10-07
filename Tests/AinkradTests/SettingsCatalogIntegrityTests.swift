@@ -1,7 +1,8 @@
-import Testing
-@testable import Ainkrad
 import AinkradAppKit
 import AinkradAppKitContract
+import Testing
+
+@testable import Ainkrad
 
 @Suite("HostSettingsCatalog integrity")
 @MainActor
@@ -9,7 +10,8 @@ struct HostSettingsCatalogIntegrityTests {
     @Test("every path in the host catalog is unique")
     func pathsUnique() {
         let catalog = HostSettingsCatalog.build(environment: .preview())
-        let all = catalog.pages.map(\.path)
+        let all =
+            catalog.pages.map(\.path)
             + catalog.pages.flatMap { $0.groups.map(\.path) }
             + catalog.allFields.map(\.path)
         #expect(Set(all).count == all.count)
@@ -55,8 +57,11 @@ struct HostSettingsCatalogIntegrityTests {
         // retention limits and "Clear feed" were live code with no way to
         // reach them, which is precisely what this test exists to catch and
         // could not, because an absent page breaks no expectation.
-        #expect(titles == ["General", "You", "Appearance", "Sound & Voice", "Keyboard",
-                           "Notifications"])
+        #expect(
+            titles == [
+                "General", "You", "Appearance", "Sound & Voice", "Keyboard",
+                "Notifications",
+            ])
     }
 
     /// Every field in the live catalog must be genuinely reachable, not just
@@ -92,7 +97,8 @@ struct HostSettingsCatalogIntegrityTests {
                     // `.always` groups never hide content, and a
                     // `.collapsedByDefault` group must open when this field
                     // is the highlighted deep-link target.
-                    let revealed = group.disclosure == .always
+                    let revealed =
+                        group.disclosure == .always
                         || SettingsGroupView.mustExpand(
                             group: group, highlightedPath: field.path, matchedPaths: nil)
                     if !revealed {
@@ -132,15 +138,19 @@ struct HostSettingsCatalogIntegrityTests {
             let tabbed = SettingsPageView.usesTabs(page: page)
             for (index, group) in page.groups.enumerated() {
                 for field in group.fields {
-                    guard let target = SettingsPageView.deepLinkTarget(
-                        page: page, highlightedPath: field.path) else {
+                    guard
+                        let target = SettingsPageView.deepLinkTarget(
+                            page: page, highlightedPath: field.path)
+                    else {
                         broken.append("\(field.path): no target")
                         continue
                     }
                     // The right tab must be selected...
                     let expectedTab = tabbed ? index : nil
                     if target.tabIndex != expectedTab {
-                        broken.append("\(field.path): tab \(String(describing: target.tabIndex)) != \(String(describing: expectedTab))")
+                        broken.append(
+                            "\(field.path): tab \(String(describing: target.tabIndex)) != \(String(describing: expectedTab))"
+                        )
                     }
                     if target.groupPath != group.path {
                         broken.append("\(field.path): group \(target.groupPath)")
@@ -167,7 +177,8 @@ struct HostSettingsCatalogIntegrityTests {
     func permissionsTabsOpen() {
         let catalog = HostSettingsCatalog.build(environment: .preview())
         guard let page = catalog.pages.first(where: { $0.title.contains("Permissions") }) else {
-            Issue.record("no Permissions & Sandbox page"); return
+            Issue.record("no Permissions & Sandbox page")
+            return
         }
         #expect(SettingsPageView.usesTabs(page: page))
         #expect(!page.groups.contains { $0.disclosure == .collapsedByDefault })
@@ -185,8 +196,10 @@ struct HostSettingsCatalogIntegrityTests {
     func appIconIsAlwaysExpanded() {
         let catalog = HostSettingsCatalog.build(environment: .preview())
         guard let page = catalog.pages.first(where: { $0.path == SettingsPath(["workspace", "appearance"]) }),
-              let group = page.groups.first(where: { $0.title == "App Icon" }) else {
-            Issue.record("no App Icon group on workspace.appearance"); return
+            let group = page.groups.first(where: { $0.title == "App Icon" })
+        else {
+            Issue.record("no App Icon group on workspace.appearance")
+            return
         }
         #expect(group.disclosure == .always)
         let target = SettingsPageView.deepLinkTarget(page: page, highlightedPath: group.fields[0].path)

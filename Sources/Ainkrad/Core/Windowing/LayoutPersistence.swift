@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// A serializable pane tree. A node is a leaf (`appID` set) or a split
 /// (`axis`/`fractions`/`children` set). Panel identity is NOT persisted —
@@ -32,7 +32,8 @@ struct PaneSnapshot: Codable, Equatable {
             return .leaf(Block(appID: appID, title: title))
         }
         guard let axis, let children, let fractions,
-              children.count == fractions.count, !children.isEmpty else { return nil }
+            children.count == fractions.count, !children.isEmpty
+        else { return nil }
         let nodes = children.compactMap { $0.makeNode() }
         guard nodes.count == children.count else { return nil }
         if nodes.count == 1 { return nodes[0] }
@@ -82,7 +83,8 @@ struct LayoutStateSnapshot: PersistableDocument {
     /// This returns a value; the PERSISTED document is left untouched, so
     /// turning pane restore back on still finds the last saved layout.
     func launchState(restoringPanes: Bool) -> LayoutStateSnapshot {
-        let kept = workspaces
+        let kept =
+            workspaces
             .filter { $0.isMain || !Self.isAutoNamed($0.name) }
             .map { workspace in
                 WorkspaceSnapshot(

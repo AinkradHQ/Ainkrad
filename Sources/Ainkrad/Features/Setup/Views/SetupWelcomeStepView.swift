@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// The opening step, and the first screen anyone ever sees in Ainkrad.
 ///
@@ -29,6 +29,7 @@ struct SetupWelcomeStepView: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.ainkradReduceMotion) private var reduceMotion
     @Environment(\.setupGroupWidth) private var groupWidth
+    @Environment(\.ainkradSkin) private var skin
 
     let coordinator: SetupCoordinator
 
@@ -39,7 +40,7 @@ struct SetupWelcomeStepView: View {
     @State private var hasSettled = false
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
+        let tokens = environment.themeManager.hostSkin
 
         VStack(spacing: 0) {
             paragraph(tokens: tokens)
@@ -49,15 +50,17 @@ struct SetupWelcomeStepView: View {
                 .frame(maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth) * 0.8)
                 .frame(maxWidth: .infinity)
 
-            Spacer(minLength: 20)
+            Spacer(minLength: skin.size.s20)
 
             // No Back appears here: `SetupStepFooter` omits it on the first step
             // shown, which for a fresh install is this one — which is also what
             // lets `centersPrimary` genuinely centre.
-            SetupStepFooter(coordinator: coordinator,
-                            primaryTitle: "Get Started",
-                            primaryIdentifier: "setup.welcome.continue",
-                            centersPrimary: true) {
+            SetupStepFooter(
+                coordinator: coordinator,
+                primaryTitle: "Get Started",
+                primaryIdentifier: "setup.welcome.continue",
+                centersPrimary: true
+            ) {
                 coordinator.advance()
             }
         }
@@ -65,11 +68,12 @@ struct SetupWelcomeStepView: View {
         .onAppear { settle() }
     }
 
-    private func paragraph(tokens: DesignTokens) -> some View {
+    private func paragraph(tokens: AinkradSkin) -> some View {
         let size: CGFloat = 16
-        let geometry = SetupStageMotion.layerGeometry(.content,
-                                                      reduceMotion: reduceMotion,
-                                                      isForward: true)
+        let geometry = SetupStageMotion.layerGeometry(
+            .content,
+            reduceMotion: reduceMotion,
+            isForward: true)
         // `nil` geometry is reduce-motion: no lift, no stagger, nothing to fade
         // from. The text is simply there.
         let lift = geometry.map(\.lift) ?? 0
@@ -83,23 +87,28 @@ struct SetupWelcomeStepView: View {
                 + "another machine."
         )
         .font(AinkradFont.display(size))
-        .foregroundStyle(tokens.foreground.opacity(0.82))
+        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o82))
         .lineSpacing(size * 0.36)
         .multilineTextAlignment(.center)
         .fixedSize(horizontal: false, vertical: true)
         .opacity(hasSettled ? 1 : 0)
         .offset(y: hasSettled ? 0 : lift)
-        .animation(SetupStageMotion.animation(reduceMotion: reduceMotion,
-                                              layer: .content)?.delay(delay),
-                   value: hasSettled)
+        .animation(
+            SetupStageMotion.animation(
+                reduceMotion: reduceMotion,
+                layer: .content)?.delay(delay),
+            value: hasSettled)
     }
 
     /// Routed through `SetupStageMotion` rather than a bare `.animation(...)`,
     /// so the wizard has exactly one place where reduce-motion is honoured.
     private func settle() {
         guard !hasSettled else { return }
-        withAnimation(SetupStageMotion.animation(reduceMotion: reduceMotion,
-                                                 layer: .content)) {
+        withAnimation(
+            SetupStageMotion.animation(
+                reduceMotion: reduceMotion,
+                layer: .content)
+        ) {
             hasSettled = true
         }
     }

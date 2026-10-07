@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Keyless image-generation backend backed by Pollinations.ai. No API key, no
 /// account, no payment card — always `isConfigured`. Requests a single image by
@@ -16,7 +16,8 @@ struct PollinationsImageBackend: MediaBackend {
     func generateImage(prompt: String) async throws -> GeneratedImage {
         let base = baseURL.hasSuffix("/") ? String(baseURL.dropLast()) : baseURL
         // Encode the prompt as a single path segment.
-        let encoded = prompt.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)
+        let encoded =
+            prompt.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)
             ?? prompt.replacingOccurrences(of: " ", with: "%20")
         guard var comps = URLComponents(string: "\(base)/prompt/\(encoded)") else {
             throw ToolError.message("Invalid Pollinations URL.")

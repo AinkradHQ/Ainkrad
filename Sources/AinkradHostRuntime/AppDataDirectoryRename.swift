@@ -18,14 +18,16 @@ public enum AppDataDirectoryRename {
             let source = root.appendingPathComponent(old, isDirectory: true)
             let destination = root.appendingPathComponent(new, isDirectory: true)
             guard fileManager.fileExists(atPath: source.path),
-                  !fileManager.fileExists(atPath: destination.path) else { continue }
+                !fileManager.fileExists(atPath: destination.path)
+            else { continue }
             do {
                 try fileManager.moveItem(at: source, to: destination)
                 Log.persistence.info(
                     "Renamed app data \(old, privacy: .public) → \(new, privacy: .public)")
             } catch {
                 Log.persistence.error(
-                    "Could not rename app data \(old, privacy: .public): \(error.localizedDescription, privacy: .public)")
+                    "Could not rename app data \(old, privacy: .public): \(error.localizedDescription, privacy: .public)"
+                )
             }
         }
     }

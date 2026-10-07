@@ -1,9 +1,10 @@
-import Testing
+import AinkradAppKit
+import AinkradHostRuntime
 import Foundation
 import SwiftUI
-import AinkradAppKit
+import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 /// Slice 3: `.overlay`-presentation apps are summoned as a floating host
 /// overlay instead of tiling into the workspace layout; `.pane` apps (the
@@ -33,7 +34,8 @@ final class PluginOverlayLaunchTests {
         registry.install(builtIn: [overlayApp, paneApp])
         let workspaceManager = WorkspaceManager()
         let appAppearanceStore = AppAppearanceStore(persistence: InMemoryPersistenceStore())
-        let store = LauncherStore(registry: registry, workspaceManager: workspaceManager, appAppearanceStore: appAppearanceStore)
+        let store = LauncherStore(
+            registry: registry, workspaceManager: workspaceManager, appAppearanceStore: appAppearanceStore)
         return (store, workspaceManager)
     }
 

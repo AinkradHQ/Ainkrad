@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("MCPServerConfigStore")
 @MainActor
@@ -12,9 +13,10 @@ struct MCPServerConfigStoreTests {
     }
 
     private func stdioConfig() -> MCPServerConfig {
-        MCPServerConfig(id: "web-search", displayName: "Web Search", transport: .stdio,
-                        command: "npx", args: ["-y", "server"], url: nil,
-                        envKeys: ["API_KEY"], headerKeys: [], enabled: false, trusted: false)
+        MCPServerConfig(
+            id: "web-search", displayName: "Web Search", transport: .stdio,
+            command: "npx", args: ["-y", "server"], url: nil,
+            envKeys: ["API_KEY"], headerKeys: [], enabled: false, trusted: false)
     }
 
     @Test func upsertPersistsWithoutSecretValues() {
@@ -71,14 +73,15 @@ struct MCPServerConfigStoreTests {
         let encoded = try? PersistenceCoding.encoder.encode(doc)
         let json = String(data: encoded ?? Data(), encoding: .utf8) ?? ""
         #expect(!json.contains("super-secret-value"))
-        #expect(json.contains("API_KEY")) // key name is fine, value is not
+        #expect(json.contains("API_KEY"))  // key name is fine, value is not
     }
 
     @Test func httpSSEConfigRoundTripsWithHeaderKeys() {
         let (store, secrets) = make()
-        let cfg = MCPServerConfig(id: "docs-server", displayName: "Docs", transport: .httpSSE,
-                                   url: URL(string: "https://example.com/mcp"),
-                                   headerKeys: ["Authorization"])
+        let cfg = MCPServerConfig(
+            id: "docs-server", displayName: "Docs", transport: .httpSSE,
+            url: URL(string: "https://example.com/mcp"),
+            headerKeys: ["Authorization"])
         store.upsert(cfg)
         store.setSecret("Bearer abc", for: MCPSecretKey(serverID: "docs-server", key: "Authorization"))
         #expect(store.resolvedHeaders(for: "docs-server")["Authorization"] == "Bearer abc")

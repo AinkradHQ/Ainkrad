@@ -1,9 +1,10 @@
-import Testing
+import AinkradAppKit
+import AinkradHostRuntime
 import Foundation
 import SwiftUI
+import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
-import AinkradAppKit
 
 /// Generation 8: the host mints per-instance identity and calls teardown.
 @MainActor
@@ -79,7 +80,7 @@ struct PluginLifecycleTeardownTests {
     func generationSevenPluginStillDeregisters() {
         let reg = registry()
         reg.install(builtIn: [], loaded: [app("legacy")])
-        reg.deregister(id: "legacy")   // teardown is nil — must not crash
+        reg.deregister(id: "legacy")  // teardown is nil — must not crash
         #expect(reg.allApps.isEmpty)
     }
 
@@ -105,7 +106,8 @@ struct PluginLifecycleTeardownTests {
 
     @Test("Each HostServicesImpl mints its own instance id")
     func hostMintsDistinctIdentity() {
-        let first = makeHost(), second = makeHost()
+        let first = makeHost()
+        let second = makeHost()
         // The replacement for `ObjectIdentifier(host as AnyObject)`, which was
         // an address and could be recycled onto a different host.
         #expect(first.instanceID != second.instanceID)
@@ -140,7 +142,8 @@ struct PluginLaunchOutcomeTests {
         hub.setAvailabilityProvider { _ in .unknown }
         let launcher = HostAppLauncher(appID: "leyline", hub: hub)
 
-        #expect(launcher.openReportingOutcome(appID: "gitmage", payload: "{}")
+        #expect(
+            launcher.openReportingOutcome(appID: "gitmage", payload: "{}")
                 == .unknownApp("gitmage"))
         // And no payload is left queued for an app that never opens.
         #expect(hub.takePending(for: "gitmage") == nil)
@@ -151,7 +154,8 @@ struct PluginLaunchOutcomeTests {
         let hub = PluginLaunchHub()
         hub.setAvailabilityProvider { _ in .disabled }
         let launcher = HostAppLauncher(appID: "leyline", hub: hub)
-        #expect(launcher.openReportingOutcome(appID: "gitmage", payload: nil)
+        #expect(
+            launcher.openReportingOutcome(appID: "gitmage", payload: nil)
                 == .disabled("gitmage"))
     }
 

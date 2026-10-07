@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Applies the Appearance step's choices to the live stores.
 ///
@@ -8,10 +8,12 @@ import AinkradHostRuntime
 /// (ThemeManager.swift:45), so the accent must be set afterwards or it is lost.
 @MainActor
 enum SetupAppearance {
-    static func apply(theme: Theme, accentHex: String?,
-                      family: UIFontFamily, scale: UIFontScale,
-                      icon: AppIconChoice, iconAppearance: AppIconAppearance,
-                      themeManager: ThemeManager, iconStore: AppIconStore) {
+    static func apply(
+        theme: Theme, accentHex: String?,
+        family: UIFontFamily, scale: UIFontScale,
+        icon: AppIconChoice, iconAppearance: AppIconAppearance,
+        themeManager: ThemeManager, iconStore: AppIconStore
+    ) {
         themeManager.setTheme(theme)
         themeManager.setAccentColorHex(accentHex)
         themeManager.setFontFamily(family)
@@ -47,7 +49,7 @@ enum SetupAppearance {
 ///    may return here with Back).
 ///
 /// What did NOT change, deliberately: the controls themselves are still the
-/// shared kit's, matching `AppearanceSettingsView` component for component.
+/// shared kit's, the same ones Settings uses for these preferences.
 /// Art direction is framing and copy — inventing a wizard-only theme picker
 /// would split one product into two visual languages for the same setting.
 ///
@@ -60,6 +62,7 @@ struct SetupAppearanceStepView: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.ainkradReduceMotion) private var reduceMotion
     @Environment(\.setupGroupWidth) private var groupWidth
+    @Environment(\.ainkradSkin) private var skin
 
     let coordinator: SetupCoordinator
 
@@ -68,40 +71,48 @@ struct SetupAppearanceStepView: View {
     @State private var hasSettled = false
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
+        let tokens = environment.themeManager.hostSkin
 
         VStack(alignment: .leading, spacing: 0) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
+                VStack(alignment: .leading, spacing: skin.size.s14) {
                     lead(tokens: tokens)
-                    group(index: 1,
-                          title: "Theme",
-                          hint: "The whole workspace re-tints — window, islands, and the sky "
-                              + "behind this screen.") {
+                    group(
+                        index: 1,
+                        title: "Theme",
+                        hint: "The whole workspace re-tints — window, islands, and the sky "
+                            + "behind this screen."
+                    ) {
                         themeGrid(tokens: tokens)
                     }
-                    group(index: 2,
-                          title: "Accent",
-                          hint: "Used for anything live: selection, focus, the things that are "
-                              + "currently doing something.") {
+                    group(
+                        index: 2,
+                        title: "Accent",
+                        hint: "Used for anything live: selection, focus, the things that are "
+                            + "currently doing something."
+                    ) {
                         accentColorRow(tokens: tokens, manager: environment.themeManager)
                     }
                     // "Type" first, which reads as a verb before it reads as a
                     // noun — an instruction to start typing, on a screen whose
                     // best line ("Look at the Dock") IS an instruction. Named
                     // for the two controls under it instead.
-                    group(index: 3,
-                          title: "Typeface and size",
-                          hint: "Every word in the app, including the ones you are reading now.") {
+                    group(
+                        index: 3,
+                        title: "Typeface and size",
+                        hint: "Every word in the app, including the ones you are reading now."
+                    ) {
                         typographyControls(tokens: tokens)
                     }
-                    group(index: 4,
-                          title: "App icon",
-                          hint: "Look at the Dock — it changes as you pick.") {
+                    group(
+                        index: 4,
+                        title: "App icon",
+                        hint: "Look at the Dock — it changes as you pick."
+                    ) {
                         appIconControls(tokens: tokens)
                     }
                 }
-                .padding(20)
+                .padding(skin.size.s20)
                 // FILLS the group, exactly as the Home step's folder listing
                 // does. Capping the whole column instead left every panel hard
                 // against the left edge with a void beside it — the layout read
@@ -125,100 +136,91 @@ struct SetupAppearanceStepView: View {
     /// The only sentence on this screen that is not attached to a control, and
     /// the only one that matters if the user reads nothing else: it says the
     /// thing behind the blur is the real app, already running.
-    private func lead(tokens: DesignTokens) -> some View {
+    private func lead(tokens: AinkradSkin) -> some View {
         staged(index: 0) {
-            Text("Ainkrad is already running behind this screen — that is your workspace "
-                 + "back there, not a picture of one. Nothing here needs saving: change "
-                 + "something and watch it happen.")
-                .font(AinkradFont.display(15))
-                .foregroundStyle(tokens.foreground.opacity(0.85))
-                .lineSpacing(5)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth),
-                       alignment: .leading)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            Text(
+                "Ainkrad is already running behind this screen — that is your workspace "
+                    + "back there, not a picture of one. Nothing here needs saving: change "
+                    + "something and watch it happen."
+            )
+            .font(AinkradFont.display(15))
+            .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o85))
+            .lineSpacing(5)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(
+                maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth),
+                alignment: .leading
+            )
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
     // MARK: - Theme
 
-    private func themeGrid(tokens: DesignTokens) -> some View {
-        let columns = [GridItem(.adaptive(minimum: 200, maximum: 260), spacing: 10)]
-        return LazyVGrid(columns: columns, spacing: 10) {
+    private func themeGrid(tokens: AinkradSkin) -> some View {
+        let columns = [GridItem(.adaptive(minimum: skin.size.s200, maximum: skin.size.s260), spacing: skin.size.s10)]
+        return LazyVGrid(columns: columns, spacing: skin.size.s10) {
             ForEach(Theme.allCases, id: \.self) { theme in
                 themeCard(theme, tokens: tokens)
             }
         }
     }
 
-    private func themeCard(_ theme: Theme, tokens: DesignTokens) -> some View {
+    /// A kit list row per theme: its two accents as the leading swatch, and a
+    /// tick that reads as the current choice.
+    private func themeCard(_ theme: Theme, tokens: AinkradSkin) -> some View {
         let isSelected = environment.themeManager.currentTheme == theme
-        let themeTokens = theme.tokens
+        let themeSkin = theme.skin
 
-        return Button {
-            environment.themeManager.setTheme(theme)
-        } label: {
-            HStack(spacing: 11) {
-                ChamferShape(cut: 7)
+        return AinkradListRow(
+            isSelected: isSelected,
+            onTap: { environment.themeManager.setTheme(theme) },
+            leading: {
+                ChamferShape(cut: skin.cut.c7)
                     .fill(
                         LinearGradient(
-                            colors: [themeTokens.accentPrimary, themeTokens.accentSecondary],
+                            colors: [themeSkin.color(\.accentPrimary), themeSkin.color(\.accentSecondary)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 30, height: 30)
+                    .frame(width: skin.size.s30, height: skin.size.s30)
                     .overlay(
-                        ChamferShape(cut: 7)
-                            .strokeBorder(.white.opacity(0.18), lineWidth: 1)
+                        ChamferShape(cut: skin.cut.c7)
+                            .strokeBorder(skin.color(.palette("white", skin.opacity.o18)), lineWidth: 1)
                     )
-
-                Text(theme.displayName)
-                    .font(AinkradFont.display(13, weight: .medium))
-                    .foregroundStyle(tokens.foreground.opacity(isSelected ? 0.95 : 0.7))
-
-                Spacer(minLength: 4)
-
+            },
+            title: theme.displayName,
+            trailing: {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 13))
-                    .foregroundStyle(isSelected ? tokens.accentSecondary : tokens.foreground.opacity(0.25))
+                    .font(skin.font(AinkradFontToken(sizeKey: "t13", scaled: false)))
+                    .foregroundStyle(isSelected ? tokens.color(\.accentSecondary) : tokens.color(\.foreground).opacity(skin.opacity.o25))
             }
-            .padding(12)
-            .frame(maxWidth: .infinity)
-            .background(
-                ChamferShape(cut: AinkradRadius.md)
-                    .fill(isSelected ? tokens.accentPrimary.opacity(0.13) : tokens.surfaceElevated.opacity(0.5))
-            )
-            .overlay(
-                ChamferShape(cut: AinkradRadius.md)
-                    .strokeBorder(tokens.accentPrimary.opacity(isSelected ? 0.4 : 0.15), lineWidth: 1)
-            )
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
+        )
+        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 
     // MARK: - Accent
 
     /// Preset swatches (one per theme's accent) plus a color-well for
-    /// anything else — the same pattern `AppearanceSettingsView` uses, so the
+    /// anything else — the same color well Settings' accent row uses, so the
     /// wizard and Settings agree on how an accent is picked. A well over a
     /// palette-only picker is required here because the accent is a
     /// free-form 6-digit hex, not one of a fixed set — restricting the
     /// wizard to presets while Settings allows any color would be a
     /// regression the moment the user opens Settings afterward.
-    private func accentColorRow(tokens: DesignTokens, manager: ThemeManager) -> some View {
-        HStack(spacing: 9) {
+    private func accentColorRow(tokens: AinkradSkin, manager: ThemeManager) -> some View {
+        HStack(spacing: skin.size.s9) {
             ForEach(Theme.allCases, id: \.self) { theme in
                 accentSwatch(theme, tokens: tokens, manager: manager)
             }
             AinkradColorPicker(
                 selection: Binding(
-                    get: { manager.accentColorHex.map { Color(hex: $0) } ?? tokens.accentPrimary },
-                    set: { manager.setAccentColorHex($0.hexString) }
+                    get: { manager.hostSkin.color(\.accentPrimary) },
+                    set: { manager.setAccentColor($0) }
                 )
             )
-            .frame(width: 30, height: 30)
+            .frame(width: skin.size.s30, height: skin.size.s30)
             .help("Any other colour")
             .accessibilityLabel("Choose any other accent colour")
         }
@@ -235,24 +237,30 @@ struct SetupAppearanceStepView: View {
     /// off that — so on arrival nothing was selected at all, even though the
     /// workspace visibly had an accent. It now shows the theme's own accent as
     /// the current one, which is what the user is actually looking at.
-    private func accentSwatch(_ theme: Theme, tokens: DesignTokens,
-                              manager: ThemeManager) -> some View {
-        let color = theme.tokens.accentPrimary
+    private func accentSwatch(
+        _ theme: Theme, tokens: AinkradSkin,
+        manager: ThemeManager
+    ) -> some View {
+        let color = theme.skin.color(\.accentPrimary)
         let hex = color.hexString ?? ""
         let isSelected = AccentSelection.isSelected(
             swatchHex: hex,
             overrideHex: manager.accentColorHex,
-            themeAccentHex: manager.currentTheme.tokens.accentPrimary.hexString ?? "")
+            themeAccentHex: manager.currentTheme.skin.color(\.accentPrimary).hexString ?? "")
 
-        return Button {
+        // A raw `Button`: the kit's swatch chip carries a text label, and seven
+        // labelled chips plus the well cannot fit the row a 280pt column gives.
+        return Button {  // design-lint: allow raw-control kit gap, label-free colour swatch
             manager.setAccentColorHex(hex)
         } label: {
-            ChamferShape(cut: 7)
+            ChamferShape(cut: skin.cut.c7)
                 .fill(color)
-                .frame(width: 30, height: 30)
+                .frame(width: skin.size.s30, height: skin.size.s30)
                 .overlay(
-                    ChamferShape(cut: 7).strokeBorder(
-                        isSelected ? tokens.foreground.opacity(0.95) : .white.opacity(0.16),
+                    ChamferShape(cut: skin.cut.c7).strokeBorder(
+                        isSelected
+                            ? tokens.color(\.foreground).opacity(skin.opacity.o95)
+                            : skin.color(.palette("white", skin.opacity.o16)),
                         lineWidth: isSelected ? 2 : 1
                     )
                 )
@@ -260,9 +268,9 @@ struct SetupAppearanceStepView: View {
                     // A tick, not just a ring: at 30pt a 2pt ring alone is easy
                     // to miss, and this control has no other confirmation.
                     Image(systemName: "checkmark")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(.white)
-                        .shadow(color: .black.opacity(0.4), radius: 2)
+                        .font(skin.font(AinkradFontToken(sizeKey: "t12", weight: "bold", scaled: false)))
+                        .foregroundStyle(skin.color(.palette("white", 1)))
+                        .shadow(color: skin.color(.palette("black", skin.opacity.o40)), radius: skin.size.s2)
                         .opacity(isSelected ? 1 : 0)
                 )
         }
@@ -274,22 +282,24 @@ struct SetupAppearanceStepView: View {
 
     // MARK: - Typography
 
-    private func typographyControls(tokens: DesignTokens) -> some View {
+    private func typographyControls(tokens: AinkradSkin) -> some View {
         let manager = environment.themeManager
-        return VStack(alignment: .leading, spacing: 9) {
+        return VStack(alignment: .leading, spacing: skin.size.s9) {
             AinkradCaptionedRow("Typeface") {
                 AinkradSegmentedPicker(
                     items: UIFontFamily.allCases,
-                    selection: Binding(get: { manager.uiFontFamily },
-                                       set: { manager.setFontFamily($0) }),
+                    selection: Binding(
+                        get: { manager.uiFontFamily },
+                        set: { manager.setFontFamily($0) }),
                     label: fontFamilyTitle
                 )
             }
             AinkradCaptionedRow("Size") {
                 AinkradSegmentedPicker(
                     items: UIFontScale.allCases,
-                    selection: Binding(get: { manager.uiFontScale },
-                                       set: { manager.setFontScale($0) }),
+                    selection: Binding(
+                        get: { manager.uiFontScale },
+                        set: { manager.setFontScale($0) }),
                     label: fontScaleTitle
                 )
             }
@@ -300,9 +310,9 @@ struct SetupAppearanceStepView: View {
 
     // MARK: - App icon
 
-    private func appIconControls(tokens: DesignTokens) -> some View {
+    private func appIconControls(tokens: AinkradSkin) -> some View {
         let store = environment.appIconStore
-        return VStack(alignment: .leading, spacing: 9) {
+        return VStack(alignment: .leading, spacing: skin.size.s9) {
             AinkradCaptionedRow(AppIconCaptions.color) {
                 AinkradSegmentedPicker(
                     items: AppIconChoice.allCases,
@@ -313,8 +323,9 @@ struct SetupAppearanceStepView: View {
             AinkradCaptionedRow(AppIconCaptions.appearance) {
                 AinkradSegmentedPicker(
                     items: AppIconAppearance.allCases,
-                    selection: Binding(get: { store.appearance },
-                                       set: { store.selectAppearance($0) }),
+                    selection: Binding(
+                        get: { store.appearance },
+                        set: { store.selectAppearance($0) }),
                     label: iconAppearanceTitle
                 )
             }
@@ -329,8 +340,10 @@ struct SetupAppearanceStepView: View {
     /// change, and the control. No all-caps header, no boxed card and no rule
     /// above it — the groups are separated by space alone, per the design
     /// language's no-separator rule.
-    private func group<Content: View>(index: Int, title: String, hint: String,
-                                      @ViewBuilder _ content: () -> Content) -> some View {
+    private func group<Content: View>(
+        index: Int, title: String, hint: String,
+        @ViewBuilder _ content: () -> Content
+    ) -> some View {
         staged(index: index) {
             AinkradSettingsPanel(title: title, hint: hint, content: content)
         }
@@ -345,11 +358,14 @@ struct SetupAppearanceStepView: View {
     /// directional entry for the step as a whole. It is asked in the forward
     /// orientation purely to take the magnitude and the reduce-motion gate,
     /// the same way `SetupHomeStepView` does for its folder rows.
-    private func staged<Content: View>(index: Int,
-                                       @ViewBuilder _ content: () -> Content) -> some View {
-        let geometry = SetupStageMotion.layerGeometry(.content,
-                                                      reduceMotion: reduceMotion,
-                                                      isForward: true)
+    private func staged<Content: View>(
+        index: Int,
+        @ViewBuilder _ content: () -> Content
+    ) -> some View {
+        let geometry = SetupStageMotion.layerGeometry(
+            .content,
+            reduceMotion: reduceMotion,
+            isForward: true)
         let lift = geometry.map { $0.lift * 0.6 } ?? 0
         // ONLY the per-index stagger — `SetupStageMotion.animation(layer:)`
         // already carries `.content`'s own 0.11s delay, and adding
@@ -361,15 +377,21 @@ struct SetupAppearanceStepView: View {
         return content()
             .opacity(hasSettled ? 1 : 0)
             .offset(y: hasSettled ? 0 : lift)
-            .animation(SetupStageMotion.animation(reduceMotion: reduceMotion,
-                                                  layer: .content)?.delay(delay),
-                       value: hasSettled)
+            .animation(
+                SetupStageMotion.animation(
+                    reduceMotion: reduceMotion,
+                    layer: .content)?.delay(delay),
+                value: hasSettled)
     }
 
     // MARK: - Titles
 
     private func fontScaleTitle(_ scale: UIFontScale) -> String {
-        switch scale { case .small: return "Small"; case .medium: return "Medium"; case .large: return "Large" }
+        switch scale {
+        case .small: return "Small"
+        case .medium: return "Medium"
+        case .large: return "Large"
+        }
     }
 
     private func fontFamilyTitle(_ family: UIFontFamily) -> String {
@@ -381,10 +403,18 @@ struct SetupAppearanceStepView: View {
     }
 
     private func iconColorTitle(_ c: AppIconChoice) -> String {
-        switch c { case .auto: return "Auto"; case .blue: return "Blue"; case .purple: return "Purple" }
+        switch c {
+        case .auto: return "Auto"
+        case .blue: return "Blue"
+        case .purple: return "Purple"
+        }
     }
 
     private func iconAppearanceTitle(_ a: AppIconAppearance) -> String {
-        switch a { case .system: return "System"; case .light: return "Light"; case .dark: return "Dark" }
+        switch a {
+        case .system: return "System"
+        case .light: return "Light"
+        case .dark: return "Dark"
+        }
     }
 }

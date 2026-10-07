@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-@testable import Ainkrad
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 @Suite("SkyEffect catalog")
 struct SkyEffectTests {
@@ -93,7 +94,7 @@ struct SkySettingsStoreTests {
         let saved = persistence.load(GlobalSettings.self)
         #expect(saved?.skyMotionEnabled == false)
         #expect(saved?.skyMotionSpeed == 1.5)
-        #expect(saved?.theme == .dracula)   // preserved, not clobbered
+        #expect(saved?.theme == .dracula)  // preserved, not clobbered
 
         // A fresh store sees the persisted state.
         let reloaded = SkySettingsStore(persistence: persistence)
@@ -133,7 +134,7 @@ struct SkyClockTests {
         let clock = SkyClock()
         #expect(clock.tick(real: 100, speed: 1.0) == 0)
         #expect(clock.tick(real: 110, speed: 1.0) == 10)
-        #expect(clock.tick(real: 112, speed: 0.5) == 11)   // only the new delta is scaled
+        #expect(clock.tick(real: 112, speed: 0.5) == 11)  // only the new delta is scaled
     }
 
     @Test("a speed change never teleports accumulated time")
@@ -142,7 +143,7 @@ struct SkyClockTests {
         _ = clock.tick(real: 0, speed: 1.0)
         let before = clock.tick(real: 1000, speed: 1.0)
         let after = clock.tick(real: 1001, speed: 1.5)
-        #expect(after - before == 1.5)   // not 1000 × 1.5
+        #expect(after - before == 1.5)  // not 1000 × 1.5
     }
 
     @Test("same-instant re-ticks are idempotent and backwards time is clamped")
@@ -151,7 +152,7 @@ struct SkyClockTests {
         _ = clock.tick(real: 5, speed: 1.0)
         let value = clock.tick(real: 8, speed: 1.0)
         #expect(clock.tick(real: 8, speed: 1.0) == value)
-        #expect(clock.tick(real: 7, speed: 1.0) == value)   // never runs backward
+        #expect(clock.tick(real: 7, speed: 1.0) == value)  // never runs backward
     }
 
     @Test("reset returns the clock to the frozen arrangement's zero")
@@ -160,7 +161,7 @@ struct SkyClockTests {
         _ = clock.tick(real: 0, speed: 1.0)
         _ = clock.tick(real: 500, speed: 1.0)
         clock.reset()
-        #expect(clock.tick(real: 900, speed: 1.0) == 0)     // resumes smoothly from zero
+        #expect(clock.tick(real: 900, speed: 1.0) == 0)  // resumes smoothly from zero
         #expect(clock.tick(real: 901, speed: 1.0) == 1)
     }
 }

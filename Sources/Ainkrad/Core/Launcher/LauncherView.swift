@@ -1,34 +1,13 @@
-import SwiftUI
-import AppKit
 import AinkradAppKit
 import AinkradHostRuntime
+import AppKit
+import SwiftUI
 
-/// Four corner brackets — the targeting-cursor treatment for the selected
-/// Launcher row.
-struct TargetingBrackets: Shape {
-    var length: CGFloat = 8
-
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        // Top-left
-        path.move(to: CGPoint(x: rect.minX, y: rect.minY + length))
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.minX + length, y: rect.minY))
-        // Top-right
-        path.move(to: CGPoint(x: rect.maxX - length, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY + length))
-        // Bottom-right
-        path.move(to: CGPoint(x: rect.maxX, y: rect.maxY - length))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
-        path.addLine(to: CGPoint(x: rect.maxX - length, y: rect.maxY))
-        // Bottom-left
-        path.move(to: CGPoint(x: rect.minX + length, y: rect.maxY))
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY - length))
-        return path
-    }
-}
+/// Four corner brackets — the targeting-cursor treatment for a selection.
+/// The kit's `AinkradCornerBrackets` is the same path; the alias keeps the
+/// callers in other areas compiling until their area PRs move onto the kit
+/// name, and then it goes.
+typealias TargetingBrackets = AinkradCornerBrackets
 
 /// The ⌘K summon: the workspace behind dims and blurs (see RootView), and
 /// a glowing command deck floats above it — command field, Spotlight-style
@@ -45,6 +24,7 @@ struct LauncherView: View {
     }
 
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradSkin) private var skin
     @Bindable var store: LauncherStore
     let onDismiss: () -> Void
 
@@ -53,6 +33,10 @@ struct LauncherView: View {
 
     /// Apps-per-row in grid mode; also the up/down arrow step.
     private static let gridColumns = 4
+
+    /// Colours come from `hostSkin`, which carries the user's custom accent;
+    /// every scalar comes from the environment's skin.
+    private var tokens: AinkradSkin { environment.themeManager.hostSkin }
 
     private var viewMode: LauncherViewMode { environment.generalSettingsStore.launcherViewMode }
     private var isGrid: Bool { viewMode == .grid }
@@ -84,16 +68,15 @@ struct LauncherView: View {
     }
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
         let results = appRows
 
         GeometryReader { geo in
             ZStack {
-                Color.black.opacity(OverlayChrome.backdropOpacity)
+                skin.color(.palette("black", skin.chrome.overlay.backdropOpacity))
                     .ignoresSafeArea()
                     .onTapGesture { dismiss() }
 
-                panel(results: results, tokens: tokens)
+                panel(results: results)
                     .frame(width: min(max(680, geo.size.width * 0.55), 820))
                     .offset(y: -60)
             }
@@ -101,103 +84,84 @@ struct LauncherView: View {
         .onAppear { isSearchFocused = true }
     }
 
-    private func panel(results: [AppRow], tokens: DesignTokens) -> some View {
+    private func panel(results: [AppRow]) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            commandField(results: results, tokens: tokens)
-
-            LinearGradient(
-                colors: [.clear, tokens.accentPrimary.opacity(0.5), .clear],
-                startPoint: .leading,
-                endPoint: .trailing
+            AinkradCommandField(
+                "Summon an app…", text: $store.query, focus: $isSearchFocused,
+                onArrow: { move($0, count: results.count) },
+                onSubmit: { select(results) },
+                onEscape: { dismiss() }
             )
-            .frame(height: 1)
 
             Text("APPS")
                 .font(AinkradFont.mono(9, weight: .medium))
                 .kerning(2.5)
-                .foregroundStyle(tokens.foreground.opacity(0.4))
-                .padding(.horizontal, 18)
-                .padding(.top, 14)
-                .padding(.bottom, 6)
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o40))
+                .padding(.horizontal, skin.size.s18)
+                .padding(.top, skin.size.s14)
+                .padding(.bottom, skin.size.s6)
 
             if results.isEmpty {
                 Text("No matching apps")
                     .font(AinkradFont.display(13))
-                    .foregroundStyle(tokens.foreground.opacity(0.35))
-                    .padding(.horizontal, 18)
-                    .padding(.vertical, 14)
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o35))
+                    .padding(.horizontal, skin.size.s18)
+                    .padding(.vertical, skin.size.s14)
             } else if isGrid {
-                gridView(results: results, tokens: tokens)
+                gridView(results: results)
             } else {
-                VStack(spacing: 2) {
+                VStack(spacing: skin.size.s2) {
                     ForEach(Array(results.enumerated()), id: \.element.id) { index, row in
-                        rowView(row, isSelected: index == selectedIndex, tokens: tokens)
+                        rowView(row, isSelected: index == selectedIndex)
                             .onTapGesture {
                                 selectedIndex = index
                                 select(results)
                             }
                     }
                 }
-                .padding(.horizontal, 10)
-                .padding(.bottom, 10)
+                .padding(.horizontal, skin.size.s10)
+                .padding(.bottom, skin.size.s10)
             }
 
-            footer(tokens: tokens)
+            footer
         }
-        .hudPanelChrome(tokens: tokens)
+        // The user's overlay opacity and blur settings, as every summoned
+        // overlay reads them.
+        .ainkradOverlayChrome(
+            backgroundOpacity: environment.generalSettingsStore.overlayBackgroundOpacity,
+            blurEnabled: environment.generalSettingsStore.overlayBlurEnabled,
+            blending: .withinWindow
+        )
         .onChange(of: store.query) { _, _ in selectedIndex = 0 }
     }
 
-    private func commandField(results: [AppRow], tokens: DesignTokens) -> some View {
-        HStack(spacing: 12) {
-            ChevronMark()
-                .fill(tokens.accentSecondary)
-                .frame(width: 16, height: 14)
-                .shadow(color: tokens.accentSecondary.opacity(0.9), radius: 6)
-
-            TextField("Summon an app…", text: $store.query)
-                .textFieldStyle(.plain)
-                .font(AinkradFont.display(17))
-                .foregroundStyle(tokens.foreground)
-                .tint(tokens.accentSecondary)
-                .focused($isSearchFocused)
-                .onKeyPress(.escape) { dismiss(); return .handled }
-                .onKeyPress(.downArrow) { move(by: isGrid ? Self.gridColumns : 1, count: results.count); return .handled }
-                .onKeyPress(.upArrow) { move(by: isGrid ? -Self.gridColumns : -1, count: results.count); return .handled }
-                .onKeyPress(.leftArrow) { if isGrid { move(by: -1, count: results.count); return .handled }; return .ignored }
-                .onKeyPress(.rightArrow) { if isGrid { move(by: 1, count: results.count); return .handled }; return .ignored }
-                .onKeyPress(.return) { select(results); return .handled }
-        }
-        .padding(.horizontal, 18)
-        .frame(height: 56)
-    }
-
-    private func rowView(_ row: AppRow, isSelected: Bool, tokens: DesignTokens) -> some View {
+    private func rowView(_ row: AppRow, isSelected: Bool) -> some View {
         AinkradListRow(
             isSelected: isSelected,
-            leading: { tile(for: row, tokens: tokens) },
+            leading: { tile(for: row, size: skin.size.s32) },
             title: row.displayName,
             trailing: {
                 if isSelected {
                     Text("↩")
                         .font(AinkradFont.mono(11))
-                        .foregroundStyle(tokens.accentSecondary.opacity(0.8))
+                        .foregroundStyle(tokens.color(\.accentSecondary).opacity(skin.opacity.o80))
                 }
             }
         )
         .overlay(
-            TargetingBrackets()
-                .stroke(isSelected ? tokens.accentSecondary.opacity(0.9) : .clear, lineWidth: 1.5)
-                .padding(1)
+            AinkradCornerBrackets()
+                .stroke(isSelected ? tokens.color(\.accentSecondary).opacity(skin.opacity.o90) : .clear, lineWidth: 1.5)
+                .padding(skin.size.s1)
         )
         .contentShape(Rectangle())
-        .animation(.easeOut(duration: 0.12), value: selectedIndex)
+        .animation(.easeOut(duration: skin.motion.durations.d0_12), value: selectedIndex)
     }
 
     /// The app's neon tile, drawn live from the active theme around its SF Symbol.
-    private func tile(for row: AppRow, tokens: DesignTokens) -> some View {
-        NeonAppTile(symbol: row.icon, tokens: tokens, size: 32, badge: badge(for: row),
-                    badgeStatus: badgeStatus(for: row))
+    private func tile(for row: AppRow, size: CGFloat) -> some View {
+        NeonAppTile(
+            symbol: row.icon, tokens: tokens, size: size, badge: badge(for: row),
+            badgeStatus: badgeStatus(for: row))
     }
 
     /// Unread events this app has published, for its tile badge. Nil until the
@@ -206,7 +170,7 @@ struct LauncherView: View {
     /// whose count is usually failures.
     private func badgeStatus(for row: AppRow) -> AinkradStatus? {
         guard let center = environment.signalCenter,
-              let worst = center.worstUnreadSeverity(for: .app(appID: row.id))
+            let worst = center.worstUnreadSeverity(for: .app(appID: row.id))
         else { return nil }
         return SignalPresentation.status(for: worst)
     }
@@ -218,57 +182,61 @@ struct LauncherView: View {
 
     // MARK: - Grid mode
 
-    private func gridView(results: [AppRow], tokens: DesignTokens) -> some View {
-        let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: Self.gridColumns)
-        return LazyVGrid(columns: columns, spacing: 8) {
+    private func gridView(results: [AppRow]) -> some View {
+        let columns = Array(repeating: GridItem(.flexible(), spacing: skin.spacing.sm), count: Self.gridColumns)
+        return LazyVGrid(columns: columns, spacing: skin.spacing.sm) {
             ForEach(Array(results.enumerated()), id: \.element.id) { index, row in
-                gridCell(row, isSelected: index == selectedIndex, tokens: tokens)
+                gridCell(row, isSelected: index == selectedIndex)
                     .onTapGesture {
                         selectedIndex = index
                         select(results)
                     }
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.bottom, 12)
+        .padding(.horizontal, skin.size.s14)
+        .padding(.bottom, skin.spacing.md)
     }
 
-    private func gridCell(_ row: AppRow, isSelected: Bool, tokens: DesignTokens) -> some View {
-        VStack(spacing: 8) {
-            NeonAppTile(symbol: row.icon, tokens: tokens, size: 46, badge: badge(for: row),
-                        badgeStatus: badgeStatus(for: row))
+    private func gridCell(_ row: AppRow, isSelected: Bool) -> some View {
+        VStack(spacing: skin.spacing.sm) {
+            tile(for: row, size: skin.size.s46)
             Text(row.displayName)
                 .font(AinkradFont.display(11, weight: isSelected ? .medium : .regular))
-                .foregroundStyle(tokens.foreground.opacity(isSelected ? 0.95 : 0.7))
+                .foregroundStyle(tokens.color(\.foreground).opacity(isSelected ? skin.opacity.o95 : skin.opacity.o70))
                 .lineLimit(1)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .background(ChamferShape(cut: AinkradRadius.md).fill(tokens.accentSecondary.opacity(isSelected ? 0.12 : 0)))
+        .padding(.vertical, skin.spacing.md)
+        .background(
+            ChamferShape(cut: skin.radius.md).fill(tokens.color(\.accentSecondary).opacity(isSelected ? skin.opacity.o12 : 0))
+        )
         .overlay(
-            TargetingBrackets(length: 10)
-                .stroke(isSelected ? tokens.accentSecondary.opacity(0.9) : .clear, lineWidth: 1.5)
-                .padding(2)
+            AinkradCornerBrackets(length: skin.size.s10)
+                .stroke(isSelected ? tokens.color(\.accentSecondary).opacity(skin.opacity.o90) : .clear, lineWidth: 1.5)
+                .padding(skin.size.s2)
         )
         .contentShape(Rectangle())
-        .animation(.easeOut(duration: 0.12), value: selectedIndex)
+        .animation(.easeOut(duration: skin.motion.durations.d0_12), value: selectedIndex)
     }
 
-    private func footer(tokens: DesignTokens) -> some View {
+    private var footer: some View {
         HStack {
             Spacer()
             Text("↑↓ navigate    ↩ open    esc dismiss")
                 .font(AinkradFont.mono(9))
                 .kerning(0.5)
-                .foregroundStyle(tokens.foreground.opacity(0.35))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o35))
         }
-        .padding(.horizontal, 18)
-        .padding(.bottom, 12)
+        .padding(.horizontal, skin.size.s18)
+        .padding(.bottom, skin.spacing.md)
     }
 
-    private func move(by delta: Int, count: Int) {
-        guard count > 0 else { return }
-        selectedIndex = (selectedIndex + delta + count) % count
+    /// Moves the selection for an arrow key; `false` when the key is not the
+    /// Launcher's to take, so the caret gets it.
+    private func move(_ arrow: AinkradArrow, count: Int) -> Bool {
+        guard let delta = launcherArrowStep(arrow, isGrid: isGrid, columns: Self.gridColumns) else { return false }
+        selectedIndex = launcherSelection(selectedIndex, movedBy: delta, count: count)
+        return true
     }
 
     private func select(_ results: [AppRow]) {

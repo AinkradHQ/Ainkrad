@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("AgentPermissionStore")
 @MainActor
@@ -13,14 +14,15 @@ struct AgentPermissionStoreTests {
     }
 
     @Test func setModePersistsPerWorkspace() {
-        let wsA = UUID(); let wsB = UUID()
+        let wsA = UUID()
+        let wsB = UUID()
         var active = wsA
         let persistence = InMemoryPersistenceStore()
         let store = AgentPermissionStore(persistence: persistence, currentWorkspaceID: { active })
         store.setMode(.fullAuto)
         #expect(store.mode == .fullAuto)
         active = wsB
-        #expect(store.mode == .ask)   // other workspace unaffected
+        #expect(store.mode == .ask)  // other workspace unaffected
 
         // Reload from the same persistence: workspace A's mode survives.
         active = wsA
@@ -112,6 +114,6 @@ struct AgentPermissionStoreTests {
         store.cycle()
         #expect(store.mode == .fullAuto)
         store.cycle()
-        #expect(store.mode == .ask)   // wraps back around
+        #expect(store.mode == .ask)  // wraps back around
     }
 }

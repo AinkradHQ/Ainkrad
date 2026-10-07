@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 // MARK: - Rail model
 
@@ -33,112 +33,12 @@ struct SetupRailModel {
         let steps = coordinator.steps
         let currentIndex = steps.firstIndex(of: coordinator.step) ?? 0
         items = steps.enumerated().map { index, step in
-            Item(step: step,
-                 title: step.title,
-                 isCurrent: index == currentIndex,
-                 isComplete: index < currentIndex)
+            Item(
+                step: step,
+                title: step.title,
+                isCurrent: index == currentIndex,
+                isComplete: index < currentIndex)
         }
-    }
-}
-
-// MARK: - Motion policy
-
-/// The stage's motion policy, kept separate from the views so the one rule that
-/// actually matters — reduce-motion collapses everything — is unit-testable.
-///
-/// The wizard SETS `uiReduceMotion` two steps in. A user who turns it on at
-/// Motion & Sound must see the remaining steps stop moving immediately; that is
-/// the most visible possible proof the setting works, and animating anyway is
-/// worse than never having animated at all.
-enum SetupStageMotion {
-    /// What the stage does when the step changes. `.none` is the whole point of
-    /// this type existing: it is the seam reduce-motion collapses to.
-    enum Transition: Equatable {
-        case none
-        /// Layers enter offset in the direction of travel and stagger in.
-        case layered(isForward: Bool)
-    }
-
-    /// The layers, outermost first. Each one animates as its own element — the
-    /// design language's "separated live layers, not one whole image moving".
-    enum Layer: Int, CaseIterable {
-        case rail = 0, heading, content
-    }
-
-    /// How far and how late a layer moves. Pure data so the geometry — and the
-    /// reduce-motion guard in front of it — can be asserted without SwiftUI.
-    struct LayerGeometry: Equatable {
-        /// Signed horizontal travel of the ENTERING layer, in points. Negative
-        /// when going back, which is what makes the two directions distinct.
-        let travel: CGFloat
-        let lift: CGFloat
-        let delay: Double
-    }
-
-    /// Direction of travel between two steps. A free function of the two step
-    /// indices, so it can be computed during body evaluation from the step being
-    /// rendered rather than recovered afterwards.
-    static func isForward(from previousIndex: Int, to nextIndex: Int) -> Bool {
-        nextIndex >= previousIndex
-    }
-
-    static func transition(reduceMotion: Bool, isForward: Bool = true) -> Transition {
-        reduceMotion ? .none : .layered(isForward: isForward)
-    }
-
-    /// `nil` under reduce-motion — the seam that makes `layerTransition` fall
-    /// back to `.identity`.
-    static func layerGeometry(_ layer: Layer,
-                              reduceMotion: Bool,
-                              isForward: Bool) -> LayerGeometry? {
-        guard case .layered = transition(reduceMotion: reduceMotion, isForward: isForward) else {
-            return nil
-        }
-        // A `switch`, not an indexed array: a fourth Layer case must fail to
-        // compile rather than silently inherit the third one's geometry.
-        let distance: CGFloat
-        let lift: CGFloat
-        switch layer {
-        case .rail:    distance = 26; lift = 0
-        case .heading: distance = 34; lift = 6
-        case .content: distance = 46; lift = 10
-        }
-        return LayerGeometry(travel: isForward ? distance : -distance,
-                             lift: lift,
-                             delay: Double(layer.rawValue) * 0.055)
-    }
-
-    /// `nil` under reduce-motion, which makes every `withAnimation` /
-    /// `.animation` call site a no-op without a branch at each one.
-    static func animation(reduceMotion: Bool, layer: Layer = .rail) -> Animation? {
-        guard !reduceMotion else { return nil }
-        return .spring(response: 0.42, dampingFraction: 0.82)
-            .delay(Double(layer.rawValue) * 0.055)
-    }
-
-    /// The per-layer entry/exit. Forward and back are directionally distinct
-    /// (content arrives from the side it is travelling from), and each layer
-    /// carries a slightly different distance and delay so they do not read as
-    /// one plane sliding.
-    static func layerTransition(_ layer: Layer,
-                                reduceMotion: Bool,
-                                isForward: Bool) -> AnyTransition {
-        guard let geometry = layerGeometry(layer,
-                                           reduceMotion: reduceMotion,
-                                           isForward: isForward) else {
-            return .identity
-        }
-
-        let insertion = AnyTransition
-            .offset(x: geometry.travel, y: geometry.lift)
-            .combined(with: .opacity)
-        let removal = AnyTransition
-            .offset(x: -geometry.travel * 0.6, y: 0)
-            .combined(with: .opacity)
-
-        return AnyTransition
-            .asymmetric(insertion: insertion, removal: removal)
-            .animation(animation(reduceMotion: reduceMotion, layer: layer))
     }
 }
 
@@ -199,10 +99,13 @@ enum SetupStageLayout {
     /// clamped by constants — which is what stops the size from inverting at
     /// some window dimension nobody tried.
     static func group(fitting stage: CGSize) -> CGSize {
-        CGSize(width: clamp(stage.width * widthSlope + widthBase,
-                            low: minimumColumnWidth, high: maximumColumnWidth),
-               height: clamp(stage.height * heightSlope + heightBase,
-                             low: minimumGroupHeight, high: maximumGroupHeight))
+        CGSize(
+            width: clamp(
+                stage.width * widthSlope + widthBase,
+                low: minimumColumnWidth, high: maximumColumnWidth),
+            height: clamp(
+                stage.height * heightSlope + heightBase,
+                low: minimumGroupHeight, high: maximumGroupHeight))
     }
 
     private static func clamp(_ value: CGFloat, low: CGFloat, high: CGFloat) -> CGFloat {
@@ -261,37 +164,42 @@ extension EnvironmentValues {
 /// VoiceOver gets the words instead, where they cost the visual design nothing.
 struct SetupRail: View {
     let model: SetupRailModel
-    let tokens: DesignTokens
+    let tokens: AinkradSkin
     let reduceMotion: Bool
 
+    @Environment(\.ainkradSkin) private var skin
+
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: skin.size.s6) {
             ForEach(model.items) { item in
                 Capsule()
                     .fill(fill(for: item))
-                    .frame(height: item.isCurrent ? 4 : 2)
+                    .frame(height: item.isCurrent ? skin.size.s4 : skin.size.s2)
                     .frame(maxWidth: .infinity)
                     // Explicit: SwiftUI does not reliably expose a decorative
                     // shape as an accessibility element, so without this the
                     // labels below never reach VoiceOver despite the
                     // `children: .contain` group.
                     .accessibilityElement()
-                    .accessibilityLabel(item.isCurrent
-                                        ? "Current step: \(item.title)"
-                                        : item.title)
+                    .accessibilityLabel(
+                        item.isCurrent
+                            ? "Current step: \(item.title)"
+                            : item.title)
             }
         }
-        .frame(height: 4)
-        .animation(SetupStageMotion.animation(reduceMotion: reduceMotion),
-                   value: model.items)
+        .frame(height: skin.size.s4)
+        .animation(
+            SetupStageMotion.animation(reduceMotion: reduceMotion),
+            value: model.items
+        )
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Setup progress")
     }
 
     private func fill(for item: SetupRailModel.Item) -> Color {
-        if item.isCurrent { return tokens.accentPrimary }
-        if item.isComplete { return tokens.accentSecondary.opacity(0.7) }
-        return tokens.foreground.opacity(0.16)
+        if item.isCurrent { return tokens.color(\.accentPrimary) }
+        if item.isComplete { return tokens.color(\.accentSecondary).opacity(skin.opacity.o70) }
+        return tokens.color(\.foreground).opacity(skin.opacity.o16)
     }
 }
 
@@ -330,9 +238,11 @@ enum SetupHeader {
 /// what keeps ONE Back in the wizard.
 struct SetupStage<Content: View>: View {
     let coordinator: SetupCoordinator
-    let tokens: DesignTokens
+    let tokens: AinkradSkin
     let reduceMotion: Bool
     @ViewBuilder let content: (SetupStep) -> Content
+
+    @Environment(\.ainkradSkin) private var skin
 
     /// The index the stage was LAST rendering. Updated in `onChange`, i.e. after
     /// the render that observed the step change — which is exactly why direction
@@ -365,30 +275,36 @@ struct SetupStage<Content: View>: View {
             let group = SetupStageLayout.group(fitting: proxy.size)
 
             VStack(spacing: 0) {
-                SetupRail(model: SetupRailModel(coordinator: coordinator),
-                          tokens: tokens,
-                          reduceMotion: reduceMotion)
-                    .padding(.horizontal, 34)
-                    .padding(.top, 22)
+                SetupRail(
+                    model: SetupRailModel(coordinator: coordinator),
+                    tokens: tokens,
+                    reduceMotion: reduceMotion
+                )
+                .padding(.horizontal, skin.size.s34)
+                .padding(.top, skin.size.s22)
 
                 // Symmetric spacers, not one greedy one: the group sits in the
                 // optical centre of what is left below the rail. A single
                 // `Spacer(minLength:)` above the content is what pinned the
                 // group to the top and let the footer fall to the window's far
                 // bottom edge.
-                Spacer(minLength: 24)
+                Spacer(minLength: skin.spacing.xl)
 
                 // ONE group. The heading, the step's controls and the step's
                 // footer are bounded together and travel together, so the
                 // primary button is never more than a glance from the text that
                 // explains it — whatever the window is doing.
-                VStack(alignment: .leading, spacing: 22) {
+                VStack(alignment: .leading, spacing: skin.size.s22) {
                     header
                     content(coordinator.step)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity,
-                               alignment: coordinator.step.usesHeroMark ? .top : .topLeading)
-                        .transition(SetupStageMotion.layerTransition(
-                            .content, reduceMotion: reduceMotion, isForward: isForward))
+                        .frame(
+                            maxWidth: .infinity, maxHeight: .infinity,
+                            alignment: coordinator.step.usesHeroMark ? .top : .topLeading
+                        )
+                        .transition(
+                            SetupStageMotion.layerTransition(
+                                .content, reduceMotion: reduceMotion, isForward: isForward)
+                        )
                         .id(coordinator.step)
                 }
                 .frame(width: group.width, height: group.height, alignment: .topLeading)
@@ -396,10 +312,11 @@ struct SetupStage<Content: View>: View {
                 // Makes the step change an animated transaction at all; each
                 // layer's own `.animation` (with its stagger delay) then wins for
                 // that layer. `nil` under reduce-motion, so the whole thing snaps.
-                .animation(SetupStageMotion.animation(reduceMotion: reduceMotion),
-                           value: coordinator.step)
+                .animation(
+                    SetupStageMotion.animation(reduceMotion: reduceMotion),
+                    value: coordinator.step)
 
-                Spacer(minLength: 24)
+                Spacer(minLength: skin.spacing.xl)
             }
             .frame(width: proxy.size.width, height: proxy.size.height)
         }
@@ -427,25 +344,29 @@ struct SetupStage<Content: View>: View {
     @ViewBuilder
     private var header: some View {
         if coordinator.step.usesHeroMark {
-            VStack(spacing: 26) {
-                SetupBrandMark(tokens: tokens,
-                               reduceMotion: reduceMotion,
-                               style: .hero(diameter: SetupHeader.heroDiameter))
-                    .matchedGeometryEffect(id: SetupHeader.markID, in: markSpace)
+            VStack(spacing: skin.size.s26) {
+                SetupBrandMark(
+                    tokens: tokens,
+                    reduceMotion: reduceMotion,
+                    style: .hero(diameter: SetupHeader.heroDiameter)
+                )
+                .matchedGeometryEffect(id: SetupHeader.markID, in: markSpace)
                 headlineText
                     .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
         } else {
-            HStack(alignment: .firstTextBaseline, spacing: 13) {
-                SetupBrandMark(tokens: tokens,
-                               reduceMotion: reduceMotion,
-                               style: .inline(height: SetupHeader.inlineMarkHeight))
-                    .matchedGeometryEffect(id: SetupHeader.markID, in: markSpace)
-                    // The glyph's optical centre sits above its box's centre —
-                    // the crystal hangs below the chevron — so baseline-aligning
-                    // the BOX would ride high against the text.
-                    .alignmentGuide(.firstTextBaseline) { $0.height * 0.62 }
+            HStack(alignment: .firstTextBaseline, spacing: skin.size.s13) {
+                SetupBrandMark(
+                    tokens: tokens,
+                    reduceMotion: reduceMotion,
+                    style: .inline(height: SetupHeader.inlineMarkHeight)
+                )
+                .matchedGeometryEffect(id: SetupHeader.markID, in: markSpace)
+                // The glyph's optical centre sits above its box's centre —
+                // the crystal hangs below the chevron — so baseline-aligning
+                // the BOX would ride high against the text.
+                .alignmentGuide(.firstTextBaseline) { $0.height * 0.62 }
                 headlineText
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -457,12 +378,16 @@ struct SetupStage<Content: View>: View {
         // but the stage says what Ainkrad actually is. See `SetupStep.headline`.
         Text(coordinator.step.headline)
             .font(AinkradFont.display(SetupHeader.headlineSize, weight: .semibold))
-            .foregroundStyle(tokens.foreground)
+            .foregroundStyle(tokens.color(\.foreground))
             .fixedSize(horizontal: false, vertical: true)
-            .frame(maxWidth: .infinity,
-                   alignment: coordinator.step.usesHeroMark ? .center : .leading)
-            .transition(SetupStageMotion.layerTransition(
-                .heading, reduceMotion: reduceMotion, isForward: isForward))
+            .frame(
+                maxWidth: .infinity,
+                alignment: coordinator.step.usesHeroMark ? .center : .leading
+            )
+            .transition(
+                SetupStageMotion.layerTransition(
+                    .heading, reduceMotion: reduceMotion, isForward: isForward)
+            )
             .id(coordinator.step)
     }
 

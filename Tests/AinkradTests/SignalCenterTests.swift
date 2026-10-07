@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradSignal
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @MainActor
@@ -29,9 +30,10 @@ final class SignalCenterTests {
         center = SignalCenter(
             store: store,
             deliverer: deliverer,
-            contextProvider: StubContext(deliveryContext: DeliveryContext(
-                hostIsFrontmost: false, visibleAppIDs: [],
-                systemDoNotDisturb: false, hostFocusMode: false)))
+            contextProvider: StubContext(
+                deliveryContext: DeliveryContext(
+                    hostIsFrontmost: false, visibleAppIDs: [],
+                    systemDoNotDisturb: false, hostFocusMode: false)))
     }
 
     deinit { try? FileManager.default.removeItem(at: url) }
@@ -45,8 +47,10 @@ final class SignalCenterTests {
         #expect(center.event(id: UUID()) == nil)
     }
 
-    private func draft(_ kind: String = "install.completed",
-                       _ severity: SignalSeverity = .success) -> SignalDraft {
+    private func draft(
+        _ kind: String = "install.completed",
+        _ severity: SignalSeverity = .success
+    ) -> SignalDraft {
         SignalDraft(kind: kind, severity: severity, title: "Something happened")
     }
 
@@ -72,8 +76,9 @@ final class SignalCenterTests {
     func runEventsAreOrdinary() {
         center.emit(draft("run.finished"), from: .host)
         #expect(center.recent.count == 1)
-        #expect(deliverer.delivered[0].1.contains(.banner),
-                "the exemption used to strip this; stripping it now means no banner at all")
+        #expect(
+            deliverer.delivered[0].1.contains(.banner),
+            "the exemption used to strip this; stripping it now means no banner at all")
     }
 
     @Test("marking read clears the unread count")
@@ -96,9 +101,10 @@ final class SignalCenterTests {
         let degraded = SignalCenter(
             store: nil,
             deliverer: deliverer,
-            contextProvider: StubContext(deliveryContext: DeliveryContext(
-                hostIsFrontmost: true, visibleAppIDs: [],
-                systemDoNotDisturb: false, hostFocusMode: false)))
+            contextProvider: StubContext(
+                deliveryContext: DeliveryContext(
+                    hostIsFrontmost: true, visibleAppIDs: [],
+                    systemDoNotDisturb: false, hostFocusMode: false)))
         #expect(degraded.isDegraded)
         degraded.emit(draft(), from: .host)
         #expect(degraded.recent.count == 1, "in-memory ring buffer still serves the feed")
@@ -107,10 +113,12 @@ final class SignalCenterTests {
 
     @Test("the in-memory ring buffer is bounded")
     func ringBufferBounded() {
-        let degraded = SignalCenter(store: nil, deliverer: deliverer,
-                                    contextProvider: StubContext(deliveryContext: DeliveryContext(
-                                        hostIsFrontmost: true, visibleAppIDs: [],
-                                        systemDoNotDisturb: false, hostFocusMode: false)))
+        let degraded = SignalCenter(
+            store: nil, deliverer: deliverer,
+            contextProvider: StubContext(
+                deliveryContext: DeliveryContext(
+                    hostIsFrontmost: true, visibleAppIDs: [],
+                    systemDoNotDisturb: false, hostFocusMode: false)))
         for i in 0..<250 {
             degraded.emit(SignalDraft(kind: "test.event", severity: .info, title: "e\(i)"), from: .host)
         }
@@ -147,12 +155,14 @@ final class SignalCenterTests {
         // before the first emit and nothing is delivered at all.
         let logging = LoggingDeliverer(log: log)
         let observed = SignalCenter(
-            store: try SignalStore(url: FileManager.default.temporaryDirectory
-                .appendingPathComponent("order-\(UUID().uuidString).sqlite")),
+            store: try SignalStore(
+                url: FileManager.default.temporaryDirectory
+                    .appendingPathComponent("order-\(UUID().uuidString).sqlite")),
             deliverer: logging,
-            contextProvider: StubContext(deliveryContext: DeliveryContext(
-                hostIsFrontmost: false, visibleAppIDs: [],
-                systemDoNotDisturb: false, hostFocusMode: false)))
+            contextProvider: StubContext(
+                deliveryContext: DeliveryContext(
+                    hostIsFrontmost: false, visibleAppIDs: [],
+                    systemDoNotDisturb: false, hostFocusMode: false)))
         observed.onEventRecorded = { _ in log.events.append("recorded") }
 
         observed.emit(draft("order.check"), from: .host)
@@ -177,8 +187,9 @@ final class SignalCenterTests {
     // MARK: - Activation goes somewhere
 
     private func event(source: SignalSource, deepLink: SignalDeepLink? = nil) -> SignalEvent {
-        SignalEvent(source: source, kind: "test", severity: .info,
-                    title: "t", deepLink: deepLink)
+        SignalEvent(
+            source: source, kind: "test", severity: .info,
+            title: "t", deepLink: deepLink)
     }
 
     @Test("an event with no deep link still reveals the app that sent it")
@@ -224,8 +235,11 @@ final class SignalCenterTests {
     @Test("hasDestination is true for any app event, deep link or not")
     func hasDestination() {
         #expect(event(source: .app(appID: "raven")).hasDestination)
-        #expect(event(source: .app(appID: "rune"),
-                      deepLink: SignalDeepLink(appID: "rune", payload: Data())).hasDestination)
+        #expect(
+            event(
+                source: .app(appID: "rune"),
+                deepLink: SignalDeepLink(appID: "rune", payload: Data())
+            ).hasDestination)
         // The toast falls back to the feed only for these two.
         #expect(!event(source: .host).hasDestination)
         #expect(!event(source: .sage).hasDestination)

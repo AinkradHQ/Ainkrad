@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("SkillRegistry")
@@ -12,8 +13,9 @@ struct SkillRegistryTests {
     private func write(_ text: String, name: String, root: URL, proposed: Bool = false) throws {
         let paths = SkillPaths(root: root)
         let url = proposed ? paths.proposedFile(name) : paths.skillFile(name)
-        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
-                                                withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true)
         try text.write(to: url, atomically: true, encoding: .utf8)
     }
 
@@ -46,8 +48,9 @@ struct SkillRegistryTests {
         defer { try? FileManager.default.removeItem(at: root) }
         let paths = SkillPaths(root: root)
         let url = paths.skillFile("badbytes")
-        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
-                                                withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true)
         // 0xFF 0xFE is not valid UTF-8.
         let invalidData = Data([0xFF, 0xFE, 0x00, 0x01])
         try invalidData.write(to: url)
@@ -63,7 +66,7 @@ struct SkillRegistryTests {
         defer { try? FileManager.default.removeItem(at: root) }
         try write(md("drafted", "pending"), name: "drafted", root: root, proposed: true)
         let reg = SkillRegistry(paths: SkillPaths(root: root))
-        #expect(reg.skills.isEmpty)   // _proposed is never in the active set
+        #expect(reg.skills.isEmpty)  // _proposed is never in the active set
     }
 
     @Test func localOverridesMarketplaceByName() throws {
@@ -72,8 +75,9 @@ struct SkillRegistryTests {
         // Two dirs whose SKILL.md declare the SAME `name`; "mp-dir" is a marketplace install.
         try write(md("dup", "from marketplace"), name: "mp-dir", root: root)
         try write(md("dup", "from local"), name: "local-dir", root: root)
-        let reg = SkillRegistry(paths: SkillPaths(root: root),
-                                marketplaceNames: { ["mp-dir"] })
+        let reg = SkillRegistry(
+            paths: SkillPaths(root: root),
+            marketplaceNames: { ["mp-dir"] })
         #expect(reg.skill(named: "dup")?.description == "from local")
         #expect(reg.skill(named: "dup")?.source == .local)
     }
@@ -97,7 +101,7 @@ struct SkillRegistryTests {
         #expect(!FileManager.default.fileExists(atPath: root.path))
 
         let paths = SkillPaths(root: root)
-        let reg = SkillRegistry(paths: paths)   // must not crash / throw
+        let reg = SkillRegistry(paths: paths)  // must not crash / throw
 
         #expect(reg.skills.isEmpty)
         #expect(reg.loadErrors.isEmpty)
@@ -115,10 +119,10 @@ struct SkillRegistryTests {
         try reg.propose(md("draft", "a proposed skill"), name: "draft")
 
         #expect(FileManager.default.fileExists(atPath: paths.proposedFile("draft").path))
-        #expect(reg.skill(named: "draft") == nil)   // inert until approved
+        #expect(reg.skill(named: "draft") == nil)  // inert until approved
         #expect(reg.skills.isEmpty)
 
-        reg.reload()   // even after a reload, still not active
+        reg.reload()  // even after a reload, still not active
         #expect(reg.skill(named: "draft") == nil)
     }
 
@@ -149,7 +153,7 @@ struct SkillRegistryTests {
 
         #expect(!FileManager.default.fileExists(atPath: paths.proposedDir("draft").path))
         #expect(reg.skill(named: "draft") == nil)
-        #expect(reg.skill(named: "good") != nil)   // untouched
+        #expect(reg.skill(named: "good") != nil)  // untouched
     }
 
     // MARK: - Path-traversal rejection (security)
@@ -211,6 +215,6 @@ struct SkillRegistryTests {
             try reg.discard(name: name)
         }
         #expect(FileManager.default.fileExists(atPath: sentinelDir.path))
-        #expect(reg.skill(named: "good") != nil)   // untouched
+        #expect(reg.skill(named: "good") != nil)  // untouched
     }
 }

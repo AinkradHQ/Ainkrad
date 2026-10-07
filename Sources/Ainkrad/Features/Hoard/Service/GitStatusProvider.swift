@@ -19,8 +19,10 @@ final class GitStatusProvider {
     /// tree on every navigation.
     private var knownNonRepos: Set<String> = []
 
-    init(runner: any GitRunning = SystemGitRunner(),
-         fileSystem: any FileSystemServing) {
+    init(
+        runner: any GitRunning = SystemGitRunner(),
+        fileSystem: any FileSystemServing
+    ) {
         self.runner = runner
         self.fileSystem = fileSystem
     }

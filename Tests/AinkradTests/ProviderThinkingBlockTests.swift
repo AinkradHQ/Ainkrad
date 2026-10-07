@@ -1,13 +1,14 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 /// Derives a block's "type" for assertions across providers. Claude and
 /// OpenAI-compatible blocks carry an explicit `"type"` key; Gemini's `parts`
 /// blocks (`text`, `functionCall`, `functionResponse`, `inlineData`) don't, so
 /// the block's own single key stands in for its type there.
-private extension Array where Element == [String: Any] {
-    var blockTypesForTesting: [String] {
+extension Array where Element == [String: Any] {
+    fileprivate var blockTypesForTesting: [String] {
         map { block in
             if let type = block["type"] as? String { return type }
             return block.keys.first ?? ""

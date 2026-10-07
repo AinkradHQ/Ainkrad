@@ -1,4 +1,5 @@
 import Testing
+
 @testable import Ainkrad
 
 /// TDD for AIN-148: the App Store search field's match predicate.
@@ -6,11 +7,14 @@ import Testing
 /// without spinning up a store/service/registry.
 @MainActor
 struct AppStoreSearchTests {
-    private func row(name: String = "Terminal", description: String = "A shell",
-                      author: String? = "Ainkrad") -> AppStoreRow {
-        AppStoreRow(id: "terminal", displayName: name, icon: "terminal", description: description,
-                    catalogVersion: nil, installedVersion: "1.0.0", status: .installed,
-                    isEnabled: true, kind: .builtIn, isManaged: false, author: author)
+    private func row(
+        name: String = "Terminal", description: String = "A shell",
+        author: String? = "Ainkrad"
+    ) -> AppStoreRow {
+        AppStoreRow(
+            id: "terminal", displayName: name, icon: "terminal", description: description,
+            catalogVersion: nil, installedVersion: "1.0.0", status: .installed,
+            isEnabled: true, kind: .builtIn, isManaged: false, author: author)
     }
 
     @Test("empty query matches everything")

@@ -1,5 +1,5 @@
-import Foundation
 import AinkradAppKit
+import Foundation
 
 /// What to tell the user when the Home cannot be resolved, and what they may do
 /// about it. A pure function of the error — no AppKit, no I/O — so the launch
@@ -23,10 +23,13 @@ enum LaunchRecovery {
         let actions: [Action]
     }
 
-    private static func recoverable(_ title: String, _ message: String,
-                                    choose: String = "Choose Folder…") -> Prompt {
-        Prompt(title: title, message: message,
-               buttons: [choose, "Quit Ainkrad"], actions: [.chooseFolder, .quit])
+    private static func recoverable(
+        _ title: String, _ message: String,
+        choose: String = "Choose Folder…"
+    ) -> Prompt {
+        Prompt(
+            title: title, message: message,
+            buttons: [choose, "Quit Ainkrad"], actions: [.chooseFolder, .quit])
     }
 
     /// `nil` means "not something to show an alert about" — only
@@ -139,12 +142,12 @@ enum LaunchRecovery {
             return Prompt(
                 title: "Ainkrad can’t start",
                 message: """
-                Ainkrad couldn’t open your Home.
+                    Ainkrad couldn’t open your Home.
 
-                \(error.localizedDescription)
+                    \(error.localizedDescription)
 
-                Nothing has been changed. If this keeps happening, please report it.
-                """,
+                    Nothing has been changed. If this keeps happening, please report it.
+                    """,
                 buttons: ["Quit Ainkrad"], actions: [.quit])
         }
     }

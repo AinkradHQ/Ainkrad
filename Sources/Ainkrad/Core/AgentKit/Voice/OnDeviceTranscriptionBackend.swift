@@ -43,7 +43,8 @@ protocol SpeechRecognitionTasking {
 extension SFSpeechRecognizer: SpeechRecognitionTasking {
     func startRecognition(
         request: SFSpeechURLRecognitionRequest,
-        resultHandler: @escaping (SFSpeechRecognitionResult?, Error?) -> Void) {
+        resultHandler: @escaping (SFSpeechRecognitionResult?, Error?) -> Void
+    ) {
         _ = recognitionTask(with: request, resultHandler: resultHandler)
     }
 }
@@ -61,9 +62,11 @@ struct OnDeviceTranscriptionBackend: TranscriptionService {
     let timeoutNanos: UInt64
     private let recognizerFactory: (Locale) -> SpeechRecognitionTasking?
 
-    init(availability: SpeechRecognizerAvailability = AppleSpeechAvailability(),
-         timeoutNanos: UInt64 = 30_000_000_000,
-         recognizerFactory: @escaping (Locale) -> SpeechRecognitionTasking? = { SFSpeechRecognizer(locale: $0) }) {
+    init(
+        availability: SpeechRecognizerAvailability = AppleSpeechAvailability(),
+        timeoutNanos: UInt64 = 30_000_000_000,
+        recognizerFactory: @escaping (Locale) -> SpeechRecognitionTasking? = { SFSpeechRecognizer(locale: $0) }
+    ) {
         self.availability = availability
         self.timeoutNanos = timeoutNanos
         self.recognizerFactory = recognizerFactory
@@ -94,8 +97,9 @@ struct OnDeviceTranscriptionBackend: TranscriptionService {
                     return
                 }
                 if let result, result.isFinal {
-                    box.resume(returning: TranscriptionResult(
-                        text: result.bestTranscription.formattedString, isFinal: true))
+                    box.resume(
+                        returning: TranscriptionResult(
+                            text: result.bestTranscription.formattedString, isFinal: true))
                 }
             }
             // Bounded wait: if the recognizer's handler never fires, resolve

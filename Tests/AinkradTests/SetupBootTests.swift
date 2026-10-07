@@ -1,7 +1,8 @@
+import AinkradAppKit
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradAppKit
 
 /// What launching into first-run setup establishes, independent of the keyboard
 /// gate: the environment's starting flags, and the invariant that a provisional
@@ -38,12 +39,14 @@ struct SetupBootTests {
             .appendingPathComponent("home.json")
         // The provisional home must not be the vault any pointer names.
         if let data = try? Data(contentsOf: pointer),
-           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-           let path = json["path"] as? String {
+            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let path = json["path"] as? String
+        {
             #expect(path != home.vaultRoot.path)
         }
-        #expect(!FileManager.default.fileExists(
-            atPath: home.vaultRoot.appendingPathComponent(".ainkrad-home").path))
+        #expect(
+            !FileManager.default.fileExists(
+                atPath: home.vaultRoot.appendingPathComponent(".ainkrad-home").path))
         // The invariant the gate exists to protect: a provisional home resolves to
         // a throwaway keychain namespace, so nothing authored may be written yet.
         #expect(home.isProvisional)

@@ -25,12 +25,16 @@ struct ClaudeCodeCredentialImporter {
     private let readKeychainData: (String) -> Data?
     private let keychainItemExists: (String) -> Bool
 
-    init(path: URL = FileManager.default.homeDirectoryForCurrentUser
+    init(
+        path: URL = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent(".claude/.credentials.json"),
-         service: String = ClaudeCodeCredentialImporter.keychainService,
-         readFile: @escaping (URL) -> Data? = { FileManager.default.fileExists(atPath: $0.path) ? try? Data(contentsOf: $0) : nil },
-         readKeychainData: @escaping (String) -> Data? = ClaudeCodeCredentialImporter.keychainData,
-         keychainItemExists: @escaping (String) -> Bool = ClaudeCodeCredentialImporter.keychainExists) {
+        service: String = ClaudeCodeCredentialImporter.keychainService,
+        readFile: @escaping (URL) -> Data? = {
+            FileManager.default.fileExists(atPath: $0.path) ? try? Data(contentsOf: $0) : nil
+        },
+        readKeychainData: @escaping (String) -> Data? = ClaudeCodeCredentialImporter.keychainData,
+        keychainItemExists: @escaping (String) -> Bool = ClaudeCodeCredentialImporter.keychainExists
+    ) {
         self.path = path
         self.service = service
         self.readFile = readFile
@@ -54,18 +58,20 @@ struct ClaudeCodeCredentialImporter {
 
     static func decode(_ data: Data) throws -> OAuthToken {
         guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let oauth = root["claudeAiOauth"] as? [String: Any],
-              let access = oauth["accessToken"] as? String,
-              let refresh = oauth["refreshToken"] as? String else {
+            let oauth = root["claudeAiOauth"] as? [String: Any],
+            let access = oauth["accessToken"] as? String,
+            let refresh = oauth["refreshToken"] as? String
+        else {
             throw ImportError.malformed
         }
         let scopes = (oauth["scopes"] as? [String]) ?? []
         guard scopes.contains("user:inference") else { throw ImportError.missingInferenceScope }
         // Claude Code stores expiresAt in milliseconds.
         let expiresMS = (oauth["expiresAt"] as? Double) ?? 0
-        return OAuthToken(accessToken: access, refreshToken: refresh,
-                          expiresAt: Date(timeIntervalSince1970: expiresMS / 1000),
-                          scopes: scopes)
+        return OAuthToken(
+            accessToken: access, refreshToken: refresh,
+            expiresAt: Date(timeIntervalSince1970: expiresMS / 1000),
+            scopes: scopes)
     }
 
     // MARK: - Keychain (real access)
@@ -92,7 +98,8 @@ struct ClaudeCodeCredentialImporter {
         ]
         var item: CFTypeRef?
         guard SecItemCopyMatching(query as CFDictionary, &item) == errSecSuccess,
-              let data = item as? Data else { return nil }
+            let data = item as? Data
+        else { return nil }
         return data
     }
 }

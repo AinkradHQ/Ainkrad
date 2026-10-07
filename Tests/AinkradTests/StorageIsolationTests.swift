@@ -1,8 +1,9 @@
-import Foundation
-import Testing
-@testable import Ainkrad
 import AinkradAppKit
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 @Suite("Storage isolation")
 @MainActor

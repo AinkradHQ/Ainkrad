@@ -1,32 +1,34 @@
+import AinkradAppKit
 import Foundation
 import Observation
-import AinkradAppKit
 
 /// One app's surface appearance. `surfaceOpacity` is honored only for
 /// host-background apps (the Sage); every app honors `blurEnabled`.
-public struct AppAppearanceEntry: Codable, Equatable {
-    public var surfaceOpacity: Double = 1.0
-    public var blurEnabled: Bool = false
+struct AppAppearanceEntry: Codable, Equatable {
+    var surfaceOpacity: Double = 1.0
+    var blurEnabled: Bool = false
     /// User override of the app's presentation, as `PluginPresentation.rawValue`.
     /// `nil` = use the bundle's declared default. Applies on next open.
-    public var presentationOverride: String? = nil
+    var presentationOverride: String? = nil
     /// User override of the mode the app OPENS in, as `PluginMode.rawValue`
     /// (generation 11). `nil` = use the bundle's `AinkradMode`. Applies to
     /// panes opened after it; it is not the mode an open pane is showing.
-    public var modeOverride: String? = nil
+    var modeOverride: String? = nil
     /// User override of the size the host draws this app's OVERLAY at, as
     /// `PluginOverlaySize.rawValue`. `nil` = `.default` (medium), which is the
     /// frame every overlay had before this existed.
-    public var overlaySizeOverride: String? = nil
+    var overlaySizeOverride: String? = nil
     /// Per-app font overrides, as `UIFontFamily` / `UIFontScale` raw values.
     /// `nil` = inherit the global Appearance setting.
-    public var fontFamily: String? = nil
-    public var fontScale: String? = nil
+    var fontFamily: String? = nil
+    var fontScale: String? = nil
 
-    public init(surfaceOpacity: Double = 1.0, blurEnabled: Bool = false,
-                presentationOverride: String? = nil, fontFamily: String? = nil, fontScale: String? = nil,
-                modeOverride: String? = nil,
-                overlaySizeOverride: String? = nil) {
+    init(
+        surfaceOpacity: Double = 1.0, blurEnabled: Bool = false,
+        presentationOverride: String? = nil, fontFamily: String? = nil, fontScale: String? = nil,
+        modeOverride: String? = nil,
+        overlaySizeOverride: String? = nil
+    ) {
         self.surfaceOpacity = surfaceOpacity
         self.blurEnabled = blurEnabled
         self.presentationOverride = presentationOverride
@@ -39,17 +41,18 @@ public struct AppAppearanceEntry: Codable, Equatable {
 
 /// Per-app surface appearance, keyed by `appID` (the Sage is one surface
 /// among many now — Terminal, Git Mage, and any plugin have their own entry).
-public struct AppAppearanceDocument: PersistableDocument {
-    public static let documentID = "app-appearance"
-    public static let currentSchemaVersion = 4
+struct AppAppearanceDocument: PersistableDocument {
+    static let documentID = "app-appearance"
+    static let currentSchemaVersion = 4
 
     /// v1 → v2: the 2026-08-02 app rename. Entries keyed by the retired ids
     /// (`assistant`, `canvas`, `files`, `terminal`) move to their new ids so a
     /// user's opacity, blur, presentation override and per-app fonts survive.
-    public static let migrators: [DocumentMigrator] = [
+    static let migrators: [DocumentMigrator] = [
         DocumentMigrator(from: 1) { payload in
             guard case .object(var root) = payload,
-                  case .object(let entries)? = root["entries"] else { return payload }
+                case .object(let entries)? = root["entries"]
+            else { return payload }
             root["entries"] = .object(AppIDRenames.rekeyed(entries))
             return .object(root)
         },
@@ -70,9 +73,9 @@ public struct AppAppearanceDocument: PersistableDocument {
         DocumentMigrator(from: 3) { $0 },
     ]
 
-    public var entries: [String: AppAppearanceEntry] = [:]
+    var entries: [String: AppAppearanceEntry] = [:]
 
-    public init(entries: [String: AppAppearanceEntry] = [:]) {
+    init(entries: [String: AppAppearanceEntry] = [:]) {
         self.entries = entries
     }
 }
@@ -80,17 +83,17 @@ public struct AppAppearanceDocument: PersistableDocument {
 /// The Slice-2c Assistant-only document (named for the app Sage used to be).
 /// Retained ONLY so a first load can migrate that opacity/blur into the
 /// `"sage"` entry of the per-app store. Not `private` so the migration test can seed it.
-public struct LegacyAssistantAppearanceDocument: PersistableDocument {
-    public static let documentID = "assistant-appearance"
-    public var surfaceOpacity: Double
-    public var blurEnabled: Bool
+struct LegacyAssistantAppearanceDocument: PersistableDocument {
+    static let documentID = "assistant-appearance"
+    var surfaceOpacity: Double
+    var blurEnabled: Bool
 
-    public init(surfaceOpacity: Double = 1.0, blurEnabled: Bool = false) {
+    init(surfaceOpacity: Double = 1.0, blurEnabled: Bool = false) {
         self.surfaceOpacity = surfaceOpacity
         self.blurEnabled = blurEnabled
     }
 
-    public init(from decoder: Decoder) throws {
+    init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         surfaceOpacity = try c.decodeIfPresent(Double.self, forKey: .surfaceOpacity) ?? 1.0
         blurEnabled = try c.decodeIfPresent(Bool.self, forKey: .blurEnabled) ?? false
@@ -113,7 +116,8 @@ public final class AppAppearanceStore {
         // NOT "assistant": the schema-v2 migrator above has already rekeyed the
         // map, so folding into the retired id would write an entry nothing reads.
         if doc.entries["sage"] == nil,
-           let legacy = persistence.load(LegacyAssistantAppearanceDocument.self) {
+            let legacy = persistence.load(LegacyAssistantAppearanceDocument.self)
+        {
             doc.entries["sage"] = AppAppearanceEntry(
                 surfaceOpacity: legacy.surfaceOpacity, blurEnabled: legacy.blurEnabled)
             persistence.save(doc)

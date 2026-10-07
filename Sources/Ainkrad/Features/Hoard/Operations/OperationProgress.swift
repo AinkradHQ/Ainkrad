@@ -11,8 +11,6 @@ struct OperationResult: Sendable, Equatable {
     var skipped: Int
     var failures: [OperationFailure]
     var wasCancelled: Bool
-
-    var isCompletelyClean: Bool { failures.isEmpty && !wasCancelled }
 }
 
 /// Live state for one running job, surfaced by the operations panel.

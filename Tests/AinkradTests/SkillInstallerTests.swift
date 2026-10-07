@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("SkillInstaller")
 @MainActor
@@ -14,8 +15,10 @@ struct SkillInstallerTests {
         }
     }
 
-    private func entry(_ contentURL: String, appID: String = "pdf-processing", version: String = "1.0") -> CatalogEntry {
-        CatalogEntry(appID: appID, displayName: "PDF Processing", icon: "doc",
+    private func entry(_ contentURL: String, appID: String = "pdf-processing", version: String = "1.0") -> CatalogEntry
+    {
+        CatalogEntry(
+            appID: appID, displayName: "PDF Processing", icon: "doc",
             description: "work with PDFs", version: version, apiVersion: 0,
             downloadURL: URL(string: "https://e/none")!, sha256: "", sourceRepo: "o/r",
             kind: .skill, skill: SkillCatalogDescriptor(contentURL: URL(string: contentURL)!))
@@ -27,8 +30,9 @@ struct SkillInstallerTests {
         let url = URL(string: "https://e/pdf/SKILL.md")!
         let md = "---\nname: pdf-processing\ndescription: work with PDFs\n---\nStep 1"
         let persistence = InMemoryPersistenceStore()
-        let installer = SkillInstaller(http: StubHTTP(payload: [url: Data(md.utf8)]),
-                                       paths: SkillPaths(root: root), persistence: persistence)
+        let installer = SkillInstaller(
+            http: StubHTTP(payload: [url: Data(md.utf8)]),
+            paths: SkillPaths(root: root), persistence: persistence)
         try await installer.install(entry(url.absoluteString))
         let file = SkillPaths(root: root).skillFile("pdf-processing")
         #expect(FileManager.default.fileExists(atPath: file.path))
@@ -41,8 +45,9 @@ struct SkillInstallerTests {
         let url = URL(string: "https://e/pdf/SKILL.md")!
         let md = "---\nname: pdf-processing\ndescription: work with PDFs\n---\nStep 1"
         let persistence = InMemoryPersistenceStore()
-        let installer = SkillInstaller(http: StubHTTP(payload: [url: Data(md.utf8)]),
-                                       paths: SkillPaths(root: root), persistence: persistence)
+        let installer = SkillInstaller(
+            http: StubHTTP(payload: [url: Data(md.utf8)]),
+            paths: SkillPaths(root: root), persistence: persistence)
         try await installer.install(entry(url.absoluteString))
         try await installer.install(entry(url.absoluteString))
         let dir = SkillPaths(root: root).skillDir("pdf-processing")
@@ -55,8 +60,9 @@ struct SkillInstallerTests {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("si-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: root) }
         let url = URL(string: "https://e/bad/SKILL.md")!
-        let installer = SkillInstaller(http: StubHTTP(payload: [url: Data("not a skill".utf8)]),
-                                       paths: SkillPaths(root: root), persistence: InMemoryPersistenceStore())
+        let installer = SkillInstaller(
+            http: StubHTTP(payload: [url: Data("not a skill".utf8)]),
+            paths: SkillPaths(root: root), persistence: InMemoryPersistenceStore())
         await #expect(throws: AppStoreError.self) {
             try await installer.install(entry(url.absoluteString))
         }
@@ -67,8 +73,9 @@ struct SkillInstallerTests {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("si-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: root) }
         let url = URL(string: "https://e/missing/SKILL.md")!
-        let installer = SkillInstaller(http: StubHTTP(payload: [:]),
-                                       paths: SkillPaths(root: root), persistence: InMemoryPersistenceStore())
+        let installer = SkillInstaller(
+            http: StubHTTP(payload: [:]),
+            paths: SkillPaths(root: root), persistence: InMemoryPersistenceStore())
         await #expect(throws: (any Error).self) {
             try await installer.install(entry(url.absoluteString))
         }
@@ -80,8 +87,9 @@ struct SkillInstallerTests {
         defer { try? FileManager.default.removeItem(at: root) }
         let url = URL(string: "https://e/evil/SKILL.md")!
         let md = "---\nname: pdf-processing\ndescription: d\n---\nsteps"
-        let installer = SkillInstaller(http: StubHTTP(payload: [url: Data(md.utf8)]),
-                                       paths: SkillPaths(root: root), persistence: InMemoryPersistenceStore())
+        let installer = SkillInstaller(
+            http: StubHTTP(payload: [url: Data(md.utf8)]),
+            paths: SkillPaths(root: root), persistence: InMemoryPersistenceStore())
         let maliciousEntry = entry(url.absoluteString, appID: "../../evil")
         await #expect(throws: AppStoreError.self) {
             try await installer.install(maliciousEntry)
@@ -97,8 +105,9 @@ struct SkillInstallerTests {
         let url = URL(string: "https://e/pdf/SKILL.md")!
         let md = "---\nname: pdf-processing\ndescription: d\n---\nsteps"
         let persistence = InMemoryPersistenceStore()
-        let installer = SkillInstaller(http: StubHTTP(payload: [url: Data(md.utf8)]),
-                                       paths: SkillPaths(root: root), persistence: persistence)
+        let installer = SkillInstaller(
+            http: StubHTTP(payload: [url: Data(md.utf8)]),
+            paths: SkillPaths(root: root), persistence: persistence)
         try await installer.install(entry(url.absoluteString))
         try installer.uninstall(appID: "pdf-processing")
         #expect(!FileManager.default.fileExists(atPath: SkillPaths(root: root).skillDir("pdf-processing").path))

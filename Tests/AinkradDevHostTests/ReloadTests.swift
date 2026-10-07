@@ -1,9 +1,10 @@
-import Testing
-import Foundation
-import SwiftUI
-@testable import AinkradDevHost
 import AinkradAppKit
 import AinkradHostRuntime
+import Foundation
+import SwiftUI
+import Testing
+
+@testable import AinkradDevHost
 
 /// Proves the CLI's rebuild -> relaunch loop actually picks up the FRESH
 /// bundle rather than replaying a stale cached result. A real relaunch is a
@@ -55,16 +56,18 @@ struct ReloadTests {
     /// test would see the stale "v1" marker.
     private func freshReadingLoadBundle(_ url: URL) -> Result<RegisteredApp, PluginRejection> {
         guard let bundle = Bundle(url: url),
-              let plist = bundle.infoDictionary,
-              let marker = plist[PluginInfoKey.displayName] as? String else {
+            let plist = bundle.infoDictionary,
+            let marker = plist[PluginInfoKey.displayName] as? String
+        else {
             return .failure(PluginRejection(reason: "missing Info.plist"))
         }
-        return .success(RegisteredApp(
-            id: "hello", displayName: marker, icon: "hand.wave", isEnabledByDefault: true,
-            source: .plugin(url: url, apiVersion: AinkradAppKit.apiVersion),
-            makeRootView: { AnyView(EmptyView()) },
-            makeSettingsView: { AnyView(EmptyView()) },
-            chromeFill: { nil }))
+        return .success(
+            RegisteredApp(
+                id: "hello", displayName: marker, icon: "hand.wave", isEnabledByDefault: true,
+                source: .plugin(url: url, apiVersion: AinkradAppKit.apiVersion),
+                makeRootView: { AnyView(EmptyView()) },
+                makeSettingsView: { AnyView(EmptyView()) },
+                chromeFill: { nil }))
     }
 
     @Test("relaunching against a rebuilt bundle loads the NEW version marker, not the stale one")

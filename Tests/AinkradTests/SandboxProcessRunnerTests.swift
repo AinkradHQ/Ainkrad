@@ -1,6 +1,7 @@
 // Tests/AinkradTests/SandboxProcessRunnerTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("SandboxProcessRunner")
@@ -8,8 +9,9 @@ struct SandboxProcessRunnerTests {
     private let runner = SandboxProcessRunner()
 
     @Test func capturesStdoutAndExitZero() async {
-        let r = await runner.run(executable: "/bin/echo", arguments: ["hi"],
-                                 workingDir: nil, timeout: 10)
+        let r = await runner.run(
+            executable: "/bin/echo", arguments: ["hi"],
+            workingDir: nil, timeout: 10)
         #expect(r.output.contains("hi"))
         #expect(r.exitCode == 0)
         #expect(r.isError == false)
@@ -18,23 +20,26 @@ struct SandboxProcessRunnerTests {
     }
 
     @Test func nonZeroExitIsError() async {
-        let r = await runner.run(executable: "/bin/sh", arguments: ["-c", "exit 3"],
-                                 workingDir: nil, timeout: 10)
+        let r = await runner.run(
+            executable: "/bin/sh", arguments: ["-c", "exit 3"],
+            workingDir: nil, timeout: 10)
         #expect(r.exitCode == 3)
         #expect(r.isError)
     }
 
     @Test(.timeLimit(.minutes(1)))
     func timeoutTerminatesLongRun() async {
-        let r = await runner.run(executable: "/bin/sh", arguments: ["-c", "sleep 30"],
-                                 workingDir: nil, timeout: 1)
+        let r = await runner.run(
+            executable: "/bin/sh", arguments: ["-c", "sleep 30"],
+            workingDir: nil, timeout: 1)
         #expect(r.timedOut)
         #expect(r.isError)
     }
 
     @Test func honorsWorkingDir() async {
-        let r = await runner.run(executable: "/bin/sh", arguments: ["-c", "pwd"],
-                                 workingDir: "/tmp", timeout: 10)
+        let r = await runner.run(
+            executable: "/bin/sh", arguments: ["-c", "pwd"],
+            workingDir: "/tmp", timeout: 10)
         #expect(r.output.contains("/tmp"))
     }
 
@@ -42,9 +47,10 @@ struct SandboxProcessRunnerTests {
         var smallCapRunner = SandboxProcessRunner()
         smallCapRunner.maxOutputBytes = 16
         // Produce well over 16 bytes of output.
-        let r = await smallCapRunner.run(executable: "/bin/sh",
-                                         arguments: ["-c", "printf '0123456789abcdefghijklmnopqrstuvwxyz'"],
-                                         workingDir: nil, timeout: 10)
+        let r = await smallCapRunner.run(
+            executable: "/bin/sh",
+            arguments: ["-c", "printf '0123456789abcdefghijklmnopqrstuvwxyz'"],
+            workingDir: nil, timeout: 10)
         #expect(r.output.contains("[earlier output truncated]"))
     }
 
@@ -62,9 +68,10 @@ struct SandboxProcessRunnerTests {
     /// Treat a failure here as a real signal; treat a pass as weak evidence.
     @Test func fastExitingProcessLosesNoOutput() async {
         for _ in 0..<50 {
-            let r = await runner.run(executable: "/bin/sh",
-                                     arguments: ["-c", "printf 'abc'"],
-                                     workingDir: nil, timeout: 10)
+            let r = await runner.run(
+                executable: "/bin/sh",
+                arguments: ["-c", "printf 'abc'"],
+                workingDir: nil, timeout: 10)
             #expect(r.output == "abc")
         }
     }
@@ -75,16 +82,18 @@ struct SandboxProcessRunnerTests {
     /// grace timer that prevents that.
     @Test func grandchildHoldingPipeDoesNotStallTheCall() async {
         let started = Date()
-        let r = await runner.run(executable: "/bin/sh",
-                                 arguments: ["-c", "echo done; sleep 30 &"],
-                                 workingDir: nil, timeout: 30)
+        let r = await runner.run(
+            executable: "/bin/sh",
+            arguments: ["-c", "echo done; sleep 30 &"],
+            workingDir: nil, timeout: 30)
         #expect(r.output.contains("done"))
         #expect(Date().timeIntervalSince(started) < 5)
     }
 
     @Test func spawnFailureReturnsFailedResultNotCrash() async {
-        let r = await runner.run(executable: "/nonexistent/binary/does-not-exist",
-                                 arguments: [], workingDir: nil, timeout: 10)
+        let r = await runner.run(
+            executable: "/nonexistent/binary/does-not-exist",
+            arguments: [], workingDir: nil, timeout: 10)
         #expect(r.exitCode == -1)
         #expect(r.isError)
     }

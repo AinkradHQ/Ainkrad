@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 import Foundation
 import Observation
-import AinkradHostRuntime
 
 /// Persisted choice of image/media generation provider. The API key itself never
 /// lives here — it's Keychain-only via `SecretStore` (`OpenAIImageBackend.secretID`).
@@ -21,10 +21,15 @@ struct MediaSettingsDocument: PersistableDocument {
     /// Base URL for the `custom` OpenAI-images-compatible provider.
     var customBaseURL: String = ""
 
-    init(provider: String = "openai", localSDURL: String = "", model: String = "",
-         imageSize: String = "1024x1024", customBaseURL: String = "") {
-        self.provider = provider; self.localSDURL = localSDURL; self.model = model
-        self.imageSize = imageSize; self.customBaseURL = customBaseURL
+    init(
+        provider: String = "openai", localSDURL: String = "", model: String = "",
+        imageSize: String = "1024x1024", customBaseURL: String = ""
+    ) {
+        self.provider = provider
+        self.localSDURL = localSDURL
+        self.model = model
+        self.imageSize = imageSize
+        self.customBaseURL = customBaseURL
     }
     // Forward-compatible decode (host idiom): every field tolerates absence.
     init(from decoder: Decoder) throws {
@@ -62,7 +67,16 @@ final class MediaSettingsStore {
         persistence.save(document)
     }
 
-    func setModel(_ m: String) { document.model = m; persistence.save(document) }
-    func setImageSize(_ s: String) { document.imageSize = s; persistence.save(document) }
-    func setCustomBaseURL(_ u: String) { document.customBaseURL = u; persistence.save(document) }
+    func setModel(_ m: String) {
+        document.model = m
+        persistence.save(document)
+    }
+    func setImageSize(_ s: String) {
+        document.imageSize = s
+        persistence.save(document)
+    }
+    func setCustomBaseURL(_ u: String) {
+        document.customBaseURL = u
+        persistence.save(document)
+    }
 }

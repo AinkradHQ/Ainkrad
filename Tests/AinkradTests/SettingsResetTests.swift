@@ -1,7 +1,8 @@
-import Testing
-import SwiftUI
-@testable import Ainkrad
 import AinkradAppKitContract
+import SwiftUI
+import Testing
+
+@testable import Ainkrad
 
 /// Unit tests for `SettingsPage.resettableFields` / `resetAll()` — the
 /// page-level "Reset this page" affordance added in AinkradAppKitContract.
@@ -67,7 +68,7 @@ struct SettingsResetTests {
             groups: [SettingsGroup(path: SettingsPath(["test", "group"]), title: "Group", fields: [f])])
 
         #expect(page.resettableFields.isEmpty)
-        page.resetAll() // must not crash
+        page.resetAll()  // must not crash
         #expect(!flag.wasReset)
     }
 
@@ -85,9 +86,11 @@ struct SettingsResetTests {
         let page = SettingsPage(
             path: SettingsPath(["test"]), title: "Test", icon: "gear",
             group: .workspace, order: 0,
-            groups: [SettingsGroup(
-                path: SettingsPath(["test", "group"]), title: "Group",
-                fields: [modifiedResettable, unmodifiedResettable, modifiedNoReset, unmodifiedNoReset])])
+            groups: [
+                SettingsGroup(
+                    path: SettingsPath(["test", "group"]), title: "Group",
+                    fields: [modifiedResettable, unmodifiedResettable, modifiedNoReset, unmodifiedNoReset])
+            ])
 
         #expect(page.resettableFields.map(\.path) == [modifiedResettable.path])
         page.resetAll()

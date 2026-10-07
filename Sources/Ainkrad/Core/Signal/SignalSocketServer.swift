@@ -1,5 +1,6 @@
-import Foundation
+import AinkradHostRuntime
 import AinkradSignal
+import Foundation
 
 /// Plumbing only: an `AF_UNIX` listener that moves bytes to a handler and a
 /// reply back. Every policy decision lives in `SignalIngressCoordinator`, so
@@ -43,8 +44,9 @@ final class SignalSocketServer {
             throw StartFailure.pathTooLong(length: path.utf8.count)
         }
 
-        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
-                                                withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true)
         // Unlink whatever is there first. After a crash the previous socket
         // file survives, and `bind` on an existing path fails with EADDRINUSE
         // — which would mean one hard shutdown permanently disables external
@@ -58,8 +60,9 @@ final class SignalSocketServer {
         address.sun_family = sa_family_t(AF_UNIX)
         _ = withUnsafeMutablePointer(to: &address.sun_path) { destination in
             path.withCString { source in
-                strncpy(UnsafeMutableRawPointer(destination).assumingMemoryBound(to: CChar.self),
-                        source, capacity - 1)
+                strncpy(
+                    UnsafeMutableRawPointer(destination).assumingMemoryBound(to: CChar.self),
+                    source, capacity - 1)
             }
         }
 
@@ -78,7 +81,11 @@ final class SignalSocketServer {
         // group- or world-writable — and on this socket, write access IS the
         // ability to post as any source whose token you can guess. Narrowing it
         // is not defence in depth, it is the door.
-        chmod(path, 0o600)
+        if chmod(path, 0o600) != 0 {
+            // Logged, not fatal: refusing to listen would turn a permissions
+            // quirk into a launch-time outage of external ingress.
+            Log.app.error("Signal socket chmod 0600 failed: errno \(errno, privacy: .public)")
+        }
 
         guard listen(fd, 16) == 0 else {
             let code = errno
@@ -107,7 +114,10 @@ final class SignalSocketServer {
             // here would hold the queue for as long as a peer keeps
             // connecting.
             let client = accept(fd, nil, nil)
-            guard client >= 0 else { return }
+            guard client >= 0 else {
+                Log.app.error("Signal socket accept failed: errno \(errno, privacy: .public)")
+                return
+            }
             defer { close(client) }
             guard let payload = Self.readPayload(from: client) else { return }
             Task { @MainActor in _ = handler(payload) }
@@ -151,7 +161,7 @@ final class SignalSocketServer {
 
         while payload.count < limit {
             let read = recv(client, &byte, 1, 0)
-            if read <= 0 { break }              // peer closed, or an error
+            if read <= 0 { break }  // peer closed, or an error
             if byte[0] == UInt8(ascii: "\n") { break }
             payload.append(byte[0])
         }

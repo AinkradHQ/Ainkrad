@@ -1,7 +1,7 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
 import AinkradSignal
+import SwiftUI
 
 /// The notification bell in the app's own top bar, beside the workspace
 /// diamonds.
@@ -22,12 +22,13 @@ struct SignalBellButton: View {
     /// Changes when something arrives. The bell reacts to the CHANGE, not the
     /// value, so any increment pulses once.
     var arrivalToken: Int = 0
-    let tokens: DesignTokens
+    let tokens: AinkradSkin
     let action: () -> Void
 
     @State private var isHovered = false
     @State private var pulse = false
     @Environment(\.ainkradReduceMotion) private var reduceMotion
+    @Environment(\.ainkradSkin) private var skin
 
     /// Capped so a busy session cannot widen the bar and shove the workspace
     /// diamonds along.
@@ -50,37 +51,43 @@ struct SignalBellButton: View {
     /// Names the reason as well as the count. A muted bell with three unread is
     /// two facts, and the tooltip is the only place either is written down.
     private var helpText: String {
-        let count = hasUnread
+        let count =
+            hasUnread
             ? "\(unread) unread notification\(unread == 1 ? "" : "s")"
             : "Notifications"
         return isMuted ? "\(count) — quiet hours are on" : count
     }
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 4) {
+        // The label is the glyph, its count and the arrival pulse; no kit
+        // button takes a custom label.
+        Button(action: action) {  // design-lint: allow raw-control kit gap, content label
+            HStack(spacing: skin.spacing.xs) {
                 Image(systemName: Self.glyphName(unread: unread, isMuted: isMuted))
-                    .font(.system(size: 10.5, weight: .medium))
-                    .foregroundStyle(hasUnread
-                                     ? tokens.accentSecondary
-                                     : tokens.foreground.opacity(isHovered ? 0.75 : 0.4))
+                    .font(skin.font(AinkradFontToken(sizeKey: "t10_5", weight: "medium", scaled: false)))
+                    .foregroundStyle(
+                        hasUnread
+                            ? tokens.color(\.accentSecondary)
+                            : tokens.color(\.foreground).opacity(isHovered ? skin.opacity.o75 : skin.opacity.o40)
+                    )
                     // The glyph is its own layer: it lifts on hover rather than
                     // the whole control moving.
                     // Hover and arrival multiply rather than fight: a pulse
                     // while hovered should still read as a pulse.
                     .scaleEffect((isHovered ? 1.14 : 1) * (pulse && !reduceMotion ? 1.18 : 1))
-                    .opacity(pulse && reduceMotion ? 0.55 : 1)
-                    .shadow(color: hasUnread || pulse
-                            ? tokens.accentSecondary.opacity(pulse ? 1 : 0.8) : .clear,
-                            radius: pulse ? 8 : 4)
+                    .opacity(pulse && reduceMotion ? skin.opacity.o55 : 1)
+                    .shadow(
+                        color: hasUnread || pulse
+                            ? tokens.color(\.accentSecondary).opacity(pulse ? 1 : skin.opacity.o80) : .clear,
+                        radius: pulse ? skin.size.s8 : skin.size.s4)
 
                 if let badge = Self.badgeText(unread) {
                     Text(badge)
                         .font(AinkradFont.mono(9.5, weight: .semibold))
-                        .foregroundStyle(tokens.accentSecondary)
+                        .foregroundStyle(tokens.color(\.accentSecondary))
                 }
             }
-            .frame(minWidth: 14, minHeight: 11)
+            .frame(minWidth: skin.size.s14, minHeight: skin.size.s11)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -103,14 +110,17 @@ struct SignalBellButton: View {
             }
             Task {
                 try? await Task.sleep(for: .seconds(AinkradMotion.durationFast))
-                withAnimation(reduceMotion ? nil
-                              : .easeInOut(duration: AinkradMotion.durationBase)) {
+                withAnimation(
+                    reduceMotion
+                        ? nil
+                        : .easeInOut(duration: AinkradMotion.durationBase)
+                ) {
                     pulse = false
                 }
             }
         }
         .onHover { hovering in
-            withAnimation(.easeOut(duration: 0.16)) { isHovered = hovering }
+            withAnimation(.easeOut(duration: skin.motion.durations.d0_16)) { isHovered = hovering }
         }
     }
 }

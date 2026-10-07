@@ -1,13 +1,15 @@
 import Testing
+
 @testable import AinkradHostRuntime
 
 @Suite("AppIDRenames")
 struct AppIDRenamesTests {
     @Test("maps every retired id to its replacement")
     func mapIsComplete() {
-        #expect(AppIDRenames.map == [
-            "files": "hoard", "assistant": "sage", "canvas": "scry", "terminal": "rune",
-        ])
+        #expect(
+            AppIDRenames.map == [
+                "files": "hoard", "assistant": "sage", "canvas": "scry", "terminal": "rune",
+            ])
     }
 
     @Test("re-keys a JSON object, leaving unrelated keys alone")
@@ -15,9 +17,10 @@ struct AppIDRenamesTests {
         let before: [String: JSONValue] = [
             "files": .bool(true), "gitmage": .bool(false),
         ]
-        #expect(AppIDRenames.rekeyed(before) == [
-            "hoard": .bool(true), "gitmage": .bool(false),
-        ])
+        #expect(
+            AppIDRenames.rekeyed(before) == [
+                "hoard": .bool(true), "gitmage": .bool(false),
+            ])
     }
 
     @Test("an existing new-id key wins over a migrated old-id key")

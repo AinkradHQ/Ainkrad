@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Generates an image from a prompt and renders it as an `image` card on the
 /// Live Scry (body = a data: URL), exactly like `scry_render`'s image kind.
@@ -18,10 +18,14 @@ struct ImageGenerateTool: AgentTool {
         .object([
             "type": .string("object"),
             "properties": .object([
-                "prompt": .object(["type": .string("string"),
-                                   "description": .string("Text description of the image to generate.")]),
-                "title": .object(["type": .string("string"),
-                                  "description": .string("Optional card title.")]),
+                "prompt": .object([
+                    "type": .string("string"),
+                    "description": .string("Text description of the image to generate."),
+                ]),
+                "title": .object([
+                    "type": .string("string"),
+                    "description": .string("Optional card title."),
+                ]),
             ]),
             "required": .array([.string("prompt")]),
         ])

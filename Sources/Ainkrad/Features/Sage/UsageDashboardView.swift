@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// "$x.xxxx" when `cost` is a genuine, known figure; "cost unknown" when it's
 /// non-positive — `UsageTracker.record` only accumulates cost when
@@ -30,8 +30,9 @@ func formattedRouterSavings(_ savings: Double?) -> String? {
 /// via `.ainkradModal` from the composer (see `SageComposerBar`'s usage
 /// trigger beside the model pill).
 struct UsageDashboardView: View {
+    @Environment(\.ainkradSkin) private var skin
     let tracker: UsageTracker
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
 
     /// True when any usage has ever been tracked. Gated on ALL-TIME totals so a
     /// fresh session with prior history still shows the populated dashboard (its
@@ -52,15 +53,17 @@ struct UsageDashboardView: View {
                             AinkradStatRow(label: "Input tokens", value: "\(tracker.session.input)")
                             AinkradStatRow(label: "Output tokens", value: "\(tracker.session.output)")
                             AinkradStatRow(label: "Cache read", value: "\(tracker.session.cacheRead)")
-                            AinkradStatRow(label: "Cost", value: formattedUsageCost(tracker.sessionCostUSD),
-                                          status: tracker.sessionCostUSD > 0 ? .neutral : .warning)
+                            AinkradStatRow(
+                                label: "Cost", value: formattedUsageCost(tracker.sessionCostUSD),
+                                status: tracker.sessionCostUSD > 0 ? .neutral : .warning)
                         }
                         sectionPanel(title: "All time") {
                             AinkradStatRow(label: "Input tokens", value: "\(cumulative.0.input)")
                             AinkradStatRow(label: "Output tokens", value: "\(cumulative.0.output)")
                             AinkradStatRow(label: "Cache read", value: "\(cumulative.0.cacheRead)")
-                            AinkradStatRow(label: "Cost", value: formattedUsageCost(cumulative.costUSD),
-                                          status: cumulative.costUSD > 0 ? .neutral : .warning)
+                            AinkradStatRow(
+                                label: "Cost", value: formattedUsageCost(cumulative.costUSD),
+                                status: cumulative.costUSD > 0 ? .neutral : .warning)
                             if let savings = formattedRouterSavings(cumulative.savingsUSD) {
                                 AinkradStatRow(label: "Router savings", value: savings, status: .success)
                             }
@@ -76,7 +79,7 @@ struct UsageDashboardView: View {
                 // Content-height so the card scrolls only if the sections
                 // outgrow the cap — keeps the modal a compact centered card
                 // (like Settings/Launcher), never a full-height strip.
-                .frame(maxHeight: 460)
+                .frame(maxHeight: skin.size.s460)
             } else {
                 // Empty state: header pinned top, the (space-filling) empty
                 // treatment centered below within a compact card.
@@ -91,7 +94,7 @@ struct UsageDashboardView: View {
                     )
                 }
                 .padding(AinkradSpacing.lg)
-                .frame(height: 240)
+                .frame(height: skin.size.s240)
             }
         }
     }
@@ -101,7 +104,7 @@ struct UsageDashboardView: View {
             AinkradIconGlyph(systemName: "gauge.with.dots.needle.67percent", filled: true)
             Text("Usage")
                 .font(AinkradFont.display(15, weight: .semibold))
-                .foregroundStyle(tokens.foreground)
+                .foregroundStyle(theme.foreground)
             Spacer(minLength: 0)
         }
     }
@@ -112,10 +115,10 @@ struct UsageDashboardView: View {
             Text(title.uppercased())
                 .font(AinkradFont.display(11, weight: .semibold))
                 .tracking(0.8)
-                .foregroundStyle(tokens.accentSecondary.opacity(0.85))
-            VStack(alignment: .leading, spacing: 2) { content() }
+                .foregroundStyle(theme.accentSecondary.opacity(skin.opacity.o85))
+            VStack(alignment: .leading, spacing: skin.size.s2) { content() }
                 .padding(AinkradSpacing.md)
-                .background(ChamferShape(cut: AinkradRadius.md).fill(tokens.surfaceElevated.opacity(0.4)))
+                .background(ChamferShape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(skin.opacity.o40)))
         }
     }
 }

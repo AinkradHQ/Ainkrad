@@ -1,8 +1,9 @@
+import AinkradHostRuntime
 // Tests/AinkradTests/LSPWiringTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("LSP wiring")
 @MainActor
@@ -10,14 +11,17 @@ struct LSPWiringTests {
     @Test func editToolAcceptsEditQuality() {
         let registry = LSPServerRegistry(persistence: InMemoryPersistenceStore())
         let tool = EditFileTool(editQuality: EditQuality(registry: registry))
-        #expect(tool.name == "edit_file")   // constructs without error
+        #expect(tool.name == "edit_file")  // constructs without error
     }
 
     @Test func seedIfEmptyPopulatesAnEmptyDocument() {
         let persistence = InMemoryPersistenceStore()
         let registry = LSPServerRegistry(persistence: persistence)
-        let configs = [LSPServerConfig(id: "swift", command: "/usr/bin/sourcekit-lsp",
-                                       fileGlobs: ["*.swift"], enabled: true)]
+        let configs = [
+            LSPServerConfig(
+                id: "swift", command: "/usr/bin/sourcekit-lsp",
+                fileGlobs: ["*.swift"], enabled: true)
+        ]
 
         registry.seedIfEmpty(with: configs)
 
@@ -33,8 +37,11 @@ struct LSPWiringTests {
         persistence.save(existing)
         let registry = LSPServerRegistry(persistence: persistence)
 
-        let autodetected = [LSPServerConfig(id: "swift", command: "/usr/bin/sourcekit-lsp",
-                                            fileGlobs: ["*.swift"], enabled: true)]
+        let autodetected = [
+            LSPServerConfig(
+                id: "swift", command: "/usr/bin/sourcekit-lsp",
+                fileGlobs: ["*.swift"], enabled: true)
+        ]
         registry.seedIfEmpty(with: autodetected)
 
         #expect(registry.language(forFilePath: "/x/File.swift") == nil)

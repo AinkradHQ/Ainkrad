@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("ScryRenderTool")
 @MainActor
@@ -13,34 +14,48 @@ struct ScryRenderToolTests {
 
     @Test func addCreatesElement() async throws {
         let (tool, store) = make()
-        let r = try await tool.execute(.object([
-            "op": .string("add"), "id": .string("t1"),
-            "kind": .string("table"), "body": .string("h|—\nr1")]))
+        let r = try await tool.execute(
+            .object([
+                "op": .string("add"), "id": .string("t1"),
+                "kind": .string("table"), "body": .string("h|—\nr1"),
+            ]))
         #expect(!r.isError)
         #expect(store.model.elements.first?.kind == .table)
     }
 
     @Test func updateMutatesInPlace() async throws {
         let (tool, store) = make()
-        _ = try await tool.execute(.object(["op": .string("add"), "id": .string("t1"),
-                                            "kind": .string("table"), "body": .string("r1")]))
-        _ = try await tool.execute(.object(["op": .string("update"), "id": .string("t1"),
-                                            "body": .string("r1\nr2")]))
+        _ = try await tool.execute(
+            .object([
+                "op": .string("add"), "id": .string("t1"),
+                "kind": .string("table"), "body": .string("r1"),
+            ]))
+        _ = try await tool.execute(
+            .object([
+                "op": .string("update"), "id": .string("t1"),
+                "body": .string("r1\nr2"),
+            ]))
         #expect(store.model.elements.first?.body == "r1\nr2")
     }
 
     @Test func removeDeletesElement() async throws {
         let (tool, store) = make()
-        _ = try await tool.execute(.object(["op": .string("add"), "id": .string("a"),
-                                            "kind": .string("text"), "body": .string("x")]))
+        _ = try await tool.execute(
+            .object([
+                "op": .string("add"), "id": .string("a"),
+                "kind": .string("text"), "body": .string("x"),
+            ]))
         _ = try await tool.execute(.object(["op": .string("remove"), "id": .string("a")]))
         #expect(store.model.elements.isEmpty)
     }
 
     @Test func unknownKindIsIsolatedNotThrown() async throws {
         let (tool, store) = make()
-        let r = try await tool.execute(.object(["op": .string("add"), "id": .string("h"),
-                                                "kind": .string("hologram"), "body": .string("x")]))
+        let r = try await tool.execute(
+            .object([
+                "op": .string("add"), "id": .string("h"),
+                "kind": .string("hologram"), "body": .string("x"),
+            ]))
         #expect(!r.isError)
         #expect(store.model.elements.first?.kind == .unknown)
     }
@@ -56,7 +71,8 @@ struct ScryRenderToolTests {
         let (tool, store) = make()
         let input = JSONValue.object([
             "op": .string("update"), "id": .string("ghost"),
-            "kind": .string("text"), "body": .string("materialized")])
+            "kind": .string("text"), "body": .string("materialized"),
+        ])
 
         let r = try await tool.execute(input)
         #expect(!r.isError)
@@ -80,7 +96,8 @@ struct ScryRenderContractTests {
     private func properties() -> [String: JSONValue] {
         let tool = ScryRenderTool(store: ScryStore())
         guard case .object(let schema) = tool.parametersSchema,
-              case .object(let props)? = schema["properties"] else { return [:] }
+            case .object(let props)? = schema["properties"]
+        else { return [:] }
         return props
     }
 
@@ -95,10 +112,12 @@ struct ScryRenderContractTests {
     @Test("the schema exposes a size hint enumerating every case")
     func sizeExposed() {
         guard case .object(let size)? = properties()["size"] else {
-            Issue.record("no size property"); return
+            Issue.record("no size property")
+            return
         }
         guard case .array(let cases)? = size["enum"] else {
-            Issue.record("size has no enum"); return
+            Issue.record("size has no enum")
+            return
         }
         let raws = cases.compactMap(\.stringValue)
         #expect(Set(raws) == Set(ScrySizeHint.allCases.map(\.rawValue)))
@@ -115,10 +134,13 @@ struct ScryRenderContractTests {
     func sizeRoundTrips() async throws {
         let store = ScryStore()
         let registry = AgentToolRegistry(tools: [ScryRenderTool(store: store)])
-        let result = await registry.run(ToolCall(
-            id: "1", name: "scry_render",
-            input: .object(["op": .string("add"), "kind": .string("text"),
-                            "body": .string("hi"), "size": .string("full")])))
+        let result = await registry.run(
+            ToolCall(
+                id: "1", name: "scry_render",
+                input: .object([
+                    "op": .string("add"), "kind": .string("text"),
+                    "body": .string("hi"), "size": .string("full"),
+                ])))
         #expect(!result.isError)
         #expect(store.model.elements.first?.sizeHint == .full)
     }

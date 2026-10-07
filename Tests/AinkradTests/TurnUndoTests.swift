@@ -1,6 +1,7 @@
 // Tests/AinkradTests/TurnUndoTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("TurnUndo classification")
@@ -8,11 +9,13 @@ import Testing
 struct TurnUndoTests {
     @Test func flagsTerminalAndGitAsIrreversible() {
         let turn = [
-            AgentMessage(role: .assistant, content: [
-                .toolUse(id: "1", name: "edit_file", input: .object(["path": .string("/x")])),
-                .toolUse(id: "2", name: "run_terminal", input: .object(["command": .string("rm x")])),
-                .toolUse(id: "3", name: "mcp/gitmage/commit", input: .object(["repoPath": .string("/r")])),
-            ]),
+            AgentMessage(
+                role: .assistant,
+                content: [
+                    .toolUse(id: "1", name: "edit_file", input: .object(["path": .string("/x")])),
+                    .toolUse(id: "2", name: "run_terminal", input: .object(["command": .string("rm x")])),
+                    .toolUse(id: "3", name: "mcp/gitmage/commit", input: .object(["repoPath": .string("/r")])),
+                ])
         ]
         let notes = TurnUndo.classifyIrreversible(turn)
         // run_terminal + the MCP git call, not edit_file. Git arrives as
@@ -24,8 +27,13 @@ struct TurnUndoTests {
     }
 
     @Test func pureReadTurnHasNoIrreversibles() {
-        let turn = [AgentMessage(role: .assistant, content: [
-            .toolUse(id: "1", name: "read_file", input: .object(["path": .string("/x")]))])]
+        let turn = [
+            AgentMessage(
+                role: .assistant,
+                content: [
+                    .toolUse(id: "1", name: "read_file", input: .object(["path": .string("/x")]))
+                ])
+        ]
         #expect(TurnUndo.classifyIrreversible(turn).isEmpty)
     }
 
@@ -34,10 +42,14 @@ struct TurnUndoTests {
     }
 
     @Test func multipleCallsToSameIrreversibleToolEachYieldANote() {
-        let turn = [AgentMessage(role: .assistant, content: [
-            .toolUse(id: "1", name: "run_terminal", input: .object(["command": .string("ls")])),
-            .toolUse(id: "2", name: "run_terminal", input: .object(["command": .string("pwd")])),
-        ])]
+        let turn = [
+            AgentMessage(
+                role: .assistant,
+                content: [
+                    .toolUse(id: "1", name: "run_terminal", input: .object(["command": .string("ls")])),
+                    .toolUse(id: "2", name: "run_terminal", input: .object(["command": .string("pwd")])),
+                ])
+        ]
         #expect(TurnUndo.classifyIrreversible(turn).count == 2)
     }
 }

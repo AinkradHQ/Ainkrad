@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Dispatches `image_generate` to the provider the user selected in Settings,
 /// read live from the persisted `MediaSettingsDocument` on every call — so
@@ -36,18 +36,30 @@ struct RoutingMediaBackend: MediaBackend {
         case "localsd":
             return LocalStableDiffusionBackend(baseURL: doc.localSDURL, http: auxHTTP)
         case "custom":
-            return CustomOpenAIImageBackend(secrets: secrets, http: auxHTTP,
-                                            baseURL: doc.customBaseURL, model: model, size: doc.imageSize)
+            return CustomOpenAIImageBackend(
+                secrets: secrets, http: auxHTTP,
+                baseURL: doc.customBaseURL, model: model, size: doc.imageSize)
         case "stability":
-            var b = stability; if !model.isEmpty { b.engine = model }; return b
+            var b = stability
+            if !model.isEmpty { b.engine = model }
+            return b
         case "replicate":
-            var b = replicate; if !model.isEmpty { b.model = model }; return b
+            var b = replicate
+            if !model.isEmpty { b.model = model }
+            return b
         case "google":
-            var b = google; if !model.isEmpty { b.model = model }; return b
+            var b = google
+            if !model.isEmpty { b.model = model }
+            return b
         case "huggingface":
-            var b = huggingface; if !model.isEmpty { b.model = model }; return b
+            var b = huggingface
+            if !model.isEmpty { b.model = model }
+            return b
         default:
-            var b = openai; if !model.isEmpty { b.model = model }; b.size = doc.imageSize; return b
+            var b = openai
+            if !model.isEmpty { b.model = model }
+            b.size = doc.imageSize
+            return b
         }
     }
 

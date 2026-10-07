@@ -4,6 +4,7 @@
 // (Task 5 of Checkpoint & Rewind) can share it too. Verbatim relocation — no
 // behavior change.
 import Foundation
+
 @testable import Ainkrad
 
 /// Emits one `edit_file(old_string, new_string)` tool call per queued edit, one
@@ -22,17 +23,27 @@ final class MultiEditStubProvider: LLMProvider {
         self.edits = edits
     }
 
-    func send(messages: [AgentMessage], system: String, tools: [AgentToolSchema],
-              model: AgentModelConfig, credential: ProviderCredential) -> AsyncThrowingStream<AgentEvent, Error> {
+    func send(
+        messages: [AgentMessage], system: String, tools: [AgentToolSchema],
+        model: AgentModelConfig, credential: ProviderCredential
+    ) -> AsyncThrowingStream<AgentEvent, Error> {
         callCount += 1
-        let isFollowUp = messages.last?.content.contains { if case .toolResult = $0 { return true }; return false } ?? false
+        let isFollowUp =
+            messages.last?.content.contains {
+                if case .toolResult = $0 { return true }
+                return false
+            } ?? false
         let path = path
         let nextEdit: (old: String, new: String)? = (!isFollowUp && !edits.isEmpty) ? edits.removeFirst() : nil
         return AsyncThrowingStream { cont in
             if let nextEdit {
-                cont.yield(.toolUseComplete(id: UUID().uuidString, name: "edit_file",
-                    input: .object(["path": .string(path), "old_string": .string(nextEdit.old),
-                                    "new_string": .string(nextEdit.new)])))
+                cont.yield(
+                    .toolUseComplete(
+                        id: UUID().uuidString, name: "edit_file",
+                        input: .object([
+                            "path": .string(path), "old_string": .string(nextEdit.old),
+                            "new_string": .string(nextEdit.new),
+                        ])))
                 cont.yield(.done(stopReason: "tool_use"))
             } else {
                 cont.yield(.textDelta("ok"))

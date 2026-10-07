@@ -1,8 +1,9 @@
-import Testing
-import Foundation
 import AinkradAppKit
-@testable import Ainkrad
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 /// A scripted `LLMProvider` double. `send` records whether it was invoked and
 /// replays a fixed event script regardless of arguments.
@@ -17,10 +18,13 @@ final class FakeLLMProvider: LLMProvider {
         self.script = script
     }
 
-    func send(messages: [AgentMessage], system: String, tools: [AgentToolSchema], model: AgentModelConfig, credential: ProviderCredential) -> AsyncThrowingStream<AgentEvent, Error> {
+    func send(
+        messages: [AgentMessage], system: String, tools: [AgentToolSchema], model: AgentModelConfig,
+        credential: ProviderCredential
+    ) -> AsyncThrowingStream<AgentEvent, Error> {
         wasCalled = true
         lastSystem = system
-        if case let .apiKey(k) = credential { lastApiKey = k }
+        if case .apiKey(let k) = credential { lastApiKey = k }
         let events = script
         return AsyncThrowingStream { continuation in
             for event in events {
@@ -69,14 +73,16 @@ struct AgentSessionTests {
         let persistence = InMemoryPersistenceStore()
         let secrets = InMemorySecretStore()
         let connections = ConnectionStore(persistence: persistence, secrets: secrets)
-        connections.addConnection(preset: ProviderPreset.preset(id: "claude"), displayName: "Claude", baseURL: ProviderPreset.preset(id: "claude").defaultBaseURL, token: "sk-test-123")
+        connections.addConnection(
+            preset: ProviderPreset.preset(id: "claude"), displayName: "Claude",
+            baseURL: ProviderPreset.preset(id: "claude").defaultBaseURL, token: "sk-test-123")
 
         let fake = FakeLLMProvider(script: [
             .thinkingDelta("pondering "),
             .thinkingDelta("further"),
             .textDelta("Hello "),
             .textDelta("world"),
-            .done(stopReason: "end_turn")
+            .done(stopReason: "end_turn"),
         ])
         let session = makeSession(fake: fake, connections: connections, persistence: persistence)
 
@@ -104,11 +110,13 @@ struct AgentSessionTests {
         let persistence = InMemoryPersistenceStore()
         let secrets = InMemorySecretStore()
         let connections = ConnectionStore(persistence: persistence, secrets: secrets)
-        connections.addConnection(preset: ProviderPreset.preset(id: "claude"), displayName: "Claude", baseURL: ProviderPreset.preset(id: "claude").defaultBaseURL, token: "sk-test-123")
+        connections.addConnection(
+            preset: ProviderPreset.preset(id: "claude"), displayName: "Claude",
+            baseURL: ProviderPreset.preset(id: "claude").defaultBaseURL, token: "sk-test-123")
 
         let fake = FakeLLMProvider(script: [
             .textDelta("partial"),
-            .failed("boom")
+            .failed("boom"),
         ])
         let session = makeSession(fake: fake, connections: connections, persistence: persistence)
 
@@ -147,7 +155,9 @@ struct AgentSessionTests {
         let persistence = InMemoryPersistenceStore()
         let secrets = InMemorySecretStore()
         let connections = ConnectionStore(persistence: persistence, secrets: secrets)
-        connections.addConnection(preset: ProviderPreset.preset(id: "claude"), displayName: "Claude", baseURL: ProviderPreset.preset(id: "claude").defaultBaseURL, token: "sk-test-123")
+        connections.addConnection(
+            preset: ProviderPreset.preset(id: "claude"), displayName: "Claude",
+            baseURL: ProviderPreset.preset(id: "claude").defaultBaseURL, token: "sk-test-123")
 
         let hub = AgentContextRegistryHub()
         let registry = HostContextRegistry(appID: "terminal", hub: hub)
@@ -171,7 +181,9 @@ struct AgentSessionTests {
         let persistence = InMemoryPersistenceStore()
         let secrets = InMemorySecretStore()
         let connections = ConnectionStore(persistence: persistence, secrets: secrets)
-        connections.addConnection(preset: ProviderPreset.preset(id: "claude"), displayName: "Claude", baseURL: ProviderPreset.preset(id: "claude").defaultBaseURL, token: "sk-test-123")
+        connections.addConnection(
+            preset: ProviderPreset.preset(id: "claude"), displayName: "Claude",
+            baseURL: ProviderPreset.preset(id: "claude").defaultBaseURL, token: "sk-test-123")
 
         // Empty hub → assembleContext() returns "".
         let hub = AgentContextRegistryHub()
@@ -191,7 +203,9 @@ struct AgentSessionTests {
         let persistence = InMemoryPersistenceStore()
         let secrets = InMemorySecretStore()
         let connections = ConnectionStore(persistence: persistence, secrets: secrets)
-        connections.addConnection(preset: ProviderPreset.preset(id: "claude"), displayName: "Claude", baseURL: ProviderPreset.preset(id: "claude").defaultBaseURL, token: "sk-test-123")
+        connections.addConnection(
+            preset: ProviderPreset.preset(id: "claude"), displayName: "Claude",
+            baseURL: ProviderPreset.preset(id: "claude").defaultBaseURL, token: "sk-test-123")
 
         let fake = FakeLLMProvider(script: [.textDelta("reply"), .done(stopReason: "end_turn")])
         let session = makeSession(fake: fake, connections: connections, persistence: persistence)
@@ -209,10 +223,11 @@ struct AgentSessionTests {
 
         // First turn completes untouched; "second" never entered the transcript.
         #expect(session.state == .idle)
-        #expect(session.messages == [
-            AgentMessage(role: .user, text: "first"),
-            AgentMessage(role: .assistant, text: "reply")
-        ])
+        #expect(
+            session.messages == [
+                AgentMessage(role: .user, text: "first"),
+                AgentMessage(role: .assistant, text: "reply"),
+            ])
     }
 
     @Test("stream finishes without .done but with partial text: commits assistant message and returns to idle")
@@ -220,13 +235,15 @@ struct AgentSessionTests {
         let persistence = InMemoryPersistenceStore()
         let secrets = InMemorySecretStore()
         let connections = ConnectionStore(persistence: persistence, secrets: secrets)
-        connections.addConnection(preset: ProviderPreset.preset(id: "claude"), displayName: "Claude", baseURL: ProviderPreset.preset(id: "claude").defaultBaseURL, token: "sk-test-123")
+        connections.addConnection(
+            preset: ProviderPreset.preset(id: "claude"), displayName: "Claude",
+            baseURL: ProviderPreset.preset(id: "claude").defaultBaseURL, token: "sk-test-123")
 
         // No `.done` and no `.failed` — the stream just ends (dropped
         // connection / undecodable trailing events).
         let fake = FakeLLMProvider(script: [
             .textDelta("partial "),
-            .textDelta("reply")
+            .textDelta("reply"),
         ])
         let session = makeSession(fake: fake, connections: connections, persistence: persistence)
 
@@ -252,7 +269,9 @@ struct AgentSessionTests {
         let persistence = InMemoryPersistenceStore()
         let secrets = InMemorySecretStore()
         let connections = ConnectionStore(persistence: persistence, secrets: secrets)
-        connections.addConnection(preset: ProviderPreset.preset(id: "claude"), displayName: "Claude", baseURL: ProviderPreset.preset(id: "claude").defaultBaseURL, token: "sk-test-123")
+        connections.addConnection(
+            preset: ProviderPreset.preset(id: "claude"), displayName: "Claude",
+            baseURL: ProviderPreset.preset(id: "claude").defaultBaseURL, token: "sk-test-123")
 
         // Empty script: the stream finishes immediately with no events at all.
         let fake = FakeLLMProvider(script: [])
@@ -278,7 +297,9 @@ struct AgentSessionTests {
         let persistence = InMemoryPersistenceStore()
         let secrets = InMemorySecretStore()
         let connections = ConnectionStore(persistence: persistence, secrets: secrets)
-        connections.addConnection(preset: ProviderPreset.preset(id: "claude"), displayName: "Claude", baseURL: ProviderPreset.preset(id: "claude").defaultBaseURL, token: "sk-test-123")
+        connections.addConnection(
+            preset: ProviderPreset.preset(id: "claude"), displayName: "Claude",
+            baseURL: ProviderPreset.preset(id: "claude").defaultBaseURL, token: "sk-test-123")
 
         // `.done` arrives without any preceding `.textDelta` — the model
         // produced no visible text this turn (e.g. tool-only turn, later
@@ -299,7 +320,9 @@ struct AgentSessionTests {
         let persistence = InMemoryPersistenceStore()
         let secrets = InMemorySecretStore()
         let connections = ConnectionStore(persistence: persistence, secrets: secrets)
-        connections.addConnection(preset: ProviderPreset.preset(id: "claude"), displayName: "Claude", baseURL: ProviderPreset.preset(id: "claude").defaultBaseURL, token: "sk-test-123")
+        connections.addConnection(
+            preset: ProviderPreset.preset(id: "claude"), displayName: "Claude",
+            baseURL: ProviderPreset.preset(id: "claude").defaultBaseURL, token: "sk-test-123")
 
         let fake = FakeLLMProvider(script: [.textDelta("hi"), .done(stopReason: "end_turn")])
         let session = makeSession(fake: fake, connections: connections, persistence: persistence)

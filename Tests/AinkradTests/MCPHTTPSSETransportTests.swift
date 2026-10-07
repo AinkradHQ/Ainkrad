@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("HTTPSSETransport")
 struct MCPHTTPSSETransportTests {
@@ -30,20 +31,24 @@ struct MCPHTTPSSETransportTests {
     }
 
     private func ping(id: String) -> JSONValue {
-        .object(["jsonrpc": .string("2.0"), "id": .string(id),
-                 "method": .string("ping"), "params": .object([:])])
+        .object([
+            "jsonrpc": .string("2.0"), "id": .string(id),
+            "method": .string("ping"), "params": .object([:]),
+        ])
     }
 
     @Test func rejectsNonHTTPSEndpoint() async {
-        let t = HTTPSSETransport(endpoint: URL(string: "http://mcp.example/api")!,
-                                  authHeaders: [:], http: StubHTTP(chunks: []))
+        let t = HTTPSSETransport(
+            endpoint: URL(string: "http://mcp.example/api")!,
+            authHeaders: [:], http: StubHTTP(chunks: []))
         await #expect(throws: MCPError.self) { try await t.start() }
     }
 
     @Test func yieldsSSEEventsAsJSONMessages() async throws {
         let stub = StubHTTP(chunks: ["data: {\"jsonrpc\":\"2.0\",\"id\":\"1\",\"result\":{}}\n", "\n"])
-        let t = HTTPSSETransport(endpoint: URL(string: "https://mcp.example/api")!,
-                                  authHeaders: ["Authorization": "Bearer tok"], http: stub)
+        let t = HTTPSSETransport(
+            endpoint: URL(string: "https://mcp.example/api")!,
+            authHeaders: ["Authorization": "Bearer tok"], http: stub)
         try await t.start()
         var iterator = t.incoming().makeAsyncIterator()
         try await t.send(ping(id: "1"))
@@ -54,8 +59,9 @@ struct MCPHTTPSSETransportTests {
 
     @Test func yieldsPlainJSONBodyWhenNotSSE() async throws {
         let stub = StubHTTP(chunks: ["{\"jsonrpc\":\"2.0\",\"id\":\"2\",\"result\":{\"ok\":true}}\n"])
-        let t = HTTPSSETransport(endpoint: URL(string: "https://mcp.example/api")!,
-                                  authHeaders: [:], http: stub)
+        let t = HTTPSSETransport(
+            endpoint: URL(string: "https://mcp.example/api")!,
+            authHeaders: [:], http: stub)
         try await t.start()
         var iterator = t.incoming().makeAsyncIterator()
         try await t.send(ping(id: "2"))
@@ -64,8 +70,9 @@ struct MCPHTTPSSETransportTests {
     }
 
     @Test func httpErrorStatusMapsToTypedTransportError() async throws {
-        let t = HTTPSSETransport(endpoint: URL(string: "https://mcp.example/api")!,
-                                  authHeaders: [:], http: FailingHTTP())
+        let t = HTTPSSETransport(
+            endpoint: URL(string: "https://mcp.example/api")!,
+            authHeaders: [:], http: FailingHTTP())
         try await t.start()
         await #expect(throws: MCPError.self) {
             try await t.send(ping(id: "x"))
@@ -77,8 +84,9 @@ struct MCPHTTPSSETransportTests {
             "data: not-valid-json-at-all\n", "\n",
             "data: {\"jsonrpc\":\"2.0\",\"id\":\"3\",\"result\":{}}\n", "\n",
         ])
-        let t = HTTPSSETransport(endpoint: URL(string: "https://mcp.example/api")!,
-                                  authHeaders: [:], http: stub)
+        let t = HTTPSSETransport(
+            endpoint: URL(string: "https://mcp.example/api")!,
+            authHeaders: [:], http: stub)
         try await t.start()
         var iterator = t.incoming().makeAsyncIterator()
         try await t.send(ping(id: "3"))
@@ -88,8 +96,9 @@ struct MCPHTTPSSETransportTests {
 
     @Test func customAuthHeaderPassesThrough() async throws {
         let stub = StubHTTP(chunks: ["data: {\"jsonrpc\":\"2.0\",\"id\":\"4\",\"result\":{}}\n", "\n"])
-        let t = HTTPSSETransport(endpoint: URL(string: "https://mcp.example/api")!,
-                                  authHeaders: ["X-API-Key": "secret-value"], http: stub)
+        let t = HTTPSSETransport(
+            endpoint: URL(string: "https://mcp.example/api")!,
+            authHeaders: ["X-API-Key": "secret-value"], http: stub)
         try await t.start()
         try await t.send(ping(id: "4"))
         #expect(stub.requests.first?.value(forHTTPHeaderField: "X-API-Key") == "secret-value")

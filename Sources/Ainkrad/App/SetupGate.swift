@@ -61,7 +61,8 @@ enum WorkspaceChord {
     /// `charactersIgnoringModifiers`; the index returned is zero-based.
     static func workspaceIndex(characters: String?, command: Bool, shift: Bool) -> Int? {
         guard command, !shift, let characters, let number = Int(characters),
-              (1...9).contains(number) else { return nil }
+            (1...9).contains(number)
+        else { return nil }
         return number - 1
     }
 
@@ -99,8 +100,10 @@ enum WorkspaceChord {
     /// hardcoded chords `handle` acts on, which `SetupGate` blocks on top of the
     /// registered `ShortcutAction` bindings. Every branch in `handle` is driven
     /// by one of the predicates OR'd here; nothing it performs is absent.
-    static func matches(keyCode: UInt16, characters: String?, command: Bool,
-                        option: Bool, shift: Bool) -> Bool {
+    static func matches(
+        keyCode: UInt16, characters: String?, command: Bool,
+        option: Bool, shift: Bool
+    ) -> Bool {
         cycleDirection(keyCode: keyCode, command: command, option: option) != nil
             || paneDirection(keyCode: keyCode, command: command, option: option) != nil
             || paneIndex(keyCode: keyCode, command: command, option: option, shift: shift) != nil

@@ -1,13 +1,15 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Applies the Sage step. `AgentStore.setActive` is a no-op unless the id is
 /// already in `agents`, so a custom profile must be added before it is activated.
 @MainActor
 enum SetupAssistant {
-    static func apply(profile: AgentProfile, model: String, effort: String,
-                      agents: AgentStore, config: AgentConfigStore) {
+    static func apply(
+        profile: AgentProfile, model: String, effort: String,
+        agents: AgentStore, config: AgentConfigStore
+    ) {
         let resolved: AgentProfile
         if profile.builtin {
             resolved = profile
@@ -35,7 +37,8 @@ enum SetupAssistant {
     /// to key off (a fresh install with nothing configured yet). Static
     /// `curatedModels` data — no live network call.
     static func defaultModel(connections: [Connection], activeConnectionID: UUID?) -> String {
-        let connection = activeConnectionID.flatMap { id in connections.first { $0.id == id } }
+        let connection =
+            activeConnectionID.flatMap { id in connections.first { $0.id == id } }
             ?? connections.first
         guard let connection else { return AgentConfigDocument().model }
         return ProviderPreset.preset(id: connection.presetID).curatedModels.first
@@ -64,6 +67,7 @@ enum SetupAssistant {
 struct SetupAssistantStepView: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.setupGroupWidth) private var groupWidth
+    @Environment(\.ainkradSkin) private var skin
 
     let coordinator: SetupCoordinator
 
@@ -74,11 +78,13 @@ struct SetupAssistantStepView: View {
     /// view state, so the view is what turns it into the dictionary's
     /// `"isCustom"` entry — the validator stays pure.
     private var unmet: [SetupValidation.Requirement] {
-        SetupValidation.unmet(for: .assistant, values: [
-            "isCustom": isCustom ? "true" : "false",
-            "personaName": customName,
-            "personaInstructions": customInstructions,
-        ])
+        SetupValidation.unmet(
+            for: .assistant,
+            values: [
+                "isCustom": isCustom ? "true" : "false",
+                "personaName": customName,
+                "personaInstructions": customInstructions,
+            ])
     }
 
     /// Same rule as the You step's: the warning appears once the user has typed
@@ -106,17 +112,17 @@ struct SetupAssistantStepView: View {
     @State private var touched: Set<String> = []
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
+        let tokens = environment.themeManager.hostSkin
 
         VStack(alignment: .leading, spacing: 0) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: skin.size.s18) {
                     intro(tokens: tokens)
                     builtins(tokens: tokens)
                     custom(tokens: tokens)
                     modelAndEffort(tokens: tokens)
                 }
-                .padding(20)
+                .padding(skin.size.s20)
                 // FILLS the group, exactly as the Home step's folder listing
                 // does. Capping the whole column instead left every panel hard
                 // against the left edge with a void beside it — the layout read
@@ -128,8 +134,10 @@ struct SetupAssistantStepView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            SetupStepFooter(coordinator: coordinator,
-                            isPrimaryDisabled: !unmet.isEmpty) {
+            SetupStepFooter(
+                coordinator: coordinator,
+                isPrimaryDisabled: !unmet.isEmpty
+            ) {
                 commit()
                 coordinator.advance()
             }
@@ -152,26 +160,30 @@ struct SetupAssistantStepView: View {
     /// that silently does nothing for OpenAI/Ollama/Groq/etc.
     private var activeConnectionIsClaude: Bool {
         let connections = environment.connectionStore.connections
-        let active = environment.agentConfigStore.activeConnectionID.flatMap { id in
-            connections.first { $0.id == id }
-        } ?? connections.first
+        let active =
+            environment.agentConfigStore.activeConnectionID.flatMap { id in
+                connections.first { $0.id == id }
+            } ?? connections.first
         return active?.kind == .claude
     }
 
-    private func intro(tokens: DesignTokens) -> some View {
-        Text("Ainkrad ships with two agents, Plan and Build. Confirm which one starts "
-             + "active — or write your own persona instead. You can add and edit more "
-             + "agents later.")
-            .font(AinkradFont.display(12))
-            .foregroundStyle(tokens.foreground.opacity(0.6))
-            .fixedSize(horizontal: false, vertical: true)
-            // Prose is capped even though the column fills, so the agent rows
-            // below can use the room without the intro running with them.
-            .frame(maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth),
-                   alignment: .leading)
+    private func intro(tokens: AinkradSkin) -> some View {
+        Text(
+            "Ainkrad ships with two agents, Plan and Build. Confirm which one starts "
+                + "active — or write your own persona instead. You can add and edit more "
+                + "agents later."
+        )
+        .font(AinkradFont.display(12))
+        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o60))
+        .fixedSize(horizontal: false, vertical: true)
+        // Prose is capped even though the column fills, so the agent rows
+        // below can use the room without the intro running with them.
+        .frame(
+            maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth),
+            alignment: .leading)
     }
 
-    private func builtins(tokens: DesignTokens) -> some View {
+    private func builtins(tokens: AinkradSkin) -> some View {
         AinkradSettingsPanel(
             title: "Starting agent",
             hint: "Plan and Build ship built-in — pick which one is active when you arrive."
@@ -182,69 +194,70 @@ struct SetupAssistantStepView: View {
         }
     }
 
-    private func builtinRow(_ agent: AgentProfile, tokens: DesignTokens) -> some View {
+    private func builtinRow(_ agent: AgentProfile, tokens: AinkradSkin) -> some View {
         let isSelected = !isCustom && selection.id == agent.id
-        return Button {
+        // A raw `Button`: the agent's instructions are the point of the row and
+        // run to several lines, and `AinkradListRow` truncates its subtitle to one.
+        return Button {  // design-lint: allow raw-control kit gap, list row with multi-line detail
             isCustom = false
             selection = agent
         } label: {
-            HStack(alignment: .top, spacing: 10) {
+            HStack(alignment: .top, spacing: skin.size.s10) {
                 Image(systemName: agent.icon)
-                    .font(.system(size: 13))
-                    .foregroundStyle(isSelected ? tokens.accentSecondary : tokens.foreground.opacity(0.6))
-                VStack(alignment: .leading, spacing: 4) {
+                    .font(skin.font(AinkradFontToken(sizeKey: "t13", scaled: false)))
+                    .foregroundStyle(isSelected ? tokens.color(\.accentSecondary) : tokens.color(\.foreground).opacity(skin.opacity.o60))
+                VStack(alignment: .leading, spacing: skin.spacing.xs) {
                     Text(agent.name)
                         .font(AinkradFont.display(13, weight: .medium))
-                        .foregroundStyle(tokens.foreground.opacity(0.9))
+                        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o90))
                     Text(agent.instructions)
                         .font(AinkradFont.display(11))
-                        .foregroundStyle(tokens.foreground.opacity(0.5))
+                        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o50))
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                Spacer(minLength: 8)
+                Spacer(minLength: skin.spacing.sm)
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 14))
-                        .foregroundStyle(tokens.accentSecondary)
+                        .font(skin.font(AinkradFontToken(sizeKey: "t14", scaled: false)))
+                        .foregroundStyle(tokens.color(\.accentSecondary))
                 }
             }
-            .padding(12)
-            .background(ChamferShape(cut: AinkradRadius.md).fill(tokens.surfaceElevated.opacity(0.5)))
-            .overlay(ChamferShape(cut: AinkradRadius.md)
-                .strokeBorder(isSelected ? tokens.accentSecondary.opacity(0.5) : Color.clear, lineWidth: 1))
+            .padding(skin.spacing.md)
+            .background(ChamferShape(cut: skin.radius.md).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o50)))
+            .overlay(
+                ChamferShape(cut: skin.radius.md)
+                    .strokeBorder(
+                        isSelected ? tokens.color(\.accentSecondary).opacity(skin.opacity.o50) : Color.clear, lineWidth: 1))
         }
         .buttonStyle(.plain)
     }
 
-    private func custom(tokens: DesignTokens) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Button {
-                isCustom = true
-            } label: {
-                HStack(spacing: 8) {
+    private func custom(tokens: AinkradSkin) -> some View {
+        VStack(alignment: .leading, spacing: skin.size.s10) {
+            AinkradListRow(
+                isSelected: isCustom,
+                onTap: { isCustom = true },
+                leading: {
                     Image(systemName: "sparkles")
-                        .font(.system(size: 12))
-                        .foregroundStyle(isCustom ? tokens.accentSecondary : tokens.foreground.opacity(0.6))
-                    Text("Write your own persona instead")
-                        .font(AinkradFont.display(12, weight: .medium))
-                        .foregroundStyle(tokens.foreground.opacity(0.85))
-                    Spacer(minLength: 0)
+                        .font(skin.font(AinkradFontToken(sizeKey: "t12", scaled: false)))
+                        .foregroundStyle(
+                            isCustom ? tokens.color(\.accentSecondary) : tokens.color(\.foreground).opacity(skin.opacity.o60))
+                },
+                title: "Write your own persona instead",
+                trailing: {
                     if isCustom {
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 14))
-                            .foregroundStyle(tokens.accentSecondary)
+                            .font(skin.font(AinkradFontToken(sizeKey: "t14", scaled: false)))
+                            .foregroundStyle(tokens.color(\.accentSecondary))
                     }
                 }
-                .padding(12)
-                .background(ChamferShape(cut: AinkradRadius.md).fill(tokens.surfaceElevated.opacity(0.35)))
-            }
-            .buttonStyle(.plain)
+            )
 
             if isCustom {
                 // Each unmet requirement is rendered directly under the field
                 // it is about. A disabled Continue at the far corner with no
                 // explanation is the failure mode this avoids.
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: skin.spacing.xs) {
                     AinkradTextField(text: $customName, placeholder: "Name (e.g. Scribe)")
                         .onChange(of: customName) { _, _ in touched.insert("personaName") }
                     if let message = message(for: "personaName") {
@@ -252,7 +265,7 @@ struct SetupAssistantStepView: View {
                             .accessibilityIdentifier("setup.assistant.personaName.requirement")
                     }
                 }
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: skin.spacing.xs) {
                     AinkradTextField(text: $customInstructions, placeholder: "Instructions")
                         .onChange(of: customInstructions) { _, _ in
                             touched.insert("personaInstructions")
@@ -266,24 +279,27 @@ struct SetupAssistantStepView: View {
         }
     }
 
-    private func modelAndEffort(tokens: DesignTokens) -> some View {
+    private func modelAndEffort(tokens: AinkradSkin) -> some View {
         AinkradSettingsPanel(
             title: "Model",
             hint: "Which model handles requests, and how much effort it spends on each one."
         ) {
-            HStack(spacing: 18) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Model").font(AinkradFont.display(11)).foregroundStyle(tokens.foreground.opacity(0.5))
+            HStack(spacing: skin.size.s18) {
+                VStack(alignment: .leading, spacing: skin.size.s6) {
+                    Text("Model").font(AinkradFont.display(11)).foregroundStyle(
+                        tokens.color(\.foreground).opacity(skin.opacity.o50))
                     Text(model).font(AinkradFont.display(12, weight: .medium))
-                        .foregroundStyle(tokens.foreground.opacity(0.9))
+                        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o90))
                 }
                 if activeConnectionIsClaude {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Effort").font(AinkradFont.display(11)).foregroundStyle(tokens.foreground.opacity(0.5))
+                    VStack(alignment: .leading, spacing: skin.size.s6) {
+                        Text("Effort").font(AinkradFont.display(11)).foregroundStyle(
+                            tokens.color(\.foreground).opacity(skin.opacity.o50))
                         AinkradSegmentedPicker(
                             items: Self.efforts,
                             selection: $effort,
-                            label: { $0.capitalized })
+                            label: { $0.capitalized }
+                        )
                         .fixedSize()
                     }
                 }
@@ -307,7 +323,8 @@ struct SetupAssistantStepView: View {
         } else {
             profile = selection
         }
-        SetupAssistant.apply(profile: profile, model: model, effort: effort,
-                             agents: environment.agentStore, config: environment.agentConfigStore)
+        SetupAssistant.apply(
+            profile: profile, model: model, effort: effort,
+            agents: environment.agentStore, config: environment.agentConfigStore)
     }
 }

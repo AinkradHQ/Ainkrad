@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("TokenUsage")
 struct TokenUsageParsingTests {
@@ -20,7 +21,9 @@ struct TokenUsageParsingTests {
     }
 
     @Test func claudeMessageStartUsageParse() {
-        let json = JSONValue.parse(#"{"type":"message_start","message":{"usage":{"input_tokens":100,"cache_read_input_tokens":10,"cache_creation_input_tokens":5}}}"#)!
+        let json = JSONValue.parse(
+            #"{"type":"message_start","message":{"usage":{"input_tokens":100,"cache_read_input_tokens":10,"cache_creation_input_tokens":5}}}"#
+        )!
         let u = ClaudeProvider.usageInput(from: json)
         #expect(u.input == 100)
         #expect(u.cacheRead == 10)
@@ -36,7 +39,8 @@ struct TokenUsageParsingTests {
     }
 
     @Test func openAIUsageParseCachedTokens() {
-        let json = JSONValue.parse(#"{"usage":{"prompt_tokens":100,"completion_tokens":20,"prompt_tokens_details":{"cached_tokens":15}}}"#)!
+        let json = JSONValue.parse(
+            #"{"usage":{"prompt_tokens":100,"completion_tokens":20,"prompt_tokens_details":{"cached_tokens":15}}}"#)!
         let u = OpenAICompatibleProvider.usage(from: json)
         #expect(u?.cacheRead == 15)
     }
@@ -47,7 +51,8 @@ struct TokenUsageParsingTests {
     }
 
     @Test func geminiUsageParse() {
-        let json = JSONValue.parse(#"{"usageMetadata":{"promptTokenCount":50,"candidatesTokenCount":30,"cachedContentTokenCount":5}}"#)!
+        let json = JSONValue.parse(
+            #"{"usageMetadata":{"promptTokenCount":50,"candidatesTokenCount":30,"cachedContentTokenCount":5}}"#)!
         let u = GeminiProvider.usage(from: json)
         #expect(u?.input == 50)
         #expect(u?.output == 30)
@@ -75,13 +80,19 @@ struct TokenUsageParsingTests {
             // chunk 2: cumulative-so-far usage (prompt=10, candidates=12) with finishReason
             "data: {\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"lo\"}],\"role\":\"model\"},\"finishReason\":\"STOP\"}],\"usageMetadata\":{\"promptTokenCount\":10,\"candidatesTokenCount\":12}}\n\n",
         ]
-        let provider = GeminiProvider(http: StubStreamingHTTPClient(chunks: chunks),
-                                      baseURL: "https://generativelanguage.googleapis.com/v1beta")
+        let provider = GeminiProvider(
+            http: StubStreamingHTTPClient(chunks: chunks),
+            baseURL: "https://generativelanguage.googleapis.com/v1beta")
         var out: [AgentEvent] = []
-        for try await e in provider.send(messages: [AgentMessage(role: .user, text: "hi")], system: "sys", tools: [],
-            model: AgentModelConfig(model: "gemini-2.5-flash", effort: "xhigh"), credential: .apiKey("k")) { out.append(e) }
+        for try await e in provider.send(
+            messages: [AgentMessage(role: .user, text: "hi")], system: "sys", tools: [],
+            model: AgentModelConfig(model: "gemini-2.5-flash", effort: "xhigh"), credential: .apiKey("k"))
+        { out.append(e) }
 
-        let usageEvents: [TokenUsage] = out.compactMap { if case .usage(let u) = $0 { return u }; return nil }
+        let usageEvents: [TokenUsage] = out.compactMap {
+            if case .usage(let u) = $0 { return u }
+            return nil
+        }
         #expect(usageEvents.count == 1)
         #expect(usageEvents.first?.input == 10)
         #expect(usageEvents.first?.output == 12)
@@ -106,13 +117,19 @@ struct TokenUsageParsingTests {
             // final chunk: empty candidates array, usage-only
             "data: {\"candidates\":[],\"usageMetadata\":{\"promptTokenCount\":7,\"candidatesTokenCount\":9}}\n\n",
         ]
-        let provider = GeminiProvider(http: StubStreamingHTTPClient(chunks: chunks),
-                                      baseURL: "https://generativelanguage.googleapis.com/v1beta")
+        let provider = GeminiProvider(
+            http: StubStreamingHTTPClient(chunks: chunks),
+            baseURL: "https://generativelanguage.googleapis.com/v1beta")
         var out: [AgentEvent] = []
-        for try await e in provider.send(messages: [AgentMessage(role: .user, text: "hi")], system: "sys", tools: [],
-            model: AgentModelConfig(model: "gemini-2.5-flash", effort: "xhigh"), credential: .apiKey("k")) { out.append(e) }
+        for try await e in provider.send(
+            messages: [AgentMessage(role: .user, text: "hi")], system: "sys", tools: [],
+            model: AgentModelConfig(model: "gemini-2.5-flash", effort: "xhigh"), credential: .apiKey("k"))
+        { out.append(e) }
 
-        let usageEvents: [TokenUsage] = out.compactMap { if case .usage(let u) = $0 { return u }; return nil }
+        let usageEvents: [TokenUsage] = out.compactMap {
+            if case .usage(let u) = $0 { return u }
+            return nil
+        }
         #expect(usageEvents.count == 1)
         #expect(usageEvents.first?.input == 7)
         #expect(usageEvents.first?.output == 9)

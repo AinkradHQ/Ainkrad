@@ -31,6 +31,8 @@ enum InlineMarkdownCache {
 
     /// Tracked separately: `NSCache` deliberately exposes no count.
     private static let countLock = NSLock()
+    // Safe because every read and write of `keys` goes through `countLock`.
+    // (`Mutex` would drop the opt-out but needs macOS 15; the host deploys lower.)
     nonisolated(unsafe) private static var keys: Set<String> = []
 
     static func attributed(_ source: String) -> AttributedString {
@@ -38,10 +40,11 @@ enum InlineMarkdownCache {
         if let hit = cache.object(forKey: key) { return hit.value }
         // Never throws into the view: an unparseable fragment renders as its
         // raw source, which is what the previous `try?` fallback did.
-        let value = (try? AttributedString(
-            markdown: source,
-            options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
-        )) ?? AttributedString(source)
+        let value =
+            (try? AttributedString(
+                markdown: source,
+                options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
+            )) ?? AttributedString(source)
         cache.setObject(Box(value), forKey: key)
         countLock.withLock { _ = keys.insert(source) }
         return value

@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-import AinkradSignal
 import AinkradHostRuntime
+import AinkradSignal
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("Host signal emitters")

@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 /// End-to-end against a REAL `git`, in a throwaway repo.
@@ -20,8 +21,9 @@ struct GitIntegrationTests {
         _ = try runner.run(["init", "--initial-branch=main"], in: root)
         _ = try runner.run(["config", "user.email", "test@example.com"], in: root)
         _ = try runner.run(["config", "user.name", "Test"], in: root)
-        try "initial".write(to: root.appendingPathComponent("tracked.txt"),
-                            atomically: true, encoding: .utf8)
+        try "initial".write(
+            to: root.appendingPathComponent("tracked.txt"),
+            atomically: true, encoding: .utf8)
         _ = try runner.run(["add", "."], in: root)
         _ = try runner.run(["commit", "-m", "initial"], in: root)
         return root
@@ -34,14 +36,18 @@ struct GitIntegrationTests {
         let runner = SystemGitRunner()
 
         // Modify a tracked file, add an untracked one, and ignore a third.
-        try "changed".write(to: root.appendingPathComponent("tracked.txt"),
-                            atomically: true, encoding: .utf8)
-        try "new".write(to: root.appendingPathComponent("fresh.txt"),
-                        atomically: true, encoding: .utf8)
-        try "*.log\n".write(to: root.appendingPathComponent(".gitignore"),
-                            atomically: true, encoding: .utf8)
-        try "noise".write(to: root.appendingPathComponent("debug.log"),
-                          atomically: true, encoding: .utf8)
+        try "changed".write(
+            to: root.appendingPathComponent("tracked.txt"),
+            atomically: true, encoding: .utf8)
+        try "new".write(
+            to: root.appendingPathComponent("fresh.txt"),
+            atomically: true, encoding: .utf8)
+        try "*.log\n".write(
+            to: root.appendingPathComponent(".gitignore"),
+            atomically: true, encoding: .utf8)
+        try "noise".write(
+            to: root.appendingPathComponent("debug.log"),
+            atomically: true, encoding: .utf8)
 
         let output = try runner.run(
             ["status", "--porcelain=v2", "--branch", "--ignored=matching"], in: root)
@@ -59,8 +65,9 @@ struct GitIntegrationTests {
         defer { try? FileManager.default.removeItem(at: root) }
         let runner = SystemGitRunner()
 
-        try "staged change".write(to: root.appendingPathComponent("tracked.txt"),
-                                  atomically: true, encoding: .utf8)
+        try "staged change".write(
+            to: root.appendingPathComponent("tracked.txt"),
+            atomically: true, encoding: .utf8)
         _ = try runner.run(["add", "tracked.txt"], in: root)
 
         let output = try runner.run(["status", "--porcelain=v2", "--branch"], in: root)
@@ -88,8 +95,9 @@ struct GitIntegrationTests {
         let root = try makeRepo()
         defer { try? FileManager.default.removeItem(at: root) }
 
-        try "changed".write(to: root.appendingPathComponent("tracked.txt"),
-                            atomically: true, encoding: .utf8)
+        try "changed".write(
+            to: root.appendingPathComponent("tracked.txt"),
+            atomically: true, encoding: .utf8)
 
         let provider = GitStatusProvider(fileSystem: LocalFileSystemService())
         await provider.refreshIfNeeded(directory: root)

@@ -1,6 +1,6 @@
-import Foundation
 import AinkradAppKit
 import AinkradSignal
+import Foundation
 
 @MainActor protocol ToastPresenting: AnyObject {
     func present(_ event: SignalEvent)
@@ -16,10 +16,12 @@ final class DeliveryDispatcher: SignalDeliverer {
     private let sound: any SoundPlaying
     private let badge: (SignalSource) -> Void
 
-    init(banner: any BannerPosting,
-         toast: any ToastPresenting,
-         sound: any SoundPlaying,
-         badge: @escaping (SignalSource) -> Void) {
+    init(
+        banner: any BannerPosting,
+        toast: any ToastPresenting,
+        sound: any SoundPlaying,
+        badge: @escaping (SignalSource) -> Void
+    ) {
         self.banner = banner
         self.toast = toast
         self.sound = sound

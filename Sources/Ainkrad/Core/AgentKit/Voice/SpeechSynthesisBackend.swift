@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Cloud text-to-speech provider: turns text into audio bytes (mp3). Distinct
 /// from `SpeechSynthesizing` (the fire-and-forget `speak` seam) — this fetches
@@ -17,6 +17,7 @@ struct OpenAITTSBackend: SpeechSynthesisBackend {
     static let secretID = "voice.openai.apiKey"
     /// Secret id for the `custom` OpenAI-speech-compatible provider.
     static let customSecretID = "voice.custom.apiKey"
+    // `nonisolated(unsafe)`: an immutable `let`; `KeychainSecretStore` keeps no mutable state and Keychain calls are thread-safe.
     nonisolated(unsafe) let secrets: SecretStore
     let http: DataHTTPClient
     var model = "gpt-4o-mini-tts"
@@ -58,6 +59,7 @@ struct OpenAITTSBackend: SpeechSynthesisBackend {
 /// ElevenLabs text-to-speech. Key in the Keychain via SecretStore.
 struct ElevenLabsTTSBackend: SpeechSynthesisBackend {
     static let secretID = "voice.elevenlabs.apiKey"
+    // `nonisolated(unsafe)`: an immutable `let`; `KeychainSecretStore` keeps no mutable state and Keychain calls are thread-safe.
     nonisolated(unsafe) let secrets: SecretStore
     let http: DataHTTPClient
     var voiceID: String
@@ -65,7 +67,8 @@ struct ElevenLabsTTSBackend: SpeechSynthesisBackend {
 
     /// Default voice ("Rachel") when none configured.
     init(secrets: SecretStore, http: DataHTTPClient, voiceID: String = "") {
-        self.secrets = secrets; self.http = http
+        self.secrets = secrets
+        self.http = http
         self.voiceID = voiceID.isEmpty ? "21m00Tcm4TlvDq8ikWAM" : voiceID
     }
 

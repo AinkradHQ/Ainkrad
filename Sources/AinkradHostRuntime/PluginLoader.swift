@@ -1,6 +1,7 @@
-import SwiftUI
-import Foundation
 import AinkradAppKit
+import Foundation
+import SwiftUI
+
 // Scoped import: the host's own `@main` struct is named `AinkradHostApp`
 // (`App/AinkradApp.swift`), so this scoped import binds the bare name
 // `AinkradApp` to the SDK protocol.
@@ -15,9 +16,11 @@ public final class PluginLoader {
     private let minSupportedAPIVersion: Int
     private let makeHostServices: (String, PluginPresentation) -> HostServices
 
-    public init(signaturePolicy: PluginSignaturePolicy,
-         minSupportedAPIVersion: Int = GenerationSupport.minSupported,
-         makeHostServices: @escaping (String, PluginPresentation) -> HostServices) {
+    public init(
+        signaturePolicy: PluginSignaturePolicy,
+        minSupportedAPIVersion: Int = GenerationSupport.minSupported,
+        makeHostServices: @escaping (String, PluginPresentation) -> HostServices
+    ) {
         self.signaturePolicy = signaturePolicy
         self.minSupportedAPIVersion = minSupportedAPIVersion
         self.makeHostServices = makeHostServices
@@ -64,8 +67,9 @@ public final class PluginLoader {
 
         // Phase 1 — discovery. Info.plist only; no `dlopen` happens here.
         for dir in directories {
-            let entries = (try? FileManager.default.contentsOfDirectory(
-                at: dir, includingPropertiesForKeys: nil)) ?? []
+            let entries =
+                (try? FileManager.default.contentsOfDirectory(
+                    at: dir, includingPropertiesForKeys: nil)) ?? []
             for url in entries where url.pathExtension == "bundle" {
                 switch inspect(at: url) {
                 case .success(let inspected):
@@ -74,7 +78,8 @@ public final class PluginLoader {
                         // Not a failure: an intentionally-overridden release.
                         // This line is the one that makes an override visible
                         // instead of costing an afternoon of debugging.
-                        Log.registry.notice("""
+                        Log.registry.notice(
+                            """
                             Plugin \(appID, privacy: .public) found in more than one directory: \
                             \(url.path, privacy: .public) overrides \(shadowed.path, privacy: .public). \
                             Loading \(url.path, privacy: .public); the shadowed bundle is not loaded.
@@ -90,7 +95,9 @@ public final class PluginLoader {
                     // on winners only, so a shadowed bundle's problems stay
                     // silent: it was never going to be loaded.
                     failures.append(PluginLoadFailure(url: url, reason: rejection.reason))
-                    Log.registry.error("Skipped plugin \(url.lastPathComponent, privacy: .public): \(rejection.reason, privacy: .public)")
+                    Log.registry.error(
+                        "Skipped plugin \(url.lastPathComponent, privacy: .public): \(rejection.reason, privacy: .public)"
+                    )
                 }
             }
         }
@@ -103,7 +110,8 @@ public final class PluginLoader {
                 apps.append(app)
             case .failure(let rejection):
                 failures.append(PluginLoadFailure(url: url, reason: rejection.reason))
-                Log.registry.error("Skipped plugin \(url.lastPathComponent, privacy: .public): \(rejection.reason, privacy: .public)")
+                Log.registry.error(
+                    "Skipped plugin \(url.lastPathComponent, privacy: .public): \(rejection.reason, privacy: .public)")
             }
         }
         return (apps, failures)
@@ -143,7 +151,9 @@ public final class PluginLoader {
         let info = inspected.info
         let metadata = inspected.metadata
 
-        if case .failure(let rejection) = PluginValidator.validate(metadata, infoDictionary: info, minSupportedAPIVersion: minSupportedAPIVersion) {
+        if case .failure(let rejection) = PluginValidator.validate(
+            metadata, infoDictionary: info, minSupportedAPIVersion: minSupportedAPIVersion)
+        {
             return .failure(rejection)
         }
 
@@ -161,7 +171,8 @@ public final class PluginLoader {
             let diagnosis = PluginLoadDiagnostics.diagnose(nsError)
             // The banner gets one sentence; the log keeps everything, so a
             // truncated banner never costs us the underlying detail.
-            Log.registry.error("Bundle load failed for \(url.lastPathComponent, privacy: .public): \(diagnosis.log, privacy: .public)")
+            Log.registry.error(
+                "Bundle load failed for \(url.lastPathComponent, privacy: .public): \(diagnosis.log, privacy: .public)")
             return .failure(PluginRejection(reason: diagnosis.banner))
         }
         guard let principal = bundle.principalClass as? AinkradPluginEntryPoint.Type else {
@@ -181,7 +192,8 @@ public final class PluginLoader {
         // already-compiled bundle, and the bundle stops loading entirely).
         var teardown: (@MainActor () -> Void)?
         if let teardownable = appType as? AinkradAppTeardown.Type,
-           let identified = host as? PluginInstanceIdentity {
+            let identified = host as? PluginInstanceIdentity
+        {
             let instance = identified.instanceID
             teardown = { teardownable.teardown(instance: instance) }
         }
@@ -204,12 +216,14 @@ public final class PluginLoader {
         // user's launcher. A notification feature must not uninstall apps.
         let declaredSubscriptions =
             (info[PluginInfoKey.signalSubscriptions] as? [String]) ?? []
-        return .success(.plugin(appType, url: url, apiVersion: metadata.apiVersion, host: host,
-                                presentation: metadata.presentation, mode: metadata.mode,
-                                teardown: teardown,
-                                mcpServerFactory: mcpServerFactory,
-                                signalObserverFactory: signalObserverFactory,
-                                declaredSignalSubscriptions: declaredSubscriptions))
+        return .success(
+            .plugin(
+                appType, url: url, apiVersion: metadata.apiVersion, host: host,
+                presentation: metadata.presentation, mode: metadata.mode,
+                teardown: teardown,
+                mcpServerFactory: mcpServerFactory,
+                signalObserverFactory: signalObserverFactory,
+                declaredSignalSubscriptions: declaredSubscriptions))
     }
 }
 
@@ -218,13 +232,15 @@ extension RegisteredApp {
     /// host services. Plugins are enabled by default; the registry override
     /// still applies.
     @MainActor
-    public static func plugin(_ app: any AinkradApp.Type, url: URL, apiVersion: Int, host: HostServices,
-                              presentation: PluginPresentation,
-                              mode: PluginMode = .advanced,
-                              teardown: (@MainActor () -> Void)? = nil,
-                              mcpServerFactory: (@MainActor () -> MCPAppServer)? = nil,
-                              signalObserverFactory: (@MainActor () -> any PluginSignalObserver)? = nil,
-                              declaredSignalSubscriptions: [String] = []) -> RegisteredApp {
+    public static func plugin(
+        _ app: any AinkradApp.Type, url: URL, apiVersion: Int, host: HostServices,
+        presentation: PluginPresentation,
+        mode: PluginMode = .advanced,
+        teardown: (@MainActor () -> Void)? = nil,
+        mcpServerFactory: (@MainActor () -> MCPAppServer)? = nil,
+        signalObserverFactory: (@MainActor () -> any PluginSignalObserver)? = nil,
+        declaredSignalSubscriptions: [String] = []
+    ) -> RegisteredApp {
         var registered = RegisteredApp(
             id: app.id,
             displayName: app.displayName,

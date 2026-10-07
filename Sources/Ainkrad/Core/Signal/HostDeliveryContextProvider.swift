@@ -1,5 +1,5 @@
-import AppKit
 import AinkradSignal
+import AppKit
 
 /// Reads the user's actual situation. The single place the host answers
 /// "is the user looking?" - the input that turns a toast into a banner.

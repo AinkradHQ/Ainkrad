@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-@testable import Ainkrad
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 @Suite("LegacyUserDefaultsMigration")
 final class LegacyUserDefaultsMigrationTests {
@@ -11,8 +12,9 @@ final class LegacyUserDefaultsMigrationTests {
     deinit { defaults.removePersistentDomain(forName: suiteName) }
 
     private func seedLegacy() {
-        defaults.set(try! JSONEncoder().encode(GlobalSettings(theme: .cyberPurple)),
-                     forKey: "global-settings")
+        defaults.set(
+            try! JSONEncoder().encode(GlobalSettings(theme: .cyberPurple)),
+            forKey: "global-settings")
         defaults.set(try! JSONEncoder().encode(["terminal": false]), forKey: "registry-enabled-state")
         // Terminal's settings type no longer lives in the host, so the
         // legacy blob is an arbitrary JSON object rather than a concrete type.
@@ -27,6 +29,17 @@ final class LegacyUserDefaultsMigrationTests {
 
         #expect(store.load(GlobalSettings.self)?.theme == .cyberPurple)
         #expect(store.load(RegistryStateDocument.self)?.enabled == ["terminal": false])
+    }
+
+    @Test("a fixture launch imports nothing from the shared UserDefaults domain")
+    func fixtureLaunchSkipsImport() {
+        seedLegacy()
+        let store = InMemoryPersistenceStore()
+        LegacyUserDefaultsMigration.runIfNeeded(persistence: store, defaults: defaults, isFixtureLaunch: true)
+
+        #expect(store.load(GlobalSettings.self) == nil)
+        #expect(store.load(RegistryStateDocument.self) == nil)
+        #expect(store.load(LegacyUserDefaultsMigration.LegacyImportMarker.self) == nil)
     }
 
     @Test("imports the legacy terminal-settings blob into the file store, type-free")

@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite struct DiffReviewPresentationTests {
@@ -11,11 +12,5 @@ import Testing
         #expect(changed?.right?.text == "B")
         // context lines mirror on both sides
         #expect(rows.contains { $0.left?.text == "a" && $0.right?.text == "a" })
-    }
-
-    @Test func contextRowHasNoTint() {
-        let ctx = DiffLine(kind: .context, oldNumber: 1, newNumber: 1, text: "x")
-        #expect(DiffReviewPresentation.isTinted(ctx) == false)
-        #expect(DiffReviewPresentation.isTinted(DiffLine(kind: .insertion, oldNumber: nil, newNumber: 1, text: "y")))
     }
 }

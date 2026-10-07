@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-import AinkradSignal
 import AinkradHostRuntime
+import AinkradSignal
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @MainActor
@@ -52,14 +53,16 @@ struct SignalCLIPairingTests {
         // Left alone, the CLI would report `rejected` forever.
         let url = tempConfig()
         defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
-        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
-                                                 withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true)
         try JSONEncoder().encode(["token": "stale"]).write(to: url)
 
         let registry = SignalTokenRegistry(secrets: InMemorySecretStore())
         #expect(SignalCLIPairing.ensurePaired(registry: registry, configURL: url))
-        let token = try #require(try JSONDecoder().decode(
-            [String: String].self, from: try Data(contentsOf: url))["token"])
+        let token = try #require(
+            try JSONDecoder().decode(
+                [String: String].self, from: try Data(contentsOf: url))["token"])
         #expect(token != "stale")
         #expect(registry.source(for: token) == .host)
     }
@@ -68,9 +71,11 @@ struct SignalCLIPairingTests {
     func configIsOwnerOnly() throws {
         let url = tempConfig()
         defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
-        SignalCLIPairing.ensurePaired(registry: SignalTokenRegistry(secrets: InMemorySecretStore()),
-                                      configURL: url)
-        let mode = (try FileManager.default.attributesOfItem(atPath: url.path)[.posixPermissions]
+        SignalCLIPairing.ensurePaired(
+            registry: SignalTokenRegistry(secrets: InMemorySecretStore()),
+            configURL: url)
+        let mode =
+            (try FileManager.default.attributesOfItem(atPath: url.path)[.posixPermissions]
             as? NSNumber)?.intValue ?? 0
         #expect(mode == 0o600, "a readable credential file is a leaked credential")
     }

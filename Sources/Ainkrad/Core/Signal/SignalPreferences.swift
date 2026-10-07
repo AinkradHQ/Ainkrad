@@ -1,15 +1,18 @@
-import Foundation
 import AinkradAppKit
+import AinkradHostRuntime
 import AinkradSignal
+import Foundation
 
 struct SignalPreferences: Codable, Equatable {
     var rules: RoutingRules
     var retention: RetentionPolicy
     var sound: NotificationSoundSettings
 
-    init(rules: RoutingRules = .default,
-         retention: RetentionPolicy = .default,
-         sound: NotificationSoundSettings = NotificationSoundSettings()) {
+    init(
+        rules: RoutingRules = .default,
+        retention: RetentionPolicy = .default,
+        sound: NotificationSoundSettings = NotificationSoundSettings()
+    ) {
         self.rules = rules
         self.retention = retention
         self.sound = sound
@@ -22,10 +25,12 @@ struct SignalPreferences: Codable, Equatable {
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         rules = try container.decodeIfPresent(RoutingRules.self, forKey: .rules) ?? .default
-        retention = try container.decodeIfPresent(
-            RetentionPolicy.self, forKey: .retention) ?? .default
-        sound = try container.decodeIfPresent(
-            NotificationSoundSettings.self, forKey: .sound) ?? NotificationSoundSettings()
+        retention =
+            try container.decodeIfPresent(
+                RetentionPolicy.self, forKey: .retention) ?? .default
+        sound =
+            try container.decodeIfPresent(
+                NotificationSoundSettings.self, forKey: .sound) ?? NotificationSoundSettings()
     }
 }
 
@@ -36,20 +41,31 @@ struct SignalPreferencesStore {
     let url: URL
 
     func load() -> SignalPreferences {
+        _ = setAsideIfUndecodable(SignalPreferences.self, at: url)
         guard let data = try? Data(contentsOf: url),
-              let prefs = try? JSONDecoder().decode(SignalPreferences.self, from: data)
+            let prefs = try? JSONDecoder().decode(SignalPreferences.self, from: data)
         else { return SignalPreferences() }
         return prefs
     }
 
     func save(_ prefs: SignalPreferences) {
+        guard setAsideIfUndecodable(SignalPreferences.self, at: url) else { return }
         guard let data = try? JSONEncoder().encode(prefs) else { return }
-        try? FileManager.default.createDirectory(
-            at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        do {
+            try FileManager.default.createDirectory(
+                at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        } catch {
+            // Logged and carried on: the write below then fails and logs too.
+            Log.settings.error(
+                "Failed to create the folder for \(url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
+            )
+        }
         do {
             try data.write(to: url, options: .atomic)
         } catch {
-            Log.settings.error("Failed to write \(data.count, privacy: .public) bytes to \(url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            Log.settings.error(
+                "Failed to write \(data.count, privacy: .public) bytes to \(url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
+            )
         }
     }
 }
@@ -82,34 +98,38 @@ extension AppEnvironment {
             return roots.cacheRoot.deletingLastPathComponent().appendingPathComponent("signal.sock")
         }
         #endif
-        return SignalSocketPath.default(bundleID: bundleID
-            ?? Bundle.main.bundleIdentifier
-            ?? "com.ainkrad.app")
+        return SignalSocketPath.default(
+            bundleID: bundleID
+                ?? Bundle.main.bundleIdentifier
+                ?? "com.ainkrad.app")
     }
 
     /// Builds the center, degrading to memory if the store cannot be opened.
     /// A notification subsystem that prevents the app from launching is worse
     /// than no notification subsystem.
     @MainActor
-    static func makeSignalCenter(storeURL: URL,
-                                 preferences: SignalPreferences,
-                                 sound: (any SoundPlaying)? = nil,
-                                 toast: SignalToastModel = SignalToastModel(),
-                                 contextProvider: HostDeliveryContextProvider
-                                    = HostDeliveryContextProvider(),
-                                 badge: @escaping (SignalSource) -> Void = { _ in })
-    -> SignalCenter {
+    static func makeSignalCenter(
+        storeURL: URL,
+        preferences: SignalPreferences,
+        sound: (any SoundPlaying)? = nil,
+        toast: SignalToastModel = SignalToastModel(),
+        contextProvider: HostDeliveryContextProvider = HostDeliveryContextProvider(),
+        badge: @escaping (SignalSource) -> Void = { _ in }
+    )
+        -> SignalCenter
+    {
         let store = try? SignalStore(url: storeURL)
         let dispatcher = DeliveryDispatcher(
             banner: UserNotificationBannerChannel(),
             toast: toast,
             sound: sound ?? SilentSoundPlayer(),
             badge: badge)
-        let center = SignalCenter(store: store,
-                                  deliverer: dispatcher,
-                                  contextProvider: contextProvider,
-                                  rules: preferences.rules,
-                                  retention: preferences.retention)
+        let center = SignalCenter(
+            store: store,
+            deliverer: dispatcher,
+            contextProvider: contextProvider,
+            rules: preferences.rules,
+            retention: preferences.retention)
         // SignalCenter's reference to its deliverer is weak; nothing else owns
         // the dispatcher, so the center must.
         // Read through the center rather than captured: the user can change a
@@ -119,10 +139,12 @@ extension AppEnvironment {
         center.retainDeliverer(dispatcher)
 
         if store == nil {
-            center.emit(SignalDraft(kind: "signal.degraded", severity: .warning,
-                                    title: "Notification history unavailable",
-                                    body: "Events are being kept in memory only for this session.",
-                                    dedupeKey: "signal:degraded"), from: .host)
+            center.emit(
+                SignalDraft(
+                    kind: "signal.degraded", severity: .warning,
+                    title: "Notification history unavailable",
+                    body: "Events are being kept in memory only for this session.",
+                    dedupeKey: "signal:degraded"), from: .host)
         }
         return center
     }

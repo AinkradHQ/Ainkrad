@@ -1,13 +1,15 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("ScheduleStore")
 @MainActor
 struct ScheduleStoreTests {
     private func schedule(_ name: String) -> AgentSchedule {
-        AgentSchedule(id: UUID(), name: name,
+        AgentSchedule(
+            id: UUID(), name: name,
             trigger: .time(cron: CronExpression(minutes: [0], hours: [9], daysOfWeek: nil)),
             prompt: "summarize inbox", agentID: nil, enabled: true,
             posture: SavedExecutionPosture(permissionMode: "ask", sandboxProfileID: "workspace-write"))
@@ -23,15 +25,18 @@ struct ScheduleStoreTests {
 
     @Test func setEnabledToggles() {
         let store = ScheduleStore(persistence: InMemoryPersistenceStore())
-        let s = schedule("x"); store.upsert(s)
+        let s = schedule("x")
+        store.upsert(s)
         store.setEnabled(s.id, false)
         #expect(store.schedules.first { $0.id == s.id }?.enabled == false)
     }
 
     @Test func recordFiredStampsLastRun() {
         let store = ScheduleStore(persistence: InMemoryPersistenceStore())
-        let s = schedule("x"); store.upsert(s)
-        let runID = UUID(); let when = Date(timeIntervalSince1970: 42)
+        let s = schedule("x")
+        store.upsert(s)
+        let runID = UUID()
+        let when = Date(timeIntervalSince1970: 42)
         store.recordFired(s.id, runID: runID, date: when)
         #expect(store.schedules.first { $0.id == s.id }?.lastRunID == runID)
         #expect(store.schedules.first { $0.id == s.id }?.lastFired == when)
@@ -68,8 +73,9 @@ struct ScheduleStoreTests {
     /// real webhook path — `WebhookServer`/`TriggerDispatcher` — has always
     /// keyed off `schedule.id`, never the trigger's own payload).
     @Test func webhookScheduleUsesOwningScheduleIDEverywhere() {
-        let s = AgentSchedule(name: "hook", trigger: .webhook, prompt: "x",
-                               posture: SavedExecutionPosture(permissionMode: "ask"))
+        let s = AgentSchedule(
+            name: "hook", trigger: .webhook, prompt: "x",
+            posture: SavedExecutionPosture(permissionMode: "ask"))
         // There is no id on `.webhook` to inspect/diverge — `schedule.id` is
         // the only identity a webhook trigger has, by construction.
         #expect(s.trigger == .webhook)

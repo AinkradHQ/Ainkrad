@@ -1,5 +1,7 @@
 import Foundation
+import SwiftUI
 import Testing
+
 @testable import Ainkrad
 @testable import AinkradHostRuntime
 
@@ -21,9 +23,11 @@ struct SetupStageTests {
         // a rail that hid a step the user can still reach would misreport where
         // they are.
         let settledStore = InMemoryPersistenceStore()
-        settledStore.save(SetupDocument(completedAt: Date(),
-                                        setupVersion: SetupCoordinator.currentSetupVersion,
-                                        deferredSteps: [SetupStep.providers.rawValue]))
+        settledStore.save(
+            SetupDocument(
+                completedAt: Date(),
+                setupVersion: SetupCoordinator.currentSetupVersion,
+                deferredSteps: [SetupStep.providers.rawValue]))
         let settled = SetupCoordinator(persistence: settledStore, isProvisionalHome: false)
         #expect(!SetupRailModel(coordinator: settled).items.contains { $0.step == .home })
     }
@@ -70,16 +74,34 @@ struct SetupStageTests {
         }
     }
 
+    // The stage's feel: one spring, and each layer a fixed beat behind the one
+    // above it. Pinned before the spring moves onto a skin token, so the token
+    // has to resolve to exactly today's response, damping and stagger.
+    @Test func theStageSpringAndStaggerKeepTheirFeel() {
+        for layer in SetupStageMotion.Layer.allCases {
+            #expect(
+                SetupStageMotion.animation(reduceMotion: false, layer: layer)
+                    == Animation.spring(response: 0.42, dampingFraction: 0.82)
+                    .delay(Double(layer.rawValue) * 0.055))
+        }
+    }
+
     // The third seam: the per-layer geometry, which is what `layerTransition`
     // falls back to `.identity` on.
     @Test func reduceMotionRemovesEveryLayerGeometry() {
         for layer in SetupStageMotion.Layer.allCases {
-            #expect(SetupStageMotion.layerGeometry(layer, reduceMotion: true,
-                                                   isForward: true) == nil)
-            #expect(SetupStageMotion.layerGeometry(layer, reduceMotion: true,
-                                                   isForward: false) == nil)
-            #expect(SetupStageMotion.layerGeometry(layer, reduceMotion: false,
-                                                   isForward: true) != nil)
+            #expect(
+                SetupStageMotion.layerGeometry(
+                    layer, reduceMotion: true,
+                    isForward: true) == nil)
+            #expect(
+                SetupStageMotion.layerGeometry(
+                    layer, reduceMotion: true,
+                    isForward: false) == nil)
+            #expect(
+                SetupStageMotion.layerGeometry(
+                    layer, reduceMotion: false,
+                    isForward: true) != nil)
         }
     }
 
@@ -167,10 +189,12 @@ struct SetupStageTests {
     // …while still holding margin back. A group that simply filled the window
     // is the bug this whole type exists to prevent.
     @Test func theGroupNeverFillsTheWindow() {
-        for size in [CGSize(width: 900, height: 640),
-                     CGSize(width: 1280, height: 820),
-                     CGSize(width: 1728, height: 1084),
-                     CGSize(width: 2560, height: 1440)] {
+        for size in [
+            CGSize(width: 900, height: 640),
+            CGSize(width: 1280, height: 820),
+            CGSize(width: 1728, height: 1084),
+            CGSize(width: 2560, height: 1440),
+        ] {
             let group = SetupStageLayout.group(fitting: size)
             #expect(group.width < size.width)
             #expect(group.height < size.height)
@@ -215,7 +239,8 @@ struct SetupStageTests {
         let small = SetupStageLayout.group(fitting: CGSize(width: 900, height: 640)).width
         let large = SetupStageLayout.group(fitting: CGSize(width: 1728, height: 1084)).width
 
-        #expect(SetupStageLayout.readingWidth(inGroupOf: large)
+        #expect(
+            SetupStageLayout.readingWidth(inGroupOf: large)
                 > SetupStageLayout.readingWidth(inGroupOf: small))
     }
 
@@ -273,9 +298,11 @@ struct SetupStageTests {
     // Forward and back must be directionally distinct, so the policy has to
     // carry a direction and collapse it only under reduce-motion.
     @Test func directionSurvivesUntilReduceMotionCollapsesIt() {
-        #expect(SetupStageMotion.transition(reduceMotion: false, isForward: true)
+        #expect(
+            SetupStageMotion.transition(reduceMotion: false, isForward: true)
                 != SetupStageMotion.transition(reduceMotion: false, isForward: false))
-        #expect(SetupStageMotion.transition(reduceMotion: true, isForward: true)
+        #expect(
+            SetupStageMotion.transition(reduceMotion: true, isForward: true)
                 == SetupStageMotion.transition(reduceMotion: true, isForward: false))
     }
 }

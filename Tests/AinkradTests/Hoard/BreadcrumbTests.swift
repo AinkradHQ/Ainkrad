@@ -1,12 +1,14 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("Breadcrumb and status")
 struct BreadcrumbTests {
     private func entry(_ name: String, size: Int64, dir: Bool = false) -> FileEntry {
-        FileEntry(url: URL(fileURLWithPath: "/x/\(name)"), name: name, isDirectory: dir,
-                  isSymlink: false, isHidden: false, size: size, modified: Date())
+        FileEntry(
+            url: URL(fileURLWithPath: "/x/\(name)"), name: name, isDirectory: dir,
+            isSymlink: false, isHidden: false, size: size, modified: Date())
     }
 
     @Test("splits a path into cumulative components")

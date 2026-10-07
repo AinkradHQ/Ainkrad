@@ -1,7 +1,7 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
 import AinkradSignal
+import SwiftUI
 
 /// Positions `SignalBellDropdown` under the bell and dismisses it on an
 /// outside click.
@@ -17,6 +17,7 @@ struct SignalBellDropdownOverlay: View {
     var onOpenSettings: () -> Void = {}
 
     @Environment(\.ainkradReduceMotion) private var reduceMotion
+    @Environment(\.ainkradSkin) private var skin
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
@@ -49,26 +50,28 @@ struct SignalBellDropdownOverlay: View {
                 // A snooze set here is the same field quiet hours use, so the
                 // two cannot disagree about whether now is quiet.
                 onSnooze: { $0.apply(to: &center.rules.suppression, at: Date()) },
-                onResume: { SignalSnooze.lift(&center.rules.suppression) })
-                // Derived from the bar's own height rather than a copy of it.
-                //
-                // Deliberately NOT an NSPopover, despite reading like one.
-                // `SignalBellButton`'s note explains why the bell lives
-                // in-window: the first-run setup gate is a full-screen scrim
-                // INSIDE the window, so anything in-window is covered for
-                // free. A popover is a separate window and would escape it,
-                // reintroducing exactly the escape-the-gate problem the old
-                // menu-bar status item had to suppress by hand.
-                .padding(.top, HUDBar.height + 4)
-                .padding(.trailing, 10)
-                // Reduce-motion drops the slide but keeps the fade: appearing
-                // and disappearing with no change at all is a worse outcome
-                // than a short one, because the panel then seems to teleport.
-                .transition(reduceMotion
-                            ? .opacity
-                            : .asymmetric(
-                                insertion: .move(edge: .top).combined(with: .opacity),
-                                removal: .opacity))
+                onResume: { SignalSnooze.lift(&center.rules.suppression) }
+            )
+            // Derived from the bar's own height rather than a copy of it.
+            //
+            // Deliberately NOT an NSPopover, despite reading like one.
+            // `SignalBellButton`'s note explains why the bell lives
+            // in-window: the first-run setup gate is a full-screen scrim
+            // INSIDE the window, so anything in-window is covered for
+            // free. A popover is a separate window and would escape it,
+            // reintroducing exactly the escape-the-gate problem the old
+            // menu-bar status item had to suppress by hand.
+            .padding(.top, HUDBar.height + skin.spacing.xs)
+            .padding(.trailing, skin.size.s10)
+            // Reduce-motion drops the slide but keeps the fade: appearing
+            // and disappearing with no change at all is a worse outcome
+            // than a short one, because the panel then seems to teleport.
+            .transition(
+                reduceMotion
+                    ? .opacity
+                    : .asymmetric(
+                        insertion: .move(edge: .top).combined(with: .opacity),
+                        removal: .opacity))
         }
         .ignoresSafeArea()
         // Escape closes it. Outside-click alone meant a keyboard user could

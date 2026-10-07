@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 enum ToolHookEvent: String, Codable, Equatable, Sendable, CaseIterable {
     case preToolUse, postToolUse
@@ -31,15 +31,18 @@ struct ToolHooksDocument: PersistableDocument {
     static let migrators: [DocumentMigrator] = [
         DocumentMigrator(from: 1) { payload in
             guard case .object(var root) = payload,
-                  case .array(let hooks)? = root["hooks"] else { return payload }
-            root["hooks"] = .array(hooks.map { hook in
-                guard case .object(var fields) = hook,
-                      case .string(let match)? = fields["match"] else { return hook }
-                fields["match"] = .string(AppIDRenames.renamedToolName(match))
-                return .object(fields)
-            })
+                case .array(let hooks)? = root["hooks"]
+            else { return payload }
+            root["hooks"] = .array(
+                hooks.map { hook in
+                    guard case .object(var fields) = hook,
+                        case .string(let match)? = fields["match"]
+                    else { return hook }
+                    fields["match"] = .string(AppIDRenames.renamedToolName(match))
+                    return .object(fields)
+                })
             return .object(root)
-        },
+        }
     ]
 
     var hooks: [ToolHook]
@@ -55,7 +58,7 @@ enum ToolHookMatcher {
         var cursor = toolName.startIndex
         for (i, seg) in segments.enumerated() where !seg.isEmpty {
             guard let range = toolName.range(of: seg, range: cursor..<toolName.endIndex) else { return false }
-            if i == 0, range.lowerBound != toolName.startIndex { return false }   // leading anchor
+            if i == 0, range.lowerBound != toolName.startIndex { return false }  // leading anchor
             cursor = range.upperBound
         }
         if let last = segments.last, !last.isEmpty { return toolName.hasSuffix(last) }

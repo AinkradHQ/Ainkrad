@@ -1,6 +1,7 @@
 import Foundation
 import Speech
 import Testing
+
 @testable import Ainkrad
 
 private struct StubAvailability: SpeechRecognizerAvailability {
@@ -25,7 +26,8 @@ struct SpeechRecognizerAvailabilityTests {
 private final class NeverFiringRecognizer: SpeechRecognitionTasking {
     func startRecognition(
         request: SFSpeechURLRecognitionRequest,
-        resultHandler: @escaping (SFSpeechRecognitionResult?, Error?) -> Void) {
+        resultHandler: @escaping (SFSpeechRecognitionResult?, Error?) -> Void
+    ) {
         // Deliberately never calls resultHandler.
     }
 }
@@ -40,7 +42,7 @@ struct OnDeviceTranscriptionBackendTimeoutTests {
     func neverFiringRecognizerResolvesWithProviderErrorInsteadOfHanging() async {
         let backend = OnDeviceTranscriptionBackend(
             availability: StubAvailability(available: true),
-            timeoutNanos: 10_000_000, // 10ms — deterministic, no real wait
+            timeoutNanos: 10_000_000,  // 10ms — deterministic, no real wait
             recognizerFactory: { _ in NeverFiringRecognizer() })
         do {
             _ = try await backend.transcribe(audio: Data("A".utf8), fileName: "m.m4a", localeIdentifier: "en-US")

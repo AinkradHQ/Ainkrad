@@ -1,39 +1,50 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// The App Store HUD overlay — browse the catalog and install / update /
 /// uninstall / enable apps. Same HUD language as the Launcher / Settings.
 struct AppStoreOverlayView: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.ainkradReduceMotion) private var reduceMotion
+    @Environment(\.ainkradSkin) private var skin
     @Bindable var store: AppStoreStore
     let onDismiss: () -> Void
 
-    private let columns = [GridItem(.adaptive(minimum: 248), spacing: 16)]
+    private var columns: [GridItem] { [GridItem(.adaptive(minimum: 248), spacing: skin.spacing.lg)] }
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
+        let tokens = environment.themeManager.hostSkin
         GeometryReader { geo in
             ZStack {
-                Color.black.opacity(OverlayChrome.backdropOpacity).ignoresSafeArea().onTapGesture { onDismiss() }
+                skin.color(.palette("black", skin.chrome.overlay.backdropOpacity))
+                    .ignoresSafeArea().onTapGesture { onDismiss() }
                 panel(tokens: tokens)
                     .frame(
                         width: min(max(900, geo.size.width * 0.82), 1120),
                         height: min(max(600, geo.size.height * 0.82), 760)
                     )
                     .offset(y: -30)
-                if let id = store.pendingReinstall {
-                    reinstallModal(appID: id, tokens: tokens)
-                        .transition(reduceMotion ? .identity : .scale(scale: 0.94).combined(with: .opacity))
-                }
                 if let box = store.lightbox {
                     screenshotLightbox(box, tokens: tokens)
                         .transition(reduceMotion ? .identity : .scale(scale: 0.96).combined(with: .opacity))
                 }
             }
-            .animation(reduceMotion ? nil : .snappy(duration: 0.26), value: store.pendingReinstall)
-            .animation(reduceMotion ? nil : .snappy(duration: 0.22), value: store.lightbox)
+            .animation(reduceMotion ? nil : .snappy(duration: skin.motion.durations.d0_22), value: store.lightbox)
+            .ainkradModal(
+                isPresented: Binding(
+                    get: { store.pendingReinstall != nil },
+                    set: { if !$0 { store.cancelReinstall() } }),
+                contentWidth: skin.size.s340
+            ) {
+                if let id = store.pendingReinstall {
+                    reinstallPrompt(appID: id, tokens: tokens)
+                }
+            }
+            // The kit modal's entrance runs on its own materialize timing;
+            // driving it from the store's change keeps it animated.
+            .animation(
+                reduceMotion ? nil : skin.animation(skin.motion.materializeAnimation), value: store.pendingReinstall)
         }
         .task {
             // Paint instantly from the persisted catalog cache, then fetch the
@@ -46,48 +57,49 @@ struct AppStoreOverlayView: View {
     }
 
     /// The retained-data Restore/Reset prompt shown when reinstalling an app
-    /// that left settings behind — same HUD chrome as the rest of the
-    /// overlay, with a scale/opacity entrance and pressable buttons (AIN-149).
-    /// Skipped under Reduce Motion.
-    private func reinstallModal(appID: String, tokens: DesignTokens) -> some View {
+    /// that left settings behind (AIN-149). The kit modal supplies the scrim,
+    /// panel, entrance (skipped under Reduce Motion) and Esc/scrim dismissal,
+    /// which cancel the reinstall.
+    private func reinstallPrompt(appID: String, tokens: AinkradSkin) -> some View {
         let name = store.rows.first { $0.id == appID }?.displayName ?? appID
-        return ZStack {
-            Color.black.opacity(0.5).ignoresSafeArea()
-                .onTapGesture { store.cancelReinstall() }
-            VStack(alignment: .leading, spacing: 14) {
-                Text("Reinstall \(name)")
-                    .font(AinkradFont.display(15, weight: .semibold))
-                    .foregroundStyle(tokens.foreground)
-                Text("Previous settings for \(name) were kept. Restore them, or reset to defaults?")
-                    .font(.system(size: 12))
-                    .foregroundStyle(tokens.foreground.opacity(0.75))
-                    .fixedSize(horizontal: false, vertical: true)
-                HStack(spacing: 10) {
-                    Spacer()
-                    AinkradButton(title: "Cancel", style: .ghost) { store.cancelReinstall() }
-                    AinkradButton(title: "Reset to Defaults", style: .secondary) { Task { await store.resetAndInstall(appID) } }
-                    AinkradButton(title: "Restore", style: .primary) { Task { await store.restoreAndInstall(appID) } }
+        return VStack(alignment: .leading, spacing: skin.size.s14) {
+            Text("Reinstall \(name)")
+                .font(AinkradFont.display(15, weight: .semibold))
+                .foregroundStyle(tokens.color(\.foreground))
+            Text("Previous settings for \(name) were kept. Restore them, or reset to defaults?")
+                .font(skin.font(AinkradFontToken(sizeKey: "t12", scaled: false)))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o75))
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: skin.size.s10) {
+                Spacer()
+                AinkradButton(title: "Cancel", style: .ghost) { store.cancelReinstall() }
+                AinkradButton(title: "Reset to Defaults", style: .secondary) {
+                    Task { await store.resetAndInstall(appID) }
                 }
+                AinkradButton(title: "Restore", style: .primary) { Task { await store.restoreAndInstall(appID) } }
             }
-            .padding(20)
-            .frame(width: 380)
-            .background(ChamferShape(cut: AinkradRadius.panel).fill(tokens.surface))
-            .overlay(ChamferShape(cut: AinkradRadius.panel).strokeBorder(tokens.accentPrimary.opacity(0.4), lineWidth: 1))
-            .shadow(color: .black.opacity(0.5), radius: 24, y: 8)
         }
-        .onKeyPress(.escape) { store.cancelReinstall(); return .handled }
     }
 
-    private func panel(tokens: DesignTokens) -> some View {
+    private func panel(tokens: AinkradSkin) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             if let row = store.selectedRow {
                 AppStoreDetailView(
                     entry: store.entry(for: row.id), row: row, tokens: tokens, isBusy: store.busy.contains(row.id),
                     onBack: { store.closeDetail() },
-                    onInstall: { environment.sounds.play(.install); Task { await store.install(row.id) } },
+                    onInstall: {
+                        environment.sounds.play(.install)
+                        Task { await store.install(row.id) }
+                    },
                     onUpdate: { Task { await store.update(row.id) } },
-                    onUninstall: { environment.sounds.play(.uninstall); store.uninstall(row.id) },
-                    onToggleEnabled: { environment.sounds.play(.toggle); store.setEnabled($0, for: row.id) },
+                    onUninstall: {
+                        environment.sounds.play(.uninstall)
+                        store.uninstall(row.id)
+                    },
+                    onToggleEnabled: {
+                        environment.sounds.play(.toggle)
+                        store.setEnabled($0, for: row.id)
+                    },
                     onOpenScreenshot: { urls, index in
                         environment.sounds.play(.overlayOpen)
                         store.openLightbox(urls, at: index)
@@ -102,7 +114,10 @@ struct AppStoreOverlayView: View {
         }
         .hudPanelChrome(tokens: tokens)
         .onKeyPress(.escape) {
-            if store.lightbox != nil {
+            if store.pendingReinstall != nil {
+                // The reinstall prompt answers Esc first, as Cancel.
+                store.cancelReinstall()
+            } else if store.lightbox != nil {
                 environment.sounds.play(.overlayClose)
                 store.closeLightbox()
             } else if store.selectedAppID != nil {
@@ -130,10 +145,11 @@ struct AppStoreOverlayView: View {
     /// current image fit-scaled large, ⟨/⟩ wrap-around navigation + a "n / N"
     /// counter when the gallery has more than one image, and a close ✕.
     /// ESC/←/→ are handled by the panel's key handlers above (the panel keeps
-    /// keyboard focus while this overlay is up, same as the reinstall modal).
-    private func screenshotLightbox(_ box: AppStoreStore.Lightbox, tokens: DesignTokens) -> some View {
+    /// keyboard focus while this overlay is up). No kit component shows a
+    /// full-screen image gallery, so this stays local, on skin tokens.
+    private func screenshotLightbox(_ box: AppStoreStore.Lightbox, tokens: AinkradSkin) -> some View {
         ZStack {
-            Color.black.opacity(0.82).ignoresSafeArea()
+            skin.color(.palette("black", skin.opacity.o82)).ignoresSafeArea()
                 .onTapGesture {
                     environment.sounds.play(.overlayClose)
                     store.closeLightbox()
@@ -144,97 +160,91 @@ struct AppStoreOverlayView: View {
                 case .success(let image):
                     image.resizable().aspectRatio(contentMode: .fit)
                 case .failure:
-                    VStack(spacing: 8) {
+                    VStack(spacing: skin.spacing.sm) {
                         Image(systemName: "exclamationmark.triangle")
-                            .font(.system(size: 28))
-                            .foregroundStyle(tokens.accentTertiary)
+                            .font(skin.font(AinkradFontToken(sizeKey: "t28", scaled: false)))
+                            .foregroundStyle(tokens.color(\.accentTertiary))
                         Text("Couldn't load image")
                             .font(AinkradFont.display(12))
-                            .foregroundStyle(tokens.foreground.opacity(0.6))
+                            .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o60))
                     }
                 default:
                     AinkradSpinner(size: 36)
                 }
             }
-            .padding(48)
-            .clipShape(ChamferShape(cut: AinkradRadius.md))
-            .shadow(color: .black.opacity(0.6), radius: 30, y: 10)
-            .allowsHitTesting(false)   // clicks on the image fall through to nothing (backdrop closes)
+            .padding(skin.size.s48)
+            .clipShape(ChamferShape(cut: skin.radius.md))
+            .shadow(color: skin.color(.palette("black", skin.opacity.o60)), radius: skin.size.s30, y: skin.size.s10)
+            .allowsHitTesting(false)  // clicks on the image fall through to nothing (backdrop closes)
 
             VStack {
                 HStack {
                     Spacer()
-                    AinkradIconButton(systemName: "xmark") {
+                    AinkradIconButton(systemName: "xmark", tooltip: "Close (esc)") {
                         environment.sounds.play(.overlayClose)
                         store.closeLightbox()
                     }
-                    .help("Close (esc)")
                 }
                 Spacer()
                 if box.urls.count > 1 {
-                    Text("\(box.index + 1) / \(box.urls.count)")
-                        .font(AinkradFont.display(12, weight: .medium))
-                        .foregroundStyle(tokens.foreground.opacity(0.75))
-                        .padding(.horizontal, 12).padding(.vertical, 6)
-                        .background(Capsule().fill(tokens.surfaceElevated.opacity(0.85)))
+                    AinkradChip(label: "\(box.index + 1) / \(box.urls.count)")
                 }
             }
-            .padding(20)
+            .padding(skin.size.s20)
 
             if box.urls.count > 1 {
                 HStack {
-                    lightboxArrow("chevron.left", tokens: tokens, help: "Previous (←)") { store.lightboxPrevious() }
+                    AinkradIconButton(systemName: "chevron.left", tooltip: "Previous (←)") {
+                        store.lightboxPrevious()
+                    }
                     Spacer()
-                    lightboxArrow("chevron.right", tokens: tokens, help: "Next (→)") { store.lightboxNext() }
+                    AinkradIconButton(systemName: "chevron.right", tooltip: "Next (→)") { store.lightboxNext() }
                 }
-                .padding(.horizontal, 18)
+                .padding(.horizontal, skin.size.s18)
             }
         }
     }
 
-    private func lightboxArrow(_ systemImage: String, tokens: DesignTokens, help: String, action: @escaping () -> Void) -> some View {
-        AinkradIconButton(systemName: systemImage, action: action)
-            .help(help)
-    }
-
-    private func header(tokens: DesignTokens) -> some View {
+    private func header(tokens: AinkradSkin) -> some View {
         HStack {
             Text("APP STORE").font(AinkradFont.display(14, weight: .semibold)).kerning(1)
-                .foregroundStyle(tokens.foreground)
+                .foregroundStyle(tokens.color(\.foreground))
             Spacer()
             // Refresh morphs to a spinner in place while refreshing — both
-            // views stay mounted, only `.opacity` toggles, mirroring
-            // AppStoreActionControls.actionButton's busy-morph.
+            // views stay mounted, only `.opacity` toggles. Local because the
+            // kit icon button has no loading state.
             ZStack {
-                AinkradIconButton(systemName: "arrow.clockwise") { Task { await store.refresh() } }
-                    .opacity(store.isRefreshing ? 0 : 1)
+                AinkradIconButton(systemName: "arrow.clockwise", tooltip: "Refresh catalog") {
+                    Task { await store.refresh() }
+                }
+                .opacity(store.isRefreshing ? 0 : 1)
                 AinkradSpinner(size: 16)
                     .opacity(store.isRefreshing ? 1 : 0)
             }
-            .help("Refresh catalog")
-            .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: store.isRefreshing)
-            AinkradIconButton(systemName: "xmark") { onDismiss() }
-                .help("Close")
+            .animation(
+                reduceMotion ? nil : .easeInOut(duration: skin.motion.durations.d0_2), value: store.isRefreshing)
+            AinkradIconButton(systemName: "xmark", tooltip: "Close") { onDismiss() }
         }
-        .padding(.horizontal, 18).padding(.vertical, 14)
+        .padding(.horizontal, skin.size.s18).padding(.vertical, skin.size.s14)
     }
 
-    private func filterBar(tokens: DesignTokens) -> some View {
+    private func filterBar(tokens: AinkradSkin) -> some View {
         let updateCount = store.rows.filter { $0.status == .updateAvailable }.count
-        return HStack(spacing: 8) {
+        return HStack(spacing: skin.spacing.sm) {
             AinkradSegmentedPicker(items: AppStoreStore.Filter.allCases, selection: $store.filter) { filter in
                 filterLabel(filter, updateCount: updateCount)
             }
             AinkradSearchField(text: $store.searchQuery, placeholder: "Search apps…")
-                .frame(width: 220)
+                .frame(width: skin.size.s220)
             Spacer()
             if let error = store.error {
-                Text(errorText(error)).font(.system(size: 10)).foregroundStyle(tokens.accentTertiary)
+                Text(error.message).font(skin.font(AinkradFontToken(sizeKey: "t10", scaled: false)))
+                    .foregroundStyle(tokens.color(\.accentTertiary))
                     .lineLimit(1)
                 AinkradIconButton(systemName: "xmark.circle") { store.error = nil }
             }
         }
-        .padding(.horizontal, 18).padding(.vertical, 10)
+        .padding(.horizontal, skin.size.s18).padding(.vertical, skin.size.s10)
     }
 
     private func filterLabel(_ filter: AppStoreStore.Filter, updateCount: Int) -> String {
@@ -253,26 +263,24 @@ struct AppStoreOverlayView: View {
     /// with no apps. That is a defensible trade, but not a silent one: the
     /// user is trusting the catalog rather than the code, and should know it.
     /// Hidden entirely once a Developer-ID release is cut.
-    @ViewBuilder private func trustPostureBanner(tokens: DesignTokens) -> some View {
+    @ViewBuilder private func trustPostureBanner(tokens: AinkradSkin) -> some View {
         if !PluginTrust.isVerifyingPluginSignatures {
-            HStack(alignment: .top, spacing: 6) {
-                Image(systemName: "lock.open").font(.system(size: 11))
-                VStack(alignment: .leading, spacing: 2) {
+            HStack(alignment: .top, spacing: skin.size.s6) {
+                Image(systemName: "lock.open").font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false)))
+                VStack(alignment: .leading, spacing: skin.size.s2) {
                     Text("Plugin signatures aren’t verified in this build")
                         .font(AinkradFont.display(12, weight: .semibold))
-                    Text("Downloads are still checked against the catalog’s SHA-256, so the bytes match what was published — but who published them isn’t verified.")
-                        .font(.system(size: 11))
-                        .foregroundStyle(tokens.foreground.opacity(0.7))
-                        .fixedSize(horizontal: false, vertical: true)
+                    Text(
+                        "Downloads are still checked against the catalog’s SHA-256, so the bytes match what was published — but who published them isn’t verified."
+                    )
+                    .font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false)))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o70))
+                    .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 0)
             }
-            .foregroundStyle(tokens.accentSecondary)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 12).padding(.vertical, 10)
-            .background(ChamferShape(cut: AinkradRadius.sm).fill(tokens.accentSecondary.opacity(0.10)))
-            .overlay(ChamferShape(cut: AinkradRadius.sm).strokeBorder(tokens.accentSecondary.opacity(0.35), lineWidth: 1))
-            .padding(.horizontal, 18).padding(.bottom, 8)
+            .foregroundStyle(tokens.color(\.accentSecondary))
+            .banner(tint: tokens.color(\.accentSecondary), fill: skin.opacity.o10, stroke: skin.opacity.o35, skin: skin)
         }
     }
 
@@ -280,34 +288,30 @@ struct AppStoreOverlayView: View {
     /// launch. Without this the failure is invisible: the loader records it and
     /// the app simply shows fewer apps, which reads as "nothing installed"
     /// rather than "something is wrong". Hidden entirely when nothing failed.
-    @ViewBuilder private func loadFailureBanner(tokens: DesignTokens) -> some View {
+    @ViewBuilder private func loadFailureBanner(tokens: AinkradSkin) -> some View {
         let failures = store.loadFailures
         if !failures.isEmpty {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: skin.spacing.xs) {
+                HStack(spacing: skin.size.s6) {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.system(size: 11))
+                        .font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false)))
                     Text(failures.count == 1 ? "1 app couldn’t be loaded" : "\(failures.count) apps couldn’t be loaded")
                         .font(AinkradFont.display(12, weight: .semibold))
                 }
-                .foregroundStyle(tokens.accentTertiary)
+                .foregroundStyle(tokens.color(\.accentTertiary))
                 ForEach(failures, id: \.url) { failure in
                     Text(AppStoreStore.failureText(failure))
-                        .font(.system(size: 11))
-                        .foregroundStyle(tokens.foreground.opacity(0.75))
+                        .font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false)))
+                        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o75))
                         .fixedSize(horizontal: false, vertical: true)
                         .textSelection(.enabled)
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 12).padding(.vertical, 10)
-            .background(ChamferShape(cut: AinkradRadius.sm).fill(tokens.accentTertiary.opacity(0.12)))
-            .overlay(ChamferShape(cut: AinkradRadius.sm).strokeBorder(tokens.accentTertiary.opacity(0.45), lineWidth: 1))
-            .padding(.horizontal, 18).padding(.bottom, 8)
+            .banner(tint: tokens.color(\.accentTertiary), fill: skin.opacity.o12, stroke: skin.opacity.o45, skin: skin)
         }
     }
 
-    @ViewBuilder private func content(tokens: DesignTokens) -> some View {
+    @ViewBuilder private func content(tokens: AinkradSkin) -> some View {
         let rows = store.visibleRows
         if rows.isEmpty {
             if store.isRefreshing && store.rows.isEmpty {
@@ -315,64 +319,46 @@ struct AppStoreOverlayView: View {
                 AinkradSpinner(size: 36)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                AinkradEmptyState(icon: emptyIcon, title: emptyTitle, message: emptyText)
+                let empty = store.emptyState
+                AinkradEmptyState(icon: empty.icon, title: empty.title, message: empty.message)
             }
         } else {
             ScrollView {
-                LazyVGrid(columns: columns, spacing: 16) {
+                LazyVGrid(columns: columns, spacing: skin.spacing.lg) {
                     ForEach(rows) { row in
                         AppStoreCard(
                             row: row, tokens: tokens, isBusy: store.busy.contains(row.id),
                             onOpen: { store.openDetail(row.id) },
-                            onInstall: { environment.sounds.play(.install); Task { await store.install(row.id) } },
+                            onInstall: {
+                                environment.sounds.play(.install)
+                                Task { await store.install(row.id) }
+                            },
                             onUpdate: { Task { await store.update(row.id) } },
-                            onUninstall: { environment.sounds.play(.uninstall); store.uninstall(row.id) },
-                            onToggleEnabled: { environment.sounds.play(.toggle); store.setEnabled($0, for: row.id) })
+                            onUninstall: {
+                                environment.sounds.play(.uninstall)
+                                store.uninstall(row.id)
+                            },
+                            onToggleEnabled: {
+                                environment.sounds.play(.toggle)
+                                store.setEnabled($0, for: row.id)
+                            })
                     }
                 }
-                .padding(18)
+                .padding(skin.size.s18)
             }
         }
     }
+}
 
-    private var emptyText: String {
-        let trimmedQuery = store.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !trimmedQuery.isEmpty { return "No apps match \"\(trimmedQuery)\"." }
-        switch store.filter {
-        case .all: return "No apps available — check back later."
-        case .installed: return "Nothing installed yet."
-        case .updates: return "Everything is up to date."
-        }
-    }
-
-    private var emptyTitle: String {
-        let trimmedQuery = store.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !trimmedQuery.isEmpty { return "No Matches" }
-        switch store.filter {
-        case .all: return "No Apps"
-        case .installed: return "Nothing Installed"
-        case .updates: return "Up to Date"
-        }
-    }
-
-    private var emptyIcon: String {
-        let trimmedQuery = store.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !trimmedQuery.isEmpty { return "magnifyingglass" }
-        switch store.filter {
-        case .all: return "square.grid.2x2"
-        case .installed: return "shippingbox"
-        case .updates: return "checkmark.seal"
-        }
-    }
-
-    private func errorText(_ e: AppStoreError) -> String {
-        switch e {
-        case .download: return "Download failed."
-        case .checksumMismatch: return "Integrity check failed."
-        case .unpack: return "Could not unpack."
-        case .invalidBundle: return "Invalid app bundle."
-        case .notInstalled(let id): return "\(id) is not available."
-        case .notNewer: return "Already up to date."
-        }
+extension View {
+    /// The tinted notice behind the trust-posture and load-failure banners:
+    /// a chamfered fill and border in `tint`, inset under the filter bar. Local
+    /// because the kit has no notice banner.
+    fileprivate func banner(tint: Color, fill: Double, stroke: Double, skin: AinkradSkin) -> some View {
+        frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, skin.spacing.md).padding(.vertical, skin.size.s10)
+            .background(ChamferShape(cut: skin.radius.sm).fill(tint.opacity(fill)))
+            .overlay(ChamferShape(cut: skin.radius.sm).strokeBorder(tint.opacity(stroke), lineWidth: 1))
+            .padding(.horizontal, skin.size.s18).padding(.bottom, skin.spacing.sm)
     }
 }

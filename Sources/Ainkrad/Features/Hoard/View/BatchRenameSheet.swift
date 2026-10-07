@@ -1,7 +1,7 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitUI
 import AinkradHostRuntime
+import SwiftUI
 
 /// Rename many files at once, with the result visible before anything happens.
 ///
@@ -27,12 +27,14 @@ struct BatchRenameSheet: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.ainkradTypography) private var typo
     @Environment(\.ainkradStatusColors) private var statusColors
+    @Environment(\.ainkradSkin) private var skin
 
-    private var tokens: DesignTokens { environment.themeManager.tokens }
+    private var tokens: AinkradSkin { environment.themeManager.hostSkin }
 
     private var plan: [BatchRenamePlanItem] {
-        batchRenamePlan(entries: entries, mode: mode, find: find, replace: replace,
-                        existingNames: siblings, startNumber: startNumber)
+        batchRenamePlan(
+            entries: entries, mode: mode, find: find, replace: replace,
+            existingNames: siblings, startNumber: startNumber)
     }
 
     var body: some View {
@@ -42,27 +44,24 @@ struct BatchRenameSheet: View {
             preview
             footer
         }
-        .padding(AinkradSpacing.xl)
-        .frame(width: 640)
-        .hudPanelChrome(tokens: tokens)
         .onAppear { fieldFocused = true }
     }
 
     private var header: some View {
         HStack(alignment: .top, spacing: AinkradSpacing.md) {
             Image(systemName: "character.cursor.ibeam")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(tokens.accentSecondary)
-                .frame(width: 26, height: 26)
-                .background(ChamferShape(cut: 5).fill(tokens.accentSecondary.opacity(0.15)))
+                .font(skin.font(AinkradFontToken(sizeKey: "t13", weight: "semibold", scaled: false)))
+                .foregroundStyle(tokens.color(\.accentSecondary))
+                .frame(width: skin.size.s26, height: skin.size.s26)
+                .background(ChamferShape(cut: skin.cut.c5).fill(tokens.color(\.accentSecondary).opacity(skin.opacity.o15)))
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: skin.size.s3) {
                 Text("Rename \(entries.count) Item\(entries.count == 1 ? "" : "s")")
                     .font(AinkradFontResolver.font(.headline, weight: .medium, typography: typo))
-                    .foregroundStyle(tokens.foreground)
+                    .foregroundStyle(tokens.color(\.foreground))
                 Text(entries.first?.url.deletingLastPathComponent().path ?? "")
                     .font(AinkradFontResolver.font(.caption, typography: typo))
-                    .foregroundStyle(tokens.foreground.opacity(0.5))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o50))
                     .lineLimit(1)
                     .truncationMode(.head)
             }
@@ -89,9 +88,11 @@ struct BatchRenameSheet: View {
                     // where the last one stopped.
                     AinkradStepper(value: $startNumber, in: 0...9999)
                 } else {
-                    AinkradTextField(text: $replace,
-                                     placeholder: mode == .addPrefix ? "Prefix" : "Suffix")
-                        .focused($fieldFocused)
+                    AinkradTextField(
+                        text: $replace,
+                        placeholder: mode == .addPrefix ? "Prefix" : "Suffix"
+                    )
+                    .focused($fieldFocused)
                 }
             }
         }
@@ -105,33 +106,35 @@ struct BatchRenameSheet: View {
                 }
             }
         }
-        .frame(height: 220)
-        .background(ChamferShape(cut: 6).fill(tokens.foreground.opacity(0.05)))
+        .frame(height: skin.size.s220)
+        .background(ChamferShape(cut: skin.cut.c6).fill(tokens.color(\.foreground).opacity(skin.opacity.o05)))
     }
 
     private func row(_ item: BatchRenamePlanItem) -> some View {
         HStack(spacing: AinkradSpacing.sm) {
             Text(item.entry.name)
-                .foregroundStyle(tokens.foreground.opacity(0.55))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o55))
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             Image(systemName: "arrow.right")
-                .font(.system(size: 9))
-                .foregroundStyle(tokens.foreground.opacity(0.3))
+                .font(skin.font(AinkradFontToken(sizeKey: "t9", scaled: false)))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o30))
 
             Text(item.problem == nil ? item.newName : (item.problem.map(label) ?? ""))
-                .foregroundStyle(item.problem == nil
-                                 ? tokens.foreground
-                                 : (item.problem == .unchanged
-                                    ? tokens.foreground.opacity(0.35)
-                                    : statusColors.warning))
+                .foregroundStyle(
+                    item.problem == nil
+                        ? tokens.color(\.foreground)
+                        : (item.problem == .unchanged
+                            ? tokens.color(\.foreground).opacity(skin.opacity.o35)
+                            : statusColors.warning)
+                )
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .font(AinkradFontResolver.font(.caption, typography: typo))
         .lineLimit(1)
         .truncationMode(.middle)
         .padding(.horizontal, AinkradSpacing.md)
-        .padding(.vertical, 4)
+        .padding(.vertical, skin.size.s4)
     }
 
     private func label(_ problem: BatchRenamePlanItem.Problem) -> String {
@@ -148,9 +151,10 @@ struct BatchRenameSheet: View {
         return HStack(spacing: AinkradSpacing.sm) {
             Text(summaryText(summary))
                 .font(AinkradFontResolver.font(.caption, typography: typo))
-                .foregroundStyle(summary.blocked > 0
-                                 ? statusColors.warning
-                                 : tokens.foreground.opacity(0.55))
+                .foregroundStyle(
+                    summary.blocked > 0
+                        ? statusColors.warning
+                        : tokens.color(\.foreground).opacity(skin.opacity.o55))
             Spacer()
             AinkradButton(title: "Cancel", style: .ghost, action: onCancel)
             AinkradButton(title: "Rename", style: .primary) { onApply(plan) }

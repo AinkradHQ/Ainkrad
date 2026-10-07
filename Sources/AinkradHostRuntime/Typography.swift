@@ -1,5 +1,6 @@
-import SwiftUI
 import CoreText
+// design-lint: allow-file font-size theme layer — the host font factory; sizes come from its callers
+import SwiftUI
 
 /// Registers the bundled brand fonts (Exo 2, JetBrains Mono — variable
 /// TTFs) for this process. Called once from `AinkradHostApp.init`, before any

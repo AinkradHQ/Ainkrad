@@ -1,8 +1,9 @@
+import AinkradHostRuntime
 // Tests/AinkradTests/AgentSessionAgentPolicyTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("AgentSession agent policy")
 @MainActor

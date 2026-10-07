@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 import Foundation
 import Observation
-import AinkradHostRuntime
 
 /// Its own document rather than a field on `HoardSettingsDocument`: pins are
 /// user data, display settings are preferences, and adding a field to an

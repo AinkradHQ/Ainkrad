@@ -14,9 +14,11 @@ import Foundation
 /// returned live set, so a later resync can't unregister a skill/builtin name
 /// it never actually owned.
 @MainActor
-func resyncCustomCommands(store: CustomCommandStore,
-                          registry: CommandRegistry,
-                          previous: Set<String>) -> Set<String> {
+func resyncCustomCommands(
+    store: CustomCommandStore,
+    registry: CommandRegistry,
+    previous: Set<String>
+) -> Set<String> {
     for name in previous { registry.unregister(name: name) }
     let taken = Set(registry.all().map(\.name))
     var live: Set<String> = []
@@ -41,14 +43,19 @@ final class CustomCommandWatcher {
     private var fd: Int32 = -1
     private var debounceTask: Task<Void, Never>?
 
-    init(directory: URL, debounceInterval: Duration = .milliseconds(200),
-         onChange: @escaping @MainActor () -> Void) {
+    init(
+        directory: URL, debounceInterval: Duration = .milliseconds(200),
+        onChange: @escaping @MainActor () -> Void
+    ) {
         self.directory = directory
         self.debounceInterval = debounceInterval
         self.onChange = onChange
     }
 
-    deinit { debounceTask?.cancel(); source?.cancel() }
+    deinit {
+        debounceTask?.cancel()
+        source?.cancel()
+    }
 
     func start() {
         guard source == nil else { return }
@@ -72,8 +79,10 @@ final class CustomCommandWatcher {
     }
 
     func stop() {
-        debounceTask?.cancel(); debounceTask = nil
-        source?.cancel(); source = nil
+        debounceTask?.cancel()
+        debounceTask = nil
+        source?.cancel()
+        source = nil
     }
 
     func simulateChange() { scheduleReload() }

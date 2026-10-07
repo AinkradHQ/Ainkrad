@@ -11,8 +11,9 @@ enum NaturalLanguageCronCompiler {
 
         // Day-of-week set.
         var dow: Set<Int>?
-        if s.contains("weekday") { dow = [2, 3, 4, 5, 6] }
-        else {
+        if s.contains("weekday") {
+            dow = [2, 3, 4, 5, 6]
+        } else {
             let named = weekdayNames.filter { s.contains($0.key) }.map(\.value)
             if !named.isEmpty { dow = Set(named) }
         }
@@ -27,7 +28,7 @@ enum NaturalLanguageCronCompiler {
             return CronExpression(minutes: [time.minute], hours: [time.hour], daysOfWeek: dow)
         }
         if s.contains("daily") || s.contains("every day") {
-            return CronExpression(minutes: [0], hours: [9], daysOfWeek: dow)   // default 9am
+            return CronExpression(minutes: [0], hours: [9], daysOfWeek: dow)  // default 9am
         }
         if dow != nil {
             return CronExpression(minutes: [0], hours: [9], daysOfWeek: dow)
@@ -39,7 +40,8 @@ enum NaturalLanguageCronCompiler {
     private static func parseTime(_ s: String) -> (hour: Int, minute: Int)? {
         let pattern = #"(\d{1,2})(?::(\d{2}))?\s*(am|pm)?"#
         guard let re = try? NSRegularExpression(pattern: pattern),
-              let m = re.firstMatch(in: s, range: NSRange(s.startIndex..., in: s)) else { return nil }
+            let m = re.firstMatch(in: s, range: NSRange(s.startIndex..., in: s))
+        else { return nil }
         func group(_ i: Int) -> String? {
             guard m.range(at: i).location != NSNotFound, let r = Range(m.range(at: i), in: s) else { return nil }
             return String(s[r])

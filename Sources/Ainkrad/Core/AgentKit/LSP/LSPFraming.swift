@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/LSP/LSPFraming.swift
 import Foundation
-import AinkradHostRuntime
 
 /// Content-Length framing (LSP's wire format, RFC-7230-style header block) —
 /// unlike MCP's newline-delimited JSON, a message is `Content-Length: <N>\r\n\r\n`
@@ -79,7 +79,7 @@ final class LSPFrameParser: @unchecked Sendable {
         for line in header.split(separator: "\r\n", omittingEmptySubsequences: true) {
             let parts = line.split(separator: ":", maxSplits: 1)
             guard parts.count == 2,
-                  String(parts[0]).caseInsensitiveCompare("Content-Length") == .orderedSame
+                String(parts[0]).caseInsensitiveCompare("Content-Length") == .orderedSame
             else { continue }
             let value = parts[1].trimmingCharacters(in: .whitespaces)
             if let length = Int(value), length >= 0 { return length }

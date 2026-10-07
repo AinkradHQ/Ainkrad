@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 @MainActor
 @Observable
@@ -15,12 +15,14 @@ final class SetupCoordinator {
     /// a relaunch resumes owing exactly what the last run recorded.
     private(set) var deferredSteps: Set<SetupStep>
 
-    init(persistence: PersistenceStore,
-         isProvisionalHome: Bool,
-         /// Deliberately re-walking a finished setup from Settings, rather than
-         /// being gated into it. Not the same as an incomplete marker: nothing
-         /// is OWED here, the user simply asked to go through it again.
-         isReplay: Bool = false) {
+    init(
+        persistence: PersistenceStore,
+        isProvisionalHome: Bool,
+        /// Deliberately re-walking a finished setup from Settings, rather than
+        /// being gated into it. Not the same as an incomplete marker: nothing
+        /// is OWED here, the user simply asked to go through it again.
+        isReplay: Bool = false
+    ) {
         let doc = persistence.load(SetupDocument.self) ?? SetupDocument()
         let completedVersion = doc.completedAt == nil ? -1 : doc.setupVersion
         let deferred = Set(doc.deferredSteps.compactMap(SetupStep.init(rawValue:)))
@@ -76,7 +78,8 @@ final class SetupCoordinator {
         // A deferred step keeps setup INCOMPLETE, which is what re-raises the
         // gate at launch. Combined with the step filter above, the gate comes
         // back on that step alone rather than replaying the wizard.
-        self.isComplete = doc.completedAt != nil
+        self.isComplete =
+            doc.completedAt != nil
             && doc.setupVersion >= Self.currentSetupVersion
             && deferred.isEmpty
     }
@@ -130,9 +133,11 @@ final class SetupCoordinator {
     /// true: if a step was deferred, setup is *not* complete, and the next
     /// launch must say so.
     func complete() {
-        persistence.save(SetupDocument(completedAt: Date(),
-                                       setupVersion: Self.currentSetupVersion,
-                                       deferredSteps: deferredSteps.map(\.rawValue).sorted()))
+        persistence.save(
+            SetupDocument(
+                completedAt: Date(),
+                setupVersion: Self.currentSetupVersion,
+                deferredSteps: deferredSteps.map(\.rawValue).sorted()))
         isComplete = deferredSteps.isEmpty
     }
 }

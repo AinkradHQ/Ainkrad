@@ -1,5 +1,5 @@
-import Foundation
 import AinkradAppKit
+import Foundation
 
 /// Moves pre-Home data into a vault using **copy → verify → mark**.
 ///
@@ -60,8 +60,10 @@ enum VaultMigration {
         // A fixture launch must never read, migrate or rename the real legacy tree.
         if debugFixtureRoots != nil { return nil }
         #endif
-        guard let base = FileManager.default
-            .urls(for: .applicationSupportDirectory, in: .userDomainMask).first else { return nil }
+        guard
+            let base = FileManager.default
+                .urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+        else { return nil }
         let bundleID = Bundle.main.bundleIdentifier ?? "com.ainkrad.app"
         return base.appendingPathComponent(bundleID, isDirectory: true)
     }
@@ -86,7 +88,8 @@ enum VaultMigration {
                 case .recursiveDirectory:
                     var isDir: ObjCBool = false
                     guard fm.fileExists(atPath: row.source.path, isDirectory: &isDir),
-                          isDir.boolValue else { return false }
+                        isDir.boolValue
+                    else { return false }
                     return !(((try? fm.contentsOfDirectory(atPath: row.source.path)) ?? []).isEmpty)
                 }
             }
@@ -142,39 +145,51 @@ enum VaultMigration {
         return [
             // The assistant's own documents go to `Sage/`, not `Config/` —
             // the published vault layout, and where the app now reads them.
-            Row(label: "agents.json+connections.json", reportPrefix: "",
+            Row(
+                label: "agents.json+connections.json", reportPrefix: "",
                 source: documents, destination: home.shared(.agents),
                 kind: .jsonFiles(names: assistantJSONNames)),
-            Row(label: "assistant-sessions.json", reportPrefix: "",
+            Row(
+                label: "assistant-sessions.json", reportPrefix: "",
                 source: documents, destination: home.shared(.sessions),
                 kind: .jsonFiles(names: sessionJSONNames)),
-            Row(label: "*.json", reportPrefix: "",
+            Row(
+                label: "*.json", reportPrefix: "",
                 source: documents, destination: home.shared(.config),
                 kind: .jsonFiles(names: nil)),
-            Row(label: "Plugins/", reportPrefix: "Plugins",
+            Row(
+                label: "Plugins/", reportPrefix: "Plugins",
                 source: doc("Plugins"),
                 destination: home.cacheRoot.appendingPathComponent("Plugins", isDirectory: true),
                 kind: .recursiveDirectory),
-            Row(label: "DevPlugins/", reportPrefix: "DevPlugins",
+            Row(
+                label: "DevPlugins/", reportPrefix: "DevPlugins",
                 source: doc("DevPlugins"),
                 destination: home.cacheRoot.appendingPathComponent("DevPlugins", isDirectory: true),
                 kind: .recursiveDirectory),
-            Row(label: "PluginData/", reportPrefix: "PluginData",
+            Row(
+                label: "PluginData/", reportPrefix: "PluginData",
                 source: doc("PluginData"), destination: apps, kind: .recursiveDirectory),
-            Row(label: "RetainedPluginData/", reportPrefix: "RetainedPluginData",
+            Row(
+                label: "RetainedPluginData/", reportPrefix: "RetainedPluginData",
                 source: doc("RetainedPluginData"),
                 destination: apps.appendingPathComponent(".retained", isDirectory: true),
                 kind: .recursiveDirectory),
-            Row(label: "Sounds/", reportPrefix: "Sounds",
+            Row(
+                label: "Sounds/", reportPrefix: "Sounds",
                 source: doc("Sounds"), destination: home.shared(.sounds), kind: .recursiveDirectory),
-            Row(label: "../Skills/", reportPrefix: "Skills",
+            Row(
+                label: "../Skills/", reportPrefix: "Skills",
                 source: sib("Skills"), destination: home.shared(.skills), kind: .recursiveDirectory),
-            Row(label: "../Memory/", reportPrefix: "Memory",
+            Row(
+                label: "../Memory/", reportPrefix: "Memory",
                 source: sib("Memory"), destination: home.shared(.memory), kind: .recursiveDirectory),
-            Row(label: "../Commands/", reportPrefix: "Commands",
+            Row(
+                label: "../Commands/", reportPrefix: "Commands",
                 source: sib("Commands"), destination: home.shared(.commands),
                 kind: .recursiveDirectory),
-            Row(label: "../Shares/", reportPrefix: "Shares",
+            Row(
+                label: "../Shares/", reportPrefix: "Shares",
                 source: sib("Shares"),
                 destination: home.shared(.sessions)
                     .appendingPathComponent("shares", isDirectory: true),
@@ -204,8 +219,10 @@ enum VaultMigration {
             var isDir: ObjCBool = false
             let exists = fm.fileExists(atPath: row.source.path, isDirectory: &isDir) && isDir.boolValue
             guard exists else {
-                results.append(RowResult(row: row.label, destination: row.destination.path,
-                                         present: false, copied: [], skipped: []))
+                results.append(
+                    RowResult(
+                        row: row.label, destination: row.destination.path,
+                        present: false, copied: [], skipped: []))
                 continue
             }
 
@@ -221,13 +238,16 @@ enum VaultMigration {
             // "Present" means the legacy source existed — even if every file in it
             // was skipped. Absent and skipped must stay distinguishable.
             // `Report.legacyDataWasPresent` is derived from these flags.
-            results.append(RowResult(row: row.label, destination: row.destination.path,
-                                     present: true, copied: copied, skipped: skipped))
+            results.append(
+                RowResult(
+                    row: row.label, destination: row.destination.path,
+                    present: true, copied: copied, skipped: skipped))
         }
 
-        return Report(copied: results.flatMap(\.copied),
-                      skipped: results.flatMap(\.skipped),
-                      rows: results)
+        return Report(
+            copied: results.flatMap(\.copied),
+            skipped: results.flatMap(\.skipped),
+            rows: results)
     }
 
     /// Renames the legacy `Documents` to `Documents.migrated` — the marker that
@@ -274,9 +294,12 @@ enum VaultMigration {
     }
 
     /// A `.json` row: top-level JSON documents only, non-recursive.
-    private static func migrateJSONFiles(from source: URL, to destination: URL,
-                                         claimed: Set<String>?)
-        throws -> ([String], [String]) {
+    private static func migrateJSONFiles(
+        from source: URL, to destination: URL,
+        claimed: Set<String>?
+    )
+        throws -> ([String], [String])
+    {
         let fm = FileManager.default
         var copied: [String] = []
         var skipped: [String] = []
@@ -300,15 +323,19 @@ enum VaultMigration {
     /// A directory row: recursive, file-by-file, so an existing destination file is
     /// skipped individually rather than the whole subtree being clobbered or refused.
     private static func migrateDirectory(from source: URL, to destination: URL, prefix: String)
-        throws -> ([String], [String]) {
+        throws -> ([String], [String])
+    {
         let fm = FileManager.default
         var copied: [String] = []
         var skipped: [String] = []
 
         let sourcePath = source.standardizedFileURL.path
-        guard let walker = fm.enumerator(at: source,
-                                         includingPropertiesForKeys: [.isDirectoryKey],
-                                         options: []) else {
+        guard
+            let walker = fm.enumerator(
+                at: source,
+                includingPropertiesForKeys: [.isDirectoryKey],
+                options: [])
+        else {
             throw CocoaError(.fileReadUnknown)
         }
         var files: [(relative: String, url: URL)] = []
@@ -324,7 +351,8 @@ enum VaultMigration {
             var isDir: ObjCBool = false
             _ = fm.fileExists(atPath: path, isDirectory: &isDir)
             // A symlink resolving to a directory is still copied as a link, not walked.
-            let isSymlink = (try? item.resourceValues(forKeys: [.isSymbolicLinkKey]))?
+            let isSymlink =
+                (try? item.resourceValues(forKeys: [.isSymbolicLinkKey]))?
                 .isSymbolicLink ?? false
             if isDir.boolValue && !isSymlink {
                 directories.append(relative)
@@ -335,8 +363,9 @@ enum VaultMigration {
 
         try fm.createDirectory(at: destination, withIntermediateDirectories: true)
         for relative in directories.sorted() {
-            try fm.createDirectory(at: destination.appendingPathComponent(relative, isDirectory: true),
-                                   withIntermediateDirectories: true)
+            try fm.createDirectory(
+                at: destination.appendingPathComponent(relative, isDirectory: true),
+                withIntermediateDirectories: true)
         }
 
         for file in files.sorted(by: { $0.relative < $1.relative }) {
@@ -358,115 +387,18 @@ enum VaultMigration {
         // pre-existing destination file may be truncated or zero-byte and still
         // satisfy this sweep. That is the price of never overwriting what the user
         // already has, and the skip is reported so a caller can act on it.
-        for relative in directories where !entryExists(
-            at: destination.appendingPathComponent(relative, isDirectory: true)) {
+        for relative in directories
+        where !entryExists(
+            at: destination.appendingPathComponent(relative, isDirectory: true))
+        {
             throw CocoaError(.fileWriteUnknown)
         }
-        for file in files where !entryExists(
-            at: destination.appendingPathComponent(file.relative)) {
+        for file in files
+        where !entryExists(
+            at: destination.appendingPathComponent(file.relative))
+        {
             throw CocoaError(.fileWriteUnknown)
         }
         return (copied, skipped)
-    }
-
-    // MARK: - Copy → verify
-
-    /// Copies one file and verifies what landed against what was read. A short
-    /// write — a full disk part-way through — is silent data loss otherwise, so a
-    /// failed verification removes the partial destination and throws. The SOURCE
-    /// is never touched.
-    ///
-    /// `verify` is injectable so a test can exercise the failure branch without
-    /// filling a disk.
-    static func copyVerified(from source: URL, to target: URL,
-                             verify: (URL, URL) throws -> Bool = contentsMatch) throws {
-        let fm = FileManager.default
-        try fm.createDirectory(at: target.deletingLastPathComponent(),
-                               withIntermediateDirectories: true)
-
-        // Everything lands on a scratch path THIS call created, in the target's own
-        // directory (same volume). Cleanup can then only ever remove our own scratch
-        // file — never a pre-existing vault entry — which is true by construction and
-        // does not depend on an earlier "does the target exist?" observation that a
-        // dangling symlink or a concurrent writer could invalidate.
-        let scratch = target.deletingLastPathComponent()
-            .appendingPathComponent(".ainkrad-migrate-\(UUID().uuidString)")
-        func discardScratch() { try? fm.removeItem(at: scratch) }
-
-        do {
-            try fm.copyItem(at: source, to: scratch)
-        } catch {
-            discardScratch()
-            throw error
-        }
-
-        // Symlinks are copied as links; comparing the link targets, not the
-        // (possibly absent) files they point at, is the only meaningful check.
-        let isSymlink = (try? source.resourceValues(forKeys: [.isSymbolicLinkKey]))?
-            .isSymbolicLink ?? false
-        if isSymlink {
-            let a = try? fm.destinationOfSymbolicLink(atPath: source.path)
-            let b = try? fm.destinationOfSymbolicLink(atPath: scratch.path)
-            guard a != nil, a == b else {
-                discardScratch()
-                throw CocoaError(.fileWriteUnknown)
-            }
-        } else {
-            let matched: Bool
-            do {
-                matched = try verify(source, scratch)
-            } catch {
-                discardScratch()
-                throw error
-            }
-            guard matched else {
-                discardScratch()
-                throw CocoaError(.fileWriteUnknown)
-            }
-        }
-
-        // `linkItem` is `link(2)`: it fails with EEXIST if ANYTHING is at `target`
-        // — including a dangling symlink, which `fileExists` reports as absent — and
-        // it never follows or replaces it. That makes "publish only into an empty
-        // slot" atomic rather than a check followed by a hopeful write.
-        do {
-            try fm.linkItem(at: scratch, to: target)
-        } catch {
-            discardScratch()
-            throw error
-        }
-        discardScratch()
-    }
-
-    /// Existence that does not lie about symlinks: `FileManager.fileExists` follows
-    /// links and so reports a DANGLING symlink as absent. `attributesOfItem` is
-    /// `lstat`-shaped — it sees the link itself. Every "is this destination slot
-    /// occupied?" decision in this file must use this, because treating a dangling
-    /// symlink as an empty slot is how a migration ends up destroying a vault entry
-    /// it did not create.
-    static func entryExists(at url: URL) -> Bool {
-        (try? FileManager.default.attributesOfItem(atPath: url.path)) != nil
-    }
-
-    /// Byte-for-byte comparison, streamed in chunks so a large plugin bundle is
-    /// never held in memory twice.
-    static func contentsMatch(_ a: URL, _ b: URL) throws -> Bool {
-        let fm = FileManager.default
-        let sizeA = (try fm.attributesOfItem(atPath: a.path)[.size] as? NSNumber)?.intValue
-        let sizeB = (try fm.attributesOfItem(atPath: b.path)[.size] as? NSNumber)?.intValue
-        guard sizeA == sizeB else { return false }
-
-        let handleA = try FileHandle(forReadingFrom: a)
-        defer { try? handleA.close() }
-        let handleB = try FileHandle(forReadingFrom: b)
-        defer { try? handleB.close() }
-
-        let chunk = 1 << 20
-        while true {
-            let dataA = try handleA.read(upToCount: chunk) ?? Data()
-            let dataB = try handleB.read(upToCount: chunk) ?? Data()
-            guard dataA == dataB else { return false }
-            if dataA.isEmpty { return true }
-        }
     }
 }

@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 import Foundation
 import Observation
-import AinkradHostRuntime
 
 /// Metadata for one on-disk share artifact. The HTML always lives at the
 /// deterministic path `<baseDirectory>/<id>/index.html`, so the absolute
@@ -40,9 +40,11 @@ final class SessionShareStore {
 
     /// `baseDirectory` is required: bootstrap derives it from the resolved `Home`,
     /// tests inject a temp dir. This type never computes a storage path itself.
-    init(persistence: PersistenceStore,
-         baseDirectory: URL,
-         now: @escaping () -> Date = Date.init) {
+    init(
+        persistence: PersistenceStore,
+        baseDirectory: URL,
+        now: @escaping () -> Date = Date.init
+    ) {
         self.persistence = persistence
         self.baseDirectory = baseDirectory
         self.now = now
@@ -67,12 +69,14 @@ final class SessionShareStore {
     func share(messages: [AgentMessage], title: String, redactions: [String]) throws -> SharedSessionRecord {
         let id = UUID()
         let fileURL = SessionShareStore.artifactURL(base: baseDirectory, id: id)
-        try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(),
-                                                withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: fileURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true)
         let html = SessionShareRenderer.render(messages, title: title, redactions: redactions)
         try html.write(to: fileURL, atomically: true, encoding: .utf8)
-        let record = SharedSessionRecord(id: id, title: title, createdAt: now(),
-                                         filePath: fileURL.path)
+        let record = SharedSessionRecord(
+            id: id, title: title, createdAt: now(),
+            filePath: fileURL.path)
         shares.insert(record, at: 0)
         save()
         return record
@@ -81,7 +85,13 @@ final class SessionShareStore {
     func delete(_ id: UUID) {
         guard let idx = shares.firstIndex(where: { $0.id == id }) else { return }
         let dir = baseDirectory.appendingPathComponent(id.uuidString, isDirectory: true)
-        try? FileManager.default.removeItem(at: dir)
+        // The record goes regardless: a share whose folder cannot be removed
+        // is still one the user asked to forget. The failure is logged.
+        do {
+            try FileManager.default.removeItem(at: dir)
+        } catch {
+            Log.app.error("Sage share delete: could not remove the artifact folder: \(error.localizedDescription)")
+        }
         shares.remove(at: idx)
         save()
     }

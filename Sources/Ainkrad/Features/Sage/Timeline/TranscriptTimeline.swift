@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Status of a single timeline step. `.running` == a tool call with no result yet.
 enum StepStatus: Equatable { case running, done, error }
@@ -82,7 +82,10 @@ enum TranscriptTimelineBuilder {
     private static func isPromptBubble(_ message: AgentMessage) -> Bool {
         guard message.role == .user else { return false }
         return message.content.contains {
-            switch $0 { case .text, .image: return true; default: return false }
+            switch $0 {
+            case .text, .image: return true
+            default: return false
+            }
         }
     }
 
@@ -93,10 +96,13 @@ enum TranscriptTimelineBuilder {
 
         func flushTurn() {
             guard let start = turnStartIndex, !currentSteps.isEmpty else {
-                currentSteps = []; turnStartIndex = nil; return
+                currentSteps = []
+                turnStartIndex = nil
+                return
             }
             items.append(.agentTurn(id: "turn-\(start)", steps: currentSteps))
-            currentSteps = []; turnStartIndex = nil
+            currentSteps = []
+            turnStartIndex = nil
         }
 
         for (index, message) in messages.enumerated() {
@@ -110,11 +116,15 @@ enum TranscriptTimelineBuilder {
             for (blockIndex, block) in message.content.enumerated() {
                 switch block {
                 case .thinking(let t):
-                    currentSteps.append(TurnStep(id: "\(index)-\(blockIndex)", kind: .thinking(t),
-                                                 status: .done, duration: nil, tokens: nil))
+                    currentSteps.append(
+                        TurnStep(
+                            id: "\(index)-\(blockIndex)", kind: .thinking(t),
+                            status: .done, duration: nil, tokens: nil))
                 case .text(let t):
-                    currentSteps.append(TurnStep(id: "\(index)-\(blockIndex)", kind: .text(t),
-                                                 status: .done, duration: nil, tokens: nil))
+                    currentSteps.append(
+                        TurnStep(
+                            id: "\(index)-\(blockIndex)", kind: .text(t),
+                            status: .done, duration: nil, tokens: nil))
                 case .toolUse(let id, let name, let input):
                     if name == "present_plan", let plan = PlanArtifact.from(input) {
                         // Keep only the LATEST present_plan in this turn so the node
@@ -122,8 +132,10 @@ enum TranscriptTimelineBuilder {
                         // step, then append. Stable id keeps SwiftUI diffing it as the
                         // same node across revisions.
                         currentSteps.removeAll { if case .plan = $0.kind { return true } else { return false } }
-                        currentSteps.append(TurnStep(id: "plan-\(turnStartIndex ?? index)",
-                            kind: .plan(plan), status: .done, duration: nil, tokens: nil))
+                        currentSteps.append(
+                            TurnStep(
+                                id: "plan-\(turnStartIndex ?? index)",
+                                kind: .plan(plan), status: .done, duration: nil, tokens: nil))
                         break
                     }
                     if name == "todo_write" {
@@ -131,18 +143,22 @@ enum TranscriptTimelineBuilder {
                         // LATEST todo_write in this turn so the node updates in place
                         // rather than stacking. Remove any prior todo step, then append.
                         currentSteps.removeAll { if case .todo = $0.kind { return true } else { return false } }
-                        currentSteps.append(TurnStep(id: "todo-\(turnStartIndex ?? index)",
-                            kind: .todo(TodoItem.list(from: input)),
-                            status: .done, duration: nil, tokens: nil))
+                        currentSteps.append(
+                            TurnStep(
+                                id: "todo-\(turnStartIndex ?? index)",
+                                kind: .todo(TodoItem.list(from: input)),
+                                status: .done, duration: nil, tokens: nil))
                         break
                     }
                     let result = ToolResultLookup.summary(forToolUseID: id, after: index, in: messages)
                     let status: StepStatus = result.isPending ? .running : (result.isError ? .error : .done)
-                    currentSteps.append(TurnStep(id: id,
-                        kind: .tool(ToolStepPayload(toolUseID: id, name: name, input: input, result: result)),
-                        status: status, duration: nil, tokens: nil))
+                    currentSteps.append(
+                        TurnStep(
+                            id: id,
+                            kind: .tool(ToolStepPayload(toolUseID: id, name: name, input: input, result: result)),
+                            status: status, duration: nil, tokens: nil))
                 case .toolResult, .image:
-                    break   // results are folded into their tool step; stray images ignored here
+                    break  // results are folded into their tool step; stray images ignored here
                 }
             }
         }

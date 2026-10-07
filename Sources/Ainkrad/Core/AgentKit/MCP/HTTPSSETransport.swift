@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/MCP/HTTPSSETransport.swift
 import Foundation
-import AinkradHostRuntime
 
 /// Streamable-HTTP/SSE MCP transport for remote servers. HTTPS is enforced at
 /// `start()`. Auth header *values* come from config/SecretStore and are only
@@ -20,10 +20,12 @@ actor HTTPSSETransport: MCPTransport {
     // rejects an actor-isolated conformance for it (see the same note on
     // `StubMCPTransport`/`StdioTransport`). The continuation is therefore
     // stored outside actor isolation in a lock-protected box.
-    private let box = MCPContinuationBox()
+    private let box = MCPSharedContinuationBox()
 
-    init(endpoint: URL, authHeaders: [String: String],
-         http: any StreamingHTTPClient = URLSessionStreamingHTTPClient()) {
+    init(
+        endpoint: URL, authHeaders: [String: String],
+        http: any StreamingHTTPClient = URLSessionStreamingHTTPClient()
+    ) {
         self.endpoint = endpoint
         self.authHeaders = authHeaders
         self.http = http
@@ -125,36 +127,5 @@ private final class RawBodyAccumulator: @unchecked Sendable {
         lock.lock()
         defer { lock.unlock() }
         return String(decoding: data, as: UTF8.self)
-    }
-}
-
-/// Thread-safe holder for an `AsyncThrowingStream` continuation, so a
-/// `nonisolated` protocol requirement (`incoming()`) can hand the
-/// continuation to a `send`/`stop` call made from the actor without crossing
-/// actor isolation for the reference itself. Mirrors `ContinuationBox` in
-/// `MCPTransport.swift` (kept as a separate type here since that one is
-/// file-private to its own conformer).
-private final class MCPContinuationBox: @unchecked Sendable {
-    private let lock = NSLock()
-    private var continuation: AsyncThrowingStream<JSONValue, Error>.Continuation?
-
-    func set(_ continuation: AsyncThrowingStream<JSONValue, Error>.Continuation) {
-        lock.lock()
-        self.continuation = continuation
-        lock.unlock()
-    }
-
-    func yield(_ value: JSONValue) {
-        lock.lock()
-        let c = continuation
-        lock.unlock()
-        c?.yield(value)
-    }
-
-    func finish() {
-        lock.lock()
-        let c = continuation
-        lock.unlock()
-        c?.finish()
     }
 }

@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Pure table-body → rows parser (markdown pipe table or CSV). Unit-tested.
 /// Detects the separator from the body (`|` wins over `,`), then drops a
@@ -19,26 +19,40 @@ enum ScryTableParse {
             return cells
         }
     }
+
+    /// `rows(from:)` split for `AinkradDataTable`: the first row is the
+    /// header, the rest are body rows, and every row is padded with empty
+    /// cells to the widest row so a short row never loses a column.
+    static func table(from body: String) -> (header: [String], rows: [ScryTableRow]) {
+        let parsed = rows(from: body)
+        let width = parsed.map(\.count).max() ?? 0
+        let padded = parsed.map { $0 + Array(repeating: "", count: width - $0.count) }
+        guard let header = padded.first else { return ([], []) }
+        let dataRows = padded.dropFirst().enumerated().map { ScryTableRow(id: $0.offset, cells: $0.element) }
+        return (header, dataRows)
+    }
 }
 
-/// `.table` — a markdown pipe table or CSV body rendered as rows.
+/// One body row of a Scry table, keyed by its position.
+struct ScryTableRow: Identifiable, Equatable {
+    let id: Int
+    let cells: [String]
+}
+
+/// `.table` — a markdown pipe table or CSV body drawn as the kit data table,
+/// its first row the header.
 @MainActor
 struct ScryTableCard: View {
     let element: ScryElement
-    let tokens: DesignTokens
 
     var body: some View {
-        let rows = ScryTableParse.rows(from: element.body)
-        return VStack(alignment: .leading, spacing: 2) {
-            ForEach(Array(rows.enumerated()), id: \.offset) { i, row in
-                HStack(spacing: 10) {
-                    ForEach(Array(row.enumerated()), id: \.offset) { _, cell in
-                        Text(cell).font(AinkradFont.mono(11))
-                            .foregroundStyle(tokens.foreground.opacity(i == 0 ? 0.9 : 0.65))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                }
-            }
+        let table = ScryTableParse.table(from: element.body)
+        if !table.header.isEmpty {
+            AinkradDataTable(
+                rows: table.rows,
+                columns: table.header.indices.map { i in
+                    AinkradTableColumn(id: String(i), title: table.header[i]) { $0.cells[i] }
+                })
         }
     }
 }

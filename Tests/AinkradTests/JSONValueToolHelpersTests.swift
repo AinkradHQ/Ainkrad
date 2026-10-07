@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("JSONValue tool helpers")
 struct JSONValueToolHelpersTests {
@@ -19,7 +20,8 @@ struct JSONValueToolHelpersTests {
     }
 
     @Test func toolEventsAreEquatable() {
-        #expect(AgentEvent.toolUseStart(id: "1", name: "read_file")
+        #expect(
+            AgentEvent.toolUseStart(id: "1", name: "read_file")
                 == AgentEvent.toolUseStart(id: "1", name: "read_file"))
     }
 }

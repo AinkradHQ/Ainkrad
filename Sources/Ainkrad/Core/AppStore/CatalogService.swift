@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Persisted snapshot of the last successfully-fetched catalog (offline fallback).
 struct CatalogCacheDocument: PersistableDocument {
@@ -11,7 +11,7 @@ struct CatalogCacheDocument: PersistableDocument {
 @MainActor
 final class CatalogService {
     // `CatalogSource` is a plain (non-Sendable) protocol; conformers used here
-    // (GitHub-backed source, test stubs) are immutable value types, so a
+    // (`RemoteCatalogSource`, test stubs) are immutable value types, so a
     // stored `let` is safe to hand across the actor boundary for the await.
     private nonisolated(unsafe) let source: CatalogSource
     private let persistence: PersistenceStore

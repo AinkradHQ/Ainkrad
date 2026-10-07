@@ -1,5 +1,5 @@
-import SwiftUI
 import AinkradAppKitUI
+import SwiftUI
 
 /// The ONE declaration of the list's column geometry. The header and the rows
 /// are separate views, so without a shared source they drift — the first cut
@@ -8,8 +8,6 @@ import AinkradAppKitUI
 enum HoardColumnMetrics {
     static let sizeWidth: CGFloat = 80
     static let modifiedWidth: CGFloat = 140
-    /// Gap between the size and modified columns.
-    static let columnGap = AinkradSpacing.lg
 
     /// Horizontal inset that makes the header line up with row CONTENT.
     /// `AinkradListRow` adds `AinkradSpacing.md` inside itself, and the

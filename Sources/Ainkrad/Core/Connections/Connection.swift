@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// How a connection authenticates. `apiKey` uses the Keychain token at `secretID`;
 /// `subscription` uses an OAuth bearer token owned by `OAuthCredentialStore`.
@@ -20,8 +20,10 @@ struct Connection: Codable, Equatable, Identifiable {
     /// Keychain id for this connection's token.
     var secretID: String { "connection.\(id.uuidString)" }
 
-    init(id: UUID, presetID: String, kind: ProviderKind, displayName: String,
-         baseURL: String, createdAt: Date, authMode: AuthMode = .apiKey) {
+    init(
+        id: UUID, presetID: String, kind: ProviderKind, displayName: String,
+        baseURL: String, createdAt: Date, authMode: AuthMode = .apiKey
+    ) {
         self.id = id
         self.presetID = presetID
         self.kind = kind

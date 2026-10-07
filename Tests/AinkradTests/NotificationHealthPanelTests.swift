@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradSignal
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @MainActor
@@ -33,7 +34,8 @@ struct NotificationStatsTests {
         #expect(NotificationStats.Window.day.seconds == 86_400)
         #expect(NotificationStats.Window.week.seconds == 7 * 86_400)
         #expect(NotificationStats.Window.month.seconds == 30 * 86_400)
-        #expect(NotificationStats.Window.allCases.map(\.label)
+        #expect(
+            NotificationStats.Window.allCases.map(\.label)
                 == ["24 hours", "7 days", "30 days"])
     }
 }

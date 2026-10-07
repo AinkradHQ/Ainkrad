@@ -103,7 +103,8 @@ final class TileLayout {
         case nil:
             root = .leaf(block)
         case .leaf(let existing):
-            root = .split(axis: .horizontal, children: [.leaf(existing), .leaf(block)], fractions: Self.equalFractions(2))
+            root = .split(
+                axis: .horizontal, children: [.leaf(existing), .leaf(block)], fractions: Self.equalFractions(2))
         case .split(.horizontal, var children, _):
             children.append(.leaf(block))
             root = .split(axis: .horizontal, children: children, fractions: Self.equalFractions(children.count))
@@ -142,7 +143,8 @@ final class TileLayout {
     func move(_ id: UUID, to targetID: UUID, edge: PaneEdge) {
         guard id != targetID, let root else { return }
         guard let block = blocks.first(where: { $0.id == id }),
-              blocks.contains(where: { $0.id == targetID }) else { return }
+            blocks.contains(where: { $0.id == targetID })
+        else { return }
 
         guard let remaining = Self.removing(id, from: root) else { return }
         guard Self.collectBlocks(remaining).contains(where: { $0.id == targetID }) else { return }
@@ -254,76 +256,6 @@ final class TileLayout {
         focusedBlockID = blocks.first?.id
     }
 
-    // MARK: - Geometry (keyboard navigation & resize)
-
-    /// Unit-space (0…1 × 0…1) frames for every pane, ignoring gaps —
-    /// drives directional focus movement.
-    func paneFrames() -> [UUID: CGRect] {
-        guard let root else { return [:] }
-        var frames: [UUID: CGRect] = [:]
-        Self.collectFrames(root, rect: CGRect(x: 0, y: 0, width: 1, height: 1), into: &frames)
-        return frames
-    }
-
-    /// Moves focus to the nearest pane in the given direction (⌘arrows).
-    func focusNeighbor(_ direction: PaneDirection) {
-        guard let focusedBlockID else { return }
-        let frames = paneFrames()
-        guard let origin = frames[focusedBlockID] else { return }
-
-        var best: (id: UUID, distance: CGFloat)?
-        for (id, frame) in frames where id != focusedBlockID {
-            let isCandidate: Bool
-            switch direction {
-            case .left: isCandidate = frame.midX < origin.midX - 0.001 && overlaps(frame.minY..<frame.maxY, origin.minY..<origin.maxY)
-            case .right: isCandidate = frame.midX > origin.midX + 0.001 && overlaps(frame.minY..<frame.maxY, origin.minY..<origin.maxY)
-            case .up: isCandidate = frame.midY < origin.midY - 0.001 && overlaps(frame.minX..<frame.maxX, origin.minX..<origin.maxX)
-            case .down: isCandidate = frame.midY > origin.midY + 0.001 && overlaps(frame.minX..<frame.maxX, origin.minX..<origin.maxX)
-            }
-            guard isCandidate else { continue }
-            let dx = frame.midX - origin.midX
-            let dy = frame.midY - origin.midY
-            let distance = dx * dx + dy * dy
-            if best == nil || distance < best!.distance {
-                best = (id, distance)
-            }
-        }
-        if let best {
-            self.focusedBlockID = best.id
-        }
-    }
-
-    /// Grows the focused pane toward `direction` by `delta` (⌘⇧arrows):
-    /// finds the nearest ancestor container along that axis where the
-    /// focused subtree has a boundary on that side, and shifts it.
-    func resizeFocused(_ direction: PaneDirection, delta: Double = 0.06) {
-        guard let root, let focusedBlockID else { return }
-        guard let path = Self.pathTo(focusedBlockID, in: root) else { return }
-        let axis: PaneAxis = (direction == .left || direction == .right) ? .horizontal : .vertical
-        let growsTrailing = direction == .right || direction == .down
-
-        for depth in stride(from: path.count - 1, through: 0, by: -1) {
-            let containerPath = Array(path.prefix(depth))
-            let childIndex = path[depth]
-            guard let container = Self.node(at: ArraySlice(containerPath), in: root),
-                  case .split(let containerAxis, let children, let fractions) = container,
-                  containerAxis == axis else { continue }
-
-            let boundaryIndex = growsTrailing ? childIndex : childIndex - 1
-            guard boundaryIndex >= 0, boundaryIndex < children.count - 1 else { continue }
-
-            let cumulative = fractions.prefix(boundaryIndex + 1).reduce(0, +)
-            let newPosition = cumulative + (growsTrailing ? delta : -delta)
-            setBoundary(path: containerPath, after: boundaryIndex, to: newPosition)
-            onStructuralChange?()
-            return
-        }
-    }
-
-    private func overlaps(_ a: Range<CGFloat>, _ b: Range<CGFloat>) -> Bool {
-        a.lowerBound < b.upperBound && b.lowerBound < a.upperBound
-    }
-
     // MARK: - Pure tree operations
 
     private static func equalFractions(_ count: Int) -> [Double] {
@@ -379,7 +311,8 @@ final class TileLayout {
         switch node {
         case .leaf(let existing):
             guard existing.id == targetID else { return node }
-            let pair = edge.insertsFirst
+            let pair =
+                edge.insertsFirst
                 ? [PaneNode.leaf(block), node]
                 : [node, PaneNode.leaf(block)]
             return .split(axis: edge.axis, children: pair, fractions: equalFractions(2))
@@ -388,7 +321,10 @@ final class TileLayout {
             // Parallel drop onto a direct child: join this container as an
             // equal sibling instead of nesting.
             if axis == edge.axis,
-               let targetIndex = children.firstIndex(where: { if case .leaf(let b) = $0 { b.id == targetID } else { false } }) {
+                let targetIndex = children.firstIndex(where: {
+                    if case .leaf(let b) = $0 { b.id == targetID } else { false }
+                })
+            {
                 var newChildren = children
                 newChildren.insert(.leaf(block), at: edge.insertsFirst ? targetIndex : targetIndex + 1)
                 return .split(axis: axis, children: newChildren, fractions: equalFractions(newChildren.count))
@@ -402,7 +338,9 @@ final class TileLayout {
         }
     }
 
-    private static func settingBoundary(path: ArraySlice<Int>, after index: Int, to position: Double, in node: PaneNode) -> PaneNode {
+    private static func settingBoundary(path: ArraySlice<Int>, after index: Int, to position: Double, in node: PaneNode)
+        -> PaneNode
+    {
         guard case .split(let axis, let children, var fractions) = node else { return node }
 
         if let step = path.first {
@@ -487,8 +425,8 @@ extension TileLayout {
     }
 }
 
-private extension PaneNode {
-    func fractionsOrEqual(count: Int) -> [Double] {
+extension PaneNode {
+    fileprivate func fractionsOrEqual(count: Int) -> [Double] {
         if case .split(_, _, let fractions) = self, fractions.count == count {
             return fractions
         }

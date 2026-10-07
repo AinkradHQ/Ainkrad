@@ -1,22 +1,20 @@
-import AppKit
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import AppKit
+import SwiftUI
 
 /// Share flow for `SageRootView` — mirrors `SageRootView+Export.swift`.
 /// Renders a self-contained HTML artifact to disk, reveals it in Finder, and
 /// copies its `file://` link to the clipboard. Reuses the same redaction field.
 extension SageRootView {
     var shareModalContent: some View {
-        let tokens = environment.themeManager.tokens
-
-        return VStack(alignment: .leading, spacing: 12) {
+        return VStack(alignment: .leading, spacing: skin.spacing.md) {
             Text("Share session")
                 .font(AinkradFont.display(14, weight: .semibold))
-                .foregroundStyle(tokens.foreground)
+                .foregroundStyle(theme.foreground)
             Text("Strings to redact, comma-separated (optional)")
                 .font(AinkradFont.display(11))
-                .foregroundStyle(tokens.foreground.opacity(0.6))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o60))
             AinkradTextField(text: $redactionsText, placeholder: "e.g. sk-live-…, jane@example.com")
 
             HStack {

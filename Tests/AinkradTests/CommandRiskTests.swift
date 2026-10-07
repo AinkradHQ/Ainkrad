@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 /// Wave 1-A / Blocker 4: Full-auto's only backstop used to be five substrings
@@ -10,14 +11,15 @@ struct CommandRiskTests {
 
     // MARK: - The bypasses the old substring list missed
 
-    @Test("Splitting the flags no longer hides a recursive force-delete",
-          arguments: [
+    @Test(
+        "Splitting the flags no longer hides a recursive force-delete",
+        arguments: [
             "rm -r -f ~",
             "rm -f -r ~",
-            "rm -fr ~",          // matched the old list only by luck of ordering
+            "rm -fr ~",  // matched the old list only by luck of ordering
             "rm -fR ~",
             "rm -Rf ~",
-          ])
+        ])
     func splitFlagsAreCaught(command: String) {
         #expect(CommandRisk.isIrreversible(command), "not caught: \(command)")
     }
@@ -71,22 +73,23 @@ struct CommandRiskTests {
 
     // MARK: - Ordinary commands must NOT be flagged
 
-    @Test("Everyday commands stay unattended",
-          arguments: [
+    @Test(
+        "Everyday commands stay unattended",
+        arguments: [
             "ls -la",
             "git status",
             "swift build",
-            "echo 'rm -rf is dangerous'",          // quoted mention, not an invocation
+            "echo 'rm -rf is dangerous'",  // quoted mention, not an invocation
             "grep -r 'find' .",
-            "rm build.log",                         // single file, no -r/-f
-            "rm -f build.log",                      // forced, but not recursive
-            "rm -r build",                          // recursive into a build dir, prompts anyway
-            "python3 script.py",                    // interpreter, but nothing piped in
+            "rm build.log",  // single file, no -r/-f
+            "rm -f build.log",  // forced, but not recursive
+            "rm -r build",  // recursive into a build dir, prompts anyway
+            "python3 script.py",  // interpreter, but nothing piped in
             "curl -o out.json https://api.example",  // download without executing
             "diskutil list",
             "chmod +x script.sh",
             "find . -name '*.swift'",
-          ])
+        ])
     func ordinaryCommandsAreNotFlagged(command: String) {
         #expect(!CommandRisk.isIrreversible(command), "false positive: \(command)")
     }

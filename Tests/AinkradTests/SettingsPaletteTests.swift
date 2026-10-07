@@ -1,4 +1,5 @@
 import Testing
+
 @testable import Ainkrad
 
 @Suite("Settings search mode")
@@ -24,7 +25,8 @@ struct SettingsPaletteTests {
         #expect(SettingsSearchMode.browsing.afterSidebarTap() == .browsing)
     }
 
-    @Test("a sidebar tap while the palette is open replaces it with the tapped page — never leaves it inertly on screen")
+    @Test(
+        "a sidebar tap while the palette is open replaces it with the tapped page — never leaves it inertly on screen")
     func sidebarTapFromPalette() {
         #expect(SettingsSearchMode.palette("blur").afterSidebarTap() == .filtering("blur"))
     }

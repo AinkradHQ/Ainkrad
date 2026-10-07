@@ -16,8 +16,10 @@ func filteredEntries(_ entries: [FileEntry], showHidden: Bool) -> [FileEntry] {
 ///
 /// Name and kind comparisons use `localizedStandardCompare`, so `file2`
 /// precedes `file10` the way the Finder orders them. Pure — no I/O.
-func sortedEntries(_ entries: [FileEntry], by key: FileSortKey,
-                   ascending: Bool, directoriesFirst: Bool = true) -> [FileEntry] {
+func sortedEntries(
+    _ entries: [FileEntry], by key: FileSortKey,
+    ascending: Bool, directoriesFirst: Bool = true
+) -> [FileEntry] {
     let ordered = entries.sorted { lhs, rhs in
         switch key {
         case .name:

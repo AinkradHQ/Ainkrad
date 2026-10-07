@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("Focus-Mode tab navigation")
@@ -120,8 +121,10 @@ struct PaneTabNavigationTests {
         let digitCodes: [UInt16] = [18, 19, 20, 21, 23, 22, 26, 28, 25]
         for ordinal in 0..<PaneShortcut.maximum {
             #expect(PaneShortcut.label(forOrdinal: ordinal) != nil)
-            #expect(WorkspaceChord.paneIndex(keyCode: digitCodes[ordinal], command: false,
-                                             option: true, shift: false) == ordinal)
+            #expect(
+                WorkspaceChord.paneIndex(
+                    keyCode: digitCodes[ordinal], command: false,
+                    option: true, shift: false) == ordinal)
         }
     }
 }

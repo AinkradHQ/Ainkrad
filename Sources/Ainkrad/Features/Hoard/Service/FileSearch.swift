@@ -39,7 +39,7 @@ struct SearchQuery: Equatable, Sendable {
 /// more entries than the rest of a project combined.
 private let prunedDirectories: Set<String> = [
     ".git", "node_modules", ".build", "build", "DerivedData",
-    ".next", "dist", "target", "Pods", ".venv", "venv", "__pycache__"
+    ".next", "dist", "target", "Pods", ".venv", "venv", "__pycache__",
 ]
 
 /// Does `name` match `query`?
@@ -59,9 +59,11 @@ func matchesSearch(name: String, query: SearchQuery) -> Bool {
 /// Breadth-first, deliberately: results from the top of the tree are the ones
 /// most likely to be wanted, and they arrive first. A depth-first walk would
 /// spend its budget deep inside the first subtree it happened to enter.
-func searchFiles(root: URL, query: SearchQuery, fileSystem: any FileSystemServing,
-                 isCancelled: () -> Bool = { false },
-                 onBatch: (([SearchHit]) -> Void)? = nil) -> [SearchHit] {
+func searchFiles(
+    root: URL, query: SearchQuery, fileSystem: any FileSystemServing,
+    isCancelled: () -> Bool = { false },
+    onBatch: (([SearchHit]) -> Void)? = nil
+) -> [SearchHit] {
     guard query.matchAll || !query.text.isEmpty else { return [] }
 
     var hits: [SearchHit] = []
@@ -94,10 +96,11 @@ func searchFiles(root: URL, query: SearchQuery, fileSystem: any FileSystemServin
             }
 
             if entry.isDirectory, depth + 1 <= query.maxDepth,
-               !prunedDirectories.contains(entry.name),
-               // Following symlinked directories is how a search finds a cycle
-               // and never returns.
-               !entry.isSymlink {
+                !prunedDirectories.contains(entry.name),
+                // Following symlinked directories is how a search finds a cycle
+                // and never returns.
+                !entry.isSymlink
+            {
                 queue.append((entry.url, depth + 1))
             }
         }

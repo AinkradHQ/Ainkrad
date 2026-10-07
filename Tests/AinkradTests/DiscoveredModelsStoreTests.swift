@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("DiscoveredModelsStore")
 @MainActor
@@ -31,15 +32,16 @@ struct DiscoveredModelsStoreTests {
         let store = DiscoveredModelsStore(persistence: persistence)
         let id = UUID()
         store.setModels(["good"], for: id)
-        store.setModels([], for: id)   // e.g. Ollama's last model was removed
-        #expect(store.models(for: id) == [])   // shows "no models", NOT the stale list or curated
+        store.setModels([], for: id)  // e.g. Ollama's last model was removed
+        #expect(store.models(for: id) == [])  // shows "no models", NOT the stale list or curated
     }
 
     @Test("prune drops entries for connections no longer present")
     func prune() {
         let persistence = InMemoryPersistenceStore()
         let store = DiscoveredModelsStore(persistence: persistence)
-        let keep = UUID(), drop = UUID()
+        let keep = UUID()
+        let drop = UUID()
         store.setModels(["k"], for: keep)
         store.setModels(["d"], for: drop)
         store.prune(keeping: [keep])

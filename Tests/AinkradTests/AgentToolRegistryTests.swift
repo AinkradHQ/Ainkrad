@@ -1,15 +1,18 @@
-import Testing
-@testable import Ainkrad
 import AinkradHostRuntime
+import Testing
+
+@testable import Ainkrad
 
 @MainActor
 private struct EchoTool: AgentTool {
     let name = "echo"
     let description = "echoes its text argument"
     var parametersSchema: JSONValue {
-        .object(["type": .string("object"),
-                 "properties": .object(["text": .object(["type": .string("string")])]),
-                 "required": .array([.string("text")])])
+        .object([
+            "type": .string("object"),
+            "properties": .object(["text": .object(["type": .string("string")])]),
+            "required": .array([.string("text")]),
+        ])
     }
     let permission: ToolPermissionClass = .read
     func execute(_ input: JSONValue) async throws -> ToolResult {

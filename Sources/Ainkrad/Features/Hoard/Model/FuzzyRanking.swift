@@ -46,15 +46,15 @@ func fuzzyScore(_ candidate: String, pattern: String) -> FuzzyResult? {
                 matched.append(candidateIndex)
 
                 if candidateIndex == 0 {
-                    score += 15                      // matches the very start
+                    score += 15  // matches the very start
                 } else if isSeparator(candidateChars[candidateIndex - 1]) {
-                    score += 10                      // start of a word
+                    score += 10  // start of a word
                 } else if isUppercaseBoundary(candidate, at: candidateIndex) {
-                    score += 8                       // camelCase hump
+                    score += 8  // camelCase hump
                 }
 
                 if candidateIndex == previousMatchIndex + 1 {
-                    score += 5                       // consecutive run
+                    score += 5  // consecutive run
                 }
                 // Later matches are weaker: a hit at the end of a long name is
                 // less likely to be what was meant.
@@ -88,10 +88,13 @@ private func isUppercaseBoundary(_ text: String, at index: Int) -> Bool {
 }
 
 /// Ranks `candidates` against `pattern`, best first, dropping non-matches.
-func fuzzyRank<T>(_ candidates: [T], pattern: String,
-                  name: (T) -> String) -> [(item: T, result: FuzzyResult)] {
+func fuzzyRank<T>(
+    _ candidates: [T], pattern: String,
+    name: (T) -> String
+) -> [(item: T, result: FuzzyResult)] {
     guard !pattern.isEmpty else { return candidates.map { ($0, FuzzyResult(score: 0, matchedIndices: [])) } }
-    return candidates
+    return
+        candidates
         .compactMap { candidate -> (item: T, result: FuzzyResult)? in
             guard let result = fuzzyScore(name(candidate), pattern: pattern) else { return nil }
             return (candidate, result)

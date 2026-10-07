@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 // Manual Codable for the block enum — associated values need an explicit
 // discriminator. Mirrors the wire shape loosely but is an internal on-disk
@@ -14,20 +14,25 @@ extension AgentContentBlock: Codable {
         var c = encoder.container(keyedBy: CodingKeys.self)
         switch self {
         case .text(let t):
-            try c.encode(Kind.text, forKey: .kind); try c.encode(t, forKey: .text)
+            try c.encode(Kind.text, forKey: .kind)
+            try c.encode(t, forKey: .text)
         case .thinking(let t):
-            try c.encode(Kind.thinking, forKey: .kind); try c.encode(t, forKey: .text)
+            try c.encode(Kind.thinking, forKey: .kind)
+            try c.encode(t, forKey: .text)
         case .toolUse(let id, let name, let input):
             try c.encode(Kind.toolUse, forKey: .kind)
-            try c.encode(id, forKey: .id); try c.encode(name, forKey: .name)
+            try c.encode(id, forKey: .id)
+            try c.encode(name, forKey: .name)
             try c.encode(input, forKey: .input)
         case .toolResult(let toolUseID, let content, let isError):
             try c.encode(Kind.toolResult, forKey: .kind)
-            try c.encode(toolUseID, forKey: .toolUseID); try c.encode(content, forKey: .content)
+            try c.encode(toolUseID, forKey: .toolUseID)
+            try c.encode(content, forKey: .content)
             try c.encode(isError, forKey: .isError)
         case .image(let mediaType, let base64):
             try c.encode(Kind.image, forKey: .kind)
-            try c.encode(mediaType, forKey: .mediaType); try c.encode(base64, forKey: .base64)
+            try c.encode(mediaType, forKey: .mediaType)
+            try c.encode(base64, forKey: .base64)
         }
     }
 
@@ -39,16 +44,19 @@ extension AgentContentBlock: Codable {
         case .thinking:
             self = .thinking(try c.decode(String.self, forKey: .text))
         case .toolUse:
-            self = .toolUse(id: try c.decode(String.self, forKey: .id),
-                            name: try c.decode(String.self, forKey: .name),
-                            input: try c.decode(JSONValue.self, forKey: .input))
+            self = .toolUse(
+                id: try c.decode(String.self, forKey: .id),
+                name: try c.decode(String.self, forKey: .name),
+                input: try c.decode(JSONValue.self, forKey: .input))
         case .toolResult:
-            self = .toolResult(toolUseID: try c.decode(String.self, forKey: .toolUseID),
-                               content: try c.decode(String.self, forKey: .content),
-                               isError: try c.decode(Bool.self, forKey: .isError))
+            self = .toolResult(
+                toolUseID: try c.decode(String.self, forKey: .toolUseID),
+                content: try c.decode(String.self, forKey: .content),
+                isError: try c.decode(Bool.self, forKey: .isError))
         case .image:
-            self = .image(mediaType: try c.decode(String.self, forKey: .mediaType),
-                          base64: try c.decode(String.self, forKey: .base64))
+            self = .image(
+                mediaType: try c.decode(String.self, forKey: .mediaType),
+                base64: try c.decode(String.self, forKey: .base64))
         }
     }
 }
@@ -62,7 +70,8 @@ extension AgentMessage: Codable {
     }
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        self.init(role: try c.decode(Role.self, forKey: .role),
-                  content: try c.decode([AgentContentBlock].self, forKey: .content))
+        self.init(
+            role: try c.decode(Role.self, forKey: .role),
+            content: try c.decode([AgentContentBlock].self, forKey: .content))
     }
 }

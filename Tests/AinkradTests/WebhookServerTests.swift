@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("WebhookRequestValidator")
 struct WebhookServerTests {
@@ -11,7 +12,10 @@ struct WebhookServerTests {
         let r = WebhookRequestValidator.validate(
             WebhookRequest(endpointID: sid, bearer: "s3cret", body: "{\"ref\":\"main\"}"),
             token: "s3cret", knownEndpoints: [sid])
-        guard case .success(let event) = r else { Issue.record("expected success"); return }
+        guard case .success(let event) = r else {
+            Issue.record("expected success")
+            return
+        }
         #expect(event.scheduleID.uuidString == sid)
         #expect(event.payload.contains("main"))
     }
@@ -67,28 +71,38 @@ struct WebhookServerTests {
 @MainActor
 struct WebhookServerAcceptanceTests {
     final class InstantRunner: AgentRunRunner {
-        func execute(prompt: String, posture: SavedExecutionPosture?, appendLog: @escaping (String) -> Void) async -> AgentRunOutcome { .success("ok") }
+        func execute(prompt: String, posture: SavedExecutionPosture?, appendLog: @escaping (String) -> Void) async
+            -> AgentRunOutcome
+        { .success("ok") }
     }
 
     @Test func authenticatedPostFiresTriggerAndReturns202() async throws {
         let store = ScheduleStore(persistence: InMemoryPersistenceStore())
         let runs = RunManager(persistence: InMemoryPersistenceStore(), runner: InstantRunner())
-        let schedule = AgentSchedule(name: "webhook",
+        let schedule = AgentSchedule(
+            name: "webhook",
             trigger: .fileChange(path: "/repo", glob: "*.swift"),
             prompt: "run tests", posture: SavedExecutionPosture(permissionMode: "ask", sandboxProfileID: nil))
         store.upsert(schedule)
         let dispatcher = TriggerDispatcher(store: store, runs: runs, minInterval: 0)
-        let server = WebhookServer(port: 0, token: "s3cret", dispatcher: dispatcher,
-                                    schedulesProviding: { [schedule.id.uuidString] })
+        let server = WebhookServer(
+            port: 0, token: "s3cret", dispatcher: dispatcher,
+            schedulesProviding: { [schedule.id.uuidString] })
         try server.start()
         defer { server.stop() }
 
         var port: UInt16?
         for _ in 0..<50 {
-            if let p = server.resolvedPort { port = p; break }
+            if let p = server.resolvedPort {
+                port = p
+                break
+            }
             try await Task.sleep(nanoseconds: 20_000_000)
         }
-        guard let port else { Issue.record("listener never became ready"); return }
+        guard let port else {
+            Issue.record("listener never became ready")
+            return
+        }
 
         var request = URLRequest(url: URL(string: "http://127.0.0.1:\(port)/hook/\(schedule.id.uuidString)")!)
         request.httpMethod = "POST"

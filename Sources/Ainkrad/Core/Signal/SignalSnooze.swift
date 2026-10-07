@@ -1,5 +1,5 @@
-import Foundation
 import AinkradSignal
+import Foundation
 
 /// An ad-hoc quiet spell, and the only place its durations are written down.
 ///
@@ -37,8 +37,10 @@ enum SignalSnooze: String, CaseIterable, Identifiable {
 
     /// Writes into the SAME field quiet hours reads, so the two can never
     /// disagree about whether now is quiet.
-    func apply(to suppression: inout SuppressionWindow,
-               at now: Date, calendar: Calendar = .current) {
+    func apply(
+        to suppression: inout SuppressionWindow,
+        at now: Date, calendar: Calendar = .current
+    ) {
         suppression.snoozedUntil = until(after: now, calendar: calendar)
     }
 

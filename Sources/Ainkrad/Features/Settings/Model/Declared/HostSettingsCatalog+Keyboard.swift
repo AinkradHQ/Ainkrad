@@ -1,7 +1,7 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitContract
 import AinkradHostRuntime
+import SwiftUI
 
 /// Keyboard as DECLARED rows. A shortcut row's button shows its keys; clicking
 /// it records the next combination (Esc cancels) through the same
@@ -12,14 +12,16 @@ extension HostSettingsCatalog {
         let store = environment.shortcutStore
         let recorder = environment.settingsDrafts.recorder
         let group = page.appending("shortcuts")
-        var fields = [SettingsField(
-            path: group.appending("reset-all"), label: "Reset shortcuts",
-            help: "Restore every shortcut to its default.",
-            keywords: ["shortcuts", "reset", "defaults"],
-            kind: .action(title: "Reset all") {
-                recorder.stop()
-                store.resetToDefaults()
-            })]
+        var fields = [
+            SettingsField(
+                path: group.appending("reset-all"), label: "Reset shortcuts",
+                help: "Restore every shortcut to its default.",
+                keywords: ["shortcuts", "reset", "defaults"],
+                kind: .action(title: "Reset all") {
+                    recorder.stop()
+                    store.resetToDefaults()
+                })
+        ]
         fields += ShortcutAction.allCases.map { action in
             let recording = recorder.action == action
             return SettingsField(
@@ -31,21 +33,27 @@ extension HostSettingsCatalog {
                 },
                 defaultDescription: action.defaultChord.displayString,
                 isModified: { store.bindings.overrides[action.rawValue] != nil },
-                reset: { recorder.stop(); store.resetToDefault(action) })
+                reset: {
+                    recorder.stop()
+                    store.resetToDefault(action)
+                })
         }
         let system = page.appending("system")
         return [
-            SettingsGroup(path: group, title: "Shortcuts",
-                          footerNote: recorder.conflictMessage
-                              ?? "Click a shortcut, then press a new key combination. Esc cancels.",
-                          fields: fields),
-            SettingsGroup(path: system, title: "System",
-                          footerNote: "Fixed shortcuts for pane and workspace navigation — not customizable yet.",
-                          fields: systemShortcuts.map { name, chord in
-                              SettingsField(path: system.appending(name.lowercased().replacingOccurrences(of: " ", with: "-")),
-                                            label: name, keywords: ["shortcut", "navigation", name.lowercased()],
-                                            kind: .shortcut(.constant(chord)))
-                          }),
+            SettingsGroup(
+                path: group, title: "Shortcuts",
+                footerNote: recorder.conflictMessage
+                    ?? "Click a shortcut, then press a new key combination. Esc cancels.",
+                fields: fields),
+            SettingsGroup(
+                path: system, title: "System",
+                footerNote: "Fixed shortcuts for pane and workspace navigation — not customizable yet.",
+                fields: systemShortcuts.map { name, chord in
+                    SettingsField(
+                        path: system.appending(name.lowercased().replacingOccurrences(of: " ", with: "-")),
+                        label: name, keywords: ["shortcut", "navigation", name.lowercased()],
+                        kind: .shortcut(.constant(chord)))
+                }),
         ]
     }
 

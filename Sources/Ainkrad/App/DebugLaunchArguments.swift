@@ -1,7 +1,7 @@
-import Foundation
-import os
 import AinkradAppKit
 import AinkradHostRuntime
+import Foundation
+import os
 
 /// Key-value argument lookup closure type.
 typealias ArgumentLookup = @Sendable (String) -> String?
@@ -15,7 +15,9 @@ struct DebugFixtureRoots {
 }
 
 /// Parses `-AinkradOpenApp <appID>` and optional `-AinkradOpenAppPayload <payload>` using a key-value lookup.
-func parseDebugOpenAppArguments(_ value: ArgumentLookup = { UserDefaults.standard.string(forKey: $0) }) -> (appID: String, payload: String?)? {
+func parseDebugOpenAppArguments(_ value: ArgumentLookup = { UserDefaults.standard.string(forKey: $0) }) -> (
+    appID: String, payload: String?
+)? {
     guard let rawAppID = value("AinkradOpenApp") else { return nil }
     let appID = rawAppID.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !appID.isEmpty else { return nil }
@@ -48,7 +50,8 @@ func parseDebugGalleryThemeArgument(_ value: ArgumentLookup = { UserDefaults.sta
 
 /// Parses `-AinkradGallerySection <id>` using a key-value lookup.
 /// Returns the section id string, or nil if absent or empty.
-func parseDebugGallerySectionArgument(_ value: ArgumentLookup = { UserDefaults.standard.string(forKey: $0) }) -> String? {
+func parseDebugGallerySectionArgument(_ value: ArgumentLookup = { UserDefaults.standard.string(forKey: $0) }) -> String?
+{
     guard let rawSection = value("AinkradGallerySection") else { return nil }
     let section = rawSection.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !section.isEmpty else { return nil }
@@ -76,7 +79,7 @@ func seedDebugFixtureIfNeeded(home: Home?, lookup: ArgumentLookup = { UserDefaul
 
     let vaultConfigURL = home.vaultRoot.appendingPathComponent("Config", isDirectory: true)
     let persistence = FileDocumentStore(rootURL: vaultConfigURL)
-    
+
     if persistence.load(SetupDocument.self) == nil {
         let setupDoc = SetupDocument(
             completedAt: Date(timeIntervalSince1970: 0),
@@ -167,3 +170,24 @@ func defaultHostCacheRoot(bundleID: String = Bundle.main.bundleIdentifier ?? "co
     #endif
     return AinkradHome.defaultCacheRoot(bundleID: bundleID)
 }
+
+/// The hosted App Store catalog (the central AinkradCatalog). A compile-time-constant
+/// literal, the one force-unwrap S-ERR-1 accepts: `URL(string:)` cannot fail on it.
+let remoteCatalogURL = URL(string: "https://raw.githubusercontent.com/AinkradHQ/AinkradCatalog/main/catalog.json")!  // design-lint: allow force-unwrap compile-time-constant URL literal
+
+/// The App Store catalog location: `<fixture root>/catalog.json` in a DEBUG fixture launch
+/// (no network, identical content in every capture; a missing file just leaves the store
+/// empty/offline), else the hosted catalog.
+func defaultHostCatalogURL() -> URL {
+    #if DEBUG
+    if let roots = debugFixtureRoots { return fixtureCatalogURL(in: roots) }
+    #endif
+    return remoteCatalogURL
+}
+
+#if DEBUG
+/// `catalog.json` beside the fixture's `Pointer/`, `Cache/` and `Vault/`.
+func fixtureCatalogURL(in roots: DebugFixtureRoots) -> URL {
+    roots.cacheRoot.deletingLastPathComponent().appendingPathComponent("catalog.json")
+}
+#endif

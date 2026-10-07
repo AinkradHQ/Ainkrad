@@ -1,5 +1,5 @@
-import Observation
 import AinkradHostRuntime
+import Observation
 
 /// Single source of truth for which apps exist and are enabled. Hybrid: apps
 /// are installed once after `AppEnvironment` exists, mixing compiled-in apps
@@ -31,7 +31,10 @@ final class BuiltInAppRegistry {
         loadFailures = failures
         var byID: [String: RegisteredApp] = [:]
         var order: [String] = []
-        for app in builtIn where byID[app.id] == nil { byID[app.id] = app; order.append(app.id) }
+        for app in builtIn where byID[app.id] == nil {
+            byID[app.id] = app
+            order.append(app.id)
+        }
         for app in loaded {
             if byID[app.id] != nil {
                 Log.registry.error("Plugin id conflict \(app.id, privacy: .public) — built-in wins, plugin skipped")

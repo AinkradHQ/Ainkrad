@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 private struct StubService: TranscriptionService {
     let tag: String
@@ -18,7 +19,9 @@ private struct StubAvail: SpeechRecognizerAvailability {
 @MainActor
 struct TranscriptionBackendSelectorTests {
     private func settings(_ configure: (VoiceSettingsStore) -> Void) -> VoiceSettingsStore {
-        let s = VoiceSettingsStore(persistence: InMemoryPersistenceStore()); configure(s); return s
+        let s = VoiceSettingsStore(persistence: InMemoryPersistenceStore())
+        configure(s)
+        return s
     }
 
     @Test func onDeviceWhenAvailable() throws {
@@ -55,7 +58,10 @@ struct TranscriptionBackendSelectorTests {
 
     @Test func providerSelectedAndOptedIn() throws {
         let sel = TranscriptionBackendSelector(
-            settings: settings { $0.setBackend(.provider); $0.setProviderOptIn(true) },
+            settings: settings {
+                $0.setBackend(.provider)
+                $0.setProviderOptIn(true)
+            },
             onDevice: StubService(tag: "local"),
             providerFactory: { StubService(tag: "cloud") }, availability: StubAvail(ok: true))
         #expect(try sel.resolve().kind == .provider)

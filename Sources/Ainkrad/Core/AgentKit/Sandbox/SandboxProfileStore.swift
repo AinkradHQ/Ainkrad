@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 import Foundation
 import Observation
-import AinkradHostRuntime
 
 /// Decodes one array element of `SandboxProfileDocument.userDefined` without letting a
 /// single malformed profile fail the whole array. `SandboxProfile.init(from:)` (Task 1)
@@ -63,7 +63,7 @@ final class SandboxProfileStore {
     func profile(id: String) -> SandboxProfile? { all().first { $0.id == id } }
 
     func upsert(_ profile: SandboxProfile) {
-        guard !BuiltInSandboxProfiles.reservedIDs.contains(profile.id) else { return } // built-ins immutable
+        guard !BuiltInSandboxProfiles.reservedIDs.contains(profile.id) else { return }  // built-ins immutable
         if let idx = document.userDefined.firstIndex(where: { $0.id == profile.id }) {
             document.userDefined[idx] = profile
         } else {

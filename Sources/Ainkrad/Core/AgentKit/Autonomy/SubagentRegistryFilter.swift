@@ -12,8 +12,10 @@ import Foundation
 /// wasn't already present in the source array — they can only remove tools.
 enum SubagentRegistryFilter {
     @MainActor
-    static func tools(from all: [any AgentTool], allow: [String],
-                      policy: AgentToolPolicy?) -> [any AgentTool] {
+    static func tools(
+        from all: [any AgentTool], allow: [String],
+        policy: AgentToolPolicy?
+    ) -> [any AgentTool] {
         all.filter { tool in
             let allowed = allow.isEmpty || allow.contains(tool.name)
             let byPolicy = policy?.allows(toolName: tool.name, permission: tool.permission) ?? true

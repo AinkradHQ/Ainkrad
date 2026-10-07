@@ -1,6 +1,7 @@
-import Testing
-import Foundation
 import AinkradSignal
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @MainActor
@@ -13,8 +14,9 @@ final class RunManagerSignalTests {
         }
     }
     private struct AwayContext: SignalContextProviding {
-        var deliveryContext = DeliveryContext(hostIsFrontmost: false, visibleAppIDs: [],
-                                              systemDoNotDisturb: false, hostFocusMode: false)
+        var deliveryContext = DeliveryContext(
+            hostIsFrontmost: false, visibleAppIDs: [],
+            systemDoNotDisturb: false, hostFocusMode: false)
     }
 
     @Test("a completed run produces exactly one feed event and one banner")
@@ -23,25 +25,29 @@ final class RunManagerSignalTests {
             .appendingPathComponent("signal-\(UUID().uuidString).sqlite")
         defer { try? FileManager.default.removeItem(at: url) }
         let deliverer = SpyDeliverer()
-        let center = SignalCenter(store: try SignalStore(url: url),
-                                  deliverer: deliverer, contextProvider: AwayContext())
+        let center = SignalCenter(
+            store: try SignalStore(url: url),
+            deliverer: deliverer, contextProvider: AwayContext())
 
-        let run = AgentRun(id: UUID(), prompt: "do the thing", status: .done,
-                           result: "did the thing")
+        let run = AgentRun(
+            id: UUID(), prompt: "do the thing", status: .done,
+            result: "did the thing")
         center.emit(.runCompleted(run), from: .host)
 
         #expect(center.recent.count == 1)
         #expect(center.recent[0].kind == "run.finished")
         #expect(center.recent[0].severity == .success)
         #expect(deliverer.delivered.count == 1)
-        #expect(deliverer.delivered[0].1.contains(.banner),
-                "Signal is the only banner path now; without it the run finishes silently")
+        #expect(
+            deliverer.delivered[0].1.contains(.banner),
+            "Signal is the only banner path now; without it the run finishes silently")
     }
 
     @Test("a failed run maps to failure severity and run.failed")
     func failedRunMapping() {
-        let run = AgentRun(id: UUID(), prompt: "do the thing", status: .failed,
-                           result: "exploded")
+        let run = AgentRun(
+            id: UUID(), prompt: "do the thing", status: .failed,
+            result: "exploded")
         let draft = SignalDraft.runCompleted(run)
         #expect(draft.kind == "run.failed")
         #expect(draft.severity == .failure)

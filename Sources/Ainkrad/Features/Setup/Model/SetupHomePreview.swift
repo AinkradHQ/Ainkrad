@@ -1,5 +1,5 @@
-import Foundation
 import AinkradAppKit
+import Foundation
 
 /// What the Home step shows the user is about to be created inside the folder
 /// they pick.
@@ -51,15 +51,20 @@ struct SetupHomePreview {
     /// `/skills`, `/commands` and `/sessions` are all INSIDE `Sage/`, and
     /// the listing shows top-level folders. `.agents`' copy names them.
     private static func description(of domain: SharedDomain)
-        -> (detail: String, icon: String, order: Int)? {
+        -> (detail: String, icon: String, order: Int)?
+    {
         switch domain {
         case .agents:
-            return ("Your assistant: its agents, its memory, your skills and "
-                        + "commands, and every conversation it has had.",
-                    "bubble.left.and.text.bubble.right", 0)
+            return (
+                "Your assistant: its agents, its memory, your skills and "
+                    + "commands, and every conversation it has had.",
+                "bubble.left.and.text.bubble.right", 0
+            )
         case .config:
-            return ("Your settings, as plain JSON you can read.",
-                    "slider.horizontal.3", 1)
+            return (
+                "Your settings, as plain JSON you can read.",
+                "slider.horizontal.3", 1
+            )
         case .media:
             return ("Images and files you bring into a conversation.", "photo", 3)
         case .sounds:
@@ -81,24 +86,28 @@ struct SetupHomePreview {
     static let entries: [Entry] = {
         var rows = SharedDomain.allCases.compactMap { domain -> Entry? in
             guard let description = description(of: domain) else { return nil }
-            return Entry(name: folderName(for: domain),
-                         detail: description.detail,
-                         icon: description.icon,
-                         order: description.order)
+            return Entry(
+                name: folderName(for: domain),
+                detail: description.detail,
+                icon: description.icon,
+                order: description.order)
         }
         // `Apps/` has no `SharedDomain`; it is `Home.vault(app:)`'s root, so it
         // is named through that accessor rather than as a literal.
-        rows.append(Entry(name: appsFolderName(),
-                          detail: "Whatever the apps you install make — one folder each.",
-                          icon: "square.grid.2x2",
-                          order: 2))
+        rows.append(
+            Entry(
+                name: appsFolderName(),
+                detail: "Whatever the apps you install make — one folder each.",
+                icon: "square.grid.2x2",
+                order: 2))
         return rows.sorted { $0.order < $1.order }
     }()
 
     /// A `Home` rooted somewhere that cannot collide with a real path. Only its
     /// URL arithmetic is used; nothing touches the file system.
-    private static let probeRoot = URL(fileURLWithPath: "/__ainkrad-home-probe",
-                                       isDirectory: true)
+    private static let probeRoot = URL(
+        fileURLWithPath: "/__ainkrad-home-probe",
+        isDirectory: true)
     private static var probe: Home { Home(vaultRoot: probeRoot, cacheRoot: probeRoot) }
 
     private static func firstComponent(of url: URL) -> String {

@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite struct PlanArtifactTests {
     @Test func decodesSummaryAndOrderedSteps() {
@@ -15,9 +16,12 @@ import AinkradHostRuntime
         ])
         let plan = PlanArtifact.from(input)
         #expect(plan?.summary == "Refactor the parser")
-        #expect(plan?.steps == [PlanStep(title: "Read the grammar file"),
-                                PlanStep(title: "Extract the lexer"),
-                                PlanStep(title: "Add tests")])
+        #expect(
+            plan?.steps == [
+                PlanStep(title: "Read the grammar file"),
+                PlanStep(title: "Extract the lexer"),
+                PlanStep(title: "Add tests"),
+            ])
     }
 
     @Test func acceptsBareStringSteps() {
@@ -29,12 +33,14 @@ import AinkradHostRuntime
 
     @Test func skipsBlankStepsAndNilWhenEmpty() {
         #expect(PlanArtifact.from(.object(["steps": .array([])])) == nil)
-        #expect(PlanArtifact.from(.object(["summary": .string("x")])) == nil)   // no steps key
-        let mixed = JSONValue.object(["steps": .array([
-            .object(["title": .string("  ")]),
-            .string("garbage-kept"),
-            .object(["title": .string("keep")]),
-        ])])
+        #expect(PlanArtifact.from(.object(["summary": .string("x")])) == nil)  // no steps key
+        let mixed = JSONValue.object([
+            "steps": .array([
+                .object(["title": .string("  ")]),
+                .string("garbage-kept"),
+                .object(["title": .string("keep")]),
+            ])
+        ])
         #expect(PlanArtifact.from(mixed)?.steps.map(\.title) == ["garbage-kept", "keep"])
     }
 }

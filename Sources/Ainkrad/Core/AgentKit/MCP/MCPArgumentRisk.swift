@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/MCP/MCPArgumentRisk.swift
 import Foundation
-import AinkradHostRuntime
 
 /// Generalizes the host's old git-only `optionLookingValue` check off git, so
 /// the same argument-injection defense applies to every MCP tool, including
@@ -41,7 +41,10 @@ enum MCPArgumentRisk {
     private static func looksLikeCLIOption(_ s: String) -> Bool {
         var rest = Substring(s)
         var dashes = 0
-        while rest.first == "-" { dashes += 1; rest = rest.dropFirst() }
+        while rest.first == "-" {
+            dashes += 1
+            rest = rest.dropFirst()
+        }
         guard dashes == 1 || dashes == 2 else { return false }
         // `isLetter || isNumber` rather than ASCII-only: a non-ASCII option name
         // is unusual but not impossible, and this rule errs toward flagging.

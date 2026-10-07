@@ -78,50 +78,62 @@ extension InverseOperation {
             action: .moveBack(items.map { MovedItem(from: $0.to, to: $0.from) }),
             recordedAt: now,
             affectedURLs: items.map(\.to),
-            redo: RedoSpec(kind: .move, sources: items.map(\.from),
-                           destinationDirectory: items.first?.to.deletingLastPathComponent()))
+            redo: RedoSpec(
+                kind: .move, sources: items.map(\.from),
+                destinationDirectory: items.first?.to.deletingLastPathComponent()))
     }
 
     /// Copy: delete what we created. The sources were never touched.
-    static func forCopy(created: [URL], sources: [URL] = [],
-                        at now: Date = Date()) -> InverseOperation {
+    static func forCopy(
+        created: [URL], sources: [URL] = [],
+        at now: Date = Date()
+    ) -> InverseOperation {
         InverseOperation(
             label: itemLabel("Copy", created.count),
             action: .delete(created),
             recordedAt: now,
             affectedURLs: created,
-            redo: sources.isEmpty ? nil : RedoSpec(
-                kind: .copy, sources: sources,
-                destinationDirectory: created.first?.deletingLastPathComponent()))
+            redo: sources.isEmpty
+                ? nil
+                : RedoSpec(
+                    kind: .copy, sources: sources,
+                    destinationDirectory: created.first?.deletingLastPathComponent()))
     }
 
     /// Overwrite: the displaced file was trashed BEFORE the write, so undo
     /// removes the new file and restores the old one — in that order, since
     /// restoring first would collide with the file still occupying the path.
-    static func forOverwrite(created: [URL], overwritten: [TrashedItem],
-                             sources: [URL] = [], at now: Date = Date()) -> InverseOperation {
+    static func forOverwrite(
+        created: [URL], overwritten: [TrashedItem],
+        sources: [URL] = [], at now: Date = Date()
+    ) -> InverseOperation {
         InverseOperation(
             label: itemLabel("Replace", created.count),
             action: .composite([.delete(created), .restoreFromTrash(overwritten)]),
             recordedAt: now,
             affectedURLs: created,
-            redo: sources.isEmpty ? nil : RedoSpec(
-                kind: .copy, sources: sources,
-                destinationDirectory: created.first?.deletingLastPathComponent(),
-                policy: .replace))
+            redo: sources.isEmpty
+                ? nil
+                : RedoSpec(
+                    kind: .copy, sources: sources,
+                    destinationDirectory: created.first?.deletingLastPathComponent(),
+                    policy: .replace))
     }
 
     /// Cross-volume move: implemented as copy-then-trash-source, so the
     /// inverse is delete-the-copies plus restore-the-sources.
-    static func forCrossVolumeMove(created: [URL], trashedSources: [TrashedItem],
-                                   at now: Date = Date()) -> InverseOperation {
+    static func forCrossVolumeMove(
+        created: [URL], trashedSources: [TrashedItem],
+        at now: Date = Date()
+    ) -> InverseOperation {
         InverseOperation(
             label: itemLabel("Move", created.count),
             action: .composite([.delete(created), .restoreFromTrash(trashedSources)]),
             recordedAt: now,
             affectedURLs: created,
-            redo: RedoSpec(kind: .move, sources: trashedSources.map(\.original),
-                           destinationDirectory: created.first?.deletingLastPathComponent()))
+            redo: RedoSpec(
+                kind: .move, sources: trashedSources.map(\.original),
+                destinationDirectory: created.first?.deletingLastPathComponent()))
     }
 
     static func forTrash(items: [TrashedItem], at now: Date = Date()) -> InverseOperation {
@@ -130,19 +142,23 @@ extension InverseOperation {
             action: .restoreFromTrash(items),
             recordedAt: now,
             affectedURLs: items.map(\.original),
-            redo: RedoSpec(kind: .trash, sources: items.map(\.original),
-                           destinationDirectory: nil))
+            redo: RedoSpec(
+                kind: .trash, sources: items.map(\.original),
+                destinationDirectory: nil))
     }
 
-    static func forRename(from original: URL, to renamed: URL,
-                          at now: Date = Date()) -> InverseOperation {
+    static func forRename(
+        from original: URL, to renamed: URL,
+        at now: Date = Date()
+    ) -> InverseOperation {
         InverseOperation(
             label: "Rename",
             action: .moveBack([MovedItem(from: renamed, to: original)]),
             recordedAt: now,
             affectedURLs: [renamed],
-            redo: RedoSpec(kind: .rename, sources: [original], destinationDirectory: nil,
-                           name: renamed.lastPathComponent))
+            redo: RedoSpec(
+                kind: .rename, sources: [original], destinationDirectory: nil,
+                name: renamed.lastPathComponent))
     }
 
     /// A whole batch rename as ONE entry, so ⌘Z puts every name back at once.
@@ -157,34 +173,41 @@ extension InverseOperation {
             action: .moveBack(items.map { MovedItem(from: $0.to, to: $0.from) }),
             recordedAt: now,
             affectedURLs: items.map(\.to),
-            redo: RedoSpec(kind: .batchRename, sources: items.map(\.from),
-                           destinationDirectory: nil, name: nil,
-                           names: items.map { $0.to.lastPathComponent }))
+            redo: RedoSpec(
+                kind: .batchRename, sources: items.map(\.from),
+                destinationDirectory: nil, name: nil,
+                names: items.map { $0.to.lastPathComponent }))
     }
 
     /// Archive create and extract share an inverse: delete what was produced.
     /// The inputs are untouched by either, so nothing needs restoring.
-    static func forArchive(created: [URL], sources: [URL], name: String,
-                           at now: Date = Date()) -> InverseOperation {
+    static func forArchive(
+        created: [URL], sources: [URL], name: String,
+        at now: Date = Date()
+    ) -> InverseOperation {
         InverseOperation(
             label: itemLabel("Compress", sources.count),
             action: .delete(created),
             recordedAt: now,
             affectedURLs: created,
-            redo: RedoSpec(kind: .archive, sources: sources,
-                           destinationDirectory: created.first?.deletingLastPathComponent(),
-                           name: name))
+            redo: RedoSpec(
+                kind: .archive, sources: sources,
+                destinationDirectory: created.first?.deletingLastPathComponent(),
+                name: name))
     }
 
-    static func forExtract(created: [URL], archives: [URL],
-                           into directory: URL, at now: Date = Date()) -> InverseOperation {
+    static func forExtract(
+        created: [URL], archives: [URL],
+        into directory: URL, at now: Date = Date()
+    ) -> InverseOperation {
         InverseOperation(
             label: itemLabel("Extract", archives.count),
             action: .delete(created),
             recordedAt: now,
             affectedURLs: created,
-            redo: RedoSpec(kind: .extract, sources: archives,
-                           destinationDirectory: directory))
+            redo: RedoSpec(
+                kind: .extract, sources: archives,
+                destinationDirectory: directory))
     }
 
     static func forCreateFolder(at url: URL, now: Date = Date()) -> InverseOperation {
@@ -193,8 +216,9 @@ extension InverseOperation {
             action: .delete([url]),
             recordedAt: now,
             affectedURLs: [url],
-            redo: RedoSpec(kind: .createFolder, sources: [],
-                           destinationDirectory: url.deletingLastPathComponent(),
-                           name: url.lastPathComponent))
+            redo: RedoSpec(
+                kind: .createFolder, sources: [],
+                destinationDirectory: url.deletingLastPathComponent(),
+                name: url.lastPathComponent))
     }
 }

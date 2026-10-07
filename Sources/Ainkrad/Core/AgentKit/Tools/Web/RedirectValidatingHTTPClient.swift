@@ -7,6 +7,7 @@ import Foundation
 /// the outbound request to an internal host is never dispatched. Closes the
 /// auto-redirect SSRF vector that the boundary check on the initial URL alone
 /// cannot (URLSession.shared auto-follows redirects with no per-hop check).
+/// `@unchecked Sendable`: the only stored property, `session`, is written once in `init` (see below).
 final class RedirectValidatingHTTPClient: NSObject, DataHTTPClient, URLSessionTaskDelegate, @unchecked Sendable {
     // Written exactly once in `init` (before any concurrent `data(for:)` call),
     // read-only thereafter — so `nonisolated(unsafe)` is sound and avoids the
@@ -26,14 +27,16 @@ final class RedirectValidatingHTTPClient: NSObject, DataHTTPClient, URLSessionTa
         return (data, http)
     }
 
-    func urlSession(_ session: URLSession, task: URLSessionTask,
-                    willPerformHTTPRedirection response: HTTPURLResponse,
-                    newRequest request: URLRequest,
-                    completionHandler: @escaping (URLRequest?) -> Void) {
+    func urlSession(
+        _ session: URLSession, task: URLSessionTask,
+        willPerformHTTPRedirection response: HTTPURLResponse,
+        newRequest request: URLRequest,
+        completionHandler: @escaping (URLRequest?) -> Void
+    ) {
         if let url = request.url, Self.isSafeRedirectTarget(url) {
-            completionHandler(request)   // public http(s) target — follow, re-validated
+            completionHandler(request)  // public http(s) target — follow, re-validated
         } else {
-            completionHandler(nil)       // unsafe target — stop; 3xx flows back, tool rejects non-2xx
+            completionHandler(nil)  // unsafe target — stop; 3xx flows back, tool rejects non-2xx
         }
     }
 

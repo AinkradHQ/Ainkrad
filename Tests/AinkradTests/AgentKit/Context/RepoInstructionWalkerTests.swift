@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite struct RepoInstructionWalkerTests {
@@ -25,7 +26,7 @@ import Foundation
     }
 
     @Test func respectsMaxDepth() throws {
-        let start = try makeTree() // file is one level above `start`
+        let start = try makeTree()  // file is one level above `start`
         #expect(RepoInstructionWalker.instructionFiles(startingAt: start, maxDepth: 1).isEmpty)
     }
 
@@ -34,7 +35,8 @@ import Foundation
         let repo = base.appendingPathComponent("repo")
         let src = repo.appendingPathComponent("src")
         try FileManager.default.createDirectory(at: src, withIntermediateDirectories: true)
-        try FileManager.default.createDirectory(at: repo.appendingPathComponent(".git"), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: repo.appendingPathComponent(".git"), withIntermediateDirectories: true)
         // instruction files at BOTH the repo root and ABOVE it (in base):
         try Data("repo rules".utf8).write(to: repo.appendingPathComponent("CLAUDE.md"))
         try Data("outside rules".utf8).write(to: base.appendingPathComponent("CLAUDE.md"))
@@ -49,7 +51,7 @@ import Foundation
         let base = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         let repo = base.appendingPathComponent("repo")
         try FileManager.default.createDirectory(at: repo, withIntermediateDirectories: true)
-        try Data("gitdir: /elsewhere".utf8).write(to: repo.appendingPathComponent(".git"))   // worktree-style .git FILE
+        try Data("gitdir: /elsewhere".utf8).write(to: repo.appendingPathComponent(".git"))  // worktree-style .git FILE
         try Data("repo rules".utf8).write(to: repo.appendingPathComponent("CLAUDE.md"))
         try Data("outside".utf8).write(to: base.appendingPathComponent("CLAUDE.md"))
         defer { try? FileManager.default.removeItem(at: base) }

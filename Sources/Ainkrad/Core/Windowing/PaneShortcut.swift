@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// The ⌥1-9 pane shortcuts, in one place so the key handler
 /// (`WorkspaceChord.paneIndex`), the tab strip's chip and the floating badge all
@@ -29,44 +29,50 @@ enum PaneShortcut {
 struct PaneShortcutBadge: View {
     let title: String
     let shortcut: String?
-    let tokens: DesignTokens
+
+    @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradSkin) private var skin
+
+    /// Colours come from `hostSkin`, which carries the user's custom accent;
+    /// every scalar comes from the environment's skin.
+    private var tokens: AinkradSkin { environment.themeManager.hostSkin }
 
     var body: some View {
-        HStack(spacing: AinkradSpacing.sm) {
+        HStack(spacing: skin.spacing.sm) {
             if let shortcut {
                 Text(shortcut)
                     .font(AinkradFont.mono(12, weight: .semibold))
-                    .foregroundStyle(tokens.accentSecondary)
+                    .foregroundStyle(tokens.color(\.accentSecondary))
                     .lineLimit(1)
                     .fixedSize()
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
+                    .padding(.horizontal, skin.size.s6)
+                    .padding(.vertical, skin.size.s2)
                     .background(
-                        ChamferShape(cut: 4).fill(tokens.accentSecondary.opacity(0.16))
+                        ChamferShape(cut: skin.cut.c4).fill(tokens.color(\.accentSecondary).opacity(skin.opacity.o16))
                     )
                     .overlay(
-                        ChamferShape(cut: 4)
-                            .strokeBorder(tokens.accentSecondary.opacity(0.45), lineWidth: 1)
+                        ChamferShape(cut: skin.cut.c4)
+                            .strokeBorder(tokens.color(\.accentSecondary).opacity(skin.opacity.o45), lineWidth: 1)
                     )
             }
 
             Text(title)
                 .font(AinkradFont.display(12, weight: .medium))
                 .kerning(0.4)
-                .foregroundStyle(tokens.foreground.opacity(0.9))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o90))
                 .lineLimit(1)
                 .truncationMode(.middle)
         }
-        .padding(.horizontal, AinkradSpacing.md)
-        .padding(.vertical, AinkradSpacing.sm)
+        .padding(.horizontal, skin.spacing.md)
+        .padding(.vertical, skin.spacing.sm)
         .background(
-            ChamferShape(cut: AinkradRadius.sm).fill(tokens.surfaceElevated.opacity(0.92))
+            ChamferShape(cut: skin.radius.sm).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o92))
         )
         .overlay(
-            ChamferShape(cut: AinkradRadius.sm)
-                .strokeBorder(tokens.accentPrimary.opacity(0.35), lineWidth: 1)
+            ChamferShape(cut: skin.radius.sm)
+                .strokeBorder(tokens.color(\.accentPrimary).opacity(skin.opacity.o35), lineWidth: 1)
         )
-        .shadow(color: .black.opacity(0.35), radius: 12, y: 4)
+        .shadow(color: skin.color(.palette("black", skin.opacity.o35)), radius: skin.size.s12, y: 4)
         // Never intercepts anything: it floats over the app's content, and a
         // transient badge that swallowed a click into the terminal underneath
         // would be a bug that only shows up under time pressure.

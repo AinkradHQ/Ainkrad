@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 import Foundation
 import Observation
-import AinkradHostRuntime
 
 enum RemoteChannelStatus: Equatable { case off, needsToken, listening, stopped }
 
@@ -17,8 +17,10 @@ final class RemoteChannelService {
     private let runs: RunManager
     private var server: WebhookServer?
 
-    init(settingsStore: RemoteChannelSettingsStore, scheduleStore: ScheduleStore,
-         dispatcher: TriggerDispatcher, runs: RunManager) {
+    init(
+        settingsStore: RemoteChannelSettingsStore, scheduleStore: ScheduleStore,
+        dispatcher: TriggerDispatcher, runs: RunManager
+    ) {
         self.settingsStore = settingsStore
         self.scheduleStore = scheduleStore
         self.dispatcher = dispatcher
@@ -32,14 +34,18 @@ final class RemoteChannelService {
     }
 
     var status: RemoteChannelStatus {
-        Self.status(enabled: settingsStore.settings.enabled,
-                    hasToken: settingsStore.token != nil, running: isRunning)
+        Self.status(
+            enabled: settingsStore.settings.enabled,
+            hasToken: settingsStore.token != nil, running: isRunning)
     }
 
     /// Idempotent: called on launch and whenever settings change.
     func applyEnabledState() {
         let s = settingsStore.settings
-        guard s.enabled, let token = settingsStore.token, !token.isEmpty else { stop(); return }
+        guard s.enabled, let token = settingsStore.token, !token.isEmpty else {
+            stop()
+            return
+        }
 
         let schedule = RemoteChannelProvisioner.ensureChannelSchedule(
             in: scheduleStore, existing: s.channelScheduleID)
@@ -47,12 +53,13 @@ final class RemoteChannelService {
 
         stop()
         let channelID = schedule.id.uuidString
-        let server = WebhookServer(port: s.port, token: token, dispatcher: dispatcher,
-                                   schedulesProviding: { [channelID] },
-                                   resultProviding: { [weak self] id in
-                                       guard let self else { return "{\"status\":\"unknown\"}" }
-                                       return RemoteReplyResolver.body(forRunID: id, in: self.runs)
-                                   })
+        let server = WebhookServer(
+            port: s.port, token: token, dispatcher: dispatcher,
+            schedulesProviding: { [channelID] },
+            resultProviding: { [weak self] id in
+                guard let self else { return "{\"status\":\"unknown\"}" }
+                return RemoteReplyResolver.body(forRunID: id, in: self.runs)
+            })
         do {
             try server.start()
             self.server = server
@@ -63,5 +70,9 @@ final class RemoteChannelService {
         }
     }
 
-    func stop() { server?.stop(); server = nil; isRunning = false }
+    func stop() {
+        server?.stop()
+        server = nil
+        isRunning = false
+    }
 }

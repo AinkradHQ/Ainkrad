@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// The Plan persona's turn-ending tool. It emits a structured plan for the user
 /// to approve; it touches NO files or system state, so it is `.memory`-class —
@@ -15,28 +15,32 @@ import AinkradHostRuntime
 struct PresentPlanTool: AgentTool {
     let name = "present_plan"
     let description = """
-    Present a structured, ordered plan for the user to approve before any files \
-    are changed. Call this ONCE when your investigation is complete, with the \
-    FULL plan: a short `summary` and an ordered `steps` array (each step an \
-    object with a `title`). This tool changes nothing — after calling it, STOP \
-    and wait for the user to Approve & Build or ask for changes.
-    """
+        Present a structured, ordered plan for the user to approve before any files \
+        are changed. Call this ONCE when your investigation is complete, with the \
+        FULL plan: a short `summary` and an ordered `steps` array (each step an \
+        object with a `title`). This tool changes nothing — after calling it, STOP \
+        and wait for the user to Approve & Build or ask for changes.
+        """
     let permission: ToolPermissionClass = .memory
 
     var parametersSchema: JSONValue {
         .object([
             "type": .string("object"),
             "properties": .object([
-                "summary": .object(["type": .string("string"),
-                                    "description": .string("One or two sentences on the overall approach.")]),
+                "summary": .object([
+                    "type": .string("string"),
+                    "description": .string("One or two sentences on the overall approach."),
+                ]),
                 "steps": .object([
                     "type": .string("array"),
                     "description": .string("The complete ordered list of steps to implement."),
                     "items": .object([
                         "type": .string("object"),
                         "properties": .object([
-                            "title": .object(["type": .string("string"),
-                                              "description": .string("Short imperative step description.")]),
+                            "title": .object([
+                                "type": .string("string"),
+                                "description": .string("Short imperative step description."),
+                            ])
                         ]),
                         "required": .array([.string("title")]),
                     ]),
@@ -58,7 +62,7 @@ struct PresentPlanTool: AgentTool {
         let body = lines.joined(separator: "\n")
         return ToolResult(
             content: "Plan presented to the user for approval. Do NOT take further action or call more "
-                   + "tools — stop and wait for the user to Approve & Build or ask for changes.\n\n" + body,
+                + "tools — stop and wait for the user to Approve & Build or ask for changes.\n\n" + body,
             isError: false)
     }
 }

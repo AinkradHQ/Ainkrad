@@ -1,11 +1,12 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// fal.ai text-to-video backend (queue API). Key in the Keychain via SecretStore.
 /// Submits to the queue, polls the status URL until `COMPLETED`, then fetches the
 /// response URL and extracts the video link. Parsing is isolated for unit tests.
 struct FalVideoBackend: VideoBackend {
     static let secretID = "media.fal.apiKey"
+    // `nonisolated(unsafe)`: an immutable `let`; `KeychainSecretStore` keeps no mutable state and Keychain calls are thread-safe.
     nonisolated(unsafe) let secrets: SecretStore
     let http: DataHTTPClient
     /// The fal model id to run, e.g. `fal-ai/ltx-video`.
@@ -51,7 +52,8 @@ struct FalVideoBackend: VideoBackend {
         responseReq.setValue("Key \(key)", forHTTPHeaderField: "Authorization")
         let (responseData, _) = try await http.data(for: responseReq)
         guard let videoURLString = Self.videoURL(in: responseData),
-              let videoURL = URL(string: videoURLString) else {
+            let videoURL = URL(string: videoURLString)
+        else {
             throw ToolError.message("fal response contained no video URL.")
         }
         // 4. Download.
@@ -66,8 +68,9 @@ struct FalVideoBackend: VideoBackend {
 
     static func queueURLs(in data: Data) -> (statusURL: String, responseURL: String)? {
         guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let status = root["status_url"] as? String,
-              let response = root["response_url"] as? String else { return nil }
+            let status = root["status_url"] as? String,
+            let response = root["response_url"] as? String
+        else { return nil }
         return (status, response)
     }
 
@@ -75,7 +78,7 @@ struct FalVideoBackend: VideoBackend {
     static func pollStatus(in data: Data) throws -> VideoJobPolling.Status {
         guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return .pending }
         switch root["status"] as? String {
-        case "COMPLETED": return .done("ready") // sentinel; response URL fetched separately
+        case "COMPLETED": return .done("ready")  // sentinel; response URL fetched separately
         case "FAILED", "ERROR": throw ToolError.message("fal generation failed.")
         default: return .pending
         }

@@ -1,51 +1,59 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("FailoverController")
 struct FailoverControllerTests {
     @Test func rateLimitRotatesKeyFirst() {
-        let n = FailoverController.nextAttempt(models: ["a", "b"], keys: ["k1", "k2"],
+        let n = FailoverController.nextAttempt(
+            models: ["a", "b"], keys: ["k1", "k2"],
             failedModel: "a", failedKeyIndex: 0, errorKind: .rateLimit)
         #expect(n?.model == "a")
         #expect(n?.keyIndex == 1)
     }
 
     @Test func advancesModelAfterKeysExhausted() {
-        let n = FailoverController.nextAttempt(models: ["a", "b"], keys: ["k1", "k2"],
+        let n = FailoverController.nextAttempt(
+            models: ["a", "b"], keys: ["k1", "k2"],
             failedModel: "a", failedKeyIndex: 1, errorKind: .rateLimit)
         #expect(n?.model == "b")
         #expect(n?.keyIndex == 0)
     }
 
     @Test func providerErrorAdvancesModel() {
-        let n = FailoverController.nextAttempt(models: ["a", "b"], keys: ["k1"],
+        let n = FailoverController.nextAttempt(
+            models: ["a", "b"], keys: ["k1"],
             failedModel: "a", failedKeyIndex: 0, errorKind: .providerError)
         #expect(n?.model == "b")
     }
 
     @Test func exhaustionReturnsNil() {
-        let n = FailoverController.nextAttempt(models: ["a"], keys: ["k1"],
+        let n = FailoverController.nextAttempt(
+            models: ["a"], keys: ["k1"],
             failedModel: "a", failedKeyIndex: 0, errorKind: .providerError)
         #expect(n == nil)
     }
 
     @Test func quotaAlsoRotatesKeyFirst() {
-        let n = FailoverController.nextAttempt(models: ["a"], keys: ["k1", "k2"],
+        let n = FailoverController.nextAttempt(
+            models: ["a"], keys: ["k1", "k2"],
             failedModel: "a", failedKeyIndex: 0, errorKind: .quota)
         #expect(n?.model == "a")
         #expect(n?.keyIndex == 1)
     }
 
     @Test func authErrorAdvancesModelRatherThanRotatingKey() {
-        let n = FailoverController.nextAttempt(models: ["a", "b"], keys: ["k1", "k2"],
+        let n = FailoverController.nextAttempt(
+            models: ["a", "b"], keys: ["k1", "k2"],
             failedModel: "a", failedKeyIndex: 0, errorKind: .auth)
         #expect(n?.model == "b")
         #expect(n?.keyIndex == 0)
     }
 
     @Test func noPriorFailureStartsAtFirstCandidate() {
-        let n = FailoverController.nextAttempt(models: ["a", "b"], keys: ["k1"],
+        let n = FailoverController.nextAttempt(
+            models: ["a", "b"], keys: ["k1"],
             failedModel: nil, failedKeyIndex: nil, errorKind: .providerError)
         #expect(n?.model == "a")
         #expect(n?.keyIndex == 0)
@@ -63,11 +71,13 @@ struct FailoverControllerTests {
         let maxSteps = models.count * keys.count + 1
 
         while steps < maxSteps {
-            guard let next = FailoverController.nextAttempt(
-                models: models, keys: keys,
-                failedModel: failedModel, failedKeyIndex: failedKeyIndex,
-                errorKind: .rateLimit
-            ) else { break }
+            guard
+                let next = FailoverController.nextAttempt(
+                    models: models, keys: keys,
+                    failedModel: failedModel, failedKeyIndex: failedKeyIndex,
+                    errorKind: .rateLimit
+                )
+            else { break }
             failedModel = next.model
             failedKeyIndex = next.keyIndex
             steps += 1
@@ -86,7 +96,8 @@ struct FailoverControllerTests {
         let keys = ["k1"]
         var attempts: [(model: String, keyIndex: Int)] = []
 
-        let result = await FailoverController.run(models: models, keys: keys) { model, keyIndex -> FailoverController.SendOutcome<String> in
+        let result = await FailoverController.run(models: models, keys: keys) {
+            model, keyIndex -> FailoverController.SendOutcome<String> in
             attempts.append((model, keyIndex))
             if model == "c" {
                 return .success("ok from \(model)")
@@ -133,7 +144,8 @@ struct FailoverControllerTests {
         let keys = ["k1", "k2"]
         var tries = 0
 
-        let result = await FailoverController.run(models: models, keys: keys) { model, keyIndex -> FailoverController.SendOutcome<String> in
+        let result = await FailoverController.run(models: models, keys: keys) {
+            model, keyIndex -> FailoverController.SendOutcome<String> in
             tries += 1
             return .failure(.rateLimit, "provider says no (\(model)/\(keyIndex))")
         }

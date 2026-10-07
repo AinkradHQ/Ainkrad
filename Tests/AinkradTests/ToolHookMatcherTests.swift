@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-@testable import Ainkrad
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 @Suite("ToolHook matcher")
 struct ToolHookMatcherTests {
@@ -21,8 +22,9 @@ struct ToolHookMatcherTests {
 
     @Test func documentRoundTrips() {
         let store = InMemoryPersistenceStore()
-        let hook = ToolHook(id: UUID(), enabled: true, event: .postToolUse,
-                            match: "edit_file", command: "swiftformat \"$AINKRAD_TOOL_PATH\"", timeoutSeconds: 30)
+        let hook = ToolHook(
+            id: UUID(), enabled: true, event: .postToolUse,
+            match: "edit_file", command: "swiftformat \"$AINKRAD_TOOL_PATH\"", timeoutSeconds: 30)
         store.save(ToolHooksDocument(hooks: [hook]))
         let loaded = store.load(ToolHooksDocument.self)
         #expect(loaded?.hooks.first?.command == "swiftformat \"$AINKRAD_TOOL_PATH\"")

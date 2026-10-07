@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("SandboxProfile")
@@ -28,12 +29,12 @@ struct SandboxProfileTests {
     @Test func allowHostOverrideDefaultsFalseWhenAbsentFromJSON() throws {
         // Older payloads without the flag must decode as fail-closed (false).
         let json = """
-        {"id":"x","name":"X","backend":"seatbelt",
-         "fsPolicy":{"readablePaths":[],"writablePaths":[]},
-         "networkPolicy":{"off":{}},
-         "resourceLimits":{"timeoutSeconds":30},
-         "toolAllowList":[]}
-        """.data(using: .utf8)!
+            {"id":"x","name":"X","backend":"seatbelt",
+             "fsPolicy":{"readablePaths":[],"writablePaths":[]},
+             "networkPolicy":{"off":{}},
+             "resourceLimits":{"timeoutSeconds":30},
+             "toolAllowList":[]}
+            """.data(using: .utf8)!
         let p = try JSONDecoder().decode(SandboxProfile.self, from: json)
         #expect(p.allowHostOverride == false)
     }

@@ -4,7 +4,10 @@ protocol Unzipper {
     func unzip(_ zip: URL, to destination: URL) throws
 }
 
-enum UnzipError: Error, Equatable { case failed(Int32); case unsafeEntry(String) }
+enum UnzipError: Error, Equatable {
+    case failed(Int32)
+    case unsafeEntry(String)
+}
 
 /// Extracts a .zip using the system `ditto`, but refuses archives that could
 /// escape `destination`: any entry whose name is absolute or contains a `..`
@@ -29,7 +32,8 @@ struct DittoUnzipper: Unzipper {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
         process.arguments = ["-x", "-k", zip.path, destination.path]
-        try process.run(); process.waitUntilExit()
+        try process.run()
+        process.waitUntilExit()
         guard process.terminationStatus == 0 else {
             try? FileManager.default.removeItem(at: destination)
             throw UnzipError.failed(process.terminationStatus)
@@ -50,7 +54,9 @@ struct DittoUnzipper: Unzipper {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/unzip")
         process.arguments = ["-Z1", zip.path]
-        let pipe = Pipe(); process.standardOutput = pipe; process.standardError = Pipe()
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = Pipe()
         try process.run()
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         process.waitUntilExit()

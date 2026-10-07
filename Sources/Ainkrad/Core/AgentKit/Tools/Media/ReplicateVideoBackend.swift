@@ -1,12 +1,13 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Replicate text-to-video backend. Token in the Keychain via SecretStore. Runs
 /// a video model synchronously via `Prefer: wait`, then downloads the resulting
 /// video URL. Reuses `ReplicateImageBackend.firstOutputURL` for the flexible
 /// `output` shape (string or array of strings).
 struct ReplicateVideoBackend: VideoBackend {
-    static let secretID = "media.replicate.apiKey" // shared with the image backend
+    static let secretID = "media.replicate.apiKey"  // shared with the image backend
+    // `nonisolated(unsafe)`: an immutable `let`; `KeychainSecretStore` keeps no mutable state and Keychain calls are thread-safe.
     nonisolated(unsafe) let secrets: SecretStore
     let http: DataHTTPClient
     /// `owner/name` of a text-to-video model.

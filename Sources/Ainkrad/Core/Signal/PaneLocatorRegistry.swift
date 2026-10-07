@@ -1,5 +1,5 @@
-import Foundation
 import AinkradAppKit
+import Foundation
 
 /// What each open pane last said it is showing.
 ///
@@ -67,6 +67,4 @@ final class PaneLocatorRegistry {
         sinks[blockID] = sink
         return sink
     }
-
-    var trackedCountForTesting: Int { locators.count }
 }

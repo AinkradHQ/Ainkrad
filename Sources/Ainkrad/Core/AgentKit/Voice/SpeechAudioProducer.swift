@@ -1,6 +1,6 @@
-import Foundation
 import AVFoundation
 import AinkradHostRuntime
+import Foundation
 
 /// Produces speech audio as bytes (so it can be saved / downloaded / played),
 /// as opposed to `SpeechSynthesizing` which only plays fire-and-forget. Used by
@@ -21,6 +21,7 @@ struct OnDeviceSpeechAudioProducer: SpeechAudioProducing {
         return (bytes, "caf")
     }
 
+    // `@unchecked Sendable`: `file`/`resumed` are touched only from `AVSpeechSynthesizer.write`'s serial callback.
     private final class WriteHolder: @unchecked Sendable {
         private let synth = AVSpeechSynthesizer()
         private var file: AVAudioFile?
@@ -33,7 +34,10 @@ struct OnDeviceSpeechAudioProducer: SpeechAudioProducing {
                 let utterance = AVSpeechUtterance(string: text)
                 self.synth.write(utterance) { [self] buffer in
                     guard let pcm = buffer as? AVAudioPCMBuffer else { return }
-                    if pcm.frameLength == 0 { finish(tmp: tmp, cont: cont); return }
+                    if pcm.frameLength == 0 {
+                        finish(tmp: tmp, cont: cont)
+                        return
+                    }
                     do {
                         if file == nil { file = try AVAudioFile(forWriting: tmp, settings: pcm.format.settings) }
                         try file?.write(from: pcm)
@@ -43,7 +47,7 @@ struct OnDeviceSpeechAudioProducer: SpeechAudioProducing {
         }
 
         private func finish(tmp: URL, cont: CheckedContinuation<Data, Error>) {
-            file = nil // flush/close
+            file = nil  // flush/close
             if let data = try? Data(contentsOf: tmp) {
                 try? FileManager.default.removeItem(at: tmp)
                 resume(cont: cont, with: .success(data))
@@ -74,6 +78,7 @@ struct CloudSpeechAudioProducer: SpeechAudioProducing {
 /// mp3. Falls back to on-device if a cloud provider is selected but unconfigured.
 struct RoutingSpeechAudioProducer: SpeechAudioProducing {
     let persistence: PersistenceStore
+    // `nonisolated(unsafe)`: an immutable `let`; `KeychainSecretStore` keeps no mutable state and Keychain calls are thread-safe.
     nonisolated(unsafe) let secrets: SecretStore
     let http: DataHTTPClient
     let onDevice: any SpeechAudioProducing

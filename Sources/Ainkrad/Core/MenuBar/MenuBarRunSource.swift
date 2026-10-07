@@ -4,7 +4,7 @@ import Foundation
 struct MenuBarRunItem: Equatable, Identifiable {
     let id: UUID
     let title: String
-    let isActive: Bool   // running (true) vs queued/paused (false)
+    let isActive: Bool  // running (true) vs queued/paused (false)
 }
 
 /// Seam over Slice-3 `RunManager`. Keeps the menu-bar subsystem compiling and
@@ -13,13 +13,6 @@ struct MenuBarRunItem: Equatable, Identifiable {
 protocol MenuBarRunSource: AnyObject {
     var activeRunItems: [MenuBarRunItem] { get }
     func stopRun(_ id: UUID)
-}
-
-/// Used until Slice 3 lands and in tests: reports no runs, stops nothing.
-@MainActor
-final class EmptyMenuBarRunSource: MenuBarRunSource {
-    var activeRunItems: [MenuBarRunItem] { [] }
-    func stopRun(_ id: UUID) {}
 }
 
 /// Adapts the real Slice-3 `RunManager` (queue + active/running set) onto the

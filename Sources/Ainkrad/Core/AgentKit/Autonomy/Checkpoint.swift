@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// One file's pre-mutation bytes, captured before an `edit_file`. `blobName` is
 /// the file name (under the checkpoint's directory) holding the original bytes;

@@ -1,4 +1,5 @@
 import Testing
+
 @testable import Ainkrad
 
 @Suite("ToolPresentation")
@@ -71,14 +72,5 @@ struct ToolPresentationTests {
         #expect(ToolPresentation.humanize("mcp__linear__create_issue") == "Linear create issue")
         #expect(ToolPresentation.humanize("mcp/gitmage/status") == "Gitmage status")
         #expect(ToolPresentation.humanize("mcp/gitmage/reset_hard") == "Gitmage reset hard")
-    }
-
-    /// Unlike `humanize`, a bare name with no underscore is still capitalized —
-    /// this is what Settings' MCP tool list uses so "Status" doesn't sit next
-    /// to "Reset hard" in lowercase.
-    @Test func titleCasedBareNameCapitalizesEvenWithoutUnderscore() {
-        #expect(ToolPresentation.titleCasedBareName("status") == "Status")
-        #expect(ToolPresentation.titleCasedBareName("reset_hard") == "Reset hard")
-        #expect(ToolPresentation.titleCasedBareName("remove_worktree_force") == "Remove worktree force")
     }
 }

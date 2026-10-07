@@ -1,20 +1,21 @@
-import Foundation
 import AinkradAppKitUI
+import Foundation
 
 /// Loads theme files from the main bundle via `ainkradLoadThemes` and provides theme file resolution.
-public final class ThemeCatalog: Sendable {
-    public static let shared = ThemeCatalog()
+final class ThemeCatalog: Sendable {
+    static let shared = ThemeCatalog()
 
-    public struct LoadedTheme: Sendable {
-        public let themeFile: AinkradThemeFile
-        public let hostSection: HostSkinSection?
+    struct LoadedTheme: Sendable {
+        let themeFile: AinkradThemeFile
+        let hostSection: HostSkinSection?
     }
 
-    public let loadedThemes: [String: LoadedTheme]
-    public let issues: [AinkradThemeIssue]
+    let loadedThemes: [String: LoadedTheme]
+    let issues: [AinkradThemeIssue]
 
-    public init(bundle: Bundle = .main) {
-        let themeURLs = (bundle.urls(forResourcesWithExtension: "theme", subdirectory: "Themes") ?? [])
+    init(bundle: Bundle = .main) {
+        let themeURLs =
+            (bundle.urls(forResourcesWithExtension: "theme", subdirectory: "Themes") ?? [])
             + (bundle.urls(forResourcesWithExtension: "theme", subdirectory: nil) ?? [])
 
         // Unique by path
@@ -35,7 +36,9 @@ public final class ThemeCatalog: Sendable {
                 do {
                     section = try JSONDecoder().decode(HostSkinSection.self, from: hostData)
                 } catch {
-                    Log.settings.error("Failed to decode host section for theme '\(id, privacy: .public)': \(error.localizedDescription, privacy: .public)")
+                    Log.settings.error(
+                        "Failed to decode host section for theme '\(id, privacy: .public)': \(error.localizedDescription, privacy: .public)"
+                    )
                 }
             }
             themesDict[id] = LoadedTheme(themeFile: file, hostSection: section)
@@ -43,7 +46,7 @@ public final class ThemeCatalog: Sendable {
         self.loadedThemes = themesDict
     }
 
-    public func themeFile(for themeID: String) -> AinkradThemeFile {
+    func themeFile(for themeID: String) -> AinkradThemeFile {
         if let loaded = loadedThemes[themeID] {
             return loaded.themeFile
         }
@@ -53,11 +56,13 @@ public final class ThemeCatalog: Sendable {
         return AinkradThemeFile(skin: .standard)
     }
 
-    public func hostSection(for themeID: String) -> HostSkinSection? {
+    func hostSection(for themeID: String) -> HostSkinSection? {
         if let loaded = loadedThemes[themeID], let section = loaded.hostSection {
             return section
         }
-        if let baseId = fallbackBaseId(for: themeID), let baseLoaded = loadedThemes[baseId], let section = baseLoaded.hostSection {
+        if let baseId = fallbackBaseId(for: themeID), let baseLoaded = loadedThemes[baseId],
+            let section = baseLoaded.hostSection
+        {
             return section
         }
         return nil

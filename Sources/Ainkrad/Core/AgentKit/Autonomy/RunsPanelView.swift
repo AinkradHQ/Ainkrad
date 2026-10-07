@@ -1,7 +1,7 @@
-// Sources/Ainkrad/Core/AgentKit/Autonomy/RunsPanelView.swift
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+// Sources/Ainkrad/Core/AgentKit/Autonomy/RunsPanelView.swift
+import SwiftUI
 
 /// The live Runs monitor (M7 Slice 3 Task 11): queue/active/history across
 /// every origin (chat, schedule, event), per-run status + streaming last log
@@ -12,8 +12,9 @@ import AinkradHostRuntime
 /// (`AinkradListRow`, `AinkradButton`, `AinkradMeter`, `AinkradIconGlyph`) —
 /// no native SwiftUI controls, mirroring `UsageDashboardView`.
 struct RunsPanelView: View {
+    @Environment(\.ainkradSkin) private var skin
     let manager: RunManager
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
 
     var body: some View {
         let runningCount = manager.active.filter { $0.status == .running }.count
@@ -32,18 +33,19 @@ struct RunsPanelView: View {
     private func header(runningCount: Int) -> some View {
         HStack(spacing: AinkradSpacing.md) {
             AinkradIconGlyph(systemName: "list.bullet.rectangle.portrait", filled: true)
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: skin.size.s2) {
                 Text("Runs")
                     .font(AinkradFont.display(15, weight: .semibold))
-                    .foregroundStyle(tokens.foreground)
+                    .foregroundStyle(theme.foreground)
                 Text("\(manager.active.count) active · \(manager.history.count) history")
                     .font(AinkradFont.display(11))
-                    .foregroundStyle(tokens.foreground.opacity(0.5))
+                    .foregroundStyle(theme.foreground.opacity(skin.opacity.o50))
             }
             Spacer(minLength: 0)
             // Concurrency gauge: running slots filled vs. the active queue depth.
-            AinkradMeter(value: Double(runningCount), total: Double(max(manager.active.count, 1)),
-                        label: "Running", size: 52)
+            AinkradMeter(
+                value: Double(runningCount), total: Double(max(manager.active.count, 1)),
+                label: "Running", size: 52)
         }
     }
 
@@ -54,14 +56,14 @@ struct RunsPanelView: View {
             Text("\(title.uppercased()) (\(runs.count))")
                 .font(AinkradFont.display(11, weight: .semibold))
                 .tracking(0.8)
-                .foregroundStyle(tokens.accentSecondary.opacity(0.85))
+                .foregroundStyle(theme.accentSecondary.opacity(skin.opacity.o85))
 
             if runs.isEmpty {
                 Text(showControls ? "No active runs." : "No completed runs yet.")
                     .font(AinkradFont.display(11))
-                    .foregroundStyle(tokens.foreground.opacity(0.45))
+                    .foregroundStyle(theme.foreground.opacity(skin.opacity.o45))
             } else {
-                LazyVStack(alignment: .leading, spacing: 2) {
+                LazyVStack(alignment: .leading, spacing: skin.size.s2) {
                     ForEach(runs) { run in
                         row(for: run, showControls: showControls)
                     }

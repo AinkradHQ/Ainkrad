@@ -16,10 +16,11 @@ enum MemoryConsolidator {
         for line in lines where seen.insert(line).inserted { deduped.append(line) }
         let capped = deduped.count > maxLines ? Array(deduped.suffix(maxLines)) : deduped
         let result = capped.joined(separator: "\n")
-        guard result != original else { return }   // no-op turn → no write/reindex/log churn
-        service.store.write(result, to: .memory)   // onChange reindexes
-        service.log.record(file: .memory, provenance: .consolidation,
-                           addedText: "(consolidation: deduped/capped MEMORY.md)",
-                           priorSnapshot: original)
+        guard result != original else { return }  // no-op turn → no write/reindex/log churn
+        service.store.write(result, to: .memory)  // onChange reindexes
+        service.log.record(
+            file: .memory, provenance: .consolidation,
+            addedText: "(consolidation: deduped/capped MEMORY.md)",
+            priorSnapshot: original)
     }
 }

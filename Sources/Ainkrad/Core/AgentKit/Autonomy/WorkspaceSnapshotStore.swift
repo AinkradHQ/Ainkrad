@@ -1,3 +1,4 @@
+import AinkradHostRuntime
 import Foundation
 
 /// Copies a file's pre-mutation bytes into a per-checkpoint directory under app
@@ -26,7 +27,9 @@ final class WorkspaceSnapshotStore {
             do {
                 try data.write(to: dest)
             } catch {
-                Log.persistence.error("Failed to write \(data.count, privacy: .public) bytes to \(dest.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+                Log.persistence.error(
+                    "Failed to write \(data.count, privacy: .public) bytes to \(dest.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
+                )
             }
             return FileSnapshot(path: path, existedBefore: true, blobName: blobName)
         }
@@ -42,7 +45,9 @@ final class WorkspaceSnapshotStore {
                 do {
                     try data.write(to: restoreURL)
                 } catch {
-                    Log.persistence.error("Failed to write \(data.count, privacy: .public) bytes to \(restoreURL.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+                    Log.persistence.error(
+                        "Failed to write \(data.count, privacy: .public) bytes to \(restoreURL.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
+                    )
                 }
             }
         } else if fm.fileExists(atPath: snapshot.path) {

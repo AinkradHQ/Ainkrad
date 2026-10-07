@@ -1,14 +1,18 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("File sorting and filtering")
 struct FileSortingTests {
-    private func entry(_ name: String, dir: Bool = false, size: Int64 = 0,
-                       modified: TimeInterval = 0) -> FileEntry {
-        FileEntry(url: URL(fileURLWithPath: "/x/\(name)"), name: name,
-                  isDirectory: dir, isSymlink: false, isHidden: name.hasPrefix("."),
-                  size: size, modified: Date(timeIntervalSince1970: modified))
+    private func entry(
+        _ name: String, dir: Bool = false, size: Int64 = 0,
+        modified: TimeInterval = 0
+    ) -> FileEntry {
+        FileEntry(
+            url: URL(fileURLWithPath: "/x/\(name)"), name: name,
+            isDirectory: dir, isSymlink: false, isHidden: name.hasPrefix("."),
+            size: size, modified: Date(timeIntervalSince1970: modified))
     }
 
     @Test("hides dotfiles unless asked")

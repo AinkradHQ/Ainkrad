@@ -1,7 +1,7 @@
-// Sources/Ainkrad/Core/AgentKit/MCP/AppServerActivator.swift
-import Foundation
 import AinkradAppKit
 import AinkradHostRuntime
+// Sources/Ainkrad/Core/AgentKit/MCP/AppServerActivator.swift
+import Foundation
 
 /// Why an app's MCP server could not be reached. Distinct cases so the failure
 /// text the model sees names an actionable cause instead of "something failed".
@@ -74,15 +74,17 @@ final class AppServerActivator {
     /// the activator testable without a host.
     private let requiresLiveApp: (String, String, String) -> Bool
 
-    init(serverFor: @escaping (String) -> MCPAppServer?,
-         isAppOpen: @escaping (String) -> Bool,
-         requestOpen: @escaping (String) -> Void,
-         availability: @escaping (String) -> PluginLaunchHub.Availability,
-         // Defaults to "nothing needs the window", which is the behaviour we
-         // want when no app declares anything: tool calls run in the background.
-         requiresLiveApp: @escaping (String, String, String) -> Bool = { _, _, _ in false },
-         launchTimeout: Duration = .seconds(5),
-         onLaunch: ((String) -> Void)? = nil) {
+    init(
+        serverFor: @escaping (String) -> MCPAppServer?,
+        isAppOpen: @escaping (String) -> Bool,
+        requestOpen: @escaping (String) -> Void,
+        availability: @escaping (String) -> PluginLaunchHub.Availability,
+        // Defaults to "nothing needs the window", which is the behaviour we
+        // want when no app declares anything: tool calls run in the background.
+        requiresLiveApp: @escaping (String, String, String) -> Bool = { _, _, _ in false },
+        launchTimeout: Duration = .seconds(5),
+        onLaunch: ((String) -> Void)? = nil
+    ) {
         self.serverFor = serverFor
         self.isAppOpen = isAppOpen
         self.requestOpen = requestOpen
@@ -95,16 +97,19 @@ final class AppServerActivator {
     /// A fixed set of servers — the shape tests and any caller that already
     /// holds every server use. Wraps the dictionary in a provider closure so
     /// there is only one lookup path.
-    convenience init(servers: [String: MCPAppServer],
-                     isAppOpen: @escaping (String) -> Bool,
-                     requestOpen: @escaping (String) -> Void,
-                     availability: @escaping (String) -> PluginLaunchHub.Availability,
-                     requiresLiveApp: @escaping (String, String, String) -> Bool = { _, _, _ in false },
-                     launchTimeout: Duration = .seconds(5),
-                     onLaunch: ((String) -> Void)? = nil) {
-        self.init(serverFor: { servers[$0] }, isAppOpen: isAppOpen, requestOpen: requestOpen,
-                  availability: availability, requiresLiveApp: requiresLiveApp,
-                  launchTimeout: launchTimeout, onLaunch: onLaunch)
+    convenience init(
+        servers: [String: MCPAppServer],
+        isAppOpen: @escaping (String) -> Bool,
+        requestOpen: @escaping (String) -> Void,
+        availability: @escaping (String) -> PluginLaunchHub.Availability,
+        requiresLiveApp: @escaping (String, String, String) -> Bool = { _, _, _ in false },
+        launchTimeout: Duration = .seconds(5),
+        onLaunch: ((String) -> Void)? = nil
+    ) {
+        self.init(
+            serverFor: { servers[$0] }, isAppOpen: isAppOpen, requestOpen: requestOpen,
+            availability: availability, requiresLiveApp: requiresLiveApp,
+            launchTimeout: launchTimeout, onLaunch: onLaunch)
     }
 
     /// Resolves — and on first success caches — this app's server. Every read
@@ -161,9 +166,10 @@ final class AppServerActivator {
     /// by, so it must not open anything.
     private func needsLiveApp(appID: String, message: String) -> Bool {
         guard let data = message.data(using: .utf8),
-              let root = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
-              let method = root["method"] as? String,
-              Self.methodsRequiringLiveApp.contains(method) else { return false }
+            let root = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+            let method = root["method"] as? String,
+            Self.methodsRequiringLiveApp.contains(method)
+        else { return false }
         let params = root["params"] as? [String: Any] ?? [:]
         // `tools/call` names its target in `params.name`, `resources/read` in
         // `params.uri` — the two shapes `MCPAppServer.handle` reads.

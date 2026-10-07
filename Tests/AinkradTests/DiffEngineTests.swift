@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite struct DiffEngineTests {
@@ -10,7 +11,7 @@ import Testing
         lines[17] = "line 18 CHANGED"
         let new = lines.joined(separator: "\n")
         let diff = DiffEngine.compute(old: old, new: new, path: "/f.txt", context: 2)
-        #expect(diff.hunks.count == 2)          // gaps > 2*context split the changes
+        #expect(diff.hunks.count == 2)  // gaps > 2*context split the changes
         #expect(diff.path == "/f.txt")
         #expect(diff.original == old)
     }

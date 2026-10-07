@@ -15,8 +15,10 @@ public enum AinkradSignposts {
         signposter.beginInterval(name, id: signposter.makeSignpostID())
     }
 
-    public static func end(_ signposter: OSSignposter, _ name: StaticString,
-                           _ state: OSSignpostIntervalState) {
+    public static func end(
+        _ signposter: OSSignposter, _ name: StaticString,
+        _ state: OSSignpostIntervalState
+    ) {
         signposter.endInterval(name, state)
     }
 }

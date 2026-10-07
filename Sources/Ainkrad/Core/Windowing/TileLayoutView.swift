@@ -1,7 +1,7 @@
-import SwiftUI
-import AppKit
 import AinkradAppKit
 import AinkradHostRuntime
+import AppKit
+import SwiftUI
 
 private struct PaneResizesImmediatelyKey: EnvironmentKey {
     static let defaultValue = false
@@ -38,16 +38,17 @@ extension EnvironmentValues {
 /// `PaneCanvasMetrics` so the seams stay between the panes they separate.
 struct TileLayoutView: View {
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradSkin) private var skin
     @Environment(\.ainkradReduceMotion) private var reduceMotion
     let workspace: Workspace
     let registry: BuiltInAppRegistry
 
     /// The pane the floating shortcut badge is currently announcing, and the
-    /// token that lets a later switch cancel an earlier badge's dismissal (so
-    /// switching twice quickly shows the second badge for its full time rather
-    /// than having the first one's timer close it early).
+    /// pending dismissal a later switch cancels (so switching twice quickly
+    /// shows the second badge for its full time rather than having the first
+    /// one's timer close it early).
     @State private var badgeBlockID: UUID?
-    @State private var badgeToken = 0
+    @State private var badgeDismissal: Task<Void, Never>?
 
     private var tileLayout: TileLayout { workspace.tileLayout }
 
@@ -57,7 +58,8 @@ struct TileLayoutView: View {
     private var hasTranslucentPane: Bool {
         tileLayout.blocks.contains { block in
             guard let app = registry.allApps.first(where: { $0.id == block.appID }),
-                  let fill = app.chromeFill() else { return false }
+                let fill = app.chromeFill()
+            else { return false }
             return NSColor(fill).alphaComponent < 1
         }
     }
@@ -113,7 +115,7 @@ struct TileLayoutView: View {
                             // of intermediate resizes duplicates terminal
                             // output).
                             .transition(.opacity)
-                            .animation(.easeInOut(duration: 0.2), value: workspace.viewMode)
+                            .animation(.easeInOut(duration: skin.motion.durations.d0_2), value: workspace.viewMode)
                     }
                 }
                 .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
@@ -144,18 +146,17 @@ struct TileLayoutView: View {
     // MARK: - Shortcut badge
 
     /// Shows the badge for the pane that just came forward, then dismisses it.
-    /// The token guards against an earlier switch's dismissal closing a later
-    /// badge: only the most recent announcement is allowed to clear the state.
+    /// Each announcement cancels the previous one's dismissal: only the most
+    /// recent announcement is allowed to clear the state.
     private func announceShortcut(for blockID: UUID?) {
         guard let blockID else { return }
-        badgeToken += 1
-        let token = badgeToken
-        withAnimation(reduceMotion ? nil : .easeOut(duration: 0.14)) {
+        badgeDismissal?.cancel()
+        withAnimation(reduceMotion ? nil : .easeOut(duration: skin.motion.durations.d0_14)) {
             badgeBlockID = blockID
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
-            guard badgeToken == token else { return }
-            withAnimation(reduceMotion ? nil : .easeIn(duration: 0.22)) {
+        badgeDismissal = Task { @MainActor in
+            do { try await Task.sleep(for: .seconds(1.4)) } catch { return }
+            withAnimation(reduceMotion ? nil : .easeIn(duration: skin.motion.durations.d0_22)) {
                 badgeBlockID = nil
             }
         }
@@ -164,15 +165,15 @@ struct TileLayoutView: View {
     @ViewBuilder
     private var shortcutBadge: some View {
         if let badgeBlockID,
-           let index = tileLayout.blocks.firstIndex(where: { $0.id == badgeBlockID }) {
+            let index = tileLayout.blocks.firstIndex(where: { $0.id == badgeBlockID })
+        {
             let block = tileLayout.blocks[index]
             let appName = registry.allApps.first { $0.id == block.appID }?.displayName
             PaneShortcutBadge(
                 title: block.displayTitle(appName: appName),
-                shortcut: PaneShortcut.label(forOrdinal: index),
-                tokens: environment.themeManager.tokens
+                shortcut: PaneShortcut.label(forOrdinal: index)
             )
-            .padding(AinkradSpacing.md)
+            .padding(skin.spacing.md)
             .transition(.opacity)
         }
     }
@@ -186,7 +187,7 @@ struct TileLayoutView: View {
     /// an empty workspace, not a static blurred stand-in. A single faint scrim
     /// keeps pane content legible over a busy sky.
     private var workspaceBackdrop: some View {
-        let tokens = environment.themeManager.tokens
+        let tokens = environment.themeManager.hostSkin
         return ZStack {
             // Match the empty workspace's island placement. There the island is
             // the top child of a centered stack that also holds the shortcut
@@ -197,13 +198,13 @@ struct TileLayoutView: View {
             // the revealed island at the exact height it has on the main screen.
             VStack(spacing: 0) {
                 FloatingIslandView()
-                    .frame(maxWidth: 860, maxHeight: 574)
-                Color.clear.frame(height: 72)
+                    .frame(maxWidth: skin.size.s860, maxHeight: skin.size.s574)
+                Color.clear.frame(height: skin.size.s72)
             }
             // Legibility scrim only — low enough that motion clearly shows
             // through, high enough that text over a busy sky stays readable.
             // Tuned during screenshot review.
-            tokens.background.opacity(0.12)
+            tokens.color(\.background).opacity(skin.opacity.o12)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -215,6 +216,7 @@ struct TileLayoutView: View {
 /// capsule that brightens on hover and while dragging to resize.
 private struct SeamView: View {
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradSkin) private var skin
     let placement: SeamPlacement
     let tileLayout: TileLayout
 
@@ -222,48 +224,50 @@ private struct SeamView: View {
     @State private var isDragging = false
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
+        let tokens = environment.themeManager.hostSkin
         let isLit = isHovering || isDragging
+        let seamAlpha = isLit ? skin.opacity.o90 : skin.opacity.o22
+        let seamWidth = isLit ? skin.size.s2 : skin.size.s1
 
         Group {
             if placement.axis == .horizontal {
                 LinearGradient(
-                    colors: [.clear, tokens.accentSecondary.opacity(isLit ? 0.9 : 0.22), .clear],
+                    colors: [.clear, tokens.color(\.accentSecondary).opacity(seamAlpha), .clear],
                     startPoint: .top,
                     endPoint: .bottom
                 )
-                .frame(width: isLit ? 2 : 1)
+                .frame(width: seamWidth)
                 .frame(maxWidth: .infinity)
                 .overlay {
                     if isLit {
                         Capsule()
-                            .fill(tokens.accentSecondary)
-                            .frame(width: 3, height: 22)
-                            .shadow(color: tokens.accentSecondary.opacity(0.9), radius: 4)
+                            .fill(tokens.color(\.accentSecondary))
+                            .frame(width: skin.size.s3, height: skin.size.s22)
+                            .shadow(color: tokens.color(\.accentSecondary).opacity(skin.opacity.o90), radius: skin.size.s4)
                     }
                 }
             } else {
                 LinearGradient(
-                    colors: [.clear, tokens.accentSecondary.opacity(isLit ? 0.9 : 0.22), .clear],
+                    colors: [.clear, tokens.color(\.accentSecondary).opacity(seamAlpha), .clear],
                     startPoint: .leading,
                     endPoint: .trailing
                 )
-                .frame(height: isLit ? 2 : 1)
+                .frame(height: seamWidth)
                 .frame(maxHeight: .infinity)
                 .overlay {
                     if isLit {
                         Capsule()
-                            .fill(tokens.accentSecondary)
-                            .frame(width: 22, height: 3)
-                            .shadow(color: tokens.accentSecondary.opacity(0.9), radius: 4)
+                            .fill(tokens.color(\.accentSecondary))
+                            .frame(width: skin.size.s22, height: skin.size.s3)
+                            .shadow(color: tokens.color(\.accentSecondary).opacity(skin.opacity.o90), radius: skin.size.s4)
                     }
                 }
             }
         }
-        .shadow(color: isLit ? tokens.accentSecondary.opacity(0.7) : .clear, radius: 5)
+        .shadow(color: isLit ? tokens.color(\.accentSecondary).opacity(skin.opacity.o70) : .clear, radius: skin.size.s5)
         // Grab target is wider than the 1px seam so the boundary is easy to
         // catch with the mouse without hunting for a hairline.
-        .contentShape(Rectangle().inset(by: -6))
+        .contentShape(Rectangle().inset(by: -skin.size.s6))
         .gesture(
             DragGesture(minimumDistance: 0, coordinateSpace: .named("pane-canvas"))
                 .onChanged { value in
@@ -285,6 +289,6 @@ private struct SeamView: View {
                 NSCursor.arrow.set()
             }
         }
-        .animation(.easeOut(duration: 0.12), value: isLit)
+        .animation(.easeOut(duration: skin.motion.durations.d0_12), value: isLit)
     }
 }

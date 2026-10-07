@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite struct ClaudeProviderOAuthTests {
@@ -8,8 +9,9 @@ import Foundation
     }
 
     @Test func oauthSetsBearerBetasUAAndXApp() {
-        let token = OAuthToken(accessToken: "AT", refreshToken: "RT",
-                               expiresAt: Date(), scopes: ["user:inference"])
+        let token = OAuthToken(
+            accessToken: "AT", refreshToken: "RT",
+            expiresAt: Date(), scopes: ["user:inference"])
         let req = ClaudeProvider.makeRequest(
             messages: [], system: "SYS", tools: [],
             model: AgentModelConfig(model: "claude-sonnet-5", effort: "high"),
@@ -50,14 +52,18 @@ import Foundation
     }
 
     @Test func oauthEchoedAssistantToolUseUsesWireName() {
-        let msgs = [AgentMessage(role: .assistant,
-                                 content: [.toolUse(id: "t1", name: "mcp/git/status", input: .object([:]))])]
+        let msgs = [
+            AgentMessage(
+                role: .assistant,
+                content: [.toolUse(id: "t1", name: "mcp/git/status", input: .object([:]))])
+        ]
         let token = OAuthToken(accessToken: "AT", refreshToken: "RT", expiresAt: Date(), scopes: [])
         let req = ClaudeProvider.makeRequest(
             messages: msgs, system: "S", tools: [],
             model: AgentModelConfig(model: "claude-sonnet-5", effort: "high"),
             credential: .oauth(token))
-        let wire = ((body(req)["messages"] as? [[String: Any]])?.first?["content"] as? [[String: Any]])?
+        let wire =
+            ((body(req)["messages"] as? [[String: Any]])?.first?["content"] as? [[String: Any]])?
             .first?["name"] as? String
         #expect(wire == "mcp__git__status")
     }
@@ -77,7 +83,7 @@ import Foundation
             model: AgentModelConfig(model: "claude-sonnet-5", effort: "high"),
             credential: .apiKey("k"))
         let names = ((body(req)["tools"] as? [[String: Any]]) ?? []).compactMap { $0["name"] as? String }
-        #expect(names == ["mcp/git/status"])   // unchanged on the API-key path
+        #expect(names == ["mcp/git/status"])  // unchanged on the API-key path
         #expect((body(req)["system"] as? String) == "S")
     }
 }

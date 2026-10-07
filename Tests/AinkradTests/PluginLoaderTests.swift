@@ -1,9 +1,10 @@
-import Testing
+import AinkradHostRuntime
 import Foundation
 import SwiftUI
+import Testing
+
 @testable import Ainkrad
 @testable import AinkradAppKit
-import AinkradHostRuntime
 
 /// A minimal `AinkradApp` conformance for exercising `RegisteredApp.plugin(...)`
 /// directly (the loader's fixtures are binary-less, so the factory is never
@@ -99,7 +100,7 @@ struct PluginLoaderTests {
 
         let result = loader().loadAll(from: [dir])
         #expect(result.apps.isEmpty)
-        #expect(result.failures.count == 1)   // recorded, no crash
+        #expect(result.failures.count == 1)  // recorded, no crash
     }
 
     @Test("a missing directory yields no apps and no failures")
@@ -140,14 +141,16 @@ struct PluginLoaderTests {
     func multiBundleIsolation() throws {
         let dir = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        var badAPI = validInfo; badAPI[PluginInfoKey.apiVersion] = 999
-        try writeBundle(in: dir, name: "Future", info: badAPI)          // rejected at validation
-        var noID = validInfo; noID.removeValue(forKey: PluginInfoKey.appID)
-        try writeBundle(in: dir, name: "NoID", info: noID)              // rejected at metadata parse
+        var badAPI = validInfo
+        badAPI[PluginInfoKey.apiVersion] = 999
+        try writeBundle(in: dir, name: "Future", info: badAPI)  // rejected at validation
+        var noID = validInfo
+        noID.removeValue(forKey: PluginInfoKey.appID)
+        try writeBundle(in: dir, name: "NoID", info: noID)  // rejected at metadata parse
 
         let result = loader().loadAll(from: [dir])
         #expect(result.apps.isEmpty)
-        #expect(result.failures.count == 2)   // BOTH processed — the scan never aborts early
+        #expect(result.failures.count == 2)  // BOTH processed — the scan never aborts early
     }
 
     // MARK: - Precedence between directories (the DevPlugins shadowing fix)
@@ -229,7 +232,8 @@ struct PluginLoaderTests {
     func brokenWinnerDoesNotFallBackToShadowed() throws {
         let (release, dev) = try twoDirs()
         try writeBundle(in: release, name: "HelloRelease", info: validInfo)
-        var badAPI = validInfo; badAPI[PluginInfoKey.apiVersion] = 999
+        var badAPI = validInfo
+        badAPI[PluginInfoKey.apiVersion] = 999
         try writeBundle(in: dev, name: "HelloDev", info: badAPI)
 
         let policy = RecordingSignaturePolicy()
@@ -240,7 +244,7 @@ struct PluginLoaderTests {
         #expect(result.failures[0].url.lastPathComponent == "HelloDev.bundle")
         #expect(result.failures[0].reason.contains("999"))
         // The shadowed release was never a fallback: it never reached the load path.
-        #expect(policy.seen.isEmpty)   // the winner failed before the signature gate
+        #expect(policy.seen.isEmpty)  // the winner failed before the signature gate
     }
 
     /// Precedence must not collapse distinct apps: different appIDs in different
@@ -249,14 +253,15 @@ struct PluginLoaderTests {
     func distinctAppIDsInDifferentDirectoriesBothLoad() throws {
         let (release, dev) = try twoDirs()
         try writeBundle(in: release, name: "Hello", info: validInfo)
-        var other = validInfo; other[PluginInfoKey.appID] = "goodbye"
+        var other = validInfo
+        other[PluginInfoKey.appID] = "goodbye"
         try writeBundle(in: dev, name: "Goodbye", info: other)
 
         let policy = RecordingSignaturePolicy()
         let result = loader(signaturePolicy: policy).loadAll(from: [release, dev])
 
         #expect(policy.seen.count == 2)
-        #expect(result.failures.count == 2)   // both reached the binary and both are binary-less
+        #expect(result.failures.count == 2)  // both reached the binary and both are binary-less
     }
 
     /// Two fresh sibling directories standing in for `Plugins` and `DevPlugins`.
@@ -364,12 +369,15 @@ struct PluginLoadDiagnosticsTests {
 
     @Test("the dyld text is dug out of an underlyingError when it is nested there")
     func underlyingErrorIsSearched() {
-        let inner = NSError(domain: NSCocoaErrorDomain, code: 3588,
-                            userInfo: [NSDebugDescriptionErrorKey: Self.skewDyldText])
-        let outer = NSError(domain: NSCocoaErrorDomain, code: 3588, userInfo: [
-            NSLocalizedDescriptionKey: "The bundle couldn’t be loaded.",
-            NSUnderlyingErrorKey: inner,
-        ])
+        let inner = NSError(
+            domain: NSCocoaErrorDomain, code: 3588,
+            userInfo: [NSDebugDescriptionErrorKey: Self.skewDyldText])
+        let outer = NSError(
+            domain: NSCocoaErrorDomain, code: 3588,
+            userInfo: [
+                NSLocalizedDescriptionKey: "The bundle couldn’t be loaded.",
+                NSUnderlyingErrorKey: inner,
+            ])
         #expect(PluginLoadDiagnostics.diagnose(outer).banner.contains(Self.skewSymbol))
     }
 }

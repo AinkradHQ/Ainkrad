@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// `LLMProvider` conformer that streams from any OpenAI-compatible
 /// `POST {baseURL}/chat/completions` endpoint (OpenAI, OpenRouter, Groq,
@@ -20,11 +20,13 @@ struct OpenAICompatibleProvider: LLMProvider {
         model: AgentModelConfig,
         credential: ProviderCredential
     ) -> AsyncThrowingStream<AgentEvent, Error> {
-        let apiKey: String = { if case let .apiKey(k) = credential { return k } else { return "" } }()
+        let apiKey: String = { if case .apiKey(let k) = credential { return k } else { return "" } }()
         return AsyncThrowingStream { continuation in
             let task = Task {
                 do {
-                    let request = try Self.makeRequest(baseURL: baseURL, messages: messages, system: system, tools: tools, model: model, apiKey: apiKey)
+                    let request = try Self.makeRequest(
+                        baseURL: baseURL, messages: messages, system: system, tools: tools, model: model, apiKey: apiKey
+                    )
                     let bytes = try await http.post(request)
 
                     var finishReason: String?
@@ -32,7 +34,9 @@ struct OpenAICompatibleProvider: LLMProvider {
 
                     for try await payload in SSEParser.events(from: bytes) {
                         guard let data = payload.data(using: .utf8) else { continue }
-                        guard let chunk = try? JSONDecoder().decode(ChatCompletionChunk.self, from: data) else { continue }
+                        guard let chunk = try? JSONDecoder().decode(ChatCompletionChunk.self, from: data) else {
+                            continue
+                        }
 
                         if let errorMessage = chunk.error?.message {
                             continuation.yield(.failed(errorMessage))
@@ -70,7 +74,7 @@ struct OpenAICompatibleProvider: LLMProvider {
 
                     if finishReason == "tool_calls" {
                         for index in calls.keys.sorted() {
-                            let entry = calls[index]!
+                            guard let entry = calls[index] else { continue }
                             let input = JSONValue.parse(entry.args) ?? .object([:])
                             continuation.yield(.toolUseComplete(id: entry.id, name: entry.name, input: input))
                         }
@@ -96,10 +100,14 @@ struct OpenAICompatibleProvider: LLMProvider {
     /// never arrives for endpoints that don't support it, which must never be an error.
     nonisolated static func usage(from json: JSONValue) -> TokenUsage? {
         guard let u = json["usage"] else { return nil }
-        func int(_ k: String) -> Int { if case .number(let n)? = u[k] { return Int(n) }; return 0 }
+        func int(_ k: String) -> Int {
+            if case .number(let n)? = u[k] { return Int(n) }
+            return 0
+        }
         var cacheRead = 0
         if case .number(let n)? = u["prompt_tokens_details"]?["cached_tokens"] { cacheRead = Int(n) }
-        return TokenUsage(input: int("prompt_tokens"), output: int("completion_tokens"), cacheRead: cacheRead, cacheWrite: 0)
+        return TokenUsage(
+            input: int("prompt_tokens"), output: int("completion_tokens"), cacheRead: cacheRead, cacheWrite: 0)
     }
 
     // MARK: - Request building
@@ -137,9 +145,13 @@ struct OpenAICompatibleProvider: LLMProvider {
         ]
         if !tools.isEmpty {
             body["tools"] = tools.map {
-                ["type": "function",
-                 "function": ["name": $0.name, "description": $0.description,
-                              "parameters": $0.parameters.toFoundationObject()]]
+                [
+                    "type": "function",
+                    "function": [
+                        "name": $0.name, "description": $0.description,
+                        "parameters": $0.parameters.toFoundationObject(),
+                    ],
+                ]
             }
         }
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
@@ -160,9 +172,13 @@ struct OpenAICompatibleProvider: LLMProvider {
                 texts.append(t)
                 contentParts.append(["type": "text", "text": t])
             case .toolUse(let id, let name, let input):
-                let args = String(decoding: (try? JSONSerialization.data(withJSONObject: input.toFoundationObject())) ?? Data("{}".utf8), as: UTF8.self)
-                toolCalls.append(["id": id, "type": "function",
-                                  "function": ["name": name, "arguments": args]])
+                let args = String(
+                    decoding: (try? JSONSerialization.data(withJSONObject: input.toFoundationObject()))
+                        ?? Data("{}".utf8), as: UTF8.self)
+                toolCalls.append([
+                    "id": id, "type": "function",
+                    "function": ["name": name, "arguments": args],
+                ])
             case .toolResult(let toolUseID, let content, _):
                 toolResults.append(["role": "tool", "tool_call_id": toolUseID, "content": content])
             case .image(let mediaType, let base64):
@@ -210,8 +226,9 @@ struct OpenAICompatibleProvider: LLMProvider {
     /// (the body is the server's response, not the request — the key never appears in it).
     private static func errorMessage(fromResponseBody body: String) -> String {
         if let data = body.data(using: .utf8),
-           let chunk = try? JSONDecoder().decode(ChatCompletionChunk.self, from: data),
-           let message = chunk.error?.message {
+            let chunk = try? JSONDecoder().decode(ChatCompletionChunk.self, from: data),
+            let message = chunk.error?.message
+        {
             return message
         }
         return "Provider API request failed"
@@ -223,14 +240,20 @@ struct OpenAICompatibleProvider: LLMProvider {
         struct Choice: Decodable {
             struct Delta: Decodable {
                 struct ToolCall: Decodable {
-                    struct Function: Decodable { let name: String?; let arguments: String? }
+                    struct Function: Decodable {
+                        let name: String?
+                        let arguments: String?
+                    }
                     let index: Int
                     let id: String?
                     let function: Function?
                 }
                 let content: String?
                 let toolCalls: [ToolCall]?
-                enum CodingKeys: String, CodingKey { case content; case toolCalls = "tool_calls" }
+                enum CodingKeys: String, CodingKey {
+                    case content
+                    case toolCalls = "tool_calls"
+                }
             }
             let delta: Delta?
             let finishReason: String?

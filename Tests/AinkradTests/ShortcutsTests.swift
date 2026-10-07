@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-@testable import Ainkrad
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 @Suite("KeyChord")
 struct KeyChordTests {
@@ -46,44 +47,51 @@ struct KeyChordTests {
 struct ShortcutActionDefaultsTests {
     @Test("openLauncher defaults to ⌘K (keyCode 40)")
     func openLauncher() {
-        #expect(ShortcutAction.openLauncher.defaultChord ==
-                KeyChord(keyCode: 40, command: true, shift: false, option: false, control: false))
+        #expect(
+            ShortcutAction.openLauncher.defaultChord
+                == KeyChord(keyCode: 40, command: true, shift: false, option: false, control: false))
     }
 
     @Test("toggleSettings defaults to ⌘, (keyCode 43)")
     func toggleSettings() {
-        #expect(ShortcutAction.toggleSettings.defaultChord ==
-                KeyChord(keyCode: 43, command: true, shift: false, option: false, control: false))
+        #expect(
+            ShortcutAction.toggleSettings.defaultChord
+                == KeyChord(keyCode: 43, command: true, shift: false, option: false, control: false))
     }
 
     @Test("toggleAppStore defaults to ⌘⇧A (keyCode 0)")
     func toggleAppStore() {
-        #expect(ShortcutAction.toggleAppStore.defaultChord ==
-                KeyChord(keyCode: 0, command: true, shift: true, option: false, control: false))
+        #expect(
+            ShortcutAction.toggleAppStore.defaultChord
+                == KeyChord(keyCode: 0, command: true, shift: true, option: false, control: false))
     }
 
     @Test("newWorkspace defaults to ⌘⇧N (keyCode 45)")
     func newWorkspace() {
-        #expect(ShortcutAction.newWorkspace.defaultChord ==
-                KeyChord(keyCode: 45, command: true, shift: true, option: false, control: false))
+        #expect(
+            ShortcutAction.newWorkspace.defaultChord
+                == KeyChord(keyCode: 45, command: true, shift: true, option: false, control: false))
     }
 
     @Test("toggleWorkspaceOverview defaults to ⌥Tab (keyCode 48)")
     func toggleWorkspaceOverview() {
-        #expect(ShortcutAction.toggleWorkspaceOverview.defaultChord ==
-                KeyChord(keyCode: 48, command: false, shift: false, option: true, control: false))
+        #expect(
+            ShortcutAction.toggleWorkspaceOverview.defaultChord
+                == KeyChord(keyCode: 48, command: false, shift: false, option: true, control: false))
     }
 
     @Test("closeBlock defaults to ⌘W (keyCode 13)")
     func closeBlock() {
-        #expect(ShortcutAction.closeBlock.defaultChord ==
-                KeyChord(keyCode: 13, command: true, shift: false, option: false, control: false))
+        #expect(
+            ShortcutAction.closeBlock.defaultChord
+                == KeyChord(keyCode: 13, command: true, shift: false, option: false, control: false))
     }
 
     @Test("openQuickAsk defaults to ⌘⇧Space (keyCode 49)")
     func openQuickAsk() {
-        #expect(ShortcutAction.openQuickAsk.defaultChord ==
-            KeyChord(keyCode: 49, command: true, shift: true, option: false, control: false))
+        #expect(
+            ShortcutAction.openQuickAsk.defaultChord
+                == KeyChord(keyCode: 49, command: true, shift: true, option: false, control: false))
     }
 }
 
@@ -106,7 +114,8 @@ struct ShortcutBindingsTests {
     @Test("action(matching:) resolves an action via its default chord")
     func actionMatchingDefault() {
         let bindings = ShortcutBindings()
-        #expect(bindings.action(matching: 40, command: true, shift: false, option: false, control: false) == .openLauncher)
+        #expect(
+            bindings.action(matching: 40, command: true, shift: false, option: false, control: false) == .openLauncher)
     }
 
     @Test("action(matching:) resolves an action via an override")
@@ -114,7 +123,8 @@ struct ShortcutBindingsTests {
         var bindings = ShortcutBindings()
         let custom = KeyChord(keyCode: 12, command: true, shift: false, option: false, control: false)
         bindings.overrides[ShortcutAction.openLauncher.rawValue] = custom
-        #expect(bindings.action(matching: 12, command: true, shift: false, option: false, control: false) == .openLauncher)
+        #expect(
+            bindings.action(matching: 12, command: true, shift: false, option: false, control: false) == .openLauncher)
         // The old default no longer resolves to openLauncher once overridden.
         #expect(bindings.action(matching: 40, command: true, shift: false, option: false, control: false) == nil)
     }
@@ -218,7 +228,8 @@ final class ShortcutStoreTests {
         let store = ShortcutStore(persistence: persistence)
         let free = KeyChord(keyCode: 99, command: true, shift: true, option: true, control: false)
         _ = store.rebind(.openLauncher, to: free)
-        _ = store.rebind(.newWorkspace, to: KeyChord(keyCode: 98, command: true, shift: false, option: false, control: false))
+        _ = store.rebind(
+            .newWorkspace, to: KeyChord(keyCode: 98, command: true, shift: false, option: false, control: false))
 
         store.resetToDefault(.openLauncher)
 

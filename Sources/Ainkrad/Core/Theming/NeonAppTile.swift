@@ -1,10 +1,10 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// The neon app-icon shown in the Launcher, Workspace overview, tile-mode chips,
 /// the Block header, App Store, and Settings rows. Drawn live from the active
-/// theme's `DesignTokens`, so the glyph and its glow follow whatever theme is
+/// theme's skin, so the glyph and its glow follow whatever theme is
 /// current — at any size and for any app (its SF Symbol) — with no baked
 /// per-theme art.
 ///
@@ -14,7 +14,7 @@ import AinkradHostRuntime
 struct NeonAppTile: View {
     /// The app's SF Symbol name (its `AinkradApp.icon`).
     let symbol: String
-    let tokens: DesignTokens
+    let tokens: AinkradSkin
     var size: CGFloat = 32
     /// Unread-count badge, already capped by `SignalBadgeModel.badgeText`.
     /// Defaulted to nil so every existing call site renders exactly as before.
@@ -28,31 +28,34 @@ struct NeonAppTile: View {
     var badgeStatus: AinkradStatus? = nil
 
     @Environment(\.ainkradStatusColors) private var statusColors
+    /// Opacity, cut and motion come from the skin. Colours stay on `tokens`
+    /// until the callers' area PRs drop that parameter (§1c).
+    @Environment(\.ainkradSkin) private var skin
 
     private var badgeTint: Color {
         // Mapped here rather than through `AinkradStatus.color(in:)`: that
-        // takes `HostThemeTokens` and the tile carries `DesignTokens`.
+        // takes `HostThemeTokens` and the tile carries the host skin.
         switch badgeStatus {
         case .success: return statusColors.success
         case .warning: return statusColors.warning
         case .danger: return statusColors.danger
         // Neutral is an informational count — nothing is wrong, so it keeps
         // the ordinary accent rather than borrowing a status colour.
-        case .neutral, .none: return tokens.accentTertiary
+        case .neutral, .none: return tokens.color(\.accentTertiary)
         // Resilient enum from a library-evolution module: a status added to
         // the SDK later must render rather than fail to build.
-        @unknown default: return tokens.accentTertiary
+        @unknown default: return tokens.color(\.accentTertiary)
         }
     }
 
     var body: some View {
         Image(systemName: symbol)
-            .font(.system(size: size * 0.82, weight: .medium))
-            .foregroundStyle(tokens.accentSecondary)
+            .font(.system(size: size * 0.82, weight: .medium))  // design-lint: allow font-size kit-gap neonGlyphRatio
+            .foregroundStyle(tokens.color(\.accentSecondary))
             // Glow scales with the render size so the bloom reads the same at
             // 18pt or 88pt — kept subtle.
-            .shadow(color: tokens.accentSecondary.opacity(0.35), radius: size * 0.09)
-            .shadow(color: tokens.accentSecondary.opacity(0.16), radius: size * 0.22)
+            .shadow(color: tokens.color(\.accentSecondary).opacity(skin.opacity.o35), radius: size * 0.09)
+            .shadow(color: tokens.color(\.accentSecondary).opacity(skin.opacity.o16), radius: size * 0.22)
             .frame(width: size, height: size)
             // Overlaid rather than in an HStack: the badge must not change the
             // tile's footprint, or a notification would nudge the launcher grid.
@@ -60,15 +63,15 @@ struct NeonAppTile: View {
                 if let badge {
                     Text(badge)
                         .font(AinkradFont.mono(size * 0.24, weight: .semibold))
-                        .foregroundStyle(tokens.background)
+                        .foregroundStyle(tokens.color(\.background))
                         .padding(.horizontal, size * 0.10)
                         .padding(.vertical, size * 0.03)
-                        .background(ChamferShape(cut: size * 0.10).fill(badgeTint))
-                        .shadow(color: badgeTint.opacity(0.6), radius: size * 0.08)
+                        .background(ChamferShape(cut: size * skin.cut.r0_10).fill(badgeTint))
+                        .shadow(color: badgeTint.opacity(skin.opacity.o60), radius: size * 0.08)
                         .offset(x: size * 0.22, y: -size * 0.12)
                         .transition(.scale.combined(with: .opacity))
                 }
             }
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: badge)
+            .animation(skin.motion.springs["sp30_70"].map { skin.animation($0) }, value: badge)
     }
 }

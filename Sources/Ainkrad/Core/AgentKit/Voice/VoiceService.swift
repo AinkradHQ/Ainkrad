@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 import Foundation
 import Observation
-import AinkradHostRuntime
 
 /// M7 Slice 8 (Voice) facade: composes the on-device + provider transcription
 /// backends behind `TranscriptionBackendSelector`, then wires the push-to-talk
@@ -17,13 +17,15 @@ final class VoiceService {
     var reviewTranscript: String?
     var lastNotice: String?
 
-    init(persistence: PersistenceStore,
-         connections: ConnectionStore,
-         http: DataHTTPClient = URLSessionDataHTTPClient(),
-         capture: AudioCaptureSession = AVAudioEngineCaptureSession(),
-         permission: MicPermissionProviding = SystemMicPermission(),
-         availability: SpeechRecognizerAvailability = AppleSpeechAvailability(),
-         slicer: AudioSlicer = AVAudioSlicer()) {
+    init(
+        persistence: PersistenceStore,
+        connections: ConnectionStore,
+        http: DataHTTPClient = URLSessionDataHTTPClient(),
+        capture: AudioCaptureSession = AVAudioEngineCaptureSession(),
+        permission: MicPermissionProviding = SystemMicPermission(),
+        availability: SpeechRecognizerAvailability = AppleSpeechAvailability(),
+        slicer: AudioSlicer = AVAudioSlicer()
+    ) {
         let settings = VoiceSettingsStore(persistence: persistence)
         self.settings = settings
 

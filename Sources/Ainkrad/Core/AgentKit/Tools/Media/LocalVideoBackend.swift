@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Keyless local text-to-video backend for a self-hosted server. No key, no card —
 /// configuration is just the server URL. Contract (kept deliberately simple so a

@@ -1,16 +1,16 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// The Live Scry: agent-rendered cards, auto-arranged. Cards flow newest-first
 /// into columns; dragging or resizing one records an override in the store and
 /// that card floats above the flow, which re-packs around it.
 ///
 /// No pointer parallax: it depended on `z` (now gone) and re-animated every
-/// card on every pointer move. Hover lift and shadow remain.
+/// card on every pointer move. Hover lift (the kit card's) and shadow remain.
 @MainActor
 struct ScryView: View {
-    @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradTheme) private var theme
     @Environment(\.ainkradReduceMotion) private var reduceMotion
     let store: ScryStore
 
@@ -24,33 +24,37 @@ struct ScryView: View {
     @State private var playingIDs: Set<String> = []
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
         GeometryReader { proxy in
             let elements = store.model.elements
             let overrides = store.overrides
-            let frames = ScryLayout.frames(for: elements, in: proxy.size,
-                                           overrides: overrides)
+            let frames = ScryLayout.frames(
+                for: elements, in: proxy.size,
+                overrides: overrides)
             ScrollView {
                 ZStack(alignment: .topLeading) {
                     // Flow cards.
                     ForEach(elements) { element in
                         if let rect = frames[element.id],
-                           isVisible(rect, id: element.id, viewportHeight: proxy.size.height) {
-                            ScryCard(element: element, store: store, tokens: tokens,
-                                     rect: rect, isFloating: false,
-                                     containerSize: proxy.size,
-                                     reduceMotion: reduceMotion)
+                            isVisible(rect, id: element.id, viewportHeight: proxy.size.height)
+                        {
+                            ScryCard(
+                                element: element, store: store,
+                                rect: rect, isFloating: false,
+                                containerSize: proxy.size,
+                                reduceMotion: reduceMotion)
                         }
                     }
                     // Floating (user-placed) cards, above the flow, most-
                     // recently-dragged last so it renders on top of the rest.
                     ForEach(floatingElements(elements)) { element in
                         if let rect = overrides[element.id],
-                           isVisible(rect, id: element.id, viewportHeight: proxy.size.height) {
-                            ScryCard(element: element, store: store, tokens: tokens,
-                                     rect: rect, isFloating: true,
-                                     containerSize: proxy.size,
-                                     reduceMotion: reduceMotion)
+                            isVisible(rect, id: element.id, viewportHeight: proxy.size.height)
+                        {
+                            ScryCard(
+                                element: element, store: store,
+                                rect: rect, isFloating: true,
+                                containerSize: proxy.size,
+                                reduceMotion: reduceMotion)
                         }
                     }
                 }
@@ -59,18 +63,23 @@ struct ScryView: View {
                         Color.clear.preference(
                             key: ScryScrollOffsetKey.self,
                             value: -g.frame(in: .named("scry-scroll")).minY)
-                    })
-                .frame(height: max(proxy.size.height,
-                                   ScryLayout.contentHeight(for: elements, in: proxy.size,
-                                                            overrides: overrides)),
-                       alignment: .topLeading)
+                    }
+                )
+                .frame(
+                    height: max(
+                        proxy.size.height,
+                        ScryLayout.contentHeight(
+                            for: elements, in: proxy.size,
+                            overrides: overrides)),
+                    alignment: .topLeading
+                )
                 .frame(maxWidth: .infinity, alignment: .topLeading)
             }
             .coordinateSpace(name: "scry-scroll")
             .onPreferenceChange(ScryScrollOffsetKey.self) { visibleTop = $0 }
             .onPreferenceChange(ScryPlayingCardsKey.self) { playingIDs = $0 }
             .overlay {
-                if elements.isEmpty { emptyState(tokens: tokens) }
+                if elements.isEmpty { emptyState }
             }
         }
     }
@@ -100,14 +109,10 @@ struct ScryView: View {
         return CGFloat(rect.y + rect.height) >= top && CGFloat(rect.y) <= bottom
     }
 
-    private func emptyState(tokens: DesignTokens) -> some View {
-        VStack(spacing: 8) {
-            Image(systemName: "square.on.square.dashed").font(.system(size: 26))
-                .foregroundStyle(tokens.foreground.opacity(0.25))
-            Text("The assistant will lay results out here")
-                .font(AinkradFont.display(12)).foregroundStyle(tokens.foreground.opacity(0.35))
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    private var emptyState: some View {
+        AinkradEmptyState(
+            icon: "square.on.square.dashed", title: "No cards yet",
+            message: "The assistant will lay results out here")
     }
 }
 
@@ -135,9 +140,10 @@ struct ScryPlayingCardsKey: PreferenceKey {
 /// One draggable/resizable card wrapping a `ScryElementView`.
 @MainActor
 private struct ScryCard: View {
+    @Environment(\.ainkradSkin) private var skin
     let element: ScryElement
     let store: ScryStore
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
     let rect: ScryRect
     let isFloating: Bool
     let containerSize: CGSize
@@ -181,14 +187,15 @@ private struct ScryCard: View {
     }
 
     var body: some View {
-        ScryElementView(element: element, tokens: tokens)
+        ScryElementView(element: element)
             .overlay(alignment: .topTrailing) { if isHovering { controls } }
             .overlay(alignment: .bottomTrailing) { if isHovering { resizeHandle } }
-            .scaleEffect(isHovering ? 1.01 : 1.0)
-            .shadow(color: tokens.accentSecondary.opacity(isHovering ? 0.18 : 0.08),
-                    radius: isHovering ? 12 : 6)
+            .shadow(
+                color: theme.accentSecondary.opacity(isHovering ? skin.opacity.o18 : skin.opacity.o08),
+                radius: isHovering ? 12 : 6
+            )
             .onHover { isHovering = $0 }
-            .animation(reduceMotion ? nil : .easeOut(duration: 0.14), value: isHovering)
+            .animation(reduceMotion ? nil : skin.animation(skin.motion.hover), value: isHovering)
             .gesture(
                 DragGesture()
                     .updating($dragStart) { _, state, _ in
@@ -214,21 +221,23 @@ private struct ScryCard: View {
     }
 
     private var controls: some View {
-        HStack(spacing: 6) {
-            AinkradIconButton(systemName: element.pinned ? "pin.fill" : "pin", size: 20,
-                               tooltip: element.pinned ? "Unpin" : "Pin") {
+        HStack(spacing: skin.size.s6) {
+            AinkradIconButton(
+                systemName: element.pinned ? "pin.fill" : "pin", size: 20,
+                tooltip: element.pinned ? "Unpin" : "Pin"
+            ) {
                 store.setPinned(id: element.id, !element.pinned)
             }
             AinkradIconButton(systemName: "xmark", size: 20, tooltip: "Dismiss") {
                 store.remove(id: element.id)
             }
         }
-        .padding(6)
+        .padding(skin.size.s6)
     }
 
     private var resizeHandle: some View {
-        Image(systemName: "arrow.down.right").font(.system(size: 10))
-            .foregroundStyle(tokens.foreground.opacity(0.4)).padding(4)
+        Image(systemName: "arrow.down.right").font(skin.font(AinkradFontToken(sizeKey: "t10", scaled: false)))
+            .foregroundStyle(theme.foreground.opacity(skin.opacity.o40)).padding(skin.spacing.xs)
             .gesture(
                 DragGesture()
                     .updating($resizeStart) { _, state, _ in
@@ -236,8 +245,9 @@ private struct ScryCard: View {
                     }
                     .onChanged { v in
                         let base = resizeStart ?? rect
-                        resizePreviewSize = CGSize(width: max(160, base.width + v.translation.width),
-                                                    height: max(100, base.height + v.translation.height))
+                        resizePreviewSize = CGSize(
+                            width: max(160, base.width + v.translation.width),
+                            height: max(100, base.height + v.translation.height))
                     }
                     .onEnded { v in
                         let base = resizeStart ?? rect

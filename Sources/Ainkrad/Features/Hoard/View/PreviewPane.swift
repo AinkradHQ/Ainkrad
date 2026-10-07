@@ -1,7 +1,7 @@
-import SwiftUI
-import QuickLookUI
 import AinkradAppKit
 import AinkradAppKitUI
+import QuickLookUI
+import SwiftUI
 
 /// The collapsible right-hand preview strip. ⌘Y toggles it, matching Quick
 /// Look's muscle memory.
@@ -15,25 +15,30 @@ struct PreviewPane: View {
 
     @Environment(\.ainkradTheme) private var theme
     @Environment(\.ainkradTypography) private var typo
+    @Environment(\.ainkradSkin) private var skin
 
     var body: some View {
         VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
             if let entry {
+                // Spaced off the content by a step, never a rule — the design
+                // forbids separator lines.
                 header(entry)
-                Divider().opacity(0)   // spacing only — the design forbids rules
+                    .padding(.bottom, AinkradSpacing.sm)
                 content(for: entry)
             } else {
-                AinkradEmptyState(icon: "sidebar.right", title: "No Selection",
-                                  message: "Select a file to preview it.")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                AinkradEmptyState(
+                    icon: "sidebar.right", title: "No Selection",
+                    message: "Select a file to preview it."
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .padding(AinkradSpacing.md)
-        .frame(width: 300)
+        .frame(width: skin.size.s300)
     }
 
     private func header(_ entry: FileEntry) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: skin.size.s2) {
             Text(entry.name)
                 .font(AinkradFontResolver.font(.body, weight: .medium, typography: typo))
                 .foregroundStyle(theme.foreground)
@@ -41,7 +46,7 @@ struct PreviewPane: View {
                 .truncationMode(.middle)
             Text(formattedSize(entry.size, isDirectory: entry.isDirectory))
                 .font(AinkradFontResolver.font(.caption, typography: typo))
-                .foregroundStyle(theme.foreground.opacity(0.5))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o50))
         }
     }
 
@@ -60,7 +65,7 @@ struct PreviewPane: View {
                 ScrollView {
                     Text(text)
                         .font(AinkradFontResolver.font(.mono, typography: typo))
-                        .foregroundStyle(theme.foreground.opacity(0.85))
+                        .foregroundStyle(theme.foreground.opacity(skin.opacity.o85))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .textSelection(.enabled)
                 }
@@ -83,9 +88,11 @@ struct PreviewPane: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
         case .directory:
-            AinkradEmptyState(icon: "folder", title: entry.name,
-                              message: "\(itemCount) item\(itemCount == 1 ? "" : "s")")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            AinkradEmptyState(
+                icon: "folder", title: entry.name,
+                message: "\(itemCount) item\(itemCount == 1 ? "" : "s")"
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
         case .none:
             unavailable
@@ -93,9 +100,11 @@ struct PreviewPane: View {
     }
 
     private var unavailable: some View {
-        AinkradEmptyState(icon: "eye.slash", title: "No Preview",
-                          message: "This file type can't be previewed.")
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        AinkradEmptyState(
+            icon: "eye.slash", title: "No Preview",
+            message: "This file type can't be previewed."
+        )
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/LSP/LSPServerRegistry.swift
 import Foundation
-import AinkradHostRuntime
 
 /// Connection health for one (language, workspace-root) LSP session.
 enum LSPHealth: Equatable {
@@ -27,9 +27,11 @@ final class LSPServerRegistry {
     /// - Parameter clientFactory: builds a real transport-backed client from a config.
     ///   Injectable so tests pass a stub-backed client and never spawn a real language
     ///   server process.
-    init(persistence: PersistenceStore,
-         clientFactory: @escaping @MainActor @Sendable (LSPServerConfig) -> LSPClient? =
-            LSPServerRegistry.defaultClientFactory) {
+    init(
+        persistence: PersistenceStore,
+        clientFactory: @escaping @MainActor @Sendable (LSPServerConfig) -> LSPClient? =
+            LSPServerRegistry.defaultClientFactory
+    ) {
         self.doc = persistence.load(LSPServersDocument.self) ?? LSPServersDocument()
         self.persistence = persistence
         self.clientFactory = clientFactory
@@ -208,8 +210,9 @@ final class LSPServerRegistry {
     nonisolated static func autodetect(which: (String) -> String? = defaultWhich) -> [LSPServerConfig] {
         knownServers.compactMap { entry in
             guard let resolved = which(entry.binary) else { return nil }
-            return LSPServerConfig(id: entry.language, command: resolved, args: [],
-                                    fileGlobs: entry.globs, enabled: true)
+            return LSPServerConfig(
+                id: entry.language, command: resolved, args: [],
+                fileGlobs: entry.globs, enabled: true)
         }
     }
 

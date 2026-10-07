@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// The first-run gate. Deliberately non-dismissible: no scrim tap, no Escape,
 /// no onDismiss closure — that trio is what makes every other overlay closable.
@@ -19,6 +19,7 @@ struct SetupOverlayView: View {
     /// `AinkradApp`), so the Motion & Sound step's toggle stops the remaining
     /// steps animating the instant it is flipped.
     @Environment(\.ainkradReduceMotion) private var reduceMotion
+    @Environment(\.ainkradSkin) private var skin
     @State private var coordinator: SetupCoordinator?
     /// Set by the Home step's adoption. Survives the environment swap for the
     /// same reason the coordinator does — same view identity, same `@State` —
@@ -30,26 +31,18 @@ struct SetupOverlayView: View {
     @State private var modals = SetupModalPresenter()
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
+        let tokens = environment.themeManager.hostSkin
 
         ZStack {
             // The scrim stays; the PANEL is what went away. The island keeps
             // living behind it — that is the point of running the wizard after
             // bootstrap. Still no .onTapGesture — intentional.
-            Color.black.opacity(OverlayChrome.backdropOpacity)
+            skin.color(.palette("black", skin.chrome.overlay.backdropOpacity))
                 .ignoresSafeArea()
 
             if let coordinator {
                 stage(coordinator: coordinator, tokens: tokens)
                     .environment(modals)
-            }
-
-            // Above the stage, always. A step raises this only for a decision
-            // that blocks the wizard; refusals stay inline in the step.
-            if let modal = modals.modal {
-                SetupModalView(modal: modal, tokens: tokens)
-                    .transition(.opacity)
-                    .zIndex(10)
             }
 
             // Replay-only exit. See the type doc for why first-run never gets
@@ -58,15 +51,23 @@ struct SetupOverlayView: View {
                 VStack {
                     HStack {
                         Spacer()
-                        closeReplayButton(tokens: tokens)
+                        closeReplayButton
                     }
                     Spacer()
                 }
-                .padding(20)
+                .padding(skin.size.s20)
                 .zIndex(20)
             }
         }
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.14), value: modals.modal?.id)
+        // Above the whole gate, always — the stage and the replay Close
+        // included. A step raises this only for a decision that blocks the
+        // wizard. The kit modal owns the scrim, its blur, Esc and the
+        // materialize; a scrim click or Esc takes the modal's SAFE outcome.
+        .ainkradModal(isPresented: isModalPresented, contentWidth: skin.size.s420) {
+            if let modal = modals.modal {
+                SetupModalView(modal: modal, tokens: tokens)
+            }
+        }
         .onAppear {
             if coordinator == nil {
                 coordinator = SetupCoordinator(
@@ -76,7 +77,8 @@ struct SetupOverlayView: View {
             }
         }
         // Deliberately no .onKeyPress(.escape) — this overlay must not be
-        // dismissible by keyboard either. ⌘Q is exempted upstream in
+        // dismissible by keyboard either. Esc reaches only a raised modal,
+        // where it is that modal's cancel. ⌘Q is exempted upstream in
         // `SetupGate.swallows`, not handled here.
     }
 
@@ -84,21 +86,18 @@ struct SetupOverlayView: View {
     /// without touching anything the wizard may have already written: a
     /// replaying user's facts and settings are saved field-by-field, same as
     /// the Settings panes they mirror, so there is nothing to roll back.
-    private func closeReplayButton(tokens: DesignTokens) -> some View {
-        Button(action: closeReplay) {
-            HStack(spacing: 6) {
-                Image(systemName: "xmark")
-                Text("Close")
-            }
-            .font(AinkradFont.display(12, weight: .medium))
-            .foregroundStyle(tokens.foreground.opacity(0.85))
-            .padding(.horizontal, 12)
-            .padding(.vertical, 7)
-            .background(ChamferShape(cut: AinkradRadius.sm).fill(tokens.surfaceElevated.opacity(0.7)))
-        }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier("setup.replay.close")
-        .accessibilityLabel("Close re-run setup")
+    private var closeReplayButton: some View {
+        AinkradButton(title: "Close", style: .secondary, icon: "xmark", action: closeReplay)
+            .accessibilityIdentifier("setup.replay.close")
+            .accessibilityLabel("Close re-run setup")
+    }
+
+    /// Up while the presenter holds a modal. The kit writes `false` on a scrim
+    /// click or Esc, which is a cancel — never the primary.
+    private var isModalPresented: Binding<Bool> {
+        Binding(
+            get: { modals.modal != nil },
+            set: { if !$0 { modals.cancel() } })
     }
 
     /// Both flags must clear together: leaving `isSetupReplay` set would make
@@ -114,17 +113,20 @@ struct SetupOverlayView: View {
     }
 
     /// Full-bleed: rail, heading, step, nav — no panel chrome, no fixed size.
-    private func stage(coordinator: SetupCoordinator, tokens: DesignTokens) -> some View {
-        SetupStage(coordinator: coordinator,
-                   tokens: tokens,
-                   reduceMotion: reduceMotion) { step in
-            SetupStepBody(step: step,
-                          coordinator: coordinator,
-                          didMigrateLegacyData: didMigrateLegacyData,
-                          onAdopted: { rebuilt, migrated in
-                              didMigrateLegacyData = migrated
-                              reseat(after: coordinator, using: rebuilt)
-                          })
+    private func stage(coordinator: SetupCoordinator, tokens: AinkradSkin) -> some View {
+        SetupStage(
+            coordinator: coordinator,
+            tokens: tokens,
+            reduceMotion: reduceMotion
+        ) { step in
+            SetupStepBody(
+                step: step,
+                coordinator: coordinator,
+                didMigrateLegacyData: didMigrateLegacyData,
+                onAdopted: { rebuilt, migrated in
+                    didMigrateLegacyData = migrated
+                    reseat(after: coordinator, using: rebuilt)
+                })
         }
     }
 
@@ -162,7 +164,8 @@ struct SetupOverlayView: View {
             // otherwise appear to have simply not moved.
             if let target, step != target {
                 Log.persistence.error(
-                    "Setup re-seat could not reach \(target.rawValue, privacy: .public); stopped at \(step.rawValue, privacy: .public)")
+                    "Setup re-seat could not reach \(target.rawValue, privacy: .public); stopped at \(step.rawValue, privacy: .public)"
+                )
             }
         }
     }
@@ -173,9 +176,8 @@ struct SetupOverlayView: View {
     // ever draws the steps actually owed.
 }
 
-/// Minimal per-step content: a title and a Continue button. Tasks 4-9 replace
-/// each case with the real step content; the switch itself is the seam they
-/// hook into.
+/// Routes the coordinator's current step to that step's view. Each step view
+/// owns its own content and ends in the shared `SetupStepFooter`.
 struct SetupStepBody: View {
     let step: SetupStep
     let coordinator: SetupCoordinator
@@ -209,8 +211,9 @@ struct SetupStepBody: View {
         case .assistant:
             SetupAssistantStepView(coordinator: coordinator)
         case .done:
-            SetupDoneStepView(coordinator: coordinator,
-                              didMigrateLegacyData: didMigrateLegacyData)
+            SetupDoneStepView(
+                coordinator: coordinator,
+                didMigrateLegacyData: didMigrateLegacyData)
         }
     }
 }

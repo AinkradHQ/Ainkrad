@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 /// These tests mutate global process state (`NSSetUncaughtExceptionHandler`),
@@ -15,7 +16,8 @@ struct CrashSentinelTests {
     }
 
     @Test func installedHandlerRecordsAnUncaughtException() {
-        let dir = tempDir(); defer { try? FileManager.default.removeItem(at: dir) }
+        let dir = tempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
         let writer = CrashLogWriter(directory: dir)
         let previousHandler = NSGetUncaughtExceptionHandler()
         defer { NSSetUncaughtExceptionHandler(previousHandler) }

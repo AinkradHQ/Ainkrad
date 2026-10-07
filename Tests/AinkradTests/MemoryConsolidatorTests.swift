@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("MemoryConsolidator")
 @MainActor
@@ -12,7 +13,8 @@ struct MemoryConsolidatorTests {
     }
 
     @Test func dedupesDuplicateLinesAndLogsIt() throws {
-        let (svc, root) = try service(); defer { try? FileManager.default.removeItem(at: root) }
+        let (svc, root) = try service()
+        defer { try? FileManager.default.removeItem(at: root) }
         svc.store.write("a\nb\na\nc\nb", to: .memory)
         MemoryConsolidator.consolidate(svc)
         #expect(svc.store.read(.memory) == "a\nb\nc")
@@ -20,15 +22,17 @@ struct MemoryConsolidatorTests {
     }
 
     @Test func noOpWhenNothingToConsolidate() throws {
-        let (svc, root) = try service(); defer { try? FileManager.default.removeItem(at: root) }
+        let (svc, root) = try service()
+        defer { try? FileManager.default.removeItem(at: root) }
         svc.store.write("a\nb\nc", to: .memory)
         MemoryConsolidator.consolidate(svc)
         #expect(svc.store.read(.memory) == "a\nb\nc")
-        #expect(svc.log.entries().isEmpty)   // unchanged content → no write, no log churn
+        #expect(svc.log.entries().isEmpty)  // unchanged content → no write, no log churn
     }
 
     @Test func capsToMaxLinesRetainingTail() throws {
-        let (svc, root) = try service(); defer { try? FileManager.default.removeItem(at: root) }
+        let (svc, root) = try service()
+        defer { try? FileManager.default.removeItem(at: root) }
         // 10 distinct lines, cap to 4 → suffix policy keeps the most-recent 4.
         let lines = (0..<10).map { "line\($0)" }
         svc.store.write(lines.joined(separator: "\n"), to: .memory)

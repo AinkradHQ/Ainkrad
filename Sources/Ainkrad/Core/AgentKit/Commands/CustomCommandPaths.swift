@@ -22,9 +22,11 @@ struct CustomCommandPaths {
     func commandFiles(fileManager: FileManager = .default) -> [(url: URL, scope: CustomCommand.Scope)] {
         var out: [(url: URL, scope: CustomCommand.Scope)] = []
         for (root, scope) in [(userRoot, CustomCommand.Scope.user)]
-            + (projectRoot.map { [($0, CustomCommand.Scope.project)] } ?? []) {
-            let entries = (try? fileManager.contentsOfDirectory(
-                at: root, includingPropertiesForKeys: nil)) ?? []
+            + (projectRoot.map { [($0, CustomCommand.Scope.project)] } ?? [])
+        {
+            let entries =
+                (try? fileManager.contentsOfDirectory(
+                    at: root, includingPropertiesForKeys: nil)) ?? []
             for url in entries.sorted(by: { $0.lastPathComponent < $1.lastPathComponent })
             where url.pathExtension.lowercased() == "md" {
                 out.append((url, scope))

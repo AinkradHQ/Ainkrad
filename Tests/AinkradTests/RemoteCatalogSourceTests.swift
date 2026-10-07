@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 struct RemoteCatalogSourceTests {
@@ -8,15 +9,15 @@ struct RemoteCatalogSourceTests {
     @Test("decodes full catalog entries (presentation + download) from catalog.json")
     func decodes() async throws {
         let json = """
-        {"schemaVersion":1,"apps":[
-          {"appID":"gitmage","displayName":"Git Mage","icon":"wand.and.stars",
-           "description":"Git IDE","version":"v0.2.0","apiVersion":1,
-           "downloadURL":"https://example.com/gitmage.bundle.zip","sha256":"abc",
-           "sourceRepo":"AhmedMElhalaby/GitMage",
-           "screenshots":["https://example.com/s1.png"],
-           "links":[{"title":"Home","url":"https://example.com"}]}
-        ]}
-        """.data(using: .utf8)!
+            {"schemaVersion":1,"apps":[
+              {"appID":"gitmage","displayName":"Git Mage","icon":"wand.and.stars",
+               "description":"Git IDE","version":"v0.2.0","apiVersion":1,
+               "downloadURL":"https://example.com/gitmage.bundle.zip","sha256":"abc",
+               "sourceRepo":"AhmedMElhalaby/GitMage",
+               "screenshots":["https://example.com/s1.png"],
+               "links":[{"title":"Home","url":"https://example.com"}]}
+            ]}
+            """.data(using: .utf8)!
         let http = StubHTTPClient(responses: [url: .success(json)])
         let entries = try await RemoteCatalogSource(url: url, http: http).fetchCatalog()
 

@@ -22,10 +22,12 @@ final class AgentSessionSubagentRunner: SubagentRunner {
     private let candidatesProvider: @MainActor () -> [RouterCandidate]
     private let makeSession: @MainActor (AgentProfile, AgentToolRegistry, String, Set<String>) -> AgentSession
 
-    init(allTools: [any AgentTool], agents: AgentStore, router: ModelRouter,
-         executionRouter: ExecutionRouter,
-         candidatesProvider: @escaping @MainActor () -> [RouterCandidate],
-         makeSession: @escaping @MainActor (AgentProfile, AgentToolRegistry, String, Set<String>) -> AgentSession) {
+    init(
+        allTools: [any AgentTool], agents: AgentStore, router: ModelRouter,
+        executionRouter: ExecutionRouter,
+        candidatesProvider: @escaping @MainActor () -> [RouterCandidate],
+        makeSession: @escaping @MainActor (AgentProfile, AgentToolRegistry, String, Set<String>) -> AgentSession
+    ) {
         self.allTools = allTools
         self.agents = agents
         self.router = router
@@ -37,10 +39,11 @@ final class AgentSessionSubagentRunner: SubagentRunner {
     func run(_ spec: SubagentSpec) async -> SubagentOutcome {
         let profile = spec.profileID.flatMap { id in agents.agents.first { $0.id == id } } ?? agents.active
 
-        let decision = router.route(forSubagent: SubagentModelRequest(
-            budgetTier: spec.budgetTier, needsVision: false, needsTools: true,
-            estimatedInputTokens: max(1, spec.prompt.count / 4),
-            candidates: candidatesProvider()))
+        let decision = router.route(
+            forSubagent: SubagentModelRequest(
+                budgetTier: spec.budgetTier, needsVision: false, needsTools: true,
+                estimatedInputTokens: max(1, spec.prompt.count / 4),
+                candidates: candidatesProvider()))
 
         let tools = SubagentRegistryFilter.tools(from: allTools, allow: spec.toolAllowList, policy: profile.toolPolicy)
         let registry = AgentToolRegistry(tools: tools)

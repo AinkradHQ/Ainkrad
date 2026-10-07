@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 /// Integration coverage for the *real* `URLSessionStreamingHTTPClient` — the
@@ -39,9 +40,10 @@ struct URLSessionStreamingHTTPClientTests {
         // Real OpenAI wire format: each `data:` line is followed by a blank
         // line that ends the event. If those blank lines are lost, SSEParser
         // never flushes per event and merges everything into one payload.
-        let wire = "data: {\"choices\":[{\"delta\":{\"content\":\"Hello\"}}]}\n\n"
-                 + "data: {\"choices\":[{\"delta\":{\"content\":\" world\"}}]}\n\n"
-                 + "data: [DONE]\n\n"
+        let wire =
+            "data: {\"choices\":[{\"delta\":{\"content\":\"Hello\"}}]}\n\n"
+            + "data: {\"choices\":[{\"delta\":{\"content\":\" world\"}}]}\n\n"
+            + "data: [DONE]\n\n"
         StubURLProtocol.statusCode = 200
         StubURLProtocol.responseBody = Data(wire.utf8)
 
@@ -51,10 +53,11 @@ struct URLSessionStreamingHTTPClientTests {
         var payloads: [String] = []
         for try await payload in SSEParser.events(from: bytes) { payloads.append(payload) }
 
-        #expect(payloads == [
-            "{\"choices\":[{\"delta\":{\"content\":\"Hello\"}}]}",
-            "{\"choices\":[{\"delta\":{\"content\":\" world\"}}]}",
-        ])
+        #expect(
+            payloads == [
+                "{\"choices\":[{\"delta\":{\"content\":\"Hello\"}}]}",
+                "{\"choices\":[{\"delta\":{\"content\":\" world\"}}]}",
+            ])
     }
 
     @Test("non-2xx status throws StreamingHTTPError with the response body")

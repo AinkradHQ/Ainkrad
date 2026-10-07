@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-@testable import Ainkrad
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 struct UISoundTests {
     @Test("resourceName is a stable, centralized mapping to the bundled wav base-name")
@@ -133,7 +134,7 @@ struct SoundEngineEnabledGateTests {
         engine.play(.confirm)
         settings.soundEnabled = false
         engine.play(.confirm)
-        #expect(token.playCallCount == 1)   // only the first call went through
+        #expect(token.playCallCount == 1)  // only the first call went through
     }
 
     @Test("play applies the configured volume to the underlying player")
@@ -149,7 +150,7 @@ struct SoundEngineEnabledGateTests {
     func missingPlayerIsNoOp() {
         let settings = FakeSoundSettings(soundEnabled: true)
         let engine = SoundEngine(settings: settings, players: [:])
-        engine.play(.appLaunch)   // should not crash
+        engine.play(.appLaunch)  // should not crash
     }
 }
 
@@ -196,11 +197,11 @@ struct SoundEnginePerEventTests {
         let engine = SoundEngine(settings: settings, players: [.focusMode: token])
 
         engine.preview(.focusMode)
-        #expect(token.playCallCount == 1)   // disabled event still auditions
+        #expect(token.playCallCount == 1)  // disabled event still auditions
 
         settings.soundEnabled = false
         engine.preview(.focusMode)
-        #expect(token.playCallCount == 1)   // master mute silences previews too
+        #expect(token.playCallCount == 1)  // master mute silences previews too
     }
 
     @Test("conformers without per-event state default to enabled + own sound")

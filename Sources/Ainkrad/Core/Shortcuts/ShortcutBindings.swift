@@ -1,5 +1,5 @@
-import AppKit
 import AinkradHostRuntime
+import AppKit
 
 /// The persisted rebinding document: only the actions the user has changed
 /// from their factory default are stored, keyed by `ShortcutAction.rawValue`.

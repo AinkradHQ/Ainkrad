@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Chooses the text a tool card shows: while the step is running (pending) and a
 /// live buffer exists for its id, prefer the incremental stream; otherwise use
@@ -20,9 +20,10 @@ enum TimelineLiveOutput {
 /// marker per step (`TimelineRailGutter`), and the step body (thinking disclosure
 /// / markdown / tool card) to its right. Reuses `ToolCallCardView` for tool steps.
 struct AgentTurnTimelineView: View {
+    @Environment(\.ainkradSkin) private var skin
     let steps: [TurnStep]
-    let tokens: DesignTokens
-    let typography: SageTypography
+    @Environment(\.ainkradTheme) private var theme
+    let typography: AinkradTypography
     let reduceMotion: Bool
     /// Live streaming buffers for in-flight tool calls (Task 1's store). Optional
     /// and defaulted so existing call sites/previews compile unchanged; wired
@@ -49,8 +50,8 @@ struct AgentTurnTimelineView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AinkradSpacing.xl) {
             ForEach(Array(steps.enumerated()), id: \.element.id) { index, step in
-                HStack(alignment: .top, spacing: 10) {
-                    TimelineRailGutter(status: step.status, tokens: tokens, reduceMotion: reduceMotion)
+                HStack(alignment: .top, spacing: skin.size.s10) {
+                    TimelineRailGutter(status: step.status, reduceMotion: reduceMotion)
                     stepBody(step)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -70,30 +71,39 @@ struct AgentTurnTimelineView: View {
     private func stepBody(_ step: TurnStep) -> some View {
         switch step.kind {
         case .thinking(let text):
-            TimelineThinkingRow(text: text, isExpanded: expandedThinking.contains(step.id),
-                                tokens: tokens, reduceMotion: reduceMotion) {
-                if expandedThinking.contains(step.id) { expandedThinking.remove(step.id) }
-                else { expandedThinking.insert(step.id) }
+            TimelineThinkingRow(
+                text: text, isExpanded: expandedThinking.contains(step.id)
+            ) {
+                if expandedThinking.contains(step.id) {
+                    expandedThinking.remove(step.id)
+                } else {
+                    expandedThinking.insert(step.id)
+                }
             }
         case .text(let text):
-            SageMarkdownText(text: text, tokens: tokens, typography: typography)
+            SageMarkdownText(text: text, typography: typography)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .overlay(alignment: .topTrailing) {
                     SageTurnCopyButton(text: text, isVisible: hoveredTextStep == step.id)
-                        .padding(.trailing, 2)
+                        .padding(.trailing, skin.size.s2)
                 }
                 .onHover { isHovering in
                     hoveredTextStep = isHovering ? step.id : (hoveredTextStep == step.id ? nil : hoveredTextStep)
                 }
         case .tool(let payload):
             let liveText = TimelineLiveOutput.summary(for: step, store: toolStream)
-            let imageDataURL: String? = (payload.name == "image_generate")
-                ? scryStore.flatMap { ToolCallImageLookup.canvasImageDataURL(resultText: payload.result.text, store: $0) }
+            let imageDataURL: String? =
+                (payload.name == "image_generate")
+                ? scryStore.flatMap {
+                    ToolCallImageLookup.canvasImageDataURL(resultText: payload.result.text, store: $0)
+                }
                 : nil
-            let videoURL: String? = (payload.name == "video_generate")
+            let videoURL: String? =
+                (payload.name == "video_generate")
                 ? scryStore.flatMap { ToolCallImageLookup.canvasVideoURL(resultText: payload.result.text, store: $0) }
                 : nil
-            let audioURL: String? = (payload.name == "speak")
+            let audioURL: String? =
+                (payload.name == "speak")
                 ? scryStore.flatMap { ToolCallImageLookup.canvasAudioURL(resultText: payload.result.text, store: $0) }
                 : nil
             ToolCallCardView(
@@ -101,7 +111,6 @@ struct AgentTurnTimelineView: View {
                 title: ToolPresentation.humanize(payload.name),
                 summary: liveText,
                 diff: nil,
-                tokens: tokens,
                 result: payload.result,
                 imageDataURL: imageDataURL,
                 onOpenImage: onOpenImage,
@@ -109,10 +118,10 @@ struct AgentTurnTimelineView: View {
                 onOpenVideo: onOpenVideo,
                 audioURL: audioURL)
         case .todo(let items):
-            TodoChecklistView(items: items, tokens: tokens)
+            TodoChecklistView(items: items)
                 .frame(maxWidth: .infinity, alignment: .leading)
         case .plan(let plan):
-            PlanCardView(plan: plan, tokens: tokens)
+            PlanCardView(plan: plan)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
@@ -124,30 +133,32 @@ struct AgentTurnTimelineView: View {
 /// `TimelineThinkingRow` as committed steps so the hand-off to the settled rail
 /// is seamless.
 struct LiveStepView: View {
+    @Environment(\.ainkradSkin) private var skin
     let streamingText: String
     let streamingBlocks: [MarkdownBlock]
     let streamingThinking: String
     let isStreaming: Bool
-    let tokens: DesignTokens
-    let typography: SageTypography
+    @Environment(\.ainkradTheme) private var theme
+    let typography: AinkradTypography
     let reduceMotion: Bool
     @State private var thinkingExpanded = true
 
     var body: some View {
-        HStack(alignment: .top, spacing: 10) {
-            TimelineRailGutter(status: .running, tokens: tokens, reduceMotion: reduceMotion)
-            VStack(alignment: .leading, spacing: 8) {
+        HStack(alignment: .top, spacing: skin.size.s10) {
+            TimelineRailGutter(status: .running, reduceMotion: reduceMotion)
+            VStack(alignment: .leading, spacing: skin.spacing.sm) {
                 if !streamingThinking.isEmpty {
-                    TimelineThinkingRow(text: streamingThinking, isExpanded: thinkingExpanded,
-                                        tokens: tokens, reduceMotion: reduceMotion) { thinkingExpanded.toggle() }
+                    TimelineThinkingRow(
+                        text: streamingThinking, isExpanded: thinkingExpanded
+                    ) { thinkingExpanded.toggle() }
                 }
                 if isStreaming || !streamingText.isEmpty {
-                    VStack(alignment: .leading, spacing: 2) {
-                        SageMarkdownText(blocks: streamingBlocks, tokens: tokens, typography: typography)
-                        if isStreaming { StreamingCursor(tokens: tokens) }
+                    VStack(alignment: .leading, spacing: skin.size.s2) {
+                        SageMarkdownText(blocks: streamingBlocks, typography: typography)
+                        if isStreaming { StreamingCursor() }
                     }
                 } else if streamingThinking.isEmpty {
-                    WorkingIndicator(tokens: tokens)
+                    WorkingIndicator()
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

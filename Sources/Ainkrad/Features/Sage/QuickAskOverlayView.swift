@@ -1,5 +1,6 @@
-import SwiftUI
+import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// A summonable HUD overlay hosting the Sage surface (bound to the shared
 /// `AgentSession`) so the user can ask from anywhere: streaming, gated tools,
@@ -8,53 +9,44 @@ import AinkradHostRuntime
 /// the bar) and its composer auto-focuses on appear. `Esc` dismisses; the
 /// in-flight request keeps running in the shared session.
 struct QuickAskOverlayView: View {
+    @Environment(\.ainkradSkin) private var skin
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradTheme) private var theme
     let onDismiss: () -> Void
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
-
         VStack(spacing: 0) {
-            bar(tokens: tokens)
+            bar()
             SageRootView(showsHeader: false, autoFocusComposer: true)
         }
-        .frame(width: 640)
-        .frame(maxHeight: 560)
-        .hudPanelChrome(tokens: tokens)
+        .frame(width: skin.size.s640)
+        .frame(maxHeight: skin.size.s560)
+        .hudPanelChrome(tokens: environment.themeManager.hostSkin)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .padding(.top, 120)
+        .padding(.top, skin.size.s120)
         .onExitCommand { onDismiss() }
     }
 
-    private func bar(tokens: DesignTokens) -> some View {
-        HStack(spacing: 10) {
+    private func bar() -> some View {
+        HStack(spacing: skin.size.s10) {
             Image(systemName: "sparkles")
-                .font(.system(size: 12))
-                .foregroundStyle(tokens.accentSecondary)
+                .font(skin.font(AinkradFontToken(sizeKey: "t12", scaled: false)))
+                .foregroundStyle(theme.accentSecondary)
             Text("QUICK ASK")
                 .font(AinkradFont.display(12, weight: .medium))
                 .kerning(0.6)
-                .foregroundStyle(tokens.foreground.opacity(0.7))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o70))
 
             Spacer()
 
-            Button {
+            AinkradButton(title: "Open in Sage", style: .ghost, icon: "arrow.up.forward.app") {
                 // Same session, so "open" just reveals the thread in a pane.
                 environment.workspaceManager.activeWorkspace.tileLayout.openApp(SageApp.id)
                 onDismiss()
-            } label: {
-                HStack(spacing: 5) {
-                    Text("Open in Sage")
-                        .font(AinkradFont.display(11))
-                    Image(systemName: "arrow.up.forward.app")
-                        .font(.system(size: 10))
-                }
-                .foregroundStyle(tokens.foreground.opacity(0.6))
             }
-            .buttonStyle(.plain)
             .help("Open this conversation in the Sage pane")
         }
-        .padding(.horizontal, 16)
-        .frame(height: 40)
+        .padding(.horizontal, skin.spacing.lg)
+        .frame(height: skin.size.s40)
     }
 }

@@ -125,8 +125,9 @@ final class HoardSearchStore {
     private func runScopedSearch(root: URL) {
         scopedResults = []
         isScopedSearching = true
-        let stream = Self.stream(root: root, query: SearchQuery(text: scopedText),
-                                 fileSystem: fileSystem)
+        let stream = Self.stream(
+            root: root, query: SearchQuery(text: scopedText),
+            fileSystem: fileSystem)
         scopedTask = Task { [weak self] in
             for await batch in stream {
                 guard !Task.isCancelled else { return }
@@ -203,14 +204,18 @@ final class HoardSearchStore {
     /// `nonisolated` deliberately: `AsyncStream`'s builder is a `sending`
     /// closure, and constructing it inside main-actor-isolated code makes the
     /// compiler (correctly) call it a data race.
-    private nonisolated static func stream(root: URL, query: SearchQuery,
-                                           fileSystem: any FileSystemServing)
-        -> AsyncStream<[SearchHit]> {
+    private nonisolated static func stream(
+        root: URL, query: SearchQuery,
+        fileSystem: any FileSystemServing
+    )
+        -> AsyncStream<[SearchHit]>
+    {
         AsyncStream { continuation in
             Task.detached(priority: .userInitiated) {
-                _ = searchFiles(root: root, query: query, fileSystem: fileSystem,
-                                isCancelled: { Task.isCancelled },
-                                onBatch: { continuation.yield($0) })
+                _ = searchFiles(
+                    root: root, query: query, fileSystem: fileSystem,
+                    isCancelled: { Task.isCancelled },
+                    onBatch: { continuation.yield($0) })
                 continuation.finish()
             }
         }

@@ -11,8 +11,10 @@ enum ReflectionVerdict: Equatable {
 /// skill? Deliberately conservative — a failed turn, any errored tool result,
 /// or a chat/single-step turn is never eligible. No model call, no I/O.
 enum SkillReflectionAdvisor {
-    static func evaluate(_ messages: [AgentMessage], succeeded: Bool,
-                         minToolCalls: Int = 3) -> ReflectionVerdict {
+    static func evaluate(
+        _ messages: [AgentMessage], succeeded: Bool,
+        minToolCalls: Int = 3
+    ) -> ReflectionVerdict {
         guard succeeded else { return .notEligible }
         // Window = tail back to (and excluding) the last user message that
         // carries a `.text` block (the human prompt that opened this turn).
@@ -20,7 +22,10 @@ enum SkillReflectionAdvisor {
         for idx in stride(from: messages.count - 1, through: 0, by: -1) {
             let m = messages[idx]
             let hasText = m.content.contains { if case .text = $0 { return true } else { return false } }
-            if m.role == .user && hasText { start = idx; break }
+            if m.role == .user && hasText {
+                start = idx
+                break
+            }
             start = idx
         }
         let window = messages[start...]

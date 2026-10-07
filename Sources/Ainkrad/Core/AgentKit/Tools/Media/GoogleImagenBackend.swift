@@ -1,11 +1,12 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Google Imagen (via the Generative Language API) image backend. Key in the
 /// Keychain via SecretStore, never a document. The key is passed as the `key`
 /// query parameter per the Generative Language API convention.
 struct GoogleImagenBackend: MediaBackend {
     static let secretID = "media.google.apiKey"
+    // `nonisolated(unsafe)`: an immutable `let`; `KeychainSecretStore` keeps no mutable state and Keychain calls are thread-safe.
     nonisolated(unsafe) let secrets: SecretStore
     let http: DataHTTPClient
     var model: String = "imagen-3.0-generate-002"
@@ -21,8 +22,10 @@ struct GoogleImagenBackend: MediaBackend {
         guard let key = secrets.secret(for: Self.secretID), !key.isEmpty else {
             throw ToolError.message("Image generation is not configured.")
         }
-        guard var comps = URLComponents(
-            string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):predict") else {
+        guard
+            var comps = URLComponents(
+                string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):predict")
+        else {
             throw ToolError.message("Invalid Google Imagen URL.")
         }
         comps.queryItems = [.init(name: "key", value: key)]

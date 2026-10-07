@@ -23,11 +23,16 @@ enum VideoJobPolling {
     /// Polls `check` until it returns a non-nil URL or `maxAttempts` is reached.
     /// `check` returns `.pending` to keep waiting, `.done(url)` when ready, and
     /// throws on a terminal failure. Sleeps `intervalNanos` between attempts.
-    enum Status: Equatable { case pending; case done(String) }
+    enum Status: Equatable {
+        case pending
+        case done(String)
+    }
 
-    static func poll(maxAttempts: Int = 60,
-                     intervalNanos: UInt64 = 2_000_000_000,
-                     check: () async throws -> Status) async throws -> String {
+    static func poll(
+        maxAttempts: Int = 60,
+        intervalNanos: UInt64 = 2_000_000_000,
+        check: () async throws -> Status
+    ) async throws -> String {
         for _ in 0..<maxAttempts {
             if case .done(let url) = try await check() { return url }
             try await Task.sleep(nanoseconds: intervalNanos)

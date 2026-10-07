@@ -1,8 +1,9 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
-/// Overflow panel for `SageComposerBar` (Wave 3 Task 7).
+/// Overflow panel for `SageComposerBar` (Wave 3 Task 7). Its rows are the
+/// kit's `AinkradCommandMenu`.
 ///
 /// Collapses the two low-traffic utilities (Usage & cost, Export) behind a
 /// single `•••` control — a Cardinal HUD floating panel, never a native
@@ -17,52 +18,46 @@ extension SageComposerBar {
             isOverflowVisible.toggle()
         }
         .ainkradFloatingPanel(isPresented: $isOverflowVisible, maxHeight: 170) {
-            VStack(alignment: .leading, spacing: 0) {
-                OverflowRow(icon: "gauge.with.dots.needle.67percent", title: "Usage & cost", tokens: tokens) {
-                    isOverflowVisible = false; isUsageDashboardPresented = true
-                }
-                OverflowRow(icon: "square.and.arrow.up", title: "Export…", tokens: tokens) {
-                    isOverflowVisible = false; isExportModalPresented = true
-                }
-                OverflowRow(icon: "link", title: "Share…", tokens: tokens) {
-                    isOverflowVisible = false; isShareModalPresented = true
-                }
-            }
+            AinkradCommandMenu(
+                items: OverflowItem.allCases,
+                selection: Binding(get: { nil }, set: { if let item = $0 { openOverflowItem(item) } }),
+                icon: \.icon, label: \.title, uppercased: false)
             .padding(AinkradSpacing.xs)
-            .background(ChamferShape(cut: 8).fill(tokens.surfaceElevated.opacity(0.97)))
-            .overlay(ChamferShape(cut: 8).strokeBorder(tokens.accentSecondary.opacity(0.55), lineWidth: 1.25))
-            .shadow(color: tokens.accentSecondary.opacity(0.35), radius: 10, y: 4)
-            .frame(minWidth: 160)
+            .background(ChamferShape(cut: skin.cut.c8).fill(theme.surfaceElevated.opacity(skin.opacity.o97)))
+            .overlay(ChamferShape(cut: skin.cut.c8).strokeBorder(theme.accentSecondary.opacity(skin.opacity.o55), lineWidth: 1.25))
+            .shadow(color: theme.accentSecondary.opacity(skin.opacity.o35), radius: skin.size.s10, y: 4)
+            .frame(minWidth: skin.size.s160)
+        }
+    }
+
+    /// Closes the panel and presents the chosen utility's modal.
+    private func openOverflowItem(_ item: OverflowItem) {
+        isOverflowVisible = false
+        switch item {
+        case .usage: isUsageDashboardPresented = true
+        case .export: isExportModalPresented = true
+        case .share: isShareModalPresented = true
         }
     }
 }
 
-/// A single overflow-panel row: icon + title, with its own hover highlight.
-/// Pulled out as a real `View` (rather than a helper method on the
-/// extension) because the extension carries no stored state of its own —
-/// hover needs a `@State` home.
-fileprivate struct OverflowRow: View {
-    let icon: String
-    let title: String
-    let tokens: DesignTokens
-    let action: () -> Void
-    @State private var isHovered = false
-    @Environment(\.ainkradReduceMotion) private var reduceMotion
+/// The `•••` panel's utilities, in display order.
+private enum OverflowItem: CaseIterable, Hashable {
+    case usage, export, share
 
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: AinkradSpacing.xs) {
-                Image(systemName: icon).font(.system(size: 12)).foregroundStyle(tokens.accentSecondary)
-                Text(title).font(AinkradFont.display(13)).foregroundStyle(tokens.foreground)
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, AinkradSpacing.sm)
-            .padding(.vertical, AinkradSpacing.xs + 2)
-            .background(ChamferShape(cut: 4).fill(isHovered ? tokens.accentSecondary.opacity(0.18) : .clear))
-            .contentShape(Rectangle())
+    var icon: String {
+        switch self {
+        case .usage: return "gauge.with.dots.needle.67percent"
+        case .export: return "square.and.arrow.up"
+        case .share: return "link"
         }
-        .buttonStyle(.plain)
-        .onHover { isHovered = $0 }
-        .animation(reduceMotion ? nil : AinkradMotion.hover, value: isHovered)
+    }
+
+    var title: String {
+        switch self {
+        case .usage: return "Usage & cost"
+        case .export: return "Export…"
+        case .share: return "Share…"
+        }
     }
 }

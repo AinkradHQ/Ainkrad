@@ -29,8 +29,10 @@ struct MCPCatalogDescriptor: Codable, Equatable {
     let envKeys: [String]
     let headerKeys: [String]
 
-    init(transport: MCPTransportKind, command: String? = nil, args: [String] = [],
-         url: URL? = nil, envKeys: [String] = [], headerKeys: [String] = []) {
+    init(
+        transport: MCPTransportKind, command: String? = nil, args: [String] = [],
+        url: URL? = nil, envKeys: [String] = [], headerKeys: [String] = []
+    ) {
         self.transport = transport
         self.command = command
         self.args = args
@@ -47,7 +49,7 @@ struct SkillCatalogDescriptor: Codable, Equatable {
     let contentURL: URL
 }
 
-/// One installable app in the catalog, assembled from a repo's latest release.
+/// One installable app in the hosted catalog (`RemoteCatalogSource`).
 ///
 /// `author`/`longDescription`/`screenshots`/`links` (AIN-147) are additive
 /// detail-page metadata. `screenshots`/`links` default to `[]` — both in the
@@ -64,11 +66,11 @@ struct CatalogEntry: Equatable, Identifiable, Codable {
     let displayName: String
     let icon: String
     let description: String
-    let version: String        // release tag_name
+    let version: String  // release tag_name
     let apiVersion: Int
-    let downloadURL: URL       // the .bundle.zip asset
+    let downloadURL: URL  // the .bundle.zip asset
     let sha256: String
-    let sourceRepo: String     // "owner/repo"
+    let sourceRepo: String  // "owner/repo"
     let author: String?
     let longDescription: String?
     let screenshots: [URL]
@@ -81,12 +83,14 @@ struct CatalogEntry: Equatable, Identifiable, Codable {
     /// Only populated for `.skill` entries; `nil` otherwise.
     let skill: SkillCatalogDescriptor?
 
-    init(appID: String, displayName: String, icon: String, description: String, version: String,
-         apiVersion: Int, downloadURL: URL, sha256: String, sourceRepo: String,
-         author: String? = nil, longDescription: String? = nil,
-         screenshots: [URL] = [], links: [ManifestLink] = [],
-         kind: CatalogItemKind = .plugin, mcp: MCPCatalogDescriptor? = nil,
-         skill: SkillCatalogDescriptor? = nil) {
+    init(
+        appID: String, displayName: String, icon: String, description: String, version: String,
+        apiVersion: Int, downloadURL: URL, sha256: String, sourceRepo: String,
+        author: String? = nil, longDescription: String? = nil,
+        screenshots: [URL] = [], links: [ManifestLink] = [],
+        kind: CatalogItemKind = .plugin, mcp: MCPCatalogDescriptor? = nil,
+        skill: SkillCatalogDescriptor? = nil
+    ) {
         self.appID = appID
         self.displayName = displayName
         self.icon = icon
@@ -156,34 +160,4 @@ extension CatalogEntry {
     var isValidSkillEntry: Bool {
         kind == .skill && skill != nil
     }
-}
-
-/// The `ainkrad-plugin.json` asset attached to each release.
-///
-/// `author`/`longDescription`/`screenshots`/`links` (AIN-147) are optional so
-/// manifests published before AIN-147 keep decoding unchanged (they simply
-/// decode to `nil`).
-struct PluginManifest: Codable, Equatable {
-    let id: String
-    let name: String
-    let icon: String
-    let description: String
-    let apiVersion: Int
-    let sha256: String
-    let author: String?
-    let longDescription: String?
-    let screenshots: [URL]?
-    let links: [ManifestLink]?
-}
-
-/// Minimal subset of the GitHub "releases/latest" response.
-struct GHRelease: Decodable, Equatable {
-    let tagName: String
-    let assets: [GHAsset]
-    enum CodingKeys: String, CodingKey { case tagName = "tag_name"; case assets }
-}
-struct GHAsset: Decodable, Equatable {
-    let name: String
-    let browserDownloadURL: URL
-    enum CodingKeys: String, CodingKey { case name; case browserDownloadURL = "browser_download_url" }
 }

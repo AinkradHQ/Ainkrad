@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Decodes a `scry_render` tool-call payload into a `ScryElement`.
 ///
@@ -15,7 +15,8 @@ enum ScryElementDecoder {
             throw ToolError.message("scry_render requires \"kind\" and/or \"body\".")
         }
         let kind = kindRaw.flatMap { ScryElementKind(rawValue: $0) } ?? .unknown
-        let id = input["id"]?.stringValue.flatMap { $0.isEmpty ? nil : $0 }
+        let id =
+            input["id"]?.stringValue.flatMap { $0.isEmpty ? nil : $0 }
             ?? UUID().uuidString
         return ScryElement(
             id: id,
@@ -38,8 +39,10 @@ enum ScryElementDecoder {
         }
     }
 
-    private static func sizeHint(from input: JSONValue,
-                                 kind: ScryElementKind) -> ScrySizeHint {
+    private static func sizeHint(
+        from input: JSONValue,
+        kind: ScryElementKind
+    ) -> ScrySizeHint {
         input["size"]?.stringValue
             .flatMap { ScrySizeHint(rawValue: $0) } ?? .default(for: kind)
     }

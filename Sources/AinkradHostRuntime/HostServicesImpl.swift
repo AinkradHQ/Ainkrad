@@ -1,7 +1,7 @@
-import Foundation
-import Observation
-import OSLog
 import AinkradAppKit
+import Foundation
+import OSLog
+import Observation
 
 /// The host's `HostServices`, scoped to one app id. `theme` is an observable
 /// wrapper kept in sync with the theme manager, so a loaded app follows theme
@@ -33,14 +33,17 @@ public final class HostServicesImpl: HostServices, PluginInstanceIdentity {
     public let signals: PluginSignalEmitter
     private let themeManager: ThemeManager
 
-    public init(appID: String, dataRootURL: URL, secretStore: SecretStore, themeManager: ThemeManager,
-         hub: AgentContextRegistryHub, actionHub: AgentActionRegistryHub,
-         launchHub: PluginLaunchHub,
-         signalHub: SignalEmitterHub,
-         declaredPresentation: PluginPresentation,
-         declaredMode: PluginMode = .advanced,
-         appAppearanceStore: AppAppearanceStore) {
-        self.documents = ScopedPluginDocumentStore(directory: dataRootURL.appendingPathComponent(appID, isDirectory: true))
+    public init(
+        appID: String, dataRootURL: URL, secretStore: SecretStore, themeManager: ThemeManager,
+        hub: AgentContextRegistryHub, actionHub: AgentActionRegistryHub,
+        launchHub: PluginLaunchHub,
+        signalHub: SignalEmitterHub,
+        declaredPresentation: PluginPresentation,
+        declaredMode: PluginMode = .advanced,
+        appAppearanceStore: AppAppearanceStore
+    ) {
+        self.documents = ScopedPluginDocumentStore(
+            directory: dataRootURL.appendingPathComponent(appID, isDirectory: true))
         self.secrets = ScopedPluginSecretStore(appID: appID, backing: secretStore)
         self.log = PluginLoggerImpl(appID: appID)
         self.themeManager = themeManager
@@ -50,7 +53,7 @@ public final class HostServicesImpl: HostServices, PluginInstanceIdentity {
         // ABI-frozen for plugins), and without them a plugin had no way to
         // express success/warning/danger through the theme — which is why they
         // all hardcoded system colors.
-        self.theme.updateStatusColors(HostStatusColors(from: themeManager.tokens))
+        self.theme.updateStatusColors(HostStatusColors(from: themeManager.skin))
         self.context = HostContextRegistry(appID: appID, hub: hub)
         self.actions = HostActionRegistry(appID: appID, hub: actionHub)
         self.apps = HostAppLauncher(appID: appID, hub: launchHub)
@@ -72,7 +75,7 @@ public final class HostServicesImpl: HostServices, PluginInstanceIdentity {
             Task { @MainActor in
                 guard let self else { return }
                 self.theme.update(HostThemeTokens(from: self.themeManager.currentTheme))
-                self.theme.updateStatusColors(HostStatusColors(from: self.themeManager.tokens))
+                self.theme.updateStatusColors(HostStatusColors(from: self.themeManager.skin))
                 self.armThemeSync()
             }
         }
@@ -87,7 +90,9 @@ public final class HostPresentationControl: PluginPresentationControl {
     private let declaredDefault: PluginPresentation
     private let store: AppAppearanceStore
     public init(appID: String, declaredDefault: PluginPresentation, store: AppAppearanceStore) {
-        self.appID = appID; self.declaredDefault = declaredDefault; self.store = store
+        self.appID = appID
+        self.declaredDefault = declaredDefault
+        self.store = store
     }
     public var current: PluginPresentation { store.presentationOverride(appID) ?? declaredDefault }
     public func set(_ presentation: PluginPresentation) { store.setPresentationOverride(appID, presentation) }
@@ -103,31 +108,34 @@ public final class HostPresentationControl: PluginPresentationControl {
 /// separate. `AppAppearanceStore` is `@Observable`, so a settings edit
 /// propagates without anything extra here.
 @MainActor
-public final class HostModeControl: PluginModeControl {
+final class HostModeControl: PluginModeControl {
     private let appID: String
     private let declaredDefault: PluginMode
     private let store: AppAppearanceStore
-    public init(appID: String, declaredDefault: PluginMode, store: AppAppearanceStore) {
-        self.appID = appID; self.declaredDefault = declaredDefault; self.store = store
+    init(appID: String, declaredDefault: PluginMode, store: AppAppearanceStore) {
+        self.appID = appID
+        self.declaredDefault = declaredDefault
+        self.store = store
     }
-    public var current: PluginMode { store.modeOverride(appID) ?? declaredDefault }
-    public func set(_ mode: PluginMode) { store.setModeOverride(appID, mode) }
-    public func reset() { store.setModeOverride(appID, nil) }
+    var current: PluginMode { store.modeOverride(appID) ?? declaredDefault }
+    func set(_ mode: PluginMode) { store.setModeOverride(appID, mode) }
+    func reset() { store.setModeOverride(appID, nil) }
 }
 
 /// Host-side `PluginOverlaySizeControl`. No declared default from the bundle:
 /// unlike presentation and mode, the size is not something an app knows better
 /// than the user — it depends on the display, not the app.
 @MainActor
-public final class HostOverlaySizeControl: PluginOverlaySizeControl {
+final class HostOverlaySizeControl: PluginOverlaySizeControl {
     private let appID: String
     private let store: AppAppearanceStore
-    public init(appID: String, store: AppAppearanceStore) {
-        self.appID = appID; self.store = store
+    init(appID: String, store: AppAppearanceStore) {
+        self.appID = appID
+        self.store = store
     }
-    public var current: PluginOverlaySize { store.effectiveOverlaySize(appID) }
-    public func set(_ size: PluginOverlaySize) { store.setOverlaySizeOverride(appID, size) }
-    public func reset() { store.setOverlaySizeOverride(appID, nil) }
+    var current: PluginOverlaySize { store.effectiveOverlaySize(appID) }
+    func set(_ size: PluginOverlaySize) { store.setOverlaySizeOverride(appID, size) }
+    func reset() { store.setOverlaySizeOverride(appID, nil) }
 }
 
 /// Key→data storage confined to a single directory. Keys are sanitized so a
@@ -149,11 +157,16 @@ public final class ScopedPluginDocumentStore: PluginDocumentStore {
 
     public func setData(_ data: Data?, forKey key: String) {
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        guard let data else { try? FileManager.default.removeItem(at: fileURL(key)); return }
+        guard let data else {
+            try? FileManager.default.removeItem(at: fileURL(key))
+            return
+        }
         do {
             try data.write(to: fileURL(key), options: .atomic)
         } catch {
-            Log.persistence.error("Failed to write \(data.count, privacy: .public) bytes to \(self.fileURL(key).lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            Log.persistence.error(
+                "Failed to write \(data.count, privacy: .public) bytes to \(self.fileURL(key).lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
+            )
         }
     }
 }
@@ -163,7 +176,10 @@ public final class ScopedPluginDocumentStore: PluginDocumentStore {
 public final class ScopedPluginSecretStore: PluginSecretStore {
     private let appID: String
     private let backing: SecretStore
-    public init(appID: String, backing: SecretStore) { self.appID = appID; self.backing = backing }
+    public init(appID: String, backing: SecretStore) {
+        self.appID = appID
+        self.backing = backing
+    }
 
     // Separator OUTSIDE the appID allowlist ([A-Za-z0-9._-]) so the appID prefix
     // is unambiguous and no two distinct (appID, key) pairs collide.
@@ -172,22 +188,22 @@ public final class ScopedPluginSecretStore: PluginSecretStore {
     public func setSecret(_ value: String?, forKey key: String) { backing.setSecret(value, for: scoped(key)) }
 }
 
-public final class PluginLoggerImpl: PluginLogger {
+final class PluginLoggerImpl: PluginLogger {
     private let logger: Logger
-    public init(appID: String) { logger = Logger(subsystem: "com.ainkrad.app.plugin.\(appID)", category: "plugin") }
-    public func info(_ message: String) { logger.info("\(message, privacy: .public)") }
-    public func error(_ message: String) { logger.error("\(message, privacy: .public)") }
+    init(appID: String) { logger = Logger(subsystem: "com.ainkrad.app.plugin.\(appID)", category: "plugin") }
+    func info(_ message: String) { logger.info("\(message, privacy: .public)") }
+    func error(_ message: String) { logger.error("\(message, privacy: .public)") }
 }
 
 extension HostThemeTokens {
     public init(from theme: Theme) {
-        let t = theme.tokens
+        let s = theme.skin
         self.init(
             themeID: theme.rawValue,
-            background: t.background, surface: t.surface,
-            surfaceElevated: t.surfaceElevated, accentPrimary: t.accentPrimary,
-            accentSecondary: t.accentSecondary, accentTertiary: t.accentTertiary,
-            foreground: t.foreground
+            background: s.color(\.background), surface: s.color(\.surface),
+            surfaceElevated: s.color(\.surfaceElevated), accentPrimary: s.color(\.accentPrimary),
+            accentSecondary: s.color(\.accentSecondary), accentTertiary: s.color(\.accentTertiary),
+            foreground: s.color(\.foreground)
         )
     }
 }
@@ -195,10 +211,10 @@ extension HostThemeTokens {
 extension HostStatusColors {
     /// The host's own semantic palette, as published to plugins.
     ///
-    /// `DesignTokens` carries real `success`/`warning`/`danger` values; the
+    /// The skin carries real `success`/`warning`/`danger` values; the
     /// plugin-facing `HostThemeTokens` deliberately does not, because it is
     /// ABI-frozen. This is the one adapter between them.
-    init(from tokens: DesignTokens) {
-        self.init(success: tokens.success, warning: tokens.warning, danger: tokens.danger)
+    init(from skin: AinkradSkin) {
+        self.init(success: skin.color(\.success), warning: skin.color(\.warning), danger: skin.color(\.danger))
     }
 }

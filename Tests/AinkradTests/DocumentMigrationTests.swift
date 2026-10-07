@@ -1,21 +1,24 @@
-import Testing
-import Foundation
-@testable import Ainkrad
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 /// v2 renamed the field `title` -> `name`. The migrator maps the old key.
 private struct MigratableDoc: PersistableDocument {
     static let documentID = "migratable"
     static var currentSchemaVersion: Int { 2 }
     static var migrators: [DocumentMigrator] {
-        [DocumentMigrator(from: 1) { payload in
-            guard case .object(var fields) = payload else { return payload }
-            if let title = fields["title"] {
-                fields["name"] = title
-                fields["title"] = nil
+        [
+            DocumentMigrator(from: 1) { payload in
+                guard case .object(var fields) = payload else { return payload }
+                if let title = fields["title"] {
+                    fields["name"] = title
+                    fields["title"] = nil
+                }
+                return .object(fields)
             }
-            return .object(fields)
-        }]
+        ]
     }
     var name: String
 }
@@ -47,8 +50,9 @@ final class DocumentMigrationTests {
         try writeEnvelope(version: 1, payloadJSON: #"{"title":"hi"}"#)
         _ = FileDocumentStore(rootURL: root).load(MigratableDoc.self)
 
-        let object = try JSONSerialization.jsonObject(
-            with: Data(contentsOf: root.appendingPathComponent("migratable.json"))) as? [String: Any]
+        let object =
+            try JSONSerialization.jsonObject(
+                with: Data(contentsOf: root.appendingPathComponent("migratable.json"))) as? [String: Any]
         #expect(object?["schemaVersion"] as? Int == 2)
     }
 
@@ -58,8 +62,9 @@ final class DocumentMigrationTests {
         try writeEnvelope(version: 5, payloadJSON: #"{"name":"x"}"#)
         let store = FileDocumentStore(rootURL: root)
         #expect(store.load(MigratableDoc.self) == nil)
-        #expect(FileManager.default.fileExists(
-            atPath: root.appendingPathComponent("migratable.json").path) == false)
+        #expect(
+            FileManager.default.fileExists(
+                atPath: root.appendingPathComponent("migratable.json").path) == false)
     }
 
     @Test("a payload with no migrator for its version is quarantined")
@@ -69,8 +74,9 @@ final class DocumentMigrationTests {
         try writeEnvelope(version: 0, payloadJSON: #"{"name":"x"}"#)
         let store = FileDocumentStore(rootURL: root)
         #expect(store.load(MigratableDoc.self) == nil)
-        #expect(FileManager.default.fileExists(
-            atPath: root.appendingPathComponent("migratable.json").path) == false)
+        #expect(
+            FileManager.default.fileExists(
+                atPath: root.appendingPathComponent("migratable.json").path) == false)
         let quarantined = try FileManager.default.contentsOfDirectory(atPath: root.path)
             .contains { $0.hasPrefix("migratable.json.corrupt-") }
         #expect(quarantined)

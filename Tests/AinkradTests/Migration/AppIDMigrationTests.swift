@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 @testable import AinkradHostRuntime
 
@@ -22,12 +23,14 @@ struct AppIDMigrationTests {
     @Test("appearance entries carry the user's opacity and blur onto the new id")
     func migratesAppearance() throws {
         let dir = URL.temporaryDirectory.appending(path: UUID().uuidString)
-        try seedV1("app-appearance", payload: [
-            "entries": [
-                "assistant": ["surfaceOpacity": 0.6, "blurEnabled": true],
-                "gitmage": ["surfaceOpacity": 0.9, "blurEnabled": false],
-            ],
-        ], in: dir)
+        try seedV1(
+            "app-appearance",
+            payload: [
+                "entries": [
+                    "assistant": ["surfaceOpacity": 0.6, "blurEnabled": true],
+                    "gitmage": ["surfaceOpacity": 0.9, "blurEnabled": false],
+                ]
+            ], in: dir)
 
         let store = FileDocumentStore(rootURL: dir)
         let doc = try #require(store.load(AppAppearanceDocument.self))
@@ -41,9 +44,11 @@ struct AppIDMigrationTests {
     @Test("a disabled app stays disabled under its new id")
     func migratesRegistryState() throws {
         let dir = URL.temporaryDirectory.appending(path: UUID().uuidString)
-        try seedV1("registry-enabled-state", payload: [
-            "enabled": ["files": false, "leyline": true],
-        ], in: dir)
+        try seedV1(
+            "registry-enabled-state",
+            payload: [
+                "enabled": ["files": false, "leyline": true]
+            ], in: dir)
 
         let store = FileDocumentStore(rootURL: dir)
         let doc = try #require(store.load(RegistryStateDocument.self))
@@ -56,12 +61,14 @@ struct AppIDMigrationTests {
     @Test("a permission allowlist entry follows its tool's rename")
     func migratesPermissionAllowlist() throws {
         let dir = URL.temporaryDirectory.appending(path: UUID().uuidString)
-        try seedV1("agent-permissions", payload: [
-            "defaultMode": "ask",
-            "allowlist": ["files_navigate", "run_terminal", "web_search"],
-            "perWorkspace": [String: String](),
-            "gateReads": true,
-        ], in: dir)
+        try seedV1(
+            "agent-permissions",
+            payload: [
+                "defaultMode": "ask",
+                "allowlist": ["files_navigate", "run_terminal", "web_search"],
+                "perWorkspace": [String: String](),
+                "gateReads": true,
+            ], in: dir)
 
         let store = FileDocumentStore(rootURL: dir)
         let doc = try #require(store.load(AgentPermissionDocument.self))
@@ -76,12 +83,16 @@ struct AppIDMigrationTests {
     @Test("a tool hook keeps firing after its tool is renamed")
     func migratesToolHookGlob() throws {
         let dir = URL.temporaryDirectory.appending(path: UUID().uuidString)
-        try seedV1("agent-tool-hooks", payload: [
-            "hooks": [[
-                "id": UUID().uuidString, "enabled": true, "event": "preToolUse",
-                "match": "files_*", "command": "echo hi", "timeoutSeconds": 5,
-            ]],
-        ], in: dir)
+        try seedV1(
+            "agent-tool-hooks",
+            payload: [
+                "hooks": [
+                    [
+                        "id": UUID().uuidString, "enabled": true, "event": "preToolUse",
+                        "match": "files_*", "command": "echo hi", "timeoutSeconds": 5,
+                    ]
+                ]
+            ], in: dir)
 
         let store = FileDocumentStore(rootURL: dir)
         let doc = try #require(store.load(ToolHooksDocument.self))
@@ -93,12 +104,14 @@ struct AppIDMigrationTests {
     @Test("an installed Terminal is recognised as Rune, not duplicated")
     func migratesInstalledPlugins() throws {
         let dir = URL.temporaryDirectory.appending(path: UUID().uuidString)
-        try seedV1("installed-plugins", payload: [
-            "installed": [
-                "terminal": ["version": "v0.7.1", "sourceRepo": "AhmedMElhalaby/AinkradTerminal"],
-                "gitmage": ["version": "v0.10.1", "sourceRepo": "AhmedMElhalaby/GitMage"],
-            ],
-        ], in: dir)
+        try seedV1(
+            "installed-plugins",
+            payload: [
+                "installed": [
+                    "terminal": ["version": "v0.7.1", "sourceRepo": "AhmedMElhalaby/AinkradTerminal"],
+                    "gitmage": ["version": "v0.10.1", "sourceRepo": "AhmedMElhalaby/GitMage"],
+                ]
+            ], in: dir)
 
         let store = FileDocumentStore(rootURL: dir)
         let doc = try #require(store.load(InstalledPluginsDocument.self))

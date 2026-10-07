@@ -1,7 +1,7 @@
-import AppKit
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import AppKit
+import SwiftUI
 
 /// Export/redaction flow for `SageRootView` (relocated from
 /// `SageComposerBar+Export.swift` so the modal presents over the full
@@ -17,15 +17,13 @@ extension SageRootView {
     /// user's comma-separated redaction strings, the result is copied to the
     /// clipboard AND written to a user-chosen file via `NSSavePanel`.
     var exportModalContent: some View {
-        let tokens = environment.themeManager.tokens
-
-        return VStack(alignment: .leading, spacing: 12) {
+        return VStack(alignment: .leading, spacing: skin.spacing.md) {
             Text("Export conversation")
                 .font(AinkradFont.display(14, weight: .semibold))
-                .foregroundStyle(tokens.foreground)
+                .foregroundStyle(theme.foreground)
             Text("Strings to redact, comma-separated (optional)")
                 .font(AinkradFont.display(11))
-                .foregroundStyle(tokens.foreground.opacity(0.6))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o60))
             AinkradTextField(text: $redactionsText, placeholder: "e.g. sk-live-…, jane@example.com")
 
             HStack {
@@ -39,7 +37,8 @@ extension SageRootView {
     func performExport() {
         let redactions = RedactionList.parse(redactionsText)
 
-        let rendered = ConversationExporter.export(environment.agentSession.messages, format: .markdown, redactions: redactions)
+        let rendered = ConversationExporter.export(
+            environment.agentSession.messages, format: .markdown, redactions: redactions)
 
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()

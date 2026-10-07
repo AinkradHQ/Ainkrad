@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/Tools/ReadFileTool.swift
 import Foundation
-import AinkradHostRuntime
 
 /// Reads a UTF-8 text file at an absolute path. Any path is allowed (per the
 /// Slice-2a decision); the approval HUD, not a path sandbox, is the gate.
@@ -18,7 +18,7 @@ struct ReadFileTool: AgentTool {
                 "path": .object([
                     "type": .string("string"),
                     "description": .string("Absolute path to the file to read."),
-                ]),
+                ])
             ]),
             "required": .array([.string("path")]),
         ])
@@ -39,7 +39,8 @@ struct ReadFileTool: AgentTool {
         // Enforce the cap via file attributes BEFORE reading, so a huge file is
         // never fully paged into memory just to be rejected.
         if let size = try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int,
-           size > Self.maxBytes {
+            size > Self.maxBytes
+        {
             throw ToolError.message("File is \(size) bytes; the read limit is \(Self.maxBytes).")
         }
         let data: Data

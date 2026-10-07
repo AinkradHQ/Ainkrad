@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// Writes the You step into the profile store, which projects into `USER.md` so
 /// the assistant can read it. Blank fields are omitted rather than stored empty:
@@ -46,6 +46,7 @@ enum SetupYou {
 struct SetupYouStepView: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.setupGroupWidth) private var groupWidth
+    @Environment(\.ainkradSkin) private var skin
 
     let coordinator: SetupCoordinator
 
@@ -65,11 +66,11 @@ struct SetupYouStepView: View {
         SetupValidation.unmet(for: .you, values: [:]).map(\.field))
 
     var body: some View {
-        let tokens = environment.themeManager.tokens
+        let tokens = environment.themeManager.hostSkin
 
         VStack(alignment: .leading, spacing: 0) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: skin.size.s18) {
                     intro(tokens: tokens)
                     AinkradSettingsPanel(
                         title: "About you",
@@ -78,14 +79,16 @@ struct SetupYouStepView: View {
                         fieldGrid(tokens: tokens)
                     }
                 }
-                .padding(20)
+                .padding(skin.size.s20)
                 // FILLS the group, like every other step. The FIELDS are what
                 // hold their own width — see `fieldGrid`.
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            SetupStepFooter(coordinator: coordinator,
-                            isPrimaryDisabled: !unmet.isEmpty) {
+            SetupStepFooter(
+                coordinator: coordinator,
+                isPrimaryDisabled: !unmet.isEmpty
+            ) {
                 commit()
                 coordinator.advance()
             }
@@ -96,7 +99,7 @@ struct SetupYouStepView: View {
             // already has a profile. Without this a replay shows blank fields
             // as if nothing had ever been entered, even though nothing was
             // lost (`SetupYou.apply` skips blanks on commit). Matches the
-            // idiom in `UserProfileSettingsView.onAppear`.
+            // Settings You page, which seeds its drafts from the same store.
             for (key, value) in environment.userProfileStore.all() where !value.isEmpty {
                 values[key] = value
             }
@@ -127,17 +130,20 @@ struct SetupYouStepView: View {
         return unmet.first { $0.field == key }?.message
     }
 
-    private func intro(tokens: DesignTokens) -> some View {
-        Text("Anything you fill in here goes into the assistant's memory, so it knows who "
-             + "it's working with. Your name and role are needed so it knows who it is "
-             + "working for; the rest is optional, and all of it is editable later in "
-             + "Memory.")
-            .font(AinkradFont.display(12))
-            .foregroundStyle(tokens.foreground.opacity(0.6))
-            .fixedSize(horizontal: false, vertical: true)
-            // Prose is capped even though the column fills.
-            .frame(maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth),
-                   alignment: .leading)
+    private func intro(tokens: AinkradSkin) -> some View {
+        Text(
+            "Anything you fill in here goes into the assistant's memory, so it knows who "
+                + "it's working with. Your name and role are needed so it knows who it is "
+                + "working for; the rest is optional, and all of it is editable later in "
+                + "Memory."
+        )
+        .font(AinkradFont.display(12))
+        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o60))
+        .fixedSize(horizontal: false, vertical: true)
+        // Prose is capped even though the column fills.
+        .frame(
+            maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth),
+            alignment: .leading)
     }
 
     /// The four fields, each one full width, stacked.
@@ -149,13 +155,14 @@ struct SetupYouStepView: View {
     ///
     /// The cards therefore take the whole column, which on a wide window means a
     /// wide text field. That is the accepted trade.
-    private func fieldGrid(tokens: DesignTokens) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+    private func fieldGrid(tokens: AinkradSkin) -> some View {
+        VStack(alignment: .leading, spacing: skin.size.s10) {
             ForEach(UserProfileField.all) { profileField in
-                field(tokens: tokens, title: profileField.title,
-                      subtitle: profileField.hint,
-                      placeholder: profileField.placeholder,
-                      text: binding(for: profileField.key), key: profileField.key)
+                field(
+                    tokens: tokens, title: profileField.title,
+                    subtitle: profileField.hint,
+                    placeholder: profileField.placeholder,
+                    text: binding(for: profileField.key), key: profileField.key)
             }
         }
     }
@@ -169,27 +176,29 @@ struct SetupYouStepView: View {
         Binding(get: { values[key] ?? "" }, set: { values[key] = $0 })
     }
 
-    private func field(tokens: DesignTokens, title: String, subtitle: String,
-                       placeholder: String, text: Binding<String>, key: String) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 6) {
+    private func field(
+        tokens: AinkradSkin, title: String, subtitle: String,
+        placeholder: String, text: Binding<String>, key: String
+    ) -> some View {
+        VStack(alignment: .leading, spacing: skin.size.s6) {
+            HStack(spacing: skin.size.s6) {
                 Text(title)
                     .font(AinkradFont.display(13, weight: .medium))
-                    .foregroundStyle(tokens.foreground.opacity(0.9))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o90))
                 // Visible from arrival, for required fields only. This is what
                 // keeps the rule on screen without greeting a blank form with
                 // warnings — see `message(for:)`.
                 if Self.requiredFields.contains(key) {
                     Text("Required")
                         .font(AinkradFont.display(9, weight: .medium)).kerning(0.5)
-                        .foregroundStyle(tokens.accentTertiary)
+                        .foregroundStyle(tokens.color(\.accentTertiary))
                         .accessibilityIdentifier("setup.you.\(key).required")
                 }
                 Spacer(minLength: 0)
             }
             Text(subtitle)
                 .font(AinkradFont.display(11))
-                .foregroundStyle(tokens.foreground.opacity(0.5))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o50))
             AinkradTextField(text: text, placeholder: placeholder)
                 .onChange(of: text.wrappedValue) { _, new in
                     touched.insert(key)
@@ -201,10 +210,12 @@ struct SetupYouStepView: View {
                     .accessibilityIdentifier("setup.you.\(key).requirement")
             }
         }
-        .padding(14)
+        .padding(skin.size.s14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: AinkradRadius.md).fill(tokens.surfaceElevated.opacity(0.5)))
-        .overlay(ChamferShape(cut: AinkradRadius.md).strokeBorder(tokens.accentPrimary.opacity(0.15), lineWidth: 1))
+        .background(ChamferShape(cut: skin.radius.md).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o50)))
+        .overlay(
+            ChamferShape(cut: skin.radius.md).strokeBorder(tokens.color(\.accentPrimary).opacity(skin.opacity.o15), lineWidth: 1)
+        )
     }
 
     /// Belt-and-braces: `onChange` already commits every keystroke, but a field

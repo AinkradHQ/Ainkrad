@@ -1,83 +1,7 @@
-import SwiftUI
-import AppKit
 import AinkradAppKit
 import AinkradHostRuntime
-
-/// Pure decision logic for the Home step, independent of SwiftUI and of NSOpenPanel,
-/// so it can be tested without a UI. The view supplies the real chooser and adopter.
-@MainActor
-final class SetupHomeStepModel {
-    enum Outcome: Equatable {
-        case adopted
-        case rejected(String)
-        case cancelled
-        /// The folder is ALREADY an Ainkrad Home with work in it. Adopting it is
-        /// legitimate — it is the reinstall-and-restore path — but it is not
-        /// what someone who meant to pick an empty folder expects, so it is
-        /// confirmed rather than done silently.
-        ///
-        /// A folder that is not empty and NOT an Ainkrad Home is refused
-        /// outright by `AinkradHome.validate`; there is no confirmation for that
-        /// case, because there is no version of it that is safe.
-        case needsConfirmation(url: URL, entryCount: Int)
-    }
-
-    private let chooseVault: LaunchHomeResolver.VaultChooser
-    private let adopt: (URL) throws -> Void
-    private let inspect: (URL) -> ExistingVault?
-
-    /// What an already-populated Ainkrad Home looks like from outside.
-    struct ExistingVault: Equatable {
-        /// Entries in the folder, excluding the marker itself and `.DS_Store` —
-        /// i.e. how much of the user's own work is in there.
-        let entryCount: Int
-    }
-
-    init(chooseVault: @escaping LaunchHomeResolver.VaultChooser,
-         adopt: @escaping (URL) throws -> Void,
-         inspect: @escaping (URL) -> ExistingVault? = { SetupHomeStepModel.inspectVault(at: $0) }) {
-        self.chooseVault = chooseVault
-        self.adopt = adopt
-        self.inspect = inspect
-    }
-
-    /// Reports an existing Home with contents, or `nil` for anything else —
-    /// including an EMPTY existing Home, which is indistinguishable from a fresh
-    /// folder as far as the user is concerned and needs no confirmation.
-    nonisolated static func inspectVault(at url: URL) -> ExistingVault? {
-        let fm = FileManager.default
-        guard fm.fileExists(atPath: HomeMarker.url(in: url).path) else { return nil }
-        let entries = ((try? fm.contentsOfDirectory(atPath: url.path)) ?? [])
-            .filter { $0 != HomeMarker.filename && $0 != ".DS_Store" }
-        return entries.isEmpty ? nil : ExistingVault(entryCount: entries.count)
-    }
-
-    func choose() -> Outcome {
-        guard let chosen = chooseVault() else { return .cancelled }
-        if let existing = inspect(chosen) {
-            return .needsConfirmation(url: chosen, entryCount: existing.entryCount)
-        }
-        return adoptNow(chosen)
-    }
-
-    /// Adopt a folder the user has confirmed. Separate from `choose()` so the
-    /// confirmation cannot be bypassed by accident: the only path that skips it
-    /// is the one where `inspect` found nothing to confirm.
-    func adoptConfirmed(_ url: URL) -> Outcome { adoptNow(url) }
-
-    private func adoptNow(_ url: URL) -> Outcome {
-        do {
-            try adopt(url)
-            return .adopted
-        } catch {
-            // Reuse the recovery copy so the wizard and the launch-time alerts
-            // explain the same failures the same way.
-            let message = LaunchRecovery.prompt(for: error)?.message
-                ?? "That folder can't be used as your Ainkrad Home."
-            return .rejected(message)
-        }
-    }
-}
+import AppKit
+import SwiftUI
 
 /// The Home step: the one irreversible screen in the wizard.
 ///
@@ -115,7 +39,6 @@ struct SetupHomeStepView: View {
     /// own to say so. The overlay carries it to the closing step.
     let onAdopted: (AppEnvironment, Bool) -> Void
 
-
     /// The environment rebuilt against the adopted vault, and whether adoption
     /// moved a legacy container into it. Held as state rather than as locals
     /// because adoption can now be reached from two places — the chooser and the
@@ -142,6 +65,7 @@ struct SetupHomeStepView: View {
 
     @Environment(\.ainkradReduceMotion) private var reduceMotion
     @Environment(\.setupGroupWidth) private var groupWidth
+    @Environment(\.ainkradSkin) private var skin
 
     /// Asked BEFORE the user chooses, which is the entire point of this task:
     /// `VaultMigration.needsMigration(container:)` is answerable up front, so a
@@ -163,7 +87,7 @@ struct SetupHomeStepView: View {
         VStack(alignment: .leading, spacing: 0) {
             content
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(20)
+                .padding(skin.size.s20)
                 .onAppear { migrationNotice = SetupHomeMigrationNotice.make() }
             // The footer has two shapes, because this step has two states.
             //
@@ -183,9 +107,11 @@ struct SetupHomeStepView: View {
             if hasAdoptedHome {
                 adoptedFooter
             } else {
-                SetupStepFooter(coordinator: coordinator,
-                                primaryTitle: "Choose Folder…",
-                                primaryIdentifier: "setup.home.choose") { choose() }
+                SetupStepFooter(
+                    coordinator: coordinator,
+                    primaryTitle: "Choose Folder…",
+                    primaryIdentifier: "setup.home.choose"
+                ) { choose() }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
@@ -198,43 +124,36 @@ struct SetupHomeStepView: View {
     /// folder, and this is what is in it. Someone who came Back to this step did
     /// so to check or change the folder, and the first thing they need is which
     /// one it currently is.
-    private func selectedFolder(_ path: String, tokens: DesignTokens) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 9) {
+    private func selectedFolder(_ path: String, tokens: AinkradSkin) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: skin.size.s9) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 12))
-                .foregroundStyle(tokens.accentSecondary)
-            VStack(alignment: .leading, spacing: 3) {
+                .font(skin.font(AinkradFontToken(sizeKey: "t12", scaled: false)))
+                .foregroundStyle(tokens.color(\.accentSecondary))
+            VStack(alignment: .leading, spacing: skin.size.s3) {
                 Text("Your Ainkrad Home")
                     .font(AinkradFont.display(11, weight: .medium))
-                    .foregroundStyle(tokens.foreground.opacity(0.5))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o50))
                 Text(path)
                     // Monospaced: this is a path, and a path set in the UI face
                     // is harder to read back character by character — which is
                     // exactly what someone verifying a folder is doing.
-                    .font(.system(size: 13, weight: .medium, design: .monospaced))
-                    .foregroundStyle(tokens.foreground)
+                    .font(skin.font(AinkradFontToken(sizeKey: "t13", weight: "medium", mono: "system", scaled: false)))
+                    .foregroundStyle(tokens.color(\.foreground))
                     .textSelection(.enabled)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(14)
+        .padding(skin.size.s14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: AinkradRadius.md)
-            .fill(tokens.accentSecondary.opacity(0.09)))
+        .background(
+            ChamferShape(cut: skin.radius.md)
+                .fill(tokens.color(\.accentSecondary).opacity(skin.opacity.o09))
+        )
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Your Ainkrad Home is \(path)")
         .accessibilityIdentifier("setup.home.selected")
     }
 
-    /// The "this folder already holds a vault" decision.
-    ///
-    /// It states the COUNT, because "this folder is already an Ainkrad Home" and
-    /// "this folder has 214 things in it" land very differently, and the second
-    /// is the one that stops someone who picked the wrong folder.
-    ///
-    /// The safe action is the secondary, so dismissing the modal by any route —
-    /// including a stray click on the scrim — picks again rather than claiming
-    /// the vault.
     /// A folder the app will not claim.
     ///
     /// ONE button, and it re-opens the chooser rather than merely closing: the
@@ -254,6 +173,15 @@ struct SetupHomeStepView: View {
             onDismiss: { modals.dismiss() })
     }
 
+    /// The "this folder already holds a vault" decision.
+    ///
+    /// It states the COUNT, because "this folder is already an Ainkrad Home" and
+    /// "this folder has 214 things in it" land very differently, and the second
+    /// is the one that stops someone who picked the wrong folder.
+    ///
+    /// The safe action is the secondary, so dismissing the modal by any route —
+    /// including a stray click on the scrim — picks again rather than claiming
+    /// the vault.
     private func existingVaultModal(url: URL, entryCount: Int) -> SetupModalPresenter.Modal {
         SetupModalPresenter.Modal(
             title: "This folder is already an Ainkrad Home",
@@ -288,28 +216,31 @@ struct SetupHomeStepView: View {
             AinkradButton(title: "Continue", style: .primary) { coordinator.advance() }
                 .accessibilityIdentifier("setup.continue")
         }
-        .padding(20)
+        .padding(skin.size.s20)
     }
 
     /// The folder is the idea, so the folder is what is drawn: a listing of
     /// what will exist inside whatever the user picks. Someone looking at this
     /// is choosing a place for their work to live, not filling in a path.
     private var content: some View {
-        let tokens = environment.themeManager.tokens
+        let tokens = environment.themeManager.hostSkin
 
         return ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                Text("Pick an empty folder, or make a new one anywhere you like — "
-                     + "your Documents, an external drive, a synced folder. Ainkrad "
-                     + "will never take over a folder that already has files in it.")
-                    .font(AinkradFont.display(14))
-                    .foregroundStyle(tokens.foreground.opacity(0.78))
-                    .lineSpacing(4)
-                    .fixedSize(horizontal: false, vertical: true)
-                    // Prose, so the READING measure — the folder listing below
-                    // is what uses the extra width.
-                    .frame(maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth),
-                           alignment: .leading)
+            VStack(alignment: .leading, spacing: skin.size.s18) {
+                Text(
+                    "Pick an empty folder, or make a new one anywhere you like — "
+                        + "your Documents, an external drive, a synced folder. Ainkrad "
+                        + "will never take over a folder that already has files in it."
+                )
+                .font(AinkradFont.display(14))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o78))
+                .lineSpacing(4)
+                .fixedSize(horizontal: false, vertical: true)
+                // Prose, so the READING measure — the folder listing below
+                // is what uses the extra width.
+                .frame(
+                    maxWidth: SetupStageLayout.readingWidth(inGroupOf: groupWidth),
+                    alignment: .leading)
 
                 if let adoptedPath {
                     selectedFolder(adoptedPath, tokens: tokens)
@@ -318,17 +249,18 @@ struct SetupHomeStepView: View {
                 folderPreview(tokens: tokens)
 
                 if let migrationNotice {
-                    notice(title: migrationNotice.title,
-                           message: migrationNotice.message,
-                           icon: "arrow.right.doc.on.clipboard",
-                           tint: tokens.accentSecondary,
-                           tokens: tokens)
-                        .accessibilityIdentifier("setup.home.migrationWarning")
+                    notice(
+                        title: migrationNotice.title,
+                        message: migrationNotice.message,
+                        icon: "arrow.right.doc.on.clipboard",
+                        tint: tokens.color(\.accentSecondary),
+                        tokens: tokens
+                    )
+                    .accessibilityIdentifier("setup.home.migrationWarning")
                 }
 
-
             }
-            .padding(.bottom, 4)
+            .padding(.bottom, skin.spacing.xs)
         }
     }
 
@@ -336,37 +268,42 @@ struct SetupHomeStepView: View {
     /// seamless recessed surface, per the design language — and each row
     /// arrives a beat after the one above it so the list assembles rather than
     /// appearing as a block. Flat under reduce-motion.
-    private func folderPreview(tokens: DesignTokens) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
+    private func folderPreview(tokens: AinkradSkin) -> some View {
+        VStack(alignment: .leading, spacing: skin.spacing.md) {
+            HStack(spacing: skin.spacing.sm) {
                 Image(systemName: "folder.fill")
-                    .font(.system(size: 12))
-                    .foregroundStyle(tokens.accentPrimary)
+                    .font(skin.font(AinkradFontToken(sizeKey: "t12", scaled: false)))
+                    .foregroundStyle(tokens.color(\.accentPrimary))
                 Text("Inside it")
                     .font(AinkradFont.display(12, weight: .medium))
-                    .foregroundStyle(tokens.foreground.opacity(0.5))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o50))
             }
 
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: skin.size.s14) {
                 ForEach(Array(SetupHomePreview.entries.enumerated()), id: \.element.id) {
                     index, entry in
                     entryRow(entry, index: index, tokens: tokens)
                 }
             }
         }
-        .padding(16)
+        .padding(skin.spacing.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: AinkradRadius.md)
-            .fill(tokens.surfaceElevated.opacity(0.35)))
+        .background(
+            ChamferShape(cut: skin.radius.md)
+                .fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o35))
+        )
         .accessibilityElement(children: .contain)
         .accessibilityLabel("What Ainkrad will create in the folder you choose")
     }
 
-    private func entryRow(_ entry: SetupHomePreview.Entry, index: Int,
-                          tokens: DesignTokens) -> some View {
-        let geometry = SetupStageMotion.layerGeometry(.content,
-                                                      reduceMotion: reduceMotion,
-                                                      isForward: true)
+    private func entryRow(
+        _ entry: SetupHomePreview.Entry, index: Int,
+        tokens: AinkradSkin
+    ) -> some View {
+        let geometry = SetupStageMotion.layerGeometry(
+            .content,
+            reduceMotion: reduceMotion,
+            isForward: true)
         // The stage's own `.content` travel, scaled down — these are rows
         // settling inside a panel, not the panel arriving. Scaled rather than
         // hardcoded so the rows still track `SetupStageMotion`'s vocabulary if
@@ -385,18 +322,18 @@ struct SetupHomeStepView: View {
         // the reduce-motion seam.
         let delay = geometry.map { _ in Double(index) * 0.05 } ?? 0
 
-        return HStack(alignment: .top, spacing: 10) {
+        return HStack(alignment: .top, spacing: skin.size.s10) {
             Image(systemName: entry.icon)
-                .font(.system(size: 12))
-                .foregroundStyle(tokens.accentSecondary)
-                .frame(width: 16)
-            VStack(alignment: .leading, spacing: 3) {
+                .font(skin.font(AinkradFontToken(sizeKey: "t12", scaled: false)))
+                .foregroundStyle(tokens.color(\.accentSecondary))
+                .frame(width: skin.size.s16)
+            VStack(alignment: .leading, spacing: skin.size.s3) {
                 Text(entry.name)
                     .font(AinkradFont.mono(12))
-                    .foregroundStyle(tokens.foreground.opacity(0.9))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o90))
                 Text(entry.detail)
                     .font(AinkradFont.display(12))
-                    .foregroundStyle(tokens.foreground.opacity(0.55))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o55))
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -405,9 +342,12 @@ struct SetupHomeStepView: View {
         .offset(x: hasSettled ? 0 : travel)
         // Through `SetupStageMotion`, never a bare `.animation` — reduce-motion
         // makes this `nil` and the rows are simply present.
-        .animation(SetupStageMotion.animation(reduceMotion: reduceMotion,
-                                              layer: .content)?.delay(delay),
-                   value: hasSettled)
+        .animation(
+            SetupStageMotion.animation(
+                reduceMotion: reduceMotion,
+                layer: .content)?.delay(delay),
+            value: hasSettled
+        )
         .onAppear {
             guard !hasSettled else { return }
             hasSettled = true
@@ -424,28 +364,30 @@ struct SetupHomeStepView: View {
     /// reading before they choose, so interrupting them with it would be wrong.
     ///
     /// It does not scroll. The step owns the only scroller on this axis.
-    private func notice(title: String, message: String, icon: String,
-                        tint: Color, tokens: DesignTokens) -> some View {
-        HStack(alignment: .top, spacing: 10) {
+    private func notice(
+        title: String, message: String, icon: String,
+        tint: Color, tokens: AinkradSkin
+    ) -> some View {
+        HStack(alignment: .top, spacing: skin.size.s10) {
             Image(systemName: icon)
-                .font(.system(size: 12))
+                .font(skin.font(AinkradFontToken(sizeKey: "t12", scaled: false)))
                 .foregroundStyle(tint)
-                .frame(width: 16)
-            VStack(alignment: .leading, spacing: 5) {
+                .frame(width: skin.size.s16)
+            VStack(alignment: .leading, spacing: skin.size.s5) {
                 Text(title)
                     .font(AinkradFont.display(12, weight: .medium))
                     .foregroundStyle(tint)
                 Text(message)
                     .font(AinkradFont.display(12))
-                    .foregroundStyle(tokens.foreground.opacity(0.72))
+                    .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o72))
                     .lineSpacing(3)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
-        .padding(14)
+        .padding(skin.size.s14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: AinkradRadius.md).fill(tint.opacity(0.09)))
+        .background(ChamferShape(cut: skin.radius.md).fill(tint.opacity(skin.opacity.o09)))
     }
 
     private func choose() {
@@ -510,9 +452,12 @@ struct SetupHomeStepView: View {
     /// writes the marker, migrates the legacy container and re-points every
     /// holder — exists exactly once regardless of whether a confirmation was
     /// required.
-    private func withModel(_ installer: SetupHomeInstaller,
-                           _ body: (SetupHomeStepModel) -> SetupHomeStepModel.Outcome)
-        -> SetupHomeStepModel.Outcome {
+    private func withModel(
+        _ installer: SetupHomeInstaller,
+        _ body: (SetupHomeStepModel) -> SetupHomeStepModel.Outcome
+    )
+        -> SetupHomeStepModel.Outcome
+    {
         let model = SetupHomeStepModel(
             chooseVault: LaunchHomeResolver.presentFolderChooser,
             adopt: { url in

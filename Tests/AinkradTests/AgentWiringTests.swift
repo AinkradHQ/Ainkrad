@@ -1,8 +1,9 @@
+import AinkradHostRuntime
 // Tests/AinkradTests/AgentWiringTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("Agent wiring")
 @MainActor
@@ -13,6 +14,6 @@ struct AgentWiringTests {
         s.cycleActive()
         #expect(s.active.id == BuiltInAgents.buildID)
         s.cycleActive()
-        #expect(s.active.id == BuiltInAgents.planID)   // wraps
+        #expect(s.active.id == BuiltInAgents.planID)  // wraps
     }
 }

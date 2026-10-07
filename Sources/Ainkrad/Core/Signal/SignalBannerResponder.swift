@@ -1,6 +1,6 @@
+import AinkradSignal
 import AppKit
 import UserNotifications
-import AinkradSignal
 
 /// Turns a clicked macOS banner back into exactly what a clicked feed row does.
 ///
@@ -36,8 +36,9 @@ final class SignalBannerResponder: NSObject, UNUserNotificationCenterDelegate {
             return
         }
         if let actionID, actionID != UNNotificationDefaultActionIdentifier,
-           actionID != UNNotificationDismissActionIdentifier,
-           let action = event.actions.first(where: { $0.id == actionID }) {
+            actionID != UNNotificationDismissActionIdentifier,
+            let action = event.actions.first(where: { $0.id == actionID })
+        {
             center.markRead(ids: [event.id])
             center.invokeBannerAction(action, on: event)
             return

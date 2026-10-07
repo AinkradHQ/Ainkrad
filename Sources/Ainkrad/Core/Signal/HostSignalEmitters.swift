@@ -1,6 +1,6 @@
-import Foundation
 import AinkradHostRuntime
 import AinkradSignal
+import Foundation
 
 extension SignalDraft {
     /// Maps a finished `AgentRun` onto the feed.
@@ -14,52 +14,65 @@ extension SignalDraft {
         let title: String
         switch run.status {
         case .done:
-            kind = "run.finished"; severity = .success; title = "Run finished"
+            kind = "run.finished"
+            severity = .success
+            title = "Run finished"
         case .failed:
-            kind = "run.failed"; severity = .failure; title = "Run failed"
+            kind = "run.failed"
+            severity = .failure
+            title = "Run failed"
         case .interrupted:
-            kind = "run.interrupted"; severity = .warning; title = "Run interrupted"
+            kind = "run.interrupted"
+            severity = .warning
+            title = "Run interrupted"
         case .queued, .running, .paused:
-            kind = "run.updated"; severity = .info; title = "Run update"
+            kind = "run.updated"
+            severity = .info
+            title = "Run update"
         }
         var body = String(run.prompt.prefix(80))
         if let result = run.result, !result.isEmpty {
             body += "\n" + result.prefix(120)
         }
-        return SignalDraft(kind: kind, severity: severity, title: title, body: body,
-                           importance: run.status == .failed ? .urgent : .normal,
-                           dedupeKey: "run:\(run.id.uuidString)")
+        return SignalDraft(
+            kind: kind, severity: severity, title: title, body: body,
+            importance: run.status == .failed ? .urgent : .normal,
+            dedupeKey: "run:\(run.id.uuidString)")
     }
 
     // MARK: - App store
 
     /// An app finished installing from the store.
     static func appInstalled(displayName: String) -> SignalDraft {
-        SignalDraft(kind: "install.completed", severity: .success,
-                    title: "\(displayName) installed", importance: .normal,
-                    dedupeKey: "install:\(displayName)")
+        SignalDraft(
+            kind: "install.completed", severity: .success,
+            title: "\(displayName) installed", importance: .normal,
+            dedupeKey: "install:\(displayName)")
     }
 
     /// An install failed. `.urgent`: the user asked for this app and does not
     /// have it, which is work they must redo.
     static func appInstallFailed(displayName: String, reason: String) -> SignalDraft {
-        SignalDraft(kind: "install.failed", severity: .failure,
-                    title: "\(displayName) failed to install", body: reason,
-                    importance: .urgent, dedupeKey: "installfail:\(displayName)")
+        SignalDraft(
+            kind: "install.failed", severity: .failure,
+            title: "\(displayName) failed to install", body: reason,
+            importance: .urgent, dedupeKey: "installfail:\(displayName)")
     }
 
     static func appUpdated(displayName: String) -> SignalDraft {
-        SignalDraft(kind: "update.completed", severity: .success,
-                    title: "\(displayName) updated", importance: .normal,
-                    dedupeKey: "update:\(displayName)")
+        SignalDraft(
+            kind: "update.completed", severity: .success,
+            title: "\(displayName) updated", importance: .normal,
+            dedupeKey: "update:\(displayName)")
     }
 
     /// Distinct kind from `install.failed` so a user can mute update noise
     /// without also muting the installs they explicitly asked for.
     static func appUpdateFailed(displayName: String, reason: String) -> SignalDraft {
-        SignalDraft(kind: "update.failed", severity: .failure,
-                    title: "\(displayName) failed to update", body: reason,
-                    importance: .urgent, dedupeKey: "updatefail:\(displayName)")
+        SignalDraft(
+            kind: "update.failed", severity: .failure,
+            title: "\(displayName) failed to update", body: reason,
+            importance: .urgent, dedupeKey: "updatefail:\(displayName)")
     }
 
     /// An app declared subscription patterns the host could not parse.
@@ -69,12 +82,13 @@ extension SignalDraft {
     /// subscription simply never fires with nothing to explain it. Named
     /// patterns verbatim — the point is to show the author their own string.
     static func subscriptionsDropped(displayName: String, patterns: [String]) -> SignalDraft {
-        SignalDraft(kind: "plugin.subscriptions-dropped", severity: .warning,
-                    title: "\(displayName) declared notification access Ainkrad could not read",
-                    body: "These entries were ignored: " + patterns.joined(separator: ", ")
-                        + ". The app still works; it just will not receive those notifications.",
-                    importance: .background,
-                    dedupeKey: "subsdropped:\(displayName)")
+        SignalDraft(
+            kind: "plugin.subscriptions-dropped", severity: .warning,
+            title: "\(displayName) declared notification access Ainkrad could not read",
+            body: "These entries were ignored: " + patterns.joined(separator: ", ")
+                + ". The app still works; it just will not receive those notifications.",
+            importance: .background,
+            dedupeKey: "subsdropped:\(displayName)")
     }
 
     /// External ingress could not start.
@@ -89,12 +103,13 @@ extension SignalDraft {
     /// every installed app are unaffected. This is one path being unavailable,
     /// not the feature being down.
     static func externalIngressUnavailable(reason: String) -> SignalDraft {
-        SignalDraft(kind: "signal.ingress-unavailable", severity: .warning,
-                    title: "Notifications from scripts and hooks are unavailable",
-                    body: "The local notification socket could not be opened, so "
-                        + "`ainkrad notify` and anything using it cannot reach the feed. "
-                        + "Notifications from Ainkrad and its apps still work. \(reason)",
-                    importance: .normal, dedupeKey: "ingress-unavailable")
+        SignalDraft(
+            kind: "signal.ingress-unavailable", severity: .warning,
+            title: "Notifications from scripts and hooks are unavailable",
+            body: "The local notification socket could not be opened, so "
+                + "`ainkrad notify` and anything using it cannot reach the feed. "
+                + "Notifications from Ainkrad and its apps still work. \(reason)",
+            importance: .normal, dedupeKey: "ingress-unavailable")
     }
 
     /// A plugin bundle failed to load at launch.
@@ -107,8 +122,9 @@ extension SignalDraft {
     /// into something friendlier and less useful.
     static func pluginLoadFailed(_ failure: PluginLoadFailure) -> SignalDraft {
         let bundle = failure.url.lastPathComponent
-        return SignalDraft(kind: "plugin.load-failed", severity: .failure,
-                           title: "\(bundle) failed to load", body: failure.reason,
-                           importance: .urgent, dedupeKey: "loadfail:\(bundle)")
+        return SignalDraft(
+            kind: "plugin.load-failed", severity: .failure,
+            title: "\(bundle) failed to load", body: failure.reason,
+            importance: .urgent, dedupeKey: "loadfail:\(bundle)")
     }
 }

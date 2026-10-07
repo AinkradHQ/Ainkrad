@@ -1,7 +1,8 @@
+import AinkradAppKit
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradAppKit
 
 @Suite("Home adoption")
 @MainActor
@@ -9,10 +10,12 @@ struct HomeAdoptionTests {
     private func sandbox(_ label: String) -> (base: URL, pointer: URL, cache: URL, vault: URL) {
         let base = FileManager.default.temporaryDirectory
             .appendingPathComponent("\(label)-\(UUID().uuidString)", isDirectory: true)
-        return (base,
-                base.appendingPathComponent("pointer"),
-                base.appendingPathComponent("cache"),
-                base.appendingPathComponent("vault"))
+        return (
+            base,
+            base.appendingPathComponent("pointer"),
+            base.appendingPathComponent("cache"),
+            base.appendingPathComponent("vault")
+        )
     }
 
     @Test func adoptingRebuildsTheEnvironmentAgainstTheChosenVault() throws {
@@ -37,8 +40,9 @@ struct HomeAdoptionTests {
         #expect(installed != nil)
         // The rebuilt environment must persist into the chosen vault, not anywhere else.
         installed?.themeManager.setFontScale(.large)
-        #expect(FileManager.default.fileExists(
-            atPath: s.vault.appendingPathComponent("Config/global-settings.json").path))
+        #expect(
+            FileManager.default.fileExists(
+                atPath: s.vault.appendingPathComponent("Config/global-settings.json").path))
     }
 
     @Test func aFailedAdoptionInstallsNothing() throws {
@@ -46,8 +50,9 @@ struct HomeAdoptionTests {
         defer { try? FileManager.default.removeItem(at: s.base) }
         try FileManager.default.createDirectory(at: s.vault, withIntermediateDirectories: true)
         // Populated and not a home -> HomeError.notEmpty
-        try "x".write(to: s.vault.appendingPathComponent("occupied.txt"),
-                      atomically: true, encoding: .utf8)
+        try "x".write(
+            to: s.vault.appendingPathComponent("occupied.txt"),
+            atomically: true, encoding: .utf8)
 
         let suite = "com.ainkrad.tests.adoptfail.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suite)!
@@ -94,8 +99,9 @@ struct HomeAdoptionTests {
         // wanted: the container is marked (so a relaunch won't re-run it) and
         // the skill is in the adopted vault.
         #expect(!VaultMigration.needsMigration(container: legacy))
-        #expect(FileManager.default.fileExists(
-            atPath: result.home.shared(.skills).appendingPathComponent("pdf/SKILL.md").path))
+        #expect(
+            FileManager.default.fileExists(
+                atPath: result.home.shared(.skills).appendingPathComponent("pdf/SKILL.md").path))
     }
 
     @Test func migratedIsFalseWhenTheLegacyContainerHasNothingToMove() throws {

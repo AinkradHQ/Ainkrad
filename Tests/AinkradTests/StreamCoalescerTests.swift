@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("StreamCoalescer")
@@ -33,8 +34,10 @@ struct StreamCoalescerTests {
         var coalescer = StreamCoalescer(interval: .milliseconds(50))
         let start = ContinuousClock.now
         var published = 0
-        for offset in 0..<100 where coalescer.shouldPublish(
-            at: start.advanced(by: .microseconds(offset * 100))) {
+        for offset in 0..<100
+        where coalescer.shouldPublish(
+            at: start.advanced(by: .microseconds(offset * 100)))
+        {
             published += 1
         }
         // 100 calls spread over 10ms — one window.

@@ -1,5 +1,5 @@
-import Foundation
 import AinkradSignal
+import Foundation
 
 enum RateDecision: Equatable, Sendable {
     case allowed

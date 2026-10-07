@@ -9,7 +9,7 @@ enum PartialEdit {
     static func reconstruct(_ diff: FileDiff, rejecting rejectedHunkIDs: Set<Int>) -> String {
         let originalLines = diff.original.isEmpty ? [] : diff.original.components(separatedBy: "\n")
         var out: [String] = []
-        var cursor = 0   // 0-based index into originalLines
+        var cursor = 0  // 0-based index into originalLines
         for hunk in diff.hunks.sorted(by: { $0.oldStart < $1.oldStart }) {
             // `oldStart` is 1-based; a pure top insertion has oldStart == 0 or covers no old lines.
             let hunkOldStartIndex = max(0, hunk.oldStart - 1)

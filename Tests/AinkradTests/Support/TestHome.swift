@@ -1,5 +1,5 @@
-import Foundation
 import AinkradAppKit
+import Foundation
 
 /// A throwaway Home plus an isolated defaults suite. Every test that bootstraps
 /// must use this — it is what keeps the suite out of the developer's real data.
@@ -15,9 +15,12 @@ enum TestHome {
         let suiteName = "com.ainkrad.tests.\(label).\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!
 
-        return (Home(vaultRoot: vault, cacheRoot: cache), defaults, {
-            defaults.removePersistentDomain(forName: suiteName)
-            try? FileManager.default.removeItem(at: base)
-        })
+        return (
+            Home(vaultRoot: vault, cacheRoot: cache), defaults,
+            {
+                defaults.removePersistentDomain(forName: suiteName)
+                try? FileManager.default.removeItem(at: base)
+            }
+        )
     }
 }

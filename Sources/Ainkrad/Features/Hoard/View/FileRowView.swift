@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitUI
+import SwiftUI
 
 /// One file row.
 ///
@@ -33,12 +33,13 @@ struct FileRowView: View {
     @Environment(\.ainkradTypography) private var typo
     @Environment(\.ainkradReduceMotion) private var reduceMotion
     @Environment(\.ainkradStatusColors) private var statusColors
+    @Environment(\.ainkradSkin) private var skin
     @State private var hovering = false
 
     var body: some View {
         HStack(spacing: AinkradSpacing.sm) {
             AinkradIconGlyph(systemName: iconName(for: entry), size: iconSize)
-                .opacity(entry.isSymlink ? 0.6 : 1)
+                .opacity(entry.isSymlink ? skin.opacity.o60 : 1)
                 .frame(width: iconSize + 5)
 
             Text(entry.name)
@@ -52,7 +53,7 @@ struct FileRowView: View {
             // bullet-point list rather than a status.
             if let gitStatus {
                 Image(systemName: gitStatus.glyph)
-                    .font(.system(size: iconSize * 0.5))
+                    .font(.system(size: iconSize * 0.5))  // design-lint: allow font-size kit-gap gitGlyphRatio
                     .foregroundStyle(color(for: gitStatus))
                     .help(gitStatusLabel(gitStatus))
             }
@@ -67,11 +68,11 @@ struct FileRowView: View {
             }
         }
         .font(AinkradFontResolver.font(.caption, typography: typo))
-        .foregroundStyle(theme.foreground.opacity(0.5))
+        .foregroundStyle(theme.foreground.opacity(skin.opacity.o50))
         .monospacedDigit()
         .padding(.horizontal, AinkradSpacing.sm)
         .padding(.vertical, rowPadding)
-        .background(ChamferShape(cut: 4).fill(rowFill))
+        .background(ChamferShape(cut: skin.cut.c4).fill(rowFill))
         .overlay(alignment: .leading) {
             Rectangle()
                 .fill(theme.accentSecondary)
@@ -79,7 +80,7 @@ struct FileRowView: View {
         }
         // Hidden AND ignored entries render dimmed when shown, so ⌘. reads as
         // "reveal", not "add more identical rows".
-        .opacity(isCut ? 0.4 : (entry.isHidden || isIgnored ? 0.55 : 1))
+        .opacity(isCut ? skin.opacity.o40 : (entry.isHidden || isIgnored ? skin.opacity.o55 : 1))
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
         // Single tap fires IMMEDIATELY; the double-tap runs alongside it as a
@@ -89,9 +90,9 @@ struct FileRowView: View {
         // felt slow and unresponsive.
         .onTapGesture(perform: onTap)
         .simultaneousGesture(TapGesture(count: 2).onEnded { onDoubleTap() })
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: hovering)
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: isSelected)
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: isCursor)
+        .animation(reduceMotion ? nil : .easeOut(duration: skin.motion.durations.d0_12), value: hovering)
+        .animation(reduceMotion ? nil : .easeOut(duration: skin.motion.durations.d0_12), value: isSelected)
+        .animation(reduceMotion ? nil : .easeOut(duration: skin.motion.durations.d0_12), value: isCursor)
     }
 
     private func gitStatusLabel(_ status: GitFileStatus) -> String {
@@ -113,14 +114,14 @@ struct FileRowView: View {
         case .conflicted, .deleted: return statusColors.danger
         case .modified, .staged, .renamed: return statusColors.warning
         case .added: return statusColors.success
-        case .untracked: return theme.foreground.opacity(0.45)
-        case .ignored: return theme.foreground.opacity(0.3)
+        case .untracked: return theme.foreground.opacity(skin.opacity.o45)
+        case .ignored: return theme.foreground.opacity(skin.opacity.o30)
         }
     }
 
     private var rowFill: Color {
-        if isSelected { return theme.accentPrimary.opacity(0.22) }
-        if hovering { return theme.foreground.opacity(0.06) }
+        if isSelected { return theme.accentPrimary.opacity(skin.opacity.o22) }
+        if hovering { return theme.foreground.opacity(skin.opacity.o06) }
         return .clear
     }
 }

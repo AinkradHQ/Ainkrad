@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitUI
+import SwiftUI
 
 /// The always-present scoped search field, sitting in the breadcrumb row.
 ///
@@ -21,49 +21,46 @@ struct HoardFilterField: View {
     @Environment(\.ainkradTheme) private var theme
     @Environment(\.ainkradTypography) private var typo
     @Environment(\.ainkradReduceMotion) private var reduceMotion
+    @Environment(\.ainkradSkin) private var skin
 
     var body: some View {
         HStack(spacing: AinkradSpacing.xs) {
             Image(systemName: search.isScopedSearching ? "ellipsis" : "magnifyingglass")
-                .font(.system(size: 10))
-                .foregroundStyle(theme.foreground.opacity(search.isScoped ? 0.8 : 0.4))
+                .font(skin.font(AinkradFontToken(sizeKey: "t10", scaled: false)))
+                .foregroundStyle(theme.foreground.opacity(search.isScoped ? skin.opacity.o80 : skin.opacity.o40))
 
-            TextField("Search here  ⌥F", text: $search.scopedText)
+            TextField("Search here  ⌥F", text: $search.scopedText)  // design-lint: allow raw-control kit gap, enum focus binding
                 .textFieldStyle(.plain)
                 .font(AinkradFontResolver.font(.caption, typography: typo))
                 .focused(focus, equals: .search)
-                .frame(width: 150)
+                .frame(width: skin.size.s150)
                 .onExitCommand {
                     search.clearScoped()
                     focus.wrappedValue = .list
                 }
 
             if search.isScoped {
-                Button {
+                AinkradIconButton(systemName: "xmark.circle.fill", size: skin.size.s14, tooltip: "Clear search") {
                     search.clearScoped()
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 9))
-                        .foregroundStyle(theme.foreground.opacity(0.45))
                 }
-                .buttonStyle(.plain)
                 .transition(.opacity)
             }
         }
         .padding(.horizontal, AinkradSpacing.sm)
-        .padding(.vertical, 3)
+        .padding(.vertical, skin.size.s3)
         .background(
-            ChamferShape(cut: 4)
-                .fill(theme.foreground.opacity(search.isScoped ? 0.10 : 0.06))
+            ChamferShape(cut: skin.cut.c4)
+                .fill(theme.foreground.opacity(search.isScoped ? skin.opacity.o10 : skin.opacity.o06))
         )
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: search.isScoped)
+        .animation(reduceMotion ? nil : .easeOut(duration: skin.motion.durations.d0_12), value: search.isScoped)
         .onTapGesture { focus.wrappedValue = .search }
         // A visible focus ring: without it, ⌥F looks like it did nothing even
         // when the caret is sitting in the field.
         .overlay(
-            ChamferShape(cut: 4)
-                .strokeBorder(theme.accentSecondary.opacity(
-                    focus.wrappedValue == .search ? 0.7 : 0), lineWidth: 1)
+            ChamferShape(cut: skin.cut.c4)
+                .strokeBorder(
+                    theme.accentSecondary.opacity(
+                        focus.wrappedValue == .search ? 0.7 : 0), lineWidth: 1)
         )
     }
 }

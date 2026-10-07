@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 import Foundation
 import Observation
-import AinkradHostRuntime
 
 /// Persisted choice of text-to-speech provider for the `speak` tool. Keys are
 /// Keychain-only via SecretStore. `onDevice` is the default (keyless/offline).
@@ -16,10 +16,16 @@ struct SpeechSynthesisSettingsDocument: PersistableDocument {
     var customModel: String = ""
     var customVoice: String = ""
 
-    init(provider: String = "onDevice", elevenLabsVoiceID: String = "", openAIVoice: String = "alloy",
-         customBaseURL: String = "", customModel: String = "", customVoice: String = "") {
-        self.provider = provider; self.elevenLabsVoiceID = elevenLabsVoiceID; self.openAIVoice = openAIVoice
-        self.customBaseURL = customBaseURL; self.customModel = customModel; self.customVoice = customVoice
+    init(
+        provider: String = "onDevice", elevenLabsVoiceID: String = "", openAIVoice: String = "alloy",
+        customBaseURL: String = "", customModel: String = "", customVoice: String = ""
+    ) {
+        self.provider = provider
+        self.elevenLabsVoiceID = elevenLabsVoiceID
+        self.openAIVoice = openAIVoice
+        self.customBaseURL = customBaseURL
+        self.customModel = customModel
+        self.customVoice = customVoice
     }
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -46,10 +52,28 @@ final class SpeechSynthesisSettingsStore {
         self.document = persistence.load(SpeechSynthesisSettingsDocument.self) ?? SpeechSynthesisSettingsDocument()
     }
 
-    func setProvider(_ id: String) { document.provider = id; persistence.save(document) }
-    func setElevenLabsVoiceID(_ v: String) { document.elevenLabsVoiceID = v; persistence.save(document) }
-    func setOpenAIVoice(_ v: String) { document.openAIVoice = v; persistence.save(document) }
-    func setCustomBaseURL(_ u: String) { document.customBaseURL = u; persistence.save(document) }
-    func setCustomModel(_ m: String) { document.customModel = m; persistence.save(document) }
-    func setCustomVoice(_ v: String) { document.customVoice = v; persistence.save(document) }
+    func setProvider(_ id: String) {
+        document.provider = id
+        persistence.save(document)
+    }
+    func setElevenLabsVoiceID(_ v: String) {
+        document.elevenLabsVoiceID = v
+        persistence.save(document)
+    }
+    func setOpenAIVoice(_ v: String) {
+        document.openAIVoice = v
+        persistence.save(document)
+    }
+    func setCustomBaseURL(_ u: String) {
+        document.customBaseURL = u
+        persistence.save(document)
+    }
+    func setCustomModel(_ m: String) {
+        document.customModel = m
+        persistence.save(document)
+    }
+    func setCustomVoice(_ v: String) {
+        document.customVoice = v
+        persistence.save(document)
+    }
 }

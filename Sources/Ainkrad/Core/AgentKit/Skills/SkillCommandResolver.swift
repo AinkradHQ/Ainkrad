@@ -1,7 +1,7 @@
 import Foundation
 
 enum SkillCommandResolution: Equatable {
-    case prompt(String)                                     // composed text to run
+    case prompt(String)  // composed text to run
     case brokenBinding(command: String, missingSkill: String)
     case notASkillCommand
 }
@@ -18,12 +18,14 @@ enum SkillCommandResolver {
         guard trimmed.hasPrefix("/") else { return .notASkillCommand }
         let parts = trimmed.dropFirst().split(separator: " ", maxSplits: 1)
         guard let name = parts.first.map(String.init),
-              let skillName = store.skillName(forCommand: name) else { return .notASkillCommand }
+            let skillName = store.skillName(forCommand: name)
+        else { return .notASkillCommand }
         let args = parts.count > 1 ? String(parts[1]) : ""
         guard let skill = registry.skill(named: skillName) else {
             return .brokenBinding(command: name, missingSkill: skillName)
         }
-        let composed = args.isEmpty
+        let composed =
+            args.isEmpty
             ? skill.body
             : "\(skill.body)\n\nArguments: \(args)"
         return .prompt(composed)
@@ -50,7 +52,8 @@ extension SkillCommandStore {
                     category: .skill
                 ) { [weak self] args, session in
                     guard let self else { return .notACommand }
-                    switch SkillCommandResolver.resolve("/\(binding.command) \(args)", store: self, registry: registry) {
+                    switch SkillCommandResolver.resolve("/\(binding.command) \(args)", store: self, registry: registry)
+                    {
                     case .prompt(let composed):
                         session.send(composed)
                         return .handled(note: nil)

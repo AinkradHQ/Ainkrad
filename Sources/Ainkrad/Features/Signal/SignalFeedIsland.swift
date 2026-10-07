@@ -1,7 +1,7 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
 import AinkradSignal
+import SwiftUI
 
 /// The in-window feed: a source rail, severity filters, search, and the list.
 ///
@@ -42,6 +42,7 @@ struct SignalFeedIsland: View {
     /// empty chip row is currently open, which is not a view the user built.
     @State private var showsFilters = false
     @Environment(\.ainkradReduceMotion) private var reduceMotion
+    @Environment(\.ainkradSkin) private var skin
 
     /// Severity, source and unread are applied here rather than by re-querying:
     /// the caller may have handed us search results, and re-filtering in the
@@ -60,9 +61,10 @@ struct SignalFeedIsland: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
-            SignalSourceRail(items: railItems,
-                             selection: $viewState.selectedSource,
-                             onConfigure: onConfigureSource)
+            SignalSourceRail(
+                items: railItems,
+                selection: $viewState.selectedSource,
+                onConfigure: onConfigureSource)
             VStack(alignment: .leading, spacing: 0) {
                 header
                 if showsFilters || viewState.chipFilterCount > 0 {
@@ -70,9 +72,10 @@ struct SignalFeedIsland: View {
                         // Wipes down from the header it belongs to rather than
                         // fading in place, so the rows below are seen to make
                         // room instead of being covered.
-                        .transition(reduceMotion
-                                    ? .opacity
-                                    : .move(edge: .top).combined(with: .opacity))
+                        .transition(
+                            reduceMotion
+                                ? .opacity
+                                : .move(edge: .top).combined(with: .opacity))
                 }
                 if isDegraded { degradedNotice }
                 content
@@ -86,17 +89,19 @@ struct SignalFeedIsland: View {
             noMatches
         } else if viewState.effectiveGrouping == .bySource {
             SignalFeedGroupedList(
-                groups: SignalPresentation.sourceGroups(filtered, readIDs: readIDs,
-                                                        name: displayName),
+                groups: SignalPresentation.sourceGroups(
+                    filtered, readIDs: readIDs,
+                    name: displayName),
                 collapsed: $viewState.collapsedSources,
                 repeatCounts: repeatCounts, readIDs: readIDs, now: now,
                 onActivate: onActivate, onAction: onAction, menuItems: menuItems,
                 pinnedIDs: pinnedIDs, expandedIDs: expandedIDs)
         } else {
-            SignalFeedList(events: filtered, repeatCounts: repeatCounts, readIDs: readIDs,
-                           now: now, calendar: .current, onActivate: onActivate,
-                           onAction: onAction, menuItems: menuItems,
-                           pinnedIDs: pinnedIDs, expandedIDs: expandedIDs)
+            SignalFeedList(
+                events: filtered, repeatCounts: repeatCounts, readIDs: readIDs,
+                now: now, calendar: .current, onActivate: onActivate,
+                onAction: onAction, menuItems: menuItems,
+                pinnedIDs: pinnedIDs, expandedIDs: expandedIDs)
         }
     }
 
@@ -122,22 +127,20 @@ struct SignalFeedIsland: View {
             // label or a glyph whose width is its content; the search field is
             // the only thing that can give, so it is the only thing allowed to.
             AinkradSearchField(text: searchText, placeholder: "Search")
-                .frame(minWidth: 120, maxWidth: 190)
+                .frame(minWidth: skin.size.s120, maxWidth: skin.size.s190)
             quietControl
             if unread > 0 {
-                Button(action: onMarkAllRead) {
-                    // Names what it will actually do. Under a filter, "Mark all
-                    // read" reads as everything and quietly means twelve — so
-                    // the user clears rows they cannot see.
-                    Text(viewState.isShowingEverything
-                         ? "Mark all read"
-                         : "Mark \(filtered.filter { !readIDs.contains($0.id) }.count) read")
-                        .font(AinkradFont.display(10.5, weight: .medium))
-                        .foregroundStyle(theme.accentPrimary)
-                        .lineLimit(1)
-                        .fixedSize(horizontal: true, vertical: false)
-                }
-                .buttonStyle(.plain)
+                // Names what it will actually do. Under a filter, "Mark all
+                // read" reads as everything and quietly means twelve — so the
+                // user clears rows they cannot see.
+                AinkradButton(
+                    title: viewState.isShowingEverything
+                        ? "Mark all read"
+                        : "Mark \(filtered.filter { !readIDs.contains($0.id) }.count) read",
+                    style: .ghost,
+                    action: onMarkAllRead
+                )
+                .fixedSize()
             }
         }
         .padding(.horizontal, AinkradSpacing.lg)
@@ -149,24 +152,22 @@ struct SignalFeedIsland: View {
     /// usually short. Chips appear on demand — and stay visible whenever
     /// anything is actually filtering, because a hidden active filter is how a
     /// user concludes the feed has lost their events.
+    ///
+    /// The kit's latch button: lit while the chip row is showing, which is
+    /// also whenever a filter is active.
     private var filtersButton: some View {
         let count = viewState.chipFilterCount
-        return Button {
-            withAnimation(reduceMotion ? nil : .easeOut(duration: AinkradMotion.durationFast)) {
-                showsFilters.toggle()
-            }
-        } label: {
-            HStack(spacing: 4) {
-                Image(systemName: "line.3.horizontal.decrease")
-                    .font(.system(size: 9.5, weight: .medium))
-                Text(count > 0 ? "Filters · \(count)" : "Filters")
-                    .font(AinkradFont.display(10.5, weight: .medium))
-            }
-            .foregroundStyle(count > 0 ? theme.accentSecondary
-                                       : theme.foreground.opacity(0.55))
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
+        let isShowing = Binding(
+            get: { showsFilters || count > 0 },
+            set: { _ in
+                withAnimation(reduceMotion ? nil : .easeOut(duration: AinkradMotion.durationFast)) {
+                    showsFilters.toggle()
+                }
+            })
+        return AinkradToggleButton(
+            isOn: isShowing, systemName: "line.3.horizontal.decrease",
+            title: count > 0 ? "Filters · \(count)" : "Filters"
+        )
         .help(count > 0 ? "\(count) filters active" : "Filter this feed")
         .accessibilityLabel(count > 0 ? "Filters, \(count) active" : "Filters")
     }
@@ -175,26 +176,26 @@ struct SignalFeedIsland: View {
     /// collapsing to a single Resume once something is in force.
     @ViewBuilder
     private var quietControl: some View {
-        let glyph = Image(systemName: isMuted ? "bell.slash.fill" : "bell.slash")
-            .font(.system(size: 10.5, weight: .medium))
-            .foregroundStyle(isMuted ? theme.accentSecondary
-                                     : theme.foreground.opacity(0.45))
         if isMuted {
-            Button(action: onResume) { glyph }
-                .buttonStyle(.plain)
-                .help("Resume now")
-                .accessibilityLabel("Resume now")
+            AinkradIconButton(
+                systemName: "bell.slash.fill", size: skin.size.s20, tooltip: "Resume now", action: onResume
+            )
+            .accessibilityLabel("Resume now")
         } else {
             // The kit's own menu, not SwiftUI's `Menu`: that renders a stock
             // AppKit menu -- grey slab, system corner radius, system highlight
             // -- which landed in the middle of the HUD looking like it belonged
             // to another application.
-            AinkradMenuButton(items: SignalSnooze.allCases.map { snooze in
-                AinkradMenuItem(title: snooze.label, systemName: "bell.slash") {
-                    onSnooze(snooze)
+            AinkradMenuButton(
+                items: SignalSnooze.allCases.map { snooze in
+                    AinkradMenuItem(title: snooze.label, systemName: "bell.slash") {
+                        onSnooze(snooze)
+                    }
                 }
-            }) {
-                glyph
+            ) {
+                Image(systemName: "bell.slash")
+                    .font(skin.font(AinkradFontToken(sizeKey: "t10_5", weight: "medium", scaled: false)))
+                    .foregroundStyle(theme.foreground.opacity(skin.opacity.o45))
             }
             .help("Go quiet")
             .accessibilityLabel("Go quiet")
@@ -208,7 +209,8 @@ struct SignalFeedIsland: View {
                     label: severity.rawValue.capitalized,
                     swatch: SignalPresentation.status(for: severity)
                         .color(in: theme, statusColors: status),
-                    isOn: viewState.severities.contains(severity)) {
+                    isOn: viewState.severities.contains(severity)
+                ) {
                     if viewState.severities.contains(severity) {
                         viewState.severities.remove(severity)
                     } else {
@@ -216,8 +218,10 @@ struct SignalFeedIsland: View {
                     }
                 }
             }
-            AinkradSwatchChip(label: "Unread", swatch: theme.accentSecondary,
-                              isOn: viewState.unreadOnly) {
+            AinkradSwatchChip(
+                label: "Unread", swatch: theme.accentSecondary,
+                isOn: viewState.unreadOnly
+            ) {
                 viewState.unreadOnly.toggle()
             }
             Spacer()
@@ -227,7 +231,7 @@ struct SignalFeedIsland: View {
                 // whether a filter or a query had emptied it.
                 Text(count == 1 ? "1 result" : "\(count) results")
                     .font(AinkradFont.mono(9.5))
-                    .foregroundStyle(theme.foreground.opacity(0.5))
+                    .foregroundStyle(theme.foreground.opacity(skin.opacity.o50))
             }
             // Only where it can say anything. With a source selected every
             // event is from that source, so this and the rail were two controls
@@ -249,23 +253,23 @@ struct SignalFeedIsland: View {
     private var degradedNotice: some View {
         HStack(spacing: AinkradSpacing.sm - 1) {
             Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 10.5))
+                .font(skin.font(AinkradFontToken(sizeKey: "t10_5", scaled: false)))
                 .foregroundStyle(status.warning)
             Text("History unavailable — events are kept in memory for this session only.")
                 .font(AinkradFont.display(10.5))
-                .foregroundStyle(theme.foreground.opacity(0.62))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o62))
         }
         .padding(.horizontal, AinkradSpacing.lg)
         .padding(.vertical, AinkradSpacing.sm - 1)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(theme.surfaceElevated.opacity(0.6))
+        .background(theme.surfaceElevated.opacity(skin.opacity.o60))
     }
 
     private var noMatches: some View {
         VStack(spacing: AinkradSpacing.sm) {
             Text("No matching events")
                 .font(AinkradFont.display(12, weight: .medium))
-                .foregroundStyle(theme.foreground.opacity(0.55))
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o55))
             // Clears the SEARCH as well as the filters. The old button cleared
             // only the chips, so a user who had searched stayed stuck in an
             // empty feed with a button that appeared not to work.

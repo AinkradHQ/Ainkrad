@@ -1,9 +1,10 @@
-import Testing
-import Foundation
-import SwiftUI
-@testable import AinkradDevHost
 import AinkradAppKit
 import AinkradHostRuntime
+import Foundation
+import SwiftUI
+import Testing
+
+@testable import AinkradDevHost
 
 /// Proves the Dev Host's entire reason for existing: `DevHostModel.load`
 /// produces the SAME verdict and rejection message as the real host's
@@ -61,8 +62,10 @@ struct ParityTests {
         // the previous generation, so it agreed with a Dev Host making the same
         // mistake and the pair looked consistent while both were wrong. A
         // parity test is only worth having if one side is the real thing.
-        PluginLoader(signaturePolicy: DevModeSignaturePolicy(),
-                     minSupportedAPIVersion: GenerationSupport.minSupported) { appID, presentation in
+        PluginLoader(
+            signaturePolicy: DevModeSignaturePolicy(),
+            minSupportedAPIVersion: GenerationSupport.minSupported
+        ) { appID, presentation in
             self.stubHost(appID: appID, presentation: presentation)
         }
     }
@@ -114,7 +117,8 @@ struct ParityTests {
         #expect(throws: Never.self) {
             try PluginValidator.validate(
                 metadata, infoDictionary: info,
-                minSupportedAPIVersion: AinkradAppKit.apiVersion).get()
+                minSupportedAPIVersion: AinkradAppKit.apiVersion
+            ).get()
         }
         #expect(!hostRejection.reason.isEmpty)
 

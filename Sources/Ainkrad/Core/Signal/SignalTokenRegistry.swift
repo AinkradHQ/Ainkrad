@@ -1,7 +1,7 @@
-import Foundation
-import CryptoKit
-import AinkradSignal
 import AinkradHostRuntime
+import AinkradSignal
+import CryptoKit
+import Foundation
 
 /// Maps a bearer token to the `SignalSource` it may post as.
 ///
@@ -76,7 +76,8 @@ final class SignalTokenRegistry {
         self.secrets = secrets
         for identifier in indexedIdentifiers() {
             guard let source = Self.source(fromIdentifier: identifier),
-                  let token = secrets.secret(for: "signal.token.\(identifier)") else { continue }
+                let token = secrets.secret(for: "signal.token.\(identifier)")
+            else { continue }
             sourcesByToken[token] = source
         }
     }
@@ -139,8 +140,9 @@ final class SignalTokenRegistry {
     }
 
     private func writeIndex(_ identifiers: [String]) {
-        secrets.setSecret(identifiers.isEmpty ? nil : identifiers.joined(separator: "\n"),
-                          for: Self.indexKey)
+        secrets.setSecret(
+            identifiers.isEmpty ? nil : identifiers.joined(separator: "\n"),
+            for: Self.indexKey)
     }
 
     private func addToIndex(_ identifier: String) {

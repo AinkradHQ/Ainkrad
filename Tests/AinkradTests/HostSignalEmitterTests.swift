@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-import AinkradSignal
 import AinkradAppKit
+import AinkradSignal
+import Foundation
+import Testing
+
 @testable import Ainkrad
 @testable import AinkradHostRuntime
 
@@ -15,8 +16,9 @@ final class HostSignalEmitterTests {
         }
     }
     private struct PresentContext: SignalContextProviding {
-        var deliveryContext = DeliveryContext(hostIsFrontmost: true, visibleAppIDs: [],
-                                              systemDoNotDisturb: false, hostFocusMode: false)
+        var deliveryContext = DeliveryContext(
+            hostIsFrontmost: true, visibleAppIDs: [],
+            systemDoNotDisturb: false, hostFocusMode: false)
     }
 
     private let url: URL
@@ -27,8 +29,9 @@ final class HostSignalEmitterTests {
     init() throws {
         url = FileManager.default.temporaryDirectory
             .appendingPathComponent("signal-\(UUID().uuidString).sqlite")
-        center = SignalCenter(store: try SignalStore(url: url),
-                              deliverer: deliverer, contextProvider: PresentContext())
+        center = SignalCenter(
+            store: try SignalStore(url: url),
+            deliverer: deliverer, contextProvider: PresentContext())
         // The hub records through the `SignalEmitting` sink, which the feed
         // conforms to — `AinkradHostRuntime` cannot see `SignalCenter`.
         hub = SignalEmitterHub(sink: center)
@@ -123,8 +126,9 @@ final class SignalEmitterHubAttachTests {
         func deliver(_ event: SignalEvent, to channels: Set<DeliveryChannel>) {}
     }
     private struct Ctx: SignalContextProviding {
-        var deliveryContext = DeliveryContext(hostIsFrontmost: true, visibleAppIDs: [],
-                                              systemDoNotDisturb: false, hostFocusMode: false)
+        var deliveryContext = DeliveryContext(
+            hostIsFrontmost: true, visibleAppIDs: [],
+            systemDoNotDisturb: false, hostFocusMode: false)
     }
 
     @Test("an emit after attach reaches the store")
@@ -138,8 +142,9 @@ final class SignalEmitterHubAttachTests {
         let emitter = HostSignalEmitter(appID: "rune", hub: hub)
 
         // 2. finalizeBootstrap: the feed exists, and the hub gains its sink.
-        let center = SignalCenter(store: try SignalStore(url: url),
-                                  deliverer: NullDeliverer(), contextProvider: Ctx())
+        let center = SignalCenter(
+            store: try SignalStore(url: url),
+            deliverer: NullDeliverer(), contextProvider: Ctx())
         hub.attach(sink: center)
 
         // 3. A plugin emits.
@@ -168,8 +173,9 @@ final class SignalEmitterHubAttachTests {
         defer { try? FileManager.default.removeItem(at: url) }
         let hub = SignalEmitterHub()
         do {
-            let center = SignalCenter(store: try SignalStore(url: url),
-                                      deliverer: NullDeliverer(), contextProvider: Ctx())
+            let center = SignalCenter(
+                store: try SignalStore(url: url),
+                deliverer: NullDeliverer(), contextProvider: Ctx())
             hub.attach(sink: center)
         }
         // The center is gone; emitting must be a silent no-op, not a crash.

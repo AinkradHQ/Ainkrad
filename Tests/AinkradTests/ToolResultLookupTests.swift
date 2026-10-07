@@ -1,4 +1,5 @@
 import Testing
+
 @testable import Ainkrad
 
 @Suite("ToolResultLookup")
@@ -28,7 +29,7 @@ struct ToolResultLookupTests {
 
     @Test func pendingWhenNoResultYet() {
         let messages = [
-            msg(.assistant, [.toolUse(id: "t1", name: "Read", input: .null)]),
+            msg(.assistant, [.toolUse(id: "t1", name: "Read", input: .null)])
         ]
         let s = ToolResultLookup.summary(forToolUseID: "t1", after: 0, in: messages)
         #expect(s.isPending == true)

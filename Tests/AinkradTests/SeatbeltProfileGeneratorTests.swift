@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("SeatbeltProfileGenerator")
@@ -121,8 +122,9 @@ struct SeatbeltProfileGeneratorTests {
     }
 
     @Test func generationIsDeterministicForSameProfile() throws {
-        let fs = FilesystemPolicy(readablePaths: ["<workspace>", "/opt/tools"],
-                                   writablePaths: ["<workspace>"])
+        let fs = FilesystemPolicy(
+            readablePaths: ["<workspace>", "/opt/tools"],
+            writablePaths: ["<workspace>"])
         let a = try SeatbeltProfileGenerator.generate(fs: fs, network: .on, workspacePath: "/Users/x/proj")
         let b = try SeatbeltProfileGenerator.generate(fs: fs, network: .on, workspacePath: "/Users/x/proj")
         #expect(a == b)

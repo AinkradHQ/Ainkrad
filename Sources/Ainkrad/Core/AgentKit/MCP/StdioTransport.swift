@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/MCP/StdioTransport.swift
 import Foundation
-import AinkradHostRuntime
 
 /// Spawns a local MCP server subprocess and speaks newline-delimited JSON-RPC
 /// over its stdio. Mirrors the `Process`+`Pipe` pattern used by `RunTerminalTool`
@@ -36,7 +36,7 @@ actor StdioTransport: MCPTransport {
         p.environment = merged
         p.standardInput = stdin
         p.standardOutput = stdout
-        p.standardError = Pipe()   // drained to /dev/null implicitly (never read)
+        p.standardError = Pipe()  // drained to /dev/null implicitly (never read)
         do {
             try p.run()
         } catch {
@@ -67,7 +67,7 @@ actor StdioTransport: MCPTransport {
             throw MCPError.protocolError("could not serialize outbound message")
         }
         var line = data
-        line.append(0x0A)   // '\n' — newline-delimited framing
+        line.append(0x0A)  // '\n' — newline-delimited framing
         // A dead/half-dead MCP server (peer closed its stdin read end, or the
         // process exited between the `isRunning` check above and this write)
         // is a ROUTINE failure mode, not exceptional. The older non-throwing
@@ -87,10 +87,13 @@ actor StdioTransport: MCPTransport {
     nonisolated func incoming() -> AsyncThrowingStream<JSONValue, Error> {
         let handle = stdout.fileHandleForReading
         return AsyncThrowingStream { continuation in
-            let parser = LineParser()   // buffers partial lines across chunks
+            let parser = LineParser()  // buffers partial lines across chunks
             handle.readabilityHandler = { fh in
                 let chunk = fh.availableData
-                guard !chunk.isEmpty else { continuation.finish(); return } // EOF
+                guard !chunk.isEmpty else {
+                    continuation.finish()
+                    return
+                }  // EOF
                 for line in parser.push(chunk) {
                     if let value = JSONValue.parse(line) { continuation.yield(value) }
                     // Non-JSON stdout noise (server banners) is ignored, never fatal.

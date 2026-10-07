@@ -1,7 +1,7 @@
+import AinkradAppKit
 import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
-import AinkradAppKit
 
 /// Image/file drag-and-drop handling for `SageComposerBar` (M7 finalize
 /// Wave D, D2 — extracted verbatim, no behavior change).
@@ -18,7 +18,8 @@ extension SageComposerBar {
                 handled = true
                 provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, _ in
                     guard let data = item as? Data,
-                          let url = URL(dataRepresentation: data, relativeTo: nil) else { return }
+                        let url = URL(dataRepresentation: data, relativeTo: nil)
+                    else { return }
                     Task { @MainActor in
                         if AudioFileValidator.allowedExtensions.contains(url.pathExtension.lowercased()) {
                             await transcribeDroppedAudio(url)
@@ -65,7 +66,8 @@ extension SageComposerBar {
     }
 
     func attach(imageData: Data) {
-        guard let mediaType = ImageAttachment.sniffMediaType(imageData), imageData.count <= ImageAttachment.maxBytes else {
+        guard let mediaType = ImageAttachment.sniffMediaType(imageData), imageData.count <= ImageAttachment.maxBytes
+        else {
             toastCenter.show("That image couldn't be attached (unsupported format or too large).", status: .danger)
             return
         }
@@ -84,7 +86,7 @@ extension SageComposerBar {
     }
 
     var attachmentChips: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: skin.size.s6) {
             ForEach(Array(pendingImages.enumerated()), id: \.offset) { index, attachment in
                 AinkradChip(label: attachment.mediaType, systemName: "photo") {
                     pendingImages.remove(at: index)

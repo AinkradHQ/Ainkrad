@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 /// Guards the fix for the leak found in Task 3 review round 1: `preview()`
@@ -31,6 +32,7 @@ struct AppEnvironmentPreviewCleanupTests {
         }
 
         let after = previewDirCount()
-        #expect(after == before, "expected no net growth in AinkradPreview-* temp directories, saw \(before) -> \(after)")
+        #expect(
+            after == before, "expected no net growth in AinkradPreview-* temp directories, saw \(before) -> \(after)")
     }
 }

@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-import UserNotifications
 import AinkradSignal
+import Foundation
+import Testing
+import UserNotifications
+
 @testable import Ainkrad
 
 @MainActor
@@ -11,8 +12,9 @@ final class SignalBannerResponderTests {
         func deliver(_ event: SignalEvent, to channels: Set<DeliveryChannel>) {}
     }
     private struct Ctx: SignalContextProviding {
-        var deliveryContext = DeliveryContext(hostIsFrontmost: false, visibleAppIDs: [],
-                                              systemDoNotDisturb: false, hostFocusMode: false)
+        var deliveryContext = DeliveryContext(
+            hostIsFrontmost: false, visibleAppIDs: [],
+            systemDoNotDisturb: false, hostFocusMode: false)
     }
 
     private let url: URL
@@ -22,19 +24,24 @@ final class SignalBannerResponderTests {
     init() throws {
         url = FileManager.default.temporaryDirectory
             .appendingPathComponent("signal-\(UUID().uuidString).sqlite")
-        center = SignalCenter(store: try SignalStore(url: url), deliverer: deliverer,
-                              contextProvider: Ctx())
+        center = SignalCenter(
+            store: try SignalStore(url: url), deliverer: deliverer,
+            contextProvider: Ctx())
         center.retainDeliverer(deliverer)
     }
 
     deinit { try? FileManager.default.removeItem(at: url) }
 
-    private func emit(deepLink: SignalDeepLink? = nil,
-                      actions: [SignalAction] = [],
-                      from source: SignalSource = .app(appID: "raven")) throws -> SignalEvent {
-        center.emit(SignalDraft(kind: "build.failed", severity: .failure,
-                                title: "Build failed", deepLink: deepLink, actions: actions),
-                    from: source)
+    private func emit(
+        deepLink: SignalDeepLink? = nil,
+        actions: [SignalAction] = [],
+        from source: SignalSource = .app(appID: "raven")
+    ) throws -> SignalEvent {
+        center.emit(
+            SignalDraft(
+                kind: "build.failed", severity: .failure,
+                title: "Build failed", deepLink: deepLink, actions: actions),
+            from: source)
         return try #require(center.recent.first)
     }
 
@@ -42,8 +49,10 @@ final class SignalBannerResponderTests {
     func followsTheDeepLink() throws {
         var followed: SignalDeepLink?
         center.onActivateDeepLink = { followed = $0 }
-        let event = try emit(deepLink: SignalDeepLink(appID: "raven", payload: Data(),
-                                                      locator: "session-7"))
+        let event = try emit(
+            deepLink: SignalDeepLink(
+                appID: "raven", payload: Data(),
+                locator: "session-7"))
         var openedFeed = false
         let responder = SignalBannerResponder(center: center)
         responder.onOpenFeed = { openedFeed = true }
@@ -111,8 +120,9 @@ final class SignalBannerResponderTests {
         var followed = false
         center.onInvokeAction = { _, action in invoked = action }
         center.onActivateDeepLink = { _ in followed = true }
-        let event = try emit(deepLink: SignalDeepLink(appID: "raven", payload: Data()),
-                             actions: [SignalAction(id: "retry", label: "Retry")])
+        let event = try emit(
+            deepLink: SignalDeepLink(appID: "raven", payload: Data()),
+            actions: [SignalAction(id: "retry", label: "Retry")])
 
         SignalBannerResponder(center: center)
             .handle(eventID: event.id.uuidString, actionID: "retry")
@@ -126,8 +136,9 @@ final class SignalBannerResponderTests {
     func unknownActionFallsBack() throws {
         var followed = false
         center.onActivateDeepLink = { _ in followed = true }
-        let event = try emit(deepLink: SignalDeepLink(appID: "raven", payload: Data()),
-                             actions: [SignalAction(id: "retry", label: "Retry")])
+        let event = try emit(
+            deepLink: SignalDeepLink(appID: "raven", payload: Data()),
+            actions: [SignalAction(id: "retry", label: "Retry")])
 
         SignalBannerResponder(center: center)
             .handle(eventID: event.id.uuidString, actionID: "gone")
@@ -144,8 +155,9 @@ final class SignalBannerResponderTests {
         let responder = SignalBannerResponder(center: center)
         responder.onOpenFeed = { openedFeed = true }
 
-        responder.handle(eventID: event.id.uuidString,
-                         actionID: UNNotificationDismissActionIdentifier)
+        responder.handle(
+            eventID: event.id.uuidString,
+            actionID: UNNotificationDismissActionIdentifier)
 
         #expect(center.readIDs.contains(event.id))
         #expect(openedFeed == false)

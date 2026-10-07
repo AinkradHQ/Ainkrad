@@ -290,7 +290,8 @@ packages:
     # 28773ab: Epic 3 complete: every AppKit component reads the skin (T3.5.0-T3.5.9, #69-#80);
     #   AppKitUI ABI since ebeeb02: 0 removed, 4639 added (abi-ui-diff). default.theme regenerated.
     # 3618e86: Epic 4 promotions: AinkradRailItem, AinkradCornerBrackets, AinkradBrandChevron, .ainkradRowBackground, .ainkradOverlayChrome, AinkradCommandField (#81-#86).
-    revision: 3618e86aba65d9f07e5ad686f3d6822657c76ab3
+    # f4fcb8f: Epic 6.0 token-gap batch: size.s13, motion d1_4, type.editor, syntax.callout, colors.graphLanes (#88). default.theme regenerated.
+    revision: f4fcb8f5d6fe3c0b49a14b72fd7ed6cb219d45be
 
 targets:
   AinkradHostRuntime:
@@ -344,8 +345,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ainkrad.app
-        MARKETING_VERSION: "0.26.0"
-        CURRENT_PROJECT_VERSION: "26"
+        MARKETING_VERSION: "0.27.0"
+        CURRENT_PROJECT_VERSION: "27"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_NSHumanReadableCopyright: ""

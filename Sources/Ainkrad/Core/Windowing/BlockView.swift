@@ -1,8 +1,8 @@
-import SwiftUI
-import AppKit
-import UniformTypeIdentifiers
 import AinkradAppKit
 import AinkradHostRuntime
+import AppKit
+import SwiftUI
+import UniformTypeIdentifiers
 
 /// One pane: a floating, rounded panel over the sky holding the hosted app
 /// content edge-to-edge. Deliberately chromeless — no title bar, no app
@@ -17,6 +17,7 @@ import AinkradHostRuntime
 /// drag it over another pane to change position (the grid reflows live).
 struct BlockView: View {
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.ainkradSkin) private var skin
     @Environment(\.ainkradReduceMotion) private var reduceMotion
     // Injected per pane by `WorkspacePaneLayer`.
     @Environment(\.ainkradPaneMode) private var paneMode
@@ -69,8 +70,8 @@ struct BlockView: View {
     }
 
     private var paneOpacity: Double {
-        if isBeingDragged { return 0.45 }
-        return isFocused ? 1 : 0.92
+        if isBeingDragged { return skin.opacity.o45 }
+        return isFocused ? 1 : skin.opacity.o92
     }
 
     private var paneScale: CGFloat {
@@ -78,13 +79,17 @@ struct BlockView: View {
         return isBeingDragged ? 0.98 : 1
     }
 
-    var body: some View {
-        let tokens = environment.themeManager.tokens
+    /// Colours come from `hostSkin`, which carries the user's custom accent;
+    /// every scalar comes from the environment's skin.
+    private var tokens: AinkradSkin { environment.themeManager.hostSkin }
 
-        return PaneContent(app: app, topInset: contentTopInset, fallback: tokens.surface,
-                           paneLocator: environment.paneLocators.sink(forBlock: block.id),
-                           launchGeneration: block.launchGeneration)
-            .overlay(alignment: .top) { grabStrip(tokens: tokens) }
+    var body: some View {
+        PaneContent(
+            app: app, topInset: contentTopInset, fallback: tokens.color(\.surface),
+            paneLocator: environment.paneLocators.sink(forBlock: block.id),
+            launchGeneration: block.launchGeneration
+        )
+        .overlay(alignment: .top) { grabStrip }
         // The pane body is clear, so a translucent app (Terminal scheme
         // opacity, Git Mage transparency, Sage opacity) reveals whatever
         // sits behind it: the shared sharp workspace backdrop by default, or —
@@ -96,14 +101,18 @@ struct BlockView: View {
         // only input is whether the blur is on, which does NOT change when focus
         // moves, so SwiftUI skips re-rendering it on a tab switch.
         .background(PaneGlassBackdrop(isEnabled: glassBlur))
-        .clipShape(ChamferShape(cut: AinkradRadius.md))
+        .clipShape(ChamferShape(cut: skin.radius.md))
         // The pane's frame — and, when it becomes the focused one, the pulse of
         // light that now carries the tab transition. Its own view so the pulse
         // animates without re-evaluating this body (and therefore without
         // touching the app's content or the blurred backdrop) on every frame.
-        .overlay(PaneActivationRing(isFocused: isFocused, tokens: tokens))
-        .overlay(dropZoneHighlight(tokens: tokens))
-        .shadow(color: isFocused ? tokens.accentPrimary.opacity(0.28) : .black.opacity(0.25), radius: isFocused ? 22 : 12)
+        .overlay(PaneActivationRing(isFocused: isFocused))
+        .overlay(dropZoneHighlight)
+        .shadow(
+            color: isFocused
+                ? tokens.color(\.accentPrimary).opacity(skin.opacity.o28) : skin.color(.palette("black", skin.opacity.o25)),
+            radius: isFocused ? skin.size.s22 : skin.size.s12
+        )
         .opacity(paneOpacity)
         .scaleEffect(paneScale)
         .contentShape(Rectangle())
@@ -112,7 +121,7 @@ struct BlockView: View {
         // to the app inside it, so the terminal that just came forward is
         // typeable without a second click.
         .background(PaneKeyFocusAnchor(isFocused: isFocused))
-        .animation(.easeOut(duration: 0.15), value: isBeingDragged)
+        .animation(.easeOut(duration: skin.motion.fast), value: isBeingDragged)
         // When the drag session ends (drop landed elsewhere, or released
         // over no target), drop any lingering preview highlight — SwiftUI
         // doesn't reliably call dropExited on panes the drag merely passed
@@ -120,17 +129,20 @@ struct BlockView: View {
         .onChange(of: tileLayout.draggingBlockID) { _, newValue in
             if newValue == nil { dropEdge = nil }
         }
-        .onDrop(of: [.text], delegate: PaneEdgeDropDelegate(
-            targetBlockID: block.id,
-            tileLayout: tileLayout,
-            size: { paneSize },
-            edge: $dropEdge
-        ))
-        .animation(.easeOut(duration: 0.15), value: isFocused)
-        .animation(.easeOut(duration: 0.1), value: dropEdge)
+        .onDrop(
+            of: [.text],
+            delegate: PaneEdgeDropDelegate(
+                targetBlockID: block.id,
+                tileLayout: tileLayout,
+                size: { paneSize },
+                edge: $dropEdge
+            )
+        )
+        .animation(.easeOut(duration: skin.motion.fast), value: isFocused)
+        .animation(.easeOut(duration: skin.motion.durations.d0_1), value: dropEdge)
         .onAppear {
             guard !reduceMotion else { return }
-            withAnimation(.easeOut(duration: 0.15)) { hasArrived = true }
+            withAnimation(.easeOut(duration: skin.motion.fast)) { hasArrived = true }
         }
     }
 
@@ -139,31 +151,31 @@ struct BlockView: View {
     /// and a split-direction glyph, animating between edges as the drag
     /// moves.
     @ViewBuilder
-    private func dropZoneHighlight(tokens: DesignTokens) -> some View {
+    private var dropZoneHighlight: some View {
         // A drop preview only means anything while a drag is in flight —
         // gating on the live drag flag (which every render observes)
         // guarantees the highlight vanishes the instant the drag ends, even
         // if a stale `dropEdge` lingers from a pane the drag passed over.
         if let dropEdge, tileLayout.draggingBlockID != nil {
             let isHorizontal = dropEdge == .leading || dropEdge == .trailing
-            let zone = ChamferShape(cut: AinkradRadius.sm)
-                .fill(tokens.accentPrimary.opacity(0.16))
+            let zone = ChamferShape(cut: skin.radius.sm)
+                .fill(tokens.color(\.accentPrimary).opacity(skin.opacity.o16))
                 .overlay(
-                    ChamferShape(cut: AinkradRadius.sm)
-                        .strokeBorder(tokens.accentSecondary.opacity(0.65), lineWidth: 1)
+                    ChamferShape(cut: skin.radius.sm)
+                        .strokeBorder(tokens.color(\.accentSecondary).opacity(skin.opacity.o65), lineWidth: 1)
                 )
                 .overlay(
-                    TargetingBrackets(length: 9)
-                        .stroke(tokens.accentSecondary.opacity(0.9), lineWidth: 1.5)
-                        .padding(4)
+                    TargetingBrackets(length: skin.size.s9)
+                        .stroke(tokens.color(\.accentSecondary).opacity(skin.opacity.o90), lineWidth: 1.5)
+                        .padding(skin.spacing.xs)
                 )
                 .overlay(
                     Image(systemName: isHorizontal ? "rectangle.split.2x1" : "rectangle.split.1x2")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(tokens.accentSecondary.opacity(0.85))
-                        .shadow(color: tokens.accentSecondary.opacity(0.8), radius: 6)
+                        .font(skin.font(AinkradFontToken(sizeKey: "t15", weight: "medium", scaled: false)))
+                        .foregroundStyle(tokens.color(\.accentSecondary).opacity(skin.opacity.o85))
+                        .shadow(color: tokens.color(\.accentSecondary).opacity(skin.opacity.o80), radius: skin.size.s6)
                 )
-                .padding(3)
+                .padding(skin.size.s3)
                 .transition(.opacity.combined(with: .scale(scale: 0.96)))
 
             Group {
@@ -194,33 +206,26 @@ struct BlockView: View {
     /// panes the strip sits entirely in the padding and steals no clicks from
     /// the app. Where there is no inset it falls back to a minimum height and
     /// does overlay the app's top edge — the price of keeping drag.
-    private func grabStrip(tokens: DesignTokens) -> some View {
-        Color.clear
-            .frame(height: max(contentTopInset, 10))
+    private var grabStrip: some View {
+        // Built here, while the view is installed, so the preview closure
+        // (called at drag start) captures resolved colours and sizes.
+        let ghost = dragGhost
+        return Color.clear
+            .frame(height: max(contentTopInset, skin.size.s10))
             .overlay {
                 Capsule()
-                    .fill(tokens.foreground.opacity(isHoveringGrabber ? 0.35 : 0))
-                    .frame(width: 34, height: 3)
+                    .fill(tokens.color(\.foreground).opacity(isHoveringGrabber ? skin.opacity.o35 : 0))
+                    .frame(width: skin.size.s34, height: skin.size.s3)
             }
             .contentShape(Rectangle())
             .onHover { isHoveringGrabber = $0 }
-            .animation(.easeOut(duration: 0.12), value: isHoveringGrabber)
+            .animation(.easeOut(duration: skin.motion.durations.d0_12), value: isHoveringGrabber)
             .onDrag {
                 tileLayout.focus(block.id)
                 tileLayout.draggingBlockID = block.id
                 return NSItemProvider(object: block.id.uuidString as NSString)
             } preview: {
-                // Termius-style drag ghost: a small pill, not the whole pane.
-                HStack(spacing: 6) {
-                    paneTile(tokens: tokens)
-                    Text(block.displayTitle(appName: app?.displayName))
-                        .font(AinkradFont.display(11, weight: .medium))
-                        .foregroundStyle(tokens.foreground)
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background(tokens.surfaceElevated)
-                .clipShape(Capsule())
+                ghost
             }
             .help("Drag to rearrange")
             // The pane menu used to hang off the header. It moves here rather
@@ -248,39 +253,52 @@ struct BlockView: View {
         // menu is its only host-owned control surface.
         if app?.supportsModes == true {
             let isBasic = paneMode == .basic
-            items.append(AinkradMenuItem(
-                title: isBasic ? "Show Everything" : "Simplify",
-                systemName: isBasic ? "arrow.down.left.and.arrow.up.right"
-                                    : "arrow.up.right.and.arrow.down.left"
-            ) {
-                setPaneMode(isBasic ? .advanced : .basic)
-            })
+            items.append(
+                AinkradMenuItem(
+                    title: isBasic ? "Show Everything" : "Simplify",
+                    systemName: isBasic
+                        ? "arrow.down.left.and.arrow.up.right"
+                        : "arrow.up.right.and.arrow.down.left"
+                ) {
+                    setPaneMode(isBasic ? .advanced : .basic)
+                })
         }
         if let workspace {
-            items.append(AinkradMenuItem(
-                title: isInFocusMode ? "Back to Split Mode" : "Focus Mode",
-                systemName: isInFocusMode ? "rectangle.split.2x2" : "rectangle.inset.filled"
-            ) {
-                tileLayout.focus(block.id)
-                workspace.viewMode = isInFocusMode ? .split : .focus
-                environment.sounds.play(.focusMode)
-            })
+            items.append(
+                AinkradMenuItem(
+                    title: isInFocusMode ? "Back to Split Mode" : "Focus Mode",
+                    systemName: isInFocusMode ? "rectangle.split.2x2" : "rectangle.inset.filled"
+                ) {
+                    tileLayout.focus(block.id)
+                    workspace.viewMode = isInFocusMode ? .split : .focus
+                    environment.sounds.play(.focusMode)
+                })
         }
-        items.append(AinkradMenuItem(title: "Reset Layout", systemName: "arrow.counterclockwise") {
-            tileLayout.resetLayout()
-        })
-        items.append(AinkradMenuItem(title: "Close", systemName: "xmark", isDestructive: true) {
-            environment.sounds.play(.appClose)
-            tileLayout.close(block.id)
-        })
+        items.append(
+            AinkradMenuItem(title: "Reset Layout", systemName: "arrow.counterclockwise") {
+                tileLayout.resetLayout()
+            })
+        items.append(
+            AinkradMenuItem(title: "Close", systemName: "xmark", isDestructive: true) {
+                environment.sounds.play(.appClose)
+                tileLayout.close(block.id)
+            })
         return items
     }
 
-    /// The app's neon tile at HUD size, drawn live from the active theme and
-    /// matching the Launcher rows. Only the drag ghost uses it now that the
-    /// pane header is gone.
-    private func paneTile(tokens: DesignTokens) -> some View {
-        NeonAppTile(symbol: app?.icon ?? "app", tokens: tokens, size: 18)
+    /// Termius-style drag ghost: a small pill, not the whole pane — the app's
+    /// neon tile at HUD size (matching the Launcher rows) and the pane's name.
+    private var dragGhost: some View {
+        HStack(spacing: skin.size.s6) {
+            NeonAppTile(symbol: app?.icon ?? "app", tokens: tokens, size: skin.size.s18)
+            Text(block.displayTitle(appName: app?.displayName))
+                .font(AinkradFont.display(11, weight: .medium))
+                .foregroundStyle(tokens.color(\.foreground))
+        }
+        .padding(.horizontal, skin.size.s10)
+        .padding(.vertical, skin.size.s5)
+        .background(tokens.color(\.surfaceElevated))
+        .clipShape(Capsule())
     }
 
     // MARK: - Content
@@ -298,466 +316,6 @@ struct BlockView: View {
     /// their own interior padding, which is why this is a terminal-shaped
     /// problem in the first place.
     private var contentTopInset: CGFloat {
-        app?.chromeFill() == nil ? 0 : 12
-    }
-}
-
-/// The pane's border and targeting brackets — and the activation pulse that
-/// replaced the content cross-fade as the tab transition.
-///
-/// When this pane becomes the focused one its accent border flares to full
-/// strength and thickens slightly, then settles back over ~320ms, and the
-/// brackets snap in. The effect is that the pane you switched to visibly "comes
-/// alive" — motion the eye can follow — while the content underneath it never
-/// changes opacity, so nothing flashes and no two terminals ever ghost through
-/// each other.
-///
-/// Strokes only, and no shadow: a 1px path costs nothing to animate, where the
-/// shadow this file used to animate was an offscreen render pass per frame.
-private struct PaneActivationRing: View {
-    let isFocused: Bool
-    let tokens: DesignTokens
-
-    @Environment(\.ainkradReduceMotion) private var reduceMotion
-    /// 1 at the instant of activation, easing to 0. Drives both the border's
-    /// brightness and its width, so the flare reads as light rather than as the
-    /// frame changing size.
-    @State private var pulse: Double = 0
-
-    var body: some View {
-        ZStack {
-            ChamferShape(cut: AinkradRadius.md)
-                .strokeBorder(borderColor, lineWidth: 1 + pulse * 0.6)
-
-            TargetingBrackets(length: 10)
-                .stroke(bracketColor, lineWidth: 1.5)
-                .padding(-2)
-        }
-        .onChange(of: isFocused) { _, focused in
-            guard focused, !reduceMotion else { return }
-            // Set the start value, then animate to rest on the next tick, so
-            // the flare actually renders at full strength before it decays.
-            pulse = 1
-            DispatchQueue.main.async {
-                withAnimation(.easeOut(duration: 0.32)) { pulse = 0 }
-            }
-        }
-    }
-
-    private var borderColor: Color {
-        guard isFocused else { return tokens.foreground.opacity(0.1) }
-        return tokens.accentPrimary.opacity(0.55 + 0.45 * pulse)
-    }
-
-    private var bracketColor: Color {
-        guard isFocused else { return .clear }
-        return tokens.accentSecondary.opacity(0.85)
-    }
-}
-
-/// The hosted app, filling the pane.
-///
-/// Its own view — like `PaneGlassBackdrop`, and for the same measured reason.
-/// Inlined in `BlockView.body` it was rebuilt on every focus change, and
-/// rebuilding it re-invokes the hosted app's `updateNSView`; for Terminal that
-/// reapplies the whole appearance (font, ANSI palette, cursor, transparency) on
-/// a tab switch that changed none of it. None of these inputs depend on focus,
-/// so SwiftUI compares them, sees them unchanged, and leaves the app alone.
-private struct PaneContent: View {
-    let app: RegisteredApp?
-    let topInset: CGFloat
-    let fallback: Color
-    /// Lets the hosted app say which of its own things this pane is showing, so
-    /// a notification can focus the pane that produced it rather than the
-    /// first pane of that app.
-    ///
-    /// Safe to hold here BECAUSE it is memoized per block and `Equatable` by
-    /// identity — see `PaneLocatorRegistry.sink(forBlock:)`. A freshly built
-    /// closure would compare unequal on every render and undo the whole point
-    /// of this view's input list.
-    let paneLocator: SignalPaneLocatorSink
-    /// `Block.launchGeneration` — a new value remounts the app's root.
-    let launchGeneration: Int
-
-    /// Read from the environment rather than taken as an input: it is a plain
-    /// `Equatable` value injected one level up in `WorkspacePaneLayer`, so
-    /// switching mode invalidates this view without adding a per-render input
-    /// that would defeat the memoization this view exists for.
-    @Environment(\.ainkradPaneMode) private var paneMode
-
-    var body: some View {
-        if let app {
-            // The app's own background is painted across the WHOLE pane,
-            // including the inset strip, and its root view is inset within it —
-            // so the app still looks edge-to-edge (opaque, or
-            // translucent-over-blur for terminal transparency) and simply
-            // starts a little lower.
-            ZStack(alignment: .top) {
-                if let fill = app.chromeFill() {
-                    fill
-                }
-                // Generation 11: built FOR the mode, not filtered after the
-                // fact. An app that never opted into `AinkradAppModes` falls
-                // back to its mode-less factory inside this accessor, so this
-                // is unconditional and pre-11 apps are unaffected.
-                app.makeRootView(mode: paneMode)
-                    .id(launchGeneration)
-                    .padding(.top, topInset)
-                    .environment(\.ainkradPaneLocator, paneLocator)
-            }
-        } else {
-            fallback
-        }
-    }
-}
-
-/// The host-rendered Gaussian blur revealed through a translucent pane.
-///
-/// A view can't blur the layers behind it, so the host draws its own sky+island
-/// copy here and blurs that. It sits behind the whole pane, so everything in it
-/// frosts continuously (no seam).
-///
-/// ## Why this is its own view and not a `.background { }` closure
-///
-/// It used to be inlined in `BlockView.body`, which meant every focus change
-/// re-evaluated it — and re-rasterized its `drawingGroup`. Measured, a single
-/// tab switch rebuilt this backdrop five times and stalled the main thread for
-/// up to 184ms (~11 dropped frames), while an idle app drifted 0.9ms. The blur
-/// does not depend on focus at all, so as a separate view with one `Bool` input
-/// SwiftUI compares that input, sees it unchanged, and skips the whole subtree.
-///
-/// ## Why one shared image and not a `drawingGroup`
-///
-/// A `drawingGroup` keeps a pane-sized, full-resolution texture per pane — in
-/// Focus Mode every tab is canvas-sized, so five panes held ~263 MB of
-/// half-float textures of the same blurred picture. At radius 26 nothing
-/// finer than a few points survives the blur, so ONE copy is rendered at half
-/// scale for a fixed canvas and every pane shows it aspect-filled. Size is not
-/// an input: adding a pane, dragging a divider or entering full screen renders
-/// nothing (rendering per size stalled the main thread on every one of those).
-private struct PaneGlassBackdrop: View {
-    let isEnabled: Bool
-    @Environment(AppEnvironment.self) private var environment
-
-    var body: some View {
-        if isEnabled {
-            let key = PaneGlassImageCache.Key(
-                theme: environment.themeManager.currentTheme.rawValue,
-                tokens: environment.themeManager.tokens,
-                effects: environment.skySettingsStore.effectEnabled)
-            GeometryReader { proxy in
-                if let image = PaneGlassImageCache.image(for: key, render: render) {
-                    Image(decorative: image, scale: PaneGlassImageCache.scale)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: proxy.size.width, height: proxy.size.height)
-                        .clipped()
-                }
-            }
-        }
-    }
-
-    private func render() -> CGImage? {
-        let renderer = ImageRenderer(content: backdrop
-            .frame(width: PaneGlassImageCache.canvas.width, height: PaneGlassImageCache.canvas.height)
-            .environment(environment))
-        renderer.scale = PaneGlassImageCache.scale
-        return renderer.cgImage
-    }
-
-    private var backdrop: some View {
-        ZStack {
-            // `isLive: false` — this copy exists only to be blurred at
-            // radius 26, where 30fps starfield drift is not perceptible.
-            // The real sky behind the workspace still animates; nothing the
-            // user can actually see stopped moving.
-            AmbientSkyView(isLive: false)
-            FloatingIslandView()
-                .frame(maxWidth: 860, maxHeight: 574)
-        }
-        .blur(radius: 26)
-    }
-}
-
-/// The one backdrop every pane shows, and what it was rendered for. Not
-/// observed: holding the render must not itself re-render anything.
-@MainActor
-private enum PaneGlassImageCache {
-    static let scale: CGFloat = 0.5
-    /// A typical full-screen canvas; panes of any size aspect-fill from it.
-    static let canvas = CGSize(width: 1712, height: 1008)
-
-    struct Key: Equatable {
-        let theme: String
-        let tokens: DesignTokens
-        let effects: [String: Bool]
-    }
-
-    private static var key: Key?
-    private static var image: CGImage?
-
-    static func image(for key: Key, render: () -> CGImage?) -> CGImage? {
-        if key != self.key {
-            self.key = key
-            image = render()
-        }
-        return image
-    }
-}
-
-/// The Termius drop mechanism: while a dragged pane hovers, the nearest
-/// half of this pane is tracked (for the highlight); dropping performs
-/// `TileLayout.move` — joining as an equal sibling on parallel edges, or
-/// wrapping this pane into a stacked pair on perpendicular ones.
-private struct PaneEdgeDropDelegate: DropDelegate {
-    let targetBlockID: UUID
-    let tileLayout: TileLayout
-    let size: () -> CGSize
-    @Binding var edge: PaneEdge?
-
-    func validateDrop(info: DropInfo) -> Bool {
-        guard let dragging = tileLayout.draggingBlockID else { return false }
-        return dragging != targetBlockID
-    }
-
-    func dropEntered(info: DropInfo) {
-        edge = nearestEdge(to: info.location)
-    }
-
-    func dropUpdated(info: DropInfo) -> DropProposal? {
-        edge = nearestEdge(to: info.location)
-        return DropProposal(operation: .move)
-    }
-
-    func dropExited(info: DropInfo) {
-        edge = nil
-    }
-
-    func performDrop(info: DropInfo) -> Bool {
-        let landingEdge = edge ?? nearestEdge(to: info.location)
-        defer {
-            edge = nil
-            tileLayout.draggingBlockID = nil
-        }
-        guard let dragging = tileLayout.draggingBlockID else { return false }
-        tileLayout.move(dragging, to: targetBlockID, edge: landingEdge)
-        return true
-    }
-
-    private func nearestEdge(to location: CGPoint) -> PaneEdge {
-        let bounds = size()
-        guard bounds.width > 0, bounds.height > 0 else { return .trailing }
-        let dx = location.x / bounds.width - 0.5
-        let dy = location.y / bounds.height - 0.5
-        if abs(dx) > abs(dy) {
-            return dx < 0 ? .leading : .trailing
-        } else {
-            return dy < 0 ? .top : .bottom
-        }
-    }
-}
-
-/// Hands the window's keyboard focus to the app inside a pane the moment that
-/// pane becomes the focused one.
-///
-/// Why this exists: with the pane header gone, Focus Mode's tab strip is the
-/// way to switch panes — and clicking a tab used to only move the host's
-/// `focusedBlockID`. The pane came forward looking active (brackets, glow)
-/// while the keystrokes still went wherever they went before, so switching to a
-/// terminal tab and typing did nothing until you clicked into it. Focus that
-/// isn't keyboard focus is a lie the UI tells.
-///
-/// ## How it finds the app's view — and why not by walking the view tree
-///
-/// The host can't name the plugin's view; it doesn't know what's inside a pane.
-/// The first attempt searched the AppKit hierarchy around a zero-size anchor
-/// planted in the pane, and it worked only intermittently. Logging the live
-/// tree showed why, and the reason is structural, not a tuning problem:
-/// SwiftUI hosts every `NSViewRepresentable` in its own backing layer, so the
-/// anchor's subtree never contained the terminal at all — and the depth at
-/// which panes became siblings *changed between runs of the same build*.
-/// SwiftUI's backing hierarchy is an implementation detail; no amount of
-/// climbing or scoping makes it a reliable index.
-///
-/// So this asks AppKit the question AppKit actually answers: **what visible,
-/// interactive view is at this point?** `hitTest` is exactly that, and it
-/// already accounts for the thing that makes Focus Mode hard — every pane sits
-/// at full canvas size, stacked, and only the focused one is visible and
-/// hit-testable (the others are `opacity 0` with hit testing off). So a hit
-/// test at the pane's center lands inside the focused pane by construction,
-/// with no geometry comparison and no assumptions about tree shape.
-private struct PaneKeyFocusAnchor: NSViewRepresentable {
-    let isFocused: Bool
-
-    func makeNSView(context: Context) -> AnchorView {
-        let view = AnchorView()
-        view.isFocusedPane = isFocused
-        return view
-    }
-
-    func updateNSView(_ nsView: AnchorView, context: Context) {
-        let wasFocused = nsView.isFocusedPane
-        nsView.isFocusedPane = isFocused
-        // Only on the false → true transition. Claiming the keyboard on every
-        // render would fight the user: it would yank focus out of the Launcher
-        // field or a tab being renamed on each unrelated redraw.
-        guard isFocused, !wasFocused else { return }
-        nsView.beginClaimingKeyboard()
-    }
-
-    /// A zero-cost marker filling the pane (it is installed as the pane's
-    /// background, so its bounds ARE the pane's bounds — that is all the
-    /// geometry the hit test needs).
-    final class AnchorView: NSView {
-        var isFocusedPane = false
-
-        /// Retry schedule, in seconds, walked sequentially and stopping at the
-        /// first success.
-        ///
-        /// The first delay must clear TWO things, and both of them cost
-        /// correctness or smoothness when it doesn't:
-        ///
-        /// 1. **The frame that reveals the pane.** Making a terminal first
-        ///    responder costs ~8ms (it redraws) and revealing the pane costs
-        ///    ~10ms; in one frame that blows the 16.7ms budget and drops a frame
-        ///    on every switch. Measured: 18ms median stall → 1.0ms, against a
-        ///    0.9ms idle floor.
-        /// 2. **Ambiguity about which pane it is.** This used to have to wait out
-        ///    a 170ms content cross-fade, during which BOTH panes were partly
-        ///    visible and still hit-testable, so the hit test could land in the
-        ///    wrong pane — and the pane at the bottom of the stack, the first
-        ///    tab, was the one that systematically lost. That was the "focus
-        ///    works on every tab except the first" bug.
-        ///
-        ///    The cross-fade is gone (it was also what flashed), the focused pane
-        ///    now sits on top via `zIndex`, and the claim refuses a target that
-        ///    isn't visible. With all three, there is no fade left to wait out,
-        ///    so this only has to clear the reveal frame.
-        private static let retryDelays: [TimeInterval] = [0.06, 0.12, 0.22, 0.4]
-
-        /// Rising counter so a stale retry chain — from a pane that has since
-        /// been unfocused — cannot fire and steal the keyboard back.
-        private var claimGeneration = 0
-        private var isAwaitingKeyWindow = false
-
-        /// The focused pane should own the keyboard from the moment it appears,
-        /// not only after a switch — so claim on mount too.
-        override func viewDidMoveToWindow() {
-            super.viewDidMoveToWindow()
-            guard window != nil, isFocusedPane else { return }
-            beginClaimingKeyboard()
-        }
-
-        override func viewWillMove(toWindow newWindow: NSWindow?) {
-            super.viewWillMove(toWindow: newWindow)
-            stopAwaitingKeyWindow()
-        }
-
-        func beginClaimingKeyboard() {
-            claimGeneration += 1
-            attempt(index: 0, generation: claimGeneration)
-        }
-
-        private func attempt(index: Int, generation: Int) {
-            guard index < Self.retryDelays.count else { return }
-            DispatchQueue.main.asyncAfter(deadline: .now() + Self.retryDelays[index]) { [weak self] in
-                guard let self, self.claimGeneration == generation, self.isFocusedPane else { return }
-                guard !self.claimKeyboard() else { return }
-                self.attempt(index: index + 1, generation: generation)
-            }
-        }
-
-        /// Returns true once the keyboard is inside this pane, so later retries
-        /// become no-ops.
-        @discardableResult
-        private func claimKeyboard() -> Bool {
-            guard let window, let contentView = window.contentView else { return false }
-            // At launch the window becomes key only after the panes mount. Wait
-            // for it rather than dropping the claim, or the focused pane starts
-            // life without the keyboard.
-            guard window.isKeyWindow else {
-                awaitKeyWindow(window)
-                return false
-            }
-            // Already where we put it last time — the cheap path, and the one
-            // every repeat claim takes.
-            // A live text field owns the keyboard for a reason (Launcher search,
-            // a tab mid-rename, a settings field). Never take it from one.
-            if let editor = window.firstResponder as? NSTextView, editor.isFieldEditor { return false }
-            // The pane must be big enough to aim at — a pane mid-layout at zero
-            // size would hit-test into whatever is behind it.
-            guard bounds.width > 8, bounds.height > 8 else { return false }
-
-            let centerInContent = convert(CGPoint(x: bounds.midX, y: bounds.midY), to: contentView)
-            guard let hit = contentView.hitTest(centerInContent) else { return false }
-            // Belt and braces on top of the timing: refuse a view that is not
-            // actually on screen. If a cross-fade is still running, or another
-            // workspace's pane is somehow the hit, this fails and the next retry
-            // tries again rather than handing the keyboard to an invisible
-            // terminal — which the user would experience as typing into nothing.
-            guard Self.isEffectivelyVisible(hit, upTo: contentView) else { return false }
-            guard let target = Self.responderTarget(from: hit) else { return false }
-            // Already there — don't disturb exactly where inside the pane.
-            if window.firstResponder as? NSView === target { return true }
-            return window.makeFirstResponder(target)
-        }
-
-        /// The nearest view at or above the hit view that will take the
-        /// keyboard. Climbing UP from the hit is safe in a way that climbing
-        /// blind was not: the hit view is already known to be inside the
-        /// focused pane, and a container that accepts first responder on behalf
-        /// of its content (scroll views, representable hosts) is the right
-        /// target anyway.
-        private static func responderTarget(from hit: NSView) -> NSView? {
-            var candidate: NSView? = hit
-            while let view = candidate {
-                if view.acceptsFirstResponder, view.canBecomeKeyView { return view }
-                candidate = view.superview
-            }
-            return nil
-        }
-
-        /// Whether `view` is really visible: nothing between it and `root` is
-        /// hidden or faded out. SwiftUI expresses `.opacity()` on a hosted
-        /// AppKit view as a layer opacity, so both that and `isHidden` have to
-        /// be checked, all the way up.
-        private static func isEffectivelyVisible(_ view: NSView, upTo root: NSView) -> Bool {
-            var current: NSView? = view
-            while let node = current {
-                if node.isHidden { return false }
-                if node.alphaValue < 0.9 { return false }
-                if let opacity = node.layer?.opacity, opacity < 0.9 { return false }
-                if node === root { return true }
-                current = node.superview
-            }
-            return true
-        }
-
-        /// Re-runs the claim once the window becomes key. Selector-based (not
-        /// block-based) observation so it can be torn down from
-        /// `viewWillMove(toWindow:)` rather than from a `deinit` that isn't
-        /// allowed to touch non-Sendable state.
-        private func awaitKeyWindow(_ window: NSWindow) {
-            guard !isAwaitingKeyWindow else { return }
-            isAwaitingKeyWindow = true
-            NotificationCenter.default.addObserver(
-                self,
-                selector: #selector(windowDidBecomeKey),
-                name: NSWindow.didBecomeKeyNotification,
-                object: window
-            )
-        }
-
-        private func stopAwaitingKeyWindow() {
-            guard isAwaitingKeyWindow else { return }
-            isAwaitingKeyWindow = false
-            NotificationCenter.default.removeObserver(self, name: NSWindow.didBecomeKeyNotification, object: nil)
-        }
-
-        @objc private func windowDidBecomeKey(_ notification: Notification) {
-            stopAwaitingKeyWindow()
-            guard isFocusedPane else { return }
-            beginClaimingKeyboard()
-        }
+        app?.chromeFill() == nil ? 0 : skin.spacing.md
     }
 }

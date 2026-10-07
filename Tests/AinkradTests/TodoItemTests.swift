@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite struct TodoItemTests {
     @Test func decodesItemsAndStatuses() {
@@ -20,20 +21,24 @@ import AinkradHostRuntime
     }
 
     @Test func unknownOrMissingStatusFallsBackToPending() {
-        let input = JSONValue.object(["items": .array([
-            .object(["content": .string("x"), "status": .string("bogus")]),
-            .object(["content": .string("y")]),
-        ])])
+        let input = JSONValue.object([
+            "items": .array([
+                .object(["content": .string("x"), "status": .string("bogus")]),
+                .object(["content": .string("y")]),
+            ])
+        ])
         let items = TodoItem.list(from: input)
         #expect(items.map(\.status) == [.pending, .pending])
     }
 
     @Test func skipsBlankContentAndNonObjects() {
-        let input = JSONValue.object(["items": .array([
-            .object(["content": .string("  "), "status": .string("pending")]),
-            .string("garbage"),
-            .object(["content": .string("keep"), "status": .string("completed")]),
-        ])])
+        let input = JSONValue.object([
+            "items": .array([
+                .object(["content": .string("  "), "status": .string("pending")]),
+                .string("garbage"),
+                .object(["content": .string("keep"), "status": .string("completed")]),
+            ])
+        ])
         #expect(TodoItem.list(from: input) == [TodoItem(content: "keep", status: .completed)])
     }
 }

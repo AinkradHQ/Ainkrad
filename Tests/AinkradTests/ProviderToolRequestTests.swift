@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import Ainkrad
 
 @Suite("Provider tool request serialization", .serialized)
@@ -18,13 +19,16 @@ struct ProviderToolRequestTests {
 
         let messages: [AgentMessage] = [
             AgentMessage(role: .user, text: "hi"),
-            AgentMessage(role: .assistant, content: [.toolUse(id: "t1", name: "read_file", input: .object(["path": .string("/x")]))]),
+            AgentMessage(
+                role: .assistant,
+                content: [.toolUse(id: "t1", name: "read_file", input: .object(["path": .string("/x")]))]),
             AgentMessage(role: .user, content: [.toolResult(toolUseID: "t1", content: "data", isError: false)]),
         ]
-        let stream = provider.send(messages: messages, system: "sys", tools: [schema],
-                                   model: AgentModelConfig(model: "claude-opus-4-8", effort: "xhigh"),
-                                   credential: .apiKey("k"))
-        for try await _ in stream {}   // drives the request; capture protocol records the body
+        let stream = provider.send(
+            messages: messages, system: "sys", tools: [schema],
+            model: AgentModelConfig(model: "claude-opus-4-8", effort: "xhigh"),
+            credential: .apiKey("k"))
+        for try await _ in stream {}  // drives the request; capture protocol records the body
 
         let body = RequestCaptureProtocol.captured!
         let tools = body["tools"] as! [[String: Any]]
@@ -45,11 +49,13 @@ final class RequestCaptureProtocol: URLProtocol {
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func startLoading() {
         if let body = request.httpBody ?? request.bodyStreamData(),
-           let obj = try? JSONSerialization.jsonObject(with: body) as? [String: Any] {
+            let obj = try? JSONSerialization.jsonObject(with: body) as? [String: Any]
+        {
             RequestCaptureProtocol.captured = obj
         }
-        let resp = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil,
-                                   headerFields: ["Content-Type": "text/event-stream"])!
+        let resp = HTTPURLResponse(
+            url: request.url!, statusCode: 200, httpVersion: nil,
+            headerFields: ["Content-Type": "text/event-stream"])!
         client?.urlProtocol(self, didReceive: resp, cacheStoragePolicy: .notAllowed)
         client?.urlProtocol(self, didLoad: Data("data: [DONE]\n\n".utf8))
         client?.urlProtocolDidFinishLoading(self)
@@ -57,12 +63,15 @@ final class RequestCaptureProtocol: URLProtocol {
     override func stopLoading() {}
 }
 
-private extension URLRequest {
+extension URLRequest {
     // URLSession moves httpBody into a stream; read it back for assertions.
-    func bodyStreamData() -> Data? {
+    fileprivate func bodyStreamData() -> Data? {
         guard let stream = httpBodyStream else { return nil }
-        stream.open(); defer { stream.close() }
-        var data = Data(); let size = 4096; let buf = UnsafeMutablePointer<UInt8>.allocate(capacity: size)
+        stream.open()
+        defer { stream.close() }
+        var data = Data()
+        let size = 4096
+        let buf = UnsafeMutablePointer<UInt8>.allocate(capacity: size)
         defer { buf.deallocate() }
         while stream.hasBytesAvailable {
             let read = stream.read(buf, maxLength: size)

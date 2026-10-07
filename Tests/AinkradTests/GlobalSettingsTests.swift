@@ -1,7 +1,8 @@
-import Testing
-import Foundation
-@testable import Ainkrad
 import AinkradHostRuntime
+import Foundation
+import Testing
+
+@testable import Ainkrad
 
 @Suite("GlobalSettings")
 final class GlobalSettingsTests {
@@ -104,7 +105,8 @@ final class GlobalSettingsTests {
     @Test("a store with no prior write agrees with the model's default")
     func storeDefaultMatchesTheModel() {
         let persistence = InMemoryPersistenceStore()
-        #expect(GeneralSettingsStore(persistence: persistence).uiReduceMotion
+        #expect(
+            GeneralSettingsStore(persistence: persistence).uiReduceMotion
                 == GlobalSettings().uiReduceMotion)
     }
 
@@ -135,7 +137,8 @@ final class GlobalSettingsTests {
         // Compared against the model rather than a literal: with the app default
         // now `true`, a literal would pass just as readily if the store HAD
         // seeded itself from a system flag that happened to be on.
-        #expect(GeneralSettingsStore(persistence: persistence).uiReduceMotion
+        #expect(
+            GeneralSettingsStore(persistence: persistence).uiReduceMotion
                 == GlobalSettings().uiReduceMotion)
     }
 }

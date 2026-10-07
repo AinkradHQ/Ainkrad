@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Replicate image backend. Token in the Keychain via SecretStore, never a
 /// document. Runs a model synchronously via the `Prefer: wait` header, then
@@ -7,6 +7,7 @@ import AinkradHostRuntime
 /// array of URL strings depending on the model, so it is parsed leniently.
 struct ReplicateImageBackend: MediaBackend {
     static let secretID = "media.replicate.apiKey"
+    // `nonisolated(unsafe)`: an immutable `let`; `KeychainSecretStore` keeps no mutable state and Keychain calls are thread-safe.
     nonisolated(unsafe) let secrets: SecretStore
     let http: DataHTTPClient
     /// `owner/name` of a text-to-image model. flux-schnell is fast and cheap.
@@ -25,7 +26,7 @@ struct ReplicateImageBackend: MediaBackend {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
-        request.setValue("wait", forHTTPHeaderField: "Prefer") // block until finished
+        request.setValue("wait", forHTTPHeaderField: "Prefer")  // block until finished
         request.httpBody = try JSONSerialization.data(withJSONObject: ["input": ["prompt": prompt]])
         let (data, response) = try await http.data(for: request)
         guard (200..<300).contains(response.statusCode) else {

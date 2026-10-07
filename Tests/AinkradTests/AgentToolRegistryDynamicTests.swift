@@ -1,8 +1,9 @@
+import AinkradHostRuntime
 // Tests/AinkradTests/AgentToolRegistryDynamicTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("AgentToolRegistry dynamic tools")
 @MainActor
@@ -19,8 +20,9 @@ struct AgentToolRegistryDynamicTests {
 
     @Test func dynamicToolsAreVisibleAndRunnable() async {
         var live: [any AgentTool] = []
-        let registry = AgentToolRegistry(tools: [StubTool(name: "static_a")],
-                                         dynamicTools: { live })
+        let registry = AgentToolRegistry(
+            tools: [StubTool(name: "static_a")],
+            dynamicTools: { live })
         #expect(registry.tool(named: "mcp/x/y") == nil)
         live = [StubTool(name: "mcp/x/y")]
         #expect(registry.tool(named: "mcp/x/y") != nil)
@@ -30,8 +32,9 @@ struct AgentToolRegistryDynamicTests {
     }
 
     @Test func staticToolsWinOnNameCollision() {
-        let registry = AgentToolRegistry(tools: [StubTool(name: "dup")],
-                                         dynamicTools: { [StubTool(name: "dup")] })
+        let registry = AgentToolRegistry(
+            tools: [StubTool(name: "dup")],
+            dynamicTools: { [StubTool(name: "dup")] })
         // Only one schema entry for "dup", and it resolves to a tool.
         #expect(registry.schemas.filter { $0.name == "dup" }.count == 1)
         #expect(registry.tool(named: "dup") != nil)

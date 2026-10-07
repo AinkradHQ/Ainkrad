@@ -1,7 +1,8 @@
-import Testing
-import SwiftUI
-@testable import Ainkrad
 import AinkradHostRuntime
+import SwiftUI
+import Testing
+
+@testable import Ainkrad
 
 @Suite("UIFontScale")
 struct UIFontScaleTests {
@@ -20,28 +21,5 @@ struct UIFontFamilyTests {
         #expect(UIFontFamily.exo2.fontName == "Exo 2")
         #expect(UIFontFamily.jetBrainsMono.fontName == "JetBrains Mono")
         #expect(UIFontFamily.system.fontName == nil)
-    }
-}
-
-@Suite("DesignTokens.overridingAccentPrimary")
-struct DesignTokensAccentOverrideTests {
-    @Test("a non-nil color replaces accentPrimary and leaves the other tokens equal")
-    func nonNilReplaces() {
-        let base = LegacyDesignTokens.neonBlue
-        let overridden = base.overridingAccentPrimary(.red)
-
-        #expect(overridden.accentPrimary == .red)
-        #expect(overridden.background == base.background)
-        #expect(overridden.surface == base.surface)
-        #expect(overridden.surfaceElevated == base.surfaceElevated)
-        #expect(overridden.accentSecondary == base.accentSecondary)
-        #expect(overridden.accentTertiary == base.accentTertiary)
-        #expect(overridden.foreground == base.foreground)
-    }
-
-    @Test("nil returns an equal copy, unchanged")
-    func nilReturnsEqualCopy() {
-        let base = LegacyDesignTokens.cyberPurple
-        #expect(base.overridingAccentPrimary(nil) == base)
     }
 }

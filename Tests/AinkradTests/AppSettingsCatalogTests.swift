@@ -1,8 +1,9 @@
-import SwiftUI
-import Testing
-@testable import Ainkrad
 import AinkradAppKitContract
 import AinkradHostRuntime
+import SwiftUI
+import Testing
+
+@testable import Ainkrad
 
 @Suite("App settings pages")
 @MainActor
@@ -25,9 +26,9 @@ struct AppSettingsCatalogTests {
             // Hoard, Sage and Scry have host-declared pages (the built-in seam),
             // so they never take the fallback.
             guard let appID = page.appID,
-                  ![HoardApp.id, SageApp.id, ScryApp.id].contains(appID),
-                  let app = environment.registry.allApps.first(where: { $0.id == appID }),
-                  app.settingsCatalog() == nil
+                ![HoardApp.id, SageApp.id, ScryApp.id].contains(appID),
+                let app = environment.registry.allApps.first(where: { $0.id == appID }),
+                app.settingsCatalog() == nil
             else { continue }
 
             let field = page.groups.first { $0.title == page.title }?.fields.first
@@ -38,8 +39,9 @@ struct AppSettingsCatalogTests {
                 } else {
                     Issue.record("\(page.title)'s fallback field is not .custom")
                 }
-                #expect(field.keywords.contains(page.title.lowercased()),
-                        "\(page.title)'s fallback field is missing its own name as a keyword")
+                #expect(
+                    field.keywords.contains(page.title.lowercased()),
+                    "\(page.title)'s fallback field is missing its own name as a keyword")
             }
         }
     }
@@ -49,8 +51,9 @@ struct AppSettingsCatalogTests {
         let pages = AppSettingsCatalog.pages(environment: .preview())
             .filter { $0.appID != SageApp.id }
         for page in pages {
-            #expect(page.groups.contains { $0.title == "Appearance" },
-                    "\(page.title) is missing the host appearance group")
+            #expect(
+                page.groups.contains { $0.title == "Appearance" },
+                "\(page.title) is missing the host appearance group")
         }
     }
 
@@ -59,8 +62,9 @@ struct AppSettingsCatalogTests {
         for page in AppSettingsCatalog.pages(environment: .preview()) where page.appID != SageApp.id {
             #expect(page.groups.first?.title == "Appearance", "\(page.title) does not open on Appearance")
             #expect(!page.groups.contains { $0.title == "Surface" }, "\(page.title) still has a Surface tab")
-            #expect(page.groups.filter { $0.title == "Appearance" }.count == 1,
-                    "\(page.title) has more than one Appearance tab")
+            #expect(
+                page.groups.filter { $0.title == "Appearance" }.count == 1,
+                "\(page.title) has more than one Appearance tab")
         }
     }
 
@@ -95,14 +99,20 @@ struct AppSettingsCatalogTests {
                 title: "Hostile Plugin", icon: "ant",
                 group: .installedApps, order: 0,
                 groups: [
-                    SettingsGroup(path: hostPath, title: "Steal host", fields: [
-                        SettingsField(path: hostPath.appending("evil"), label: "Evil",
-                                      kind: .toggle(.constant(false)))
-                    ]),
-                    SettingsGroup(path: otherAppPath, title: "Steal other app", fields: [
-                        SettingsField(path: otherAppPath.appending("evil"), label: "Evil too",
-                                      kind: .toggle(.constant(false)))
-                    ])
+                    SettingsGroup(
+                        path: hostPath, title: "Steal host",
+                        fields: [
+                            SettingsField(
+                                path: hostPath.appending("evil"), label: "Evil",
+                                kind: .toggle(.constant(false)))
+                        ]),
+                    SettingsGroup(
+                        path: otherAppPath, title: "Steal other app",
+                        fields: [
+                            SettingsField(
+                                path: otherAppPath.appending("evil"), label: "Evil too",
+                                kind: .toggle(.constant(false)))
+                        ]),
                 ],
                 appID: "hostile-plugin")
         }
@@ -126,11 +136,13 @@ struct AppSettingsCatalogTests {
         let hostilePage = catalog.pages.first { $0.appID == "hostile-plugin" }
         #expect(hostilePage != nil)
         for group in hostilePage?.groups ?? [] {
-            #expect(group.path.segments.starts(with: ["app", "hostile-plugin"]),
-                    "group path \(group.path) escaped the plugin's namespace")
+            #expect(
+                group.path.segments.starts(with: ["app", "hostile-plugin"]),
+                "group path \(group.path) escaped the plugin's namespace")
             for field in group.fields {
-                #expect(field.path.segments.starts(with: ["app", "hostile-plugin"]),
-                        "field path \(field.path) escaped the plugin's namespace")
+                #expect(
+                    field.path.segments.starts(with: ["app", "hostile-plugin"]),
+                    "field path \(field.path) escaped the plugin's namespace")
             }
         }
     }

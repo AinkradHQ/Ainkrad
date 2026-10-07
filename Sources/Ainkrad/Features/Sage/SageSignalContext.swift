@@ -1,6 +1,6 @@
-import Foundation
 import AinkradAppKit
 import AinkradSignal
+import Foundation
 
 /// What the assistant can learn from the notification feed.
 ///
@@ -41,8 +41,10 @@ struct SageSignalContext {
     func healthLine(now: Date = Date()) -> String {
         let health = center.health(since: now.addingTimeInterval(-7 * 86_400))
         guard health.total >= Self.minimumHealthSample else { return "" }
-        var parts = ["Last 7 days: \(health.total) notifications",
-                     "\(Int((health.readRate * 100).rounded()))% read"]
+        var parts = [
+            "Last 7 days: \(health.total) notifications",
+            "\(Int((health.readRate * 100).rounded()))% read",
+        ]
         if let loudest = health.noisiest.first {
             parts.append("loudest \(loudest.kind) (\(loudest.count))")
         }
@@ -143,21 +145,22 @@ struct SageSignalContext {
     /// The count is kept rather than dropped: "17 times" is the most useful
     /// part of a recurring failure, and an assistant told only about the
     /// latest one would describe a persistent outage as a blip.
-    private static func collapsingRepeats(_ events: [SignalEvent]) -> [(SignalEvent, Int)] {
+    static func collapsingRepeats(_ events: [SignalEvent]) -> [(SignalEvent, Int)] {
         var order: [SignalSourceKindKey] = []
         var newest: [SignalSourceKindKey: SignalEvent] = [:]
         var counts: [SignalSourceKindKey: Int] = [:]
         for event in events {
             let key = SignalSourceKindKey(source: event.source, kind: event.kind)
-            if newest[key] == nil {
+            if let current = newest[key] {
+                if event.timestamp > current.timestamp { newest[key] = event }
+            } else {
                 newest[key] = event
                 order.append(key)
-            } else if event.timestamp > newest[key]!.timestamp {
-                newest[key] = event
             }
             counts[key, default: 0] += 1
         }
-        return order.map { (newest[$0]!, counts[$0]!) }
+        // Every key in `order` was inserted into both maps above.
+        return order.compactMap { key in newest[key].map { ($0, counts[key, default: 0]) } }
     }
 
     /// One event as a line.
@@ -167,10 +170,12 @@ struct SageSignalContext {
     /// useful about it. Uses the same `sourceLabel` the feed's own rows use, so
     /// the assistant and the UI never disagree about what an app is called.
     private static func line(for event: SignalEvent, repeats: Int = 1) -> String {
-        let stamp = ISO8601DateFormatter.string(from: event.timestamp,
-                                                timeZone: .current,
-                                                formatOptions: [.withInternetDateTime])
-        var line = "[\(stamp)] \(event.severity.rawValue.uppercased()) "
+        let stamp = ISO8601DateFormatter.string(
+            from: event.timestamp,
+            timeZone: .current,
+            formatOptions: [.withInternetDateTime])
+        var line =
+            "[\(stamp)] \(event.severity.rawValue.uppercased()) "
             + "\(SignalPresentation.sourceLabel(event.source)) — \(event.title)"
         if repeats > 1 {
             line += " (\(repeats)x)"

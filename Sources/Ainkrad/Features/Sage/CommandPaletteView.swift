@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// `/`-triggered slash-command palette: the fuzzy-filtered `CommandRegistry.all()`
 /// list, GROUPED into ordered category sections, rendered through the shared
@@ -9,10 +9,11 @@ import AinkradHostRuntime
 /// single `selectedIndex` maps across the flattened `selectionOrder` — the same
 /// order the composer's key monitor navigates. Presentation-only.
 struct CommandPaletteView: View {
+    @Environment(\.ainkradSkin) private var skin
     let commands: [SlashCommand]
     let query: String
     @Binding var selectedIndex: Int
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
     let onSelect: (SlashCommand) -> Void
 
     var body: some View {
@@ -20,8 +21,7 @@ struct CommandPaletteView: View {
         SageOverlayList(
             isEmpty: sections.isEmpty,
             emptyIcon: "magnifyingglass",
-            emptyText: "No matching commands",
-            tokens: tokens
+            emptyText: "No matching commands"
         ) {
             ForEach(Array(sections.enumerated()), id: \.element.category) { sectionIndex, section in
                 // Flat index base = total commands in all earlier sections, so
@@ -36,8 +36,8 @@ struct CommandPaletteView: View {
                         onTap: { onSelect(command) },
                         leading: {
                             Image(systemName: "chevron.right.circle")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(tokens.accentSecondary)
+                                .font(skin.font(AinkradFontToken(sizeKey: "t12", weight: "semibold", scaled: false)))
+                                .foregroundStyle(theme.accentSecondary)
                         },
                         title: "/\(command.name)",
                         subtitle: command.usage,
@@ -52,11 +52,11 @@ struct CommandPaletteView: View {
         Text(category.title.uppercased())
             .font(AinkradFont.display(10, weight: .medium))
             .kerning(0.6)
-            .foregroundStyle(tokens.foreground.opacity(0.5))
+            .foregroundStyle(theme.foreground.opacity(skin.opacity.o50))
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 10)
-            .padding(.top, 6)
-            .padding(.bottom, 2)
+            .padding(.horizontal, skin.size.s10)
+            .padding(.top, skin.size.s6)
+            .padding(.bottom, skin.size.s2)
     }
 
     /// Substring match over the command name and summary — permissive, case-

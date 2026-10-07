@@ -1,7 +1,8 @@
+import AinkradHostRuntime
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 /// Mirrors `FakeAppStoreService` from `AppStoreStoreTests.swift` (file-private
 /// there) so this suite doesn't depend on cross-file visibility of a test fake.
@@ -29,7 +30,8 @@ private final class FakeMCPAppStoreService: AppStoreServing {
 @MainActor
 struct AppStoreMCPRowTests {
     private func mcpEntry(_ id: String = "web-search") -> CatalogEntry {
-        CatalogEntry(appID: id, displayName: "Web Search", icon: "i", description: "d",
+        CatalogEntry(
+            appID: id, displayName: "Web Search", icon: "i", description: "d",
             version: "1", apiVersion: 0, downloadURL: URL(string: "https://e/n")!, sha256: "",
             sourceRepo: "o/r", kind: .mcpServer,
             mcp: MCPCatalogDescriptor(transport: .stdio, command: "npx", envKeys: ["API_KEY"]))
@@ -38,8 +40,9 @@ struct AppStoreMCPRowTests {
     @Test func mcpCatalogEntryProducesMCPRow() {
         let fake = FakeMCPAppStoreService()
         fake.cachedCatalog = [mcpEntry()]
-        let store = AppStoreStore(service: fake,
-                                  registry: BuiltInAppRegistry(persistence: InMemoryPersistenceStore()))
+        let store = AppStoreStore(
+            service: fake,
+            registry: BuiltInAppRegistry(persistence: InMemoryPersistenceStore()))
         store.reloadRows()
         #expect(store.rows.first(where: { $0.id == "web-search" })?.kind == .mcpServer)
     }
@@ -47,8 +50,9 @@ struct AppStoreMCPRowTests {
     @Test func installedMCPEntryIsStillFlaggedMCPServer() async {
         let fake = FakeMCPAppStoreService()
         fake.cachedCatalog = [mcpEntry()]
-        let store = AppStoreStore(service: fake,
-                                  registry: BuiltInAppRegistry(persistence: InMemoryPersistenceStore()))
+        let store = AppStoreStore(
+            service: fake,
+            registry: BuiltInAppRegistry(persistence: InMemoryPersistenceStore()))
         store.reloadRows()
         await store.install("web-search")
         let row = store.rows.first { $0.id == "web-search" }
@@ -59,11 +63,15 @@ struct AppStoreMCPRowTests {
 
     @Test func nonMCPCatalogEntryIsUnaffected() {
         let fake = FakeMCPAppStoreService()
-        fake.cachedCatalog = [CatalogEntry(appID: "notes", displayName: "Notes", icon: "i",
-            description: "d", version: "1", apiVersion: 0, downloadURL: URL(string: "https://e/n")!,
-            sha256: "", sourceRepo: "o/r")]
-        let store = AppStoreStore(service: fake,
-                                  registry: BuiltInAppRegistry(persistence: InMemoryPersistenceStore()))
+        fake.cachedCatalog = [
+            CatalogEntry(
+                appID: "notes", displayName: "Notes", icon: "i",
+                description: "d", version: "1", apiVersion: 0, downloadURL: URL(string: "https://e/n")!,
+                sha256: "", sourceRepo: "o/r")
+        ]
+        let store = AppStoreStore(
+            service: fake,
+            registry: BuiltInAppRegistry(persistence: InMemoryPersistenceStore()))
         store.reloadRows()
         #expect(store.rows.first(where: { $0.id == "notes" })?.kind == .plugin)
     }

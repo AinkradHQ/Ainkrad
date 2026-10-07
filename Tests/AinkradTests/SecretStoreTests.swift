@@ -1,8 +1,9 @@
-import Testing
+import AinkradHostRuntime
 import Foundation
 import Security
+import Testing
+
 @testable import Ainkrad
-import AinkradHostRuntime
 
 @Suite("InMemorySecretStore")
 struct InMemorySecretStoreTests {
@@ -59,8 +60,6 @@ final class KeychainSecretStoreTests {
     }
 }
 
-
-
 /// The legacy-keychain escape hatch: secrets written by older releases live in
 /// the file-based login keychain, and the store has to adopt them on demand or
 /// every saved API key vanishes on upgrade.
@@ -71,11 +70,12 @@ final class KeychainSecretStoreLegacyTests {
     deinit {
         KeychainSecretStore(service: service).setSecret(nil, for: "a")
         for useDataProtection in [true, false] {
-            SecItemDelete([
-                kSecClass as String: kSecClassGenericPassword,
-                kSecAttrService as String: service,
-                kSecUseDataProtectionKeychain as String: useDataProtection,
-            ] as CFDictionary)
+            SecItemDelete(
+                [
+                    kSecClass as String: kSecClassGenericPassword,
+                    kSecAttrService as String: service,
+                    kSecUseDataProtectionKeychain as String: useDataProtection,
+                ] as CFDictionary)
         }
     }
 
@@ -85,24 +85,26 @@ final class KeychainSecretStoreLegacyTests {
     /// the test proves nothing.
     @discardableResult
     private func addLegacyItem(_ value: String, id: String) -> OSStatus {
-        SecItemAdd([
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: id,
-            kSecValueData as String: Data(value.utf8),
-            kSecUseDataProtectionKeychain as String: false,
-        ] as CFDictionary, nil)
+        SecItemAdd(
+            [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: service,
+                kSecAttrAccount as String: id,
+                kSecValueData as String: Data(value.utf8),
+                kSecUseDataProtectionKeychain as String: false,
+            ] as CFDictionary, nil)
     }
 
     private func legacyItemExists(id: String) -> Bool {
-        SecItemCopyMatching([
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: id,
-            kSecMatchLimit as String: kSecMatchLimitOne,
-            kSecReturnAttributes as String: true,
-            kSecUseDataProtectionKeychain as String: false,
-        ] as CFDictionary, nil) == errSecSuccess
+        SecItemCopyMatching(
+            [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: service,
+                kSecAttrAccount as String: id,
+                kSecMatchLimit as String: kSecMatchLimitOne,
+                kSecReturnAttributes as String: true,
+                kSecUseDataProtectionKeychain as String: false,
+            ] as CFDictionary, nil) == errSecSuccess
     }
 
     @Test("a secret written by an older release is adopted on first read")
@@ -116,8 +118,9 @@ final class KeychainSecretStoreLegacyTests {
         let store = KeychainSecretStore(service: service)
 
         let adopted = store.secret(for: "a")
-        #expect(adopted == "sk-legacy",
-                "adopted=\(String(describing: adopted)) dataProtection=\(store.usesDataProtection)")
+        #expect(
+            adopted == "sk-legacy",
+            "adopted=\(String(describing: adopted)) dataProtection=\(store.usesDataProtection)")
         // The legacy item is consumed only when there is somewhere to move it
         // to. An unentitled runner has no second keychain and keeps reading the
         // item in place; asserting it disappeared would be asserting data loss.

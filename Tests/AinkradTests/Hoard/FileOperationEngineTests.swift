@@ -1,13 +1,15 @@
-import Testing
-import Foundation
 import AinkradHostRuntime
+import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @MainActor
 @Suite("FileOperationEngine")
 struct FileOperationEngineTests {
     private func makeEngine(_ mutator: InMemoryFileMutator, trash: InMemoryTrash = InMemoryTrash())
-        -> (FileOperationEngine, UndoStack, InMemoryTrash) {
+        -> (FileOperationEngine, UndoStack, InMemoryTrash)
+    {
         let stack = UndoStack(persistence: InMemoryPersistenceStore())
         return (FileOperationEngine(mutator: mutator, trash: trash, undoStack: stack), stack, trash)
     }
@@ -23,8 +25,9 @@ struct FileOperationEngineTests {
         mutator.addDirectory("/b")
         let (engine, stack, _) = makeEngine(mutator)
 
-        let result = await engine.submit(FileOperation(
-            kind: .copy, sources: [url("/a/one.txt")], destinationDirectory: url("/b")))
+        let result = await engine.submit(
+            FileOperation(
+                kind: .copy, sources: [url("/a/one.txt")], destinationDirectory: url("/b")))
 
         #expect(result.succeeded == 1)
         #expect(mutator.contents(of: "/b/one.txt") == "hello")
@@ -42,13 +45,15 @@ struct FileOperationEngineTests {
         mutator.addDirectory("/b")
         let (engine, stack, trash) = makeEngine(mutator)
 
-        _ = await engine.submit(FileOperation(
-            kind: .move, sources: [url("/a/one.txt")], destinationDirectory: url("/b")))
+        _ = await engine.submit(
+            FileOperation(
+                kind: .move, sources: [url("/a/one.txt")], destinationDirectory: url("/b")))
 
         #expect(!mutator.fileExists(url("/a/one.txt")))
         #expect(mutator.fileExists(url("/b/one.txt")))
         #expect(trash.trashedCount == 0)
-        #expect(stack.entries.last?.action
+        #expect(
+            stack.entries.last?.action
                 == .moveBack([MovedItem(from: url("/b/one.txt"), to: url("/a/one.txt"))]))
     }
 
@@ -60,8 +65,9 @@ struct FileOperationEngineTests {
         mutator.addDirectory("/b")
         let (engine, stack, trash) = makeEngine(mutator)
 
-        _ = await engine.submit(FileOperation(
-            kind: .move, sources: [url("/ext/one.txt")], destinationDirectory: url("/b")))
+        _ = await engine.submit(
+            FileOperation(
+                kind: .move, sources: [url("/ext/one.txt")], destinationDirectory: url("/b")))
 
         #expect(mutator.contents(of: "/b/one.txt") == "payload")
         // The source must be recoverable — that is what makes the move
@@ -84,8 +90,9 @@ struct FileOperationEngineTests {
         let (engine, stack, trash) = makeEngine(mutator)
 
         _ = await engine.submit(
-            FileOperation(kind: .copy, sources: [url("/a/one.txt")],
-                          destinationDirectory: url("/b"), policy: .replace))
+            FileOperation(
+                kind: .copy, sources: [url("/a/one.txt")],
+                destinationDirectory: url("/b"), policy: .replace))
 
         #expect(mutator.contents(of: "/b/one.txt") == "new")
         #expect(trash.trashedCount == 1)
@@ -104,8 +111,9 @@ struct FileOperationEngineTests {
         let (engine, _, _) = makeEngine(mutator)
 
         _ = await engine.submit(
-            FileOperation(kind: .copy, sources: [url("/a/one.txt")],
-                          destinationDirectory: url("/b"), policy: .keepBoth))
+            FileOperation(
+                kind: .copy, sources: [url("/a/one.txt")],
+                destinationDirectory: url("/b"), policy: .keepBoth))
 
         #expect(mutator.contents(of: "/b/one.txt") == "original")
         #expect(mutator.contents(of: "/b/one 2.txt") == "new")
@@ -119,8 +127,9 @@ struct FileOperationEngineTests {
         let (engine, stack, _) = makeEngine(mutator)
 
         let result = await engine.submit(
-            FileOperation(kind: .copy, sources: [url("/a/one.txt")],
-                          destinationDirectory: url("/b"), policy: .skip))
+            FileOperation(
+                kind: .copy, sources: [url("/a/one.txt")],
+                destinationDirectory: url("/b"), policy: .skip))
 
         #expect(result.skipped == 1)
         #expect(mutator.contents(of: "/b/one.txt") == "original")
@@ -136,8 +145,9 @@ struct FileOperationEngineTests {
         mutator.addFile("/b/one.txt", contents: "original")
         let (engine, _, _) = makeEngine(mutator)
 
-        _ = await engine.submit(FileOperation(
-            kind: .copy, sources: [url("/a/one.txt")], destinationDirectory: url("/b")))
+        _ = await engine.submit(
+            FileOperation(
+                kind: .copy, sources: [url("/a/one.txt")], destinationDirectory: url("/b")))
 
         #expect(mutator.contents(of: "/b/one.txt") == "original")
     }
@@ -153,9 +163,10 @@ struct FileOperationEngineTests {
 
         let asked = Counter()
         _ = await engine.submit(
-            FileOperation(kind: .copy,
-                          sources: ["one", "two", "three"].map { url("/a/\($0).txt") },
-                          destinationDirectory: url("/b")),
+            FileOperation(
+                kind: .copy,
+                sources: ["one", "two", "three"].map { url("/a/\($0).txt") },
+                destinationDirectory: url("/b")),
             conflictResolver: { _ in
                 asked.increment()
                 return ConflictAnswer(policy: .replace, applyToAll: true)
@@ -177,10 +188,11 @@ struct FileOperationEngineTests {
         mutator.unwritablePaths = ["/b/two.txt"]
         let (engine, _, _) = makeEngine(mutator)
 
-        let result = await engine.submit(FileOperation(
-            kind: .copy,
-            sources: ["one", "two", "three"].map { url("/a/\($0).txt") },
-            destinationDirectory: url("/b")))
+        let result = await engine.submit(
+            FileOperation(
+                kind: .copy,
+                sources: ["one", "two", "three"].map { url("/a/\($0).txt") },
+                destinationDirectory: url("/b")))
 
         #expect(result.succeeded == 2)
         #expect(result.failures.count == 1)
@@ -193,8 +205,9 @@ struct FileOperationEngineTests {
         mutator.addDirectory("/b")
         let (engine, stack, _) = makeEngine(mutator)
 
-        let result = await engine.submit(FileOperation(
-            kind: .copy, sources: [], destinationDirectory: url("/b")))
+        let result = await engine.submit(
+            FileOperation(
+                kind: .copy, sources: [], destinationDirectory: url("/b")))
 
         #expect(result.succeeded == 0)
         #expect(!stack.canUndo)
@@ -208,9 +221,10 @@ struct FileOperationEngineTests {
         mutator.addFile("/a/old.txt", contents: "data")
         let (engine, stack, _) = makeEngine(mutator)
 
-        let result = await engine.submit(FileOperation(
-            kind: .rename(newName: "new.txt"), sources: [url("/a/old.txt")],
-            destinationDirectory: nil))
+        let result = await engine.submit(
+            FileOperation(
+                kind: .rename(newName: "new.txt"), sources: [url("/a/old.txt")],
+                destinationDirectory: nil))
 
         #expect(result.succeeded == 1)
         #expect(mutator.contents(of: "/a/new.txt") == "data")
@@ -224,9 +238,10 @@ struct FileOperationEngineTests {
         mutator.addFile("/a/taken.txt", contents: "other")
         let (engine, stack, _) = makeEngine(mutator)
 
-        let result = await engine.submit(FileOperation(
-            kind: .rename(newName: "taken.txt"), sources: [url("/a/old.txt")],
-            destinationDirectory: nil))
+        let result = await engine.submit(
+            FileOperation(
+                kind: .rename(newName: "taken.txt"), sources: [url("/a/old.txt")],
+                destinationDirectory: nil))
 
         #expect(result.failures.count == 1)
         #expect(mutator.contents(of: "/a/taken.txt") == "other")
@@ -239,8 +254,9 @@ struct FileOperationEngineTests {
         mutator.addDirectory("/a")
         let (engine, stack, _) = makeEngine(mutator)
 
-        _ = await engine.submit(FileOperation(
-            kind: .createFolder(name: "fresh"), sources: [], destinationDirectory: url("/a")))
+        _ = await engine.submit(
+            FileOperation(
+                kind: .createFolder(name: "fresh"), sources: [], destinationDirectory: url("/a")))
 
         #expect(mutator.isDirectory(url("/a/fresh")))
         #expect(stack.entries.last?.action == .delete([url("/a/fresh")]))
@@ -253,9 +269,10 @@ struct FileOperationEngineTests {
         mutator.addFile("/a/two.txt")
         let (engine, stack, trash) = makeEngine(mutator)
 
-        let result = await engine.submit(FileOperation(
-            kind: .trash, sources: [url("/a/one.txt"), url("/a/two.txt")],
-            destinationDirectory: nil))
+        let result = await engine.submit(
+            FileOperation(
+                kind: .trash, sources: [url("/a/one.txt"), url("/a/two.txt")],
+                destinationDirectory: nil))
 
         #expect(result.succeeded == 2)
         #expect(trash.trashedCount == 2)

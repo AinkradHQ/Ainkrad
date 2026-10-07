@@ -1,7 +1,7 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradAppKitUI
 import AinkradHostRuntime
+import SwiftUI
 
 /// The ⌘F search and ⌘P jump palette.
 ///
@@ -18,12 +18,13 @@ struct HoardFinderBar: View {
 
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.ainkradTypography) private var typo
+    @Environment(\.ainkradSkin) private var skin
 
     @FocusState private var fieldFocused: Bool
     @State private var highlighted = 0
 
     private var hits: [SearchHit] { search.rankedResults }
-    private var tokens: DesignTokens { environment.themeManager.tokens }
+    private var tokens: AinkradSkin { environment.themeManager.hostSkin }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -33,36 +34,42 @@ struct HoardFinderBar: View {
             }
             footer
         }
-        .frame(width: 560)
+        .frame(width: skin.size.s560)
         .hudPanelChrome(tokens: tokens)
-        .onAppear { fieldFocused = true; highlighted = 0 }
+        .onAppear {
+            fieldFocused = true
+            highlighted = 0
+        }
         .onChange(of: search.queryText) { _, _ in highlighted = 0 }
     }
 
+    /// The Launcher's command field, so the two palettes read as one family;
+    /// the leading mark says which palette this is.
     private var field: some View {
         HStack(spacing: AinkradSpacing.md) {
-            // The Launcher's chevron mark, so the two palettes read as one
-            // family.
-            Image(systemName: search.mode == .jump ? "arrow.turn.down.right" : "magnifyingglass")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(tokens.accentSecondary)
-
-            TextField(placeholder, text: $search.queryText)
-                .textFieldStyle(.plain)
-                .font(AinkradFontResolver.font(.headline, typography: typo))
-                .foregroundStyle(tokens.foreground)
-                .focused($fieldFocused)
-                .onSubmit(submitHighlighted)
-                .onExitCommand(perform: onClose)
-                .onKeyPress(.downArrow) { moveHighlight(1) }
-                .onKeyPress(.upArrow) { moveHighlight(-1) }
+            AinkradCommandField(
+                placeholder, text: $search.queryText, focus: $fieldFocused,
+                leading: {
+                    Image(systemName: search.mode == .jump ? "arrow.turn.down.right" : "magnifyingglass")
+                        .font(skin.font(AinkradFontToken(sizeKey: "t13", weight: "semibold", scaled: false)))
+                        .foregroundStyle(tokens.color(\.accentSecondary))
+                },
+                onArrow: { arrow in
+                    switch arrow {
+                    case .down: return moveHighlight(1)
+                    case .up: return moveHighlight(-1)
+                    default: return false
+                    }
+                },
+                onSubmit: submitHighlighted,
+                onEscape: onClose
+            )
 
             if search.isSearching {
-                ProgressView().controlSize(.small)
+                AinkradSpinner(size: skin.size.s16)
             }
         }
-        .padding(.horizontal, AinkradSpacing.lg)
-        .padding(.vertical, AinkradSpacing.md)
+        .padding(.trailing, AinkradSpacing.lg)
     }
 
     @ViewBuilder
@@ -70,13 +77,13 @@ struct HoardFinderBar: View {
         if hits.isEmpty && !search.isSearching && !search.queryText.isEmpty {
             Text("No matches")
                 .font(AinkradFontResolver.font(.caption, typography: typo))
-                .foregroundStyle(tokens.foreground.opacity(0.5))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o50))
                 .padding(.horizontal, AinkradSpacing.lg)
                 .padding(.bottom, AinkradSpacing.md)
         } else {
             ScrollViewReader { proxy in
                 ScrollView {
-                    LazyVStack(spacing: 2) {
+                    LazyVStack(spacing: skin.size.s2) {
                         ForEach(Array(hits.enumerated()), id: \.element.id) { index, hit in
                             resultRow(hit, isHighlighted: index == highlighted)
                                 .id(hit.id)
@@ -85,7 +92,7 @@ struct HoardFinderBar: View {
                     }
                     .padding(.horizontal, AinkradSpacing.sm)
                 }
-                .frame(maxHeight: 360)
+                .frame(maxHeight: skin.size.s360)
                 .onChange(of: highlighted) { _, index in
                     guard hits.indices.contains(index) else { return }
                     proxy.scrollTo(hits[index].id, anchor: nil)
@@ -100,25 +107,27 @@ struct HoardFinderBar: View {
                 .frame(width: iconSize + 6)
             Text(hit.entry.name)
                 .font(AinkradFontResolver.font(.body, typography: typo))
-                .foregroundStyle(tokens.foreground)
+                .foregroundStyle(tokens.color(\.foreground))
                 .lineLimit(1)
             Spacer(minLength: AinkradSpacing.md)
             // WHERE it was found is most of the value of a recursive search.
             Text(hit.relativeDirectory)
                 .font(AinkradFontResolver.font(.caption, typography: typo))
-                .foregroundStyle(tokens.foreground.opacity(0.45))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o45))
                 .lineLimit(1)
                 .truncationMode(.head)
         }
         .padding(.horizontal, AinkradSpacing.md)
         .padding(.vertical, AinkradSpacing.sm)
-        .background(ChamferShape(cut: AinkradRadius.md)
-            .fill(tokens.accentSecondary.opacity(isHighlighted ? 0.12 : 0)))
+        .background(
+            ChamferShape(cut: AinkradRadius.md)
+                .fill(tokens.color(\.accentSecondary).opacity(isHighlighted ? skin.opacity.o12 : 0))
+        )
         // The Launcher's targeting brackets on the highlighted row, for the
         // same reason: one selection language across every palette.
         .overlay(
             TargetingBrackets()
-                .stroke(tokens.accentSecondary, lineWidth: isHighlighted ? 1 : 0)
+                .stroke(tokens.color(\.accentSecondary), lineWidth: isHighlighted ? 1 : 0)
         )
         .contentShape(Rectangle())
     }
@@ -126,7 +135,7 @@ struct HoardFinderBar: View {
     private var footer: some View {
         HStack(spacing: AinkradSpacing.md) {
             Text(search.mode == .jump ? "Jump" : "Global search")
-                .foregroundStyle(tokens.accentSecondary)
+                .foregroundStyle(tokens.color(\.accentSecondary))
             if search.didTruncate {
                 // Silent truncation would read as "that's everything".
                 Text("first \(hits.count) shown — narrow to see more")
@@ -135,10 +144,10 @@ struct HoardFinderBar: View {
             }
             Spacer()
             Text("↑↓ move · ⏎ open · esc close")
-                .foregroundStyle(tokens.foreground.opacity(0.4))
+                .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o40))
         }
         .font(AinkradFontResolver.font(.caption, typography: typo))
-        .foregroundStyle(tokens.foreground.opacity(0.55))
+        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o55))
         .padding(.horizontal, AinkradSpacing.lg)
         .padding(.vertical, AinkradSpacing.sm)
     }
@@ -153,10 +162,11 @@ struct HoardFinderBar: View {
         }
     }
 
-    private func moveHighlight(_ delta: Int) -> KeyPress.Result {
-        guard !hits.isEmpty else { return .ignored }
+    /// `false` with no hits, so the arrow reaches the caret instead.
+    private func moveHighlight(_ delta: Int) -> Bool {
+        guard !hits.isEmpty else { return false }
         highlighted = min(max(0, highlighted + delta), hits.count - 1)
-        return .handled
+        return true
     }
 
     private func submitHighlighted() {

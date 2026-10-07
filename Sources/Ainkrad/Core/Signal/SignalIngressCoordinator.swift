@@ -1,5 +1,5 @@
-import Foundation
 import AinkradSignal
+import Foundation
 
 enum SignalIngressResult: Equatable {
     case accepted
@@ -69,15 +69,17 @@ final class SignalIngressCoordinator {
         // The source is STAMPED from the token, never read from the payload —
         // `SignalWirePayload` has no source field to read. This line is where
         // that guarantee is cashed in.
-        center.emit(SignalDraft(kind: payload.kind,
-                                severity: payload.severity,
-                                title: payload.title,
-                                body: payload.body,
-                                importance: payload.importance,
-                                deepLink: payload.deepLink,
-                                actions: payload.actions,
-                                dedupeKey: payload.dedupeKey),
-                    from: source)
+        center.emit(
+            SignalDraft(
+                kind: payload.kind,
+                severity: payload.severity,
+                title: payload.title,
+                body: payload.body,
+                importance: payload.importance,
+                deepLink: payload.deepLink,
+                actions: payload.actions,
+                dedupeKey: payload.dedupeKey),
+            from: source)
         return .accepted
     }
 
@@ -88,19 +90,21 @@ final class SignalIngressCoordinator {
     /// mouth. **The token never appears** — only its hash, which is the whole
     /// reason `peerHash` exists.
     private func reportRejection(peer: String) {
-        center.emit(SignalDraft(kind: "signal.rejected",
-                                severity: .warning,
-                                title: "A program was refused access to notifications",
-                                body: "It presented a credential this Mac does not recognise "
-                                    + "(peer \(peer)). If you expected this, re-issue its token "
-                                    + "in Settings › Notifications.",
-                                // Never interrupts. A refused peer is worth
-                                // recording, not worth pulling the user away
-                                // for — and a toast per retry would hand an
-                                // attacker the interruption they were denied.
-                                importance: .background,
-                                dedupeKey: "signal.rejected:\(peer)"),
-                    from: .host)
+        center.emit(
+            SignalDraft(
+                kind: "signal.rejected",
+                severity: .warning,
+                title: "A program was refused access to notifications",
+                body: "It presented a credential this Mac does not recognise "
+                    + "(peer \(peer)). If you expected this, re-issue its token "
+                    + "in Settings › Notifications.",
+                // Never interrupts. A refused peer is worth
+                // recording, not worth pulling the user away
+                // for — and a toast per retry would hand an
+                // attacker the interruption they were denied.
+                importance: .background,
+                dedupeKey: "signal.rejected:\(peer)"),
+            from: .host)
     }
 
     /// Attributed to `.host` rather than to the throttled source, for a
@@ -108,13 +112,15 @@ final class SignalIngressCoordinator {
     /// against the very limit that produced it, so the one message explaining
     /// the silence would itself be silenced.
     private func reportThrottle(source: SignalSource) {
-        center.emit(SignalDraft(kind: "signal.throttled",
-                                severity: .info,
-                                title: "\(Self.label(for: source)) is sending too many notifications",
-                                body: "Some were held back to keep the feed readable.",
-                                importance: .background,
-                                dedupeKey: "signal.throttled:\(Self.label(for: source))"),
-                    from: .host)
+        center.emit(
+            SignalDraft(
+                kind: "signal.throttled",
+                severity: .info,
+                title: "\(Self.label(for: source)) is sending too many notifications",
+                body: "Some were held back to keep the feed readable.",
+                importance: .background,
+                dedupeKey: "signal.throttled:\(Self.label(for: source))"),
+            from: .host)
     }
 
     private static func label(for source: SignalSource) -> String {

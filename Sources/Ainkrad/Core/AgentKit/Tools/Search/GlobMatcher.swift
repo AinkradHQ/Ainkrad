@@ -24,8 +24,9 @@ extension GlobMatcher {
             switch c {
             case "*":
                 if i + 1 < chars.count && chars[i + 1] == "*" {
-                    out += ".*"; i += 2
-                    if i < chars.count && chars[i] == "/" { i += 1 } // "**/" also matches zero dirs
+                    out += ".*"
+                    i += 2
+                    if i < chars.count && chars[i] == "/" { i += 1 }  // "**/" also matches zero dirs
                     continue
                 }
                 out += "[^/]*"

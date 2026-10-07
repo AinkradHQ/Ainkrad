@@ -1,7 +1,8 @@
-import Testing
-import AppKit
-@testable import Ainkrad
 import AinkradHostRuntime
+import AppKit
+import Testing
+
+@testable import Ainkrad
 
 /// Captures `reply(_:)` calls instead of touching a real `NSApplication`, so
 /// `QuitCoordinator` is fully testable in-process.

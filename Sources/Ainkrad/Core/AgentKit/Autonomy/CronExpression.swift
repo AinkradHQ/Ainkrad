@@ -5,7 +5,7 @@ import Foundation
 struct CronExpression: Codable, Equatable, Sendable {
     let minutes: Set<Int>?
     let hours: Set<Int>?
-    let daysOfWeek: Set<Int>?   // Calendar weekday: 1=Sun … 7=Sat
+    let daysOfWeek: Set<Int>?  // Calendar weekday: 1=Sun … 7=Sat
 
     init(minutes: Set<Int>? = nil, hours: Set<Int>? = nil, daysOfWeek: Set<Int>? = nil) {
         self.minutes = minutes
@@ -21,8 +21,10 @@ struct CronExpression: Codable, Equatable, Sendable {
     func nextFireDate(after date: Date, calendar: Calendar = .current) -> Date? {
         if minutes?.isEmpty == true || hours?.isEmpty == true || daysOfWeek?.isEmpty == true { return nil }
         // Start at the top of the next minute.
-        guard var candidate = calendar.date(byAdding: .minute, value: 1,
-                                             to: calendar.date(bySetting: .second, value: 0, of: date) ?? date)
+        guard
+            var candidate = calendar.date(
+                byAdding: .minute, value: 1,
+                to: calendar.date(bySetting: .second, value: 0, of: date) ?? date)
         else { return nil }
         candidate = calendar.date(bySetting: .second, value: 0, of: candidate) ?? candidate
         let horizon = calendar.date(byAdding: .day, value: 366, to: date) ?? date

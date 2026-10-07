@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Builds the user-directive text injected into the ensuing turn(s) after a plan
 /// decision. Pure/testable — no session, no view.
@@ -31,8 +31,11 @@ enum PlanTurnHeuristics {
         var found: PlanArtifact?
         for message in messages {
             if message.role == .user,
-               message.content.contains(where: { if case .text(let t) = $0 { return !t.isEmpty } else { return false } }) {
-                found = nil   // a user prompt/directive supersedes any earlier plan
+                message.content.contains(where: {
+                    if case .text(let t) = $0 { return !t.isEmpty } else { return false }
+                })
+            {
+                found = nil  // a user prompt/directive supersedes any earlier plan
                 continue
             }
             for block in message.content {
@@ -46,7 +49,7 @@ enum PlanTurnHeuristics {
 }
 
 /// Composes the plan decision from the existing seams — flipping the shared
-/// `AgentStore` (the same store the composer's `AgentSwitcherView` drives) and
+/// `AgentStore` (the same store the composer's agent button cycles) and
 /// `AgentSession.send`. Deliberately NO new `AgentSession` state or gate change.
 @MainActor
 enum PlanFlow {

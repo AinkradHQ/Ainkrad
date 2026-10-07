@@ -1,6 +1,6 @@
+import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/MCP/MCPReadResourceTool.swift
 import Foundation
-import AinkradHostRuntime
 
 /// Reads one MCP resource on demand.
 ///
@@ -24,9 +24,9 @@ struct MCPReadResourceTool: AgentTool {
     /// The guidance half of the description — WHY to reach for this tool. Kept
     /// separate (and first) so the live listing below can never crowd it out.
     static let guidance = """
-    Read the full contents of a resource published by an MCP server or Ainkrad app. \
-    Use when the workspace context shows a truncated value and you need all of it.
-    """
+        Read the full contents of a resource published by an MCP server or Ainkrad app. \
+        Use when the workspace context shows a truncated value and you need all of it.
+        """
 
     /// Most resources enumerated in the description. The listing exists so the
     /// model can DISCOVER URIs it would otherwise have to be told by the user —
@@ -57,16 +57,19 @@ struct MCPReadResourceTool: AgentTool {
         // the name alone only labels them. Appended rather than substituted so
         // a server that sends none still produces a well-formed line.
         let listed = all.prefix(Self.maxListedResources).map { entry in
-            let line = "- server \"\(entry.server)\", uri \"\(entry.descriptor.uri)\": "
+            let line =
+                "- server \"\(entry.server)\", uri \"\(entry.descriptor.uri)\": "
                 + entry.descriptor.name
             let purpose = entry.descriptor.description
             return purpose.isEmpty ? line : line + " — " + purpose
         }
-        var text = Self.guidance + "\n\nCurrently available resources:\n"
+        var text =
+            Self.guidance + "\n\nCurrently available resources:\n"
             + listed.joined(separator: "\n")
         let omitted = all.count - listed.count
         if omitted > 0 {
-            text += "\n- (\(omitted) more resource\(omitted == 1 ? "" : "s") not listed; "
+            text +=
+                "\n- (\(omitted) more resource\(omitted == 1 ? "" : "s") not listed; "
                 + "call with a uri you already know, or ask the user.)"
         }
         return text
@@ -76,10 +79,14 @@ struct MCPReadResourceTool: AgentTool {
         .object([
             "type": .string("object"),
             "properties": .object([
-                "server": .object(["type": .string("string"),
-                                   "description": .string("Server or app id that owns the resource.")]),
-                "uri": .object(["type": .string("string"),
-                                "description": .string("Resource URI, as reported by the server.")]),
+                "server": .object([
+                    "type": .string("string"),
+                    "description": .string("Server or app id that owns the resource."),
+                ]),
+                "uri": .object([
+                    "type": .string("string"),
+                    "description": .string("Resource URI, as reported by the server."),
+                ]),
             ]),
             "required": .array([.string("server"), .string("uri")]),
         ])
@@ -105,8 +112,9 @@ struct MCPReadResourceTool: AgentTool {
             // the one sentence that explains what to do instead.
             return ToolResult(content: reason, isError: true)
         } catch {
-            return ToolResult(content: "Reading '\(uri)' from '\(server)' failed: \(error)",
-                              isError: true)
+            return ToolResult(
+                content: "Reading '\(uri)' from '\(server)' failed: \(error)",
+                isError: true)
         }
     }
 }

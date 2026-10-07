@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// "Bring-your-own-endpoint" text-to-video backend for any Replicate-compatible
 /// sync API: `POST <baseURL>` with `{"input": {"prompt": ...}}` and
@@ -8,6 +8,7 @@ import AinkradHostRuntime
 /// `ReplicateImageBackend.firstOutputURL` for the flexible output shape.
 struct CustomVideoBackend: VideoBackend {
     static let secretID = "media.customvideo.apiKey"
+    // `nonisolated(unsafe)`: an immutable `let`; `KeychainSecretStore` keeps no mutable state and Keychain calls are thread-safe.
     nonisolated(unsafe) let secrets: SecretStore
     let http: DataHTTPClient
     let baseURL: String
@@ -25,7 +26,8 @@ struct CustomVideoBackend: VideoBackend {
 
     func generateVideo(prompt: String) async throws -> GeneratedVideo {
         let base = normalized
-        guard !base.isEmpty, let key = secrets.secret(for: Self.secretID), !key.isEmpty, let url = URL(string: base) else {
+        guard !base.isEmpty, let key = secrets.secret(for: Self.secretID), !key.isEmpty, let url = URL(string: base)
+        else {
             throw ToolError.message("Video generation is not configured.")
         }
         var request = URLRequest(url: url, timeoutInterval: 300)

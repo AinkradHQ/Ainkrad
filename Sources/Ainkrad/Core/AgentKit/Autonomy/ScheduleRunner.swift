@@ -35,7 +35,7 @@ final class ScheduleRunner {
             // single run rather than backfilling one per missed instant
             // (recordFired stores `now`, not `due`, below).
             let run = runs.enqueue(prompt: schedule.prompt, origin: .schedule, posture: schedule.posture)
-            store.recordFired(schedule.id, runID: run.id, date: now)   // now, not `due`, so the window coalesces
+            store.recordFired(schedule.id, runID: run.id, date: now)  // now, not `due`, so the window coalesces
             fired.append(schedule.id)
         }
         return fired
@@ -55,5 +55,8 @@ final class ScheduleRunner {
         timer = t
     }
 
-    func stop() { timer?.invalidate(); timer = nil }
+    func stop() {
+        timer?.invalidate()
+        timer = nil
+    }
 }

@@ -95,13 +95,15 @@ final class SoundEngine: SoundPlaying {
     private func player(for sound: UISound) -> AudioPlayback? {
         if let existing = players[sound] { return existing }
         guard let bundle else { return nil }
-        guard let url = SoundEngine.resolvedURL(
+        guard
+            let url = SoundEngine.resolvedURL(
                 for: sound,
                 overrideDirectory: overrideDirectory,
                 bundle: bundle,
                 fileExists: { FileManager.default.fileExists(atPath: $0.path) }
-              ),
-              let player = try? AVAudioPlayer(contentsOf: url) else { return nil }
+            ),
+            let player = try? AVAudioPlayer(contentsOf: url)
+        else { return nil }
         player.prepareToPlay()
         players[sound] = player
         return player

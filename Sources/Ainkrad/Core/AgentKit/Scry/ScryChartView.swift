@@ -1,6 +1,6 @@
-import SwiftUI
 import AinkradAppKit
 import AinkradHostRuntime
+import SwiftUI
 
 /// One parsed chart data point: a label and its non-negative value.
 struct ScryChartBar: Equatable, Sendable {
@@ -33,15 +33,16 @@ enum ScryChartParse {
 /// stays visible rather than vanishing.
 @MainActor
 struct ScryChartView: View {
+    @Environment(\.ainkradSkin) private var skin
     let bars: [ScryChartBar]
-    let tokens: DesignTokens
+    @Environment(\.ainkradTheme) private var theme
 
     private var maxValue: Double {
         max(bars.map(\.value).max() ?? 0, 0.0001)
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: skin.spacing.sm) {
             ForEach(Array(bars.enumerated()), id: \.offset) { index, bar in
                 row(index: index, bar: bar)
             }
@@ -49,11 +50,11 @@ struct ScryChartView: View {
     }
 
     private func row(index: Int, bar: ScryChartBar) -> some View {
-        HStack(spacing: 8) {
+        HStack(spacing: skin.spacing.sm) {
             Text(bar.label)
                 .font(AinkradFont.mono(10))
-                .foregroundStyle(tokens.foreground.opacity(0.7))
-                .frame(width: 64, alignment: .leading)
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o70))
+                .frame(width: 64, alignment: .leading)  // design-lint: allow frame-literal chart geometry, label column width is data layout
                 .lineLimit(1)
             GeometryReader { geo in
                 Capsule()
@@ -63,16 +64,16 @@ struct ScryChartView: View {
                         height: 14
                     )
             }
-            .frame(height: 14)
+            .frame(height: 14)  // design-lint: allow frame-literal chart geometry, bar thickness is data layout
             Text(formatted(bar.value))
                 .font(AinkradFont.mono(10))
-                .foregroundStyle(tokens.foreground.opacity(0.5))
-                .frame(width: 44, alignment: .trailing)
+                .foregroundStyle(theme.foreground.opacity(skin.opacity.o50))
+                .frame(width: 44, alignment: .trailing)  // design-lint: allow frame-literal chart geometry, value column width is data layout
         }
     }
 
     private func barColor(for index: Int) -> Color {
-        index.isMultiple(of: 2) ? tokens.accentPrimary : tokens.accentSecondary
+        index.isMultiple(of: 2) ? theme.accentPrimary : theme.accentSecondary
     }
 
     private func formatted(_ value: Double) -> String {

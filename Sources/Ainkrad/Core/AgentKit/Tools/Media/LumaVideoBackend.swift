@@ -1,11 +1,12 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Luma Dream Machine text-to-video backend. Key in the Keychain via SecretStore.
 /// Async job model: submit a generation, poll until `completed`, then download
 /// the asset. The status/URL parsing is isolated in static funcs for unit tests.
 struct LumaVideoBackend: VideoBackend {
     static let secretID = "media.luma.apiKey"
+    // `nonisolated(unsafe)`: an immutable `let`; `KeychainSecretStore` keeps no mutable state and Keychain calls are thread-safe.
     nonisolated(unsafe) let secrets: SecretStore
     let http: DataHTTPClient
     var baseURL = "https://api.lumalabs.ai/dream-machine/v1"
@@ -65,7 +66,10 @@ struct LumaVideoBackend: VideoBackend {
         let state = (root["state"] as? String) ?? ""
         if state == "failed" { throw ToolError.message("Luma generation failed.") }
         if state == "completed", let assets = root["assets"] as? [String: Any],
-           let video = assets["video"] as? String { return .done(video) }
+            let video = assets["video"] as? String
+        {
+            return .done(video)
+        }
         return .pending
     }
 }

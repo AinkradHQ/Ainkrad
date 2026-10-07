@@ -1,5 +1,6 @@
-import Testing
 import Foundation
+import Testing
+
 @testable import Ainkrad
 
 @Suite("GlobTool")
@@ -14,7 +15,8 @@ struct GlobToolTests {
         return root
     }
     @Test func matchesSwiftFiles() async throws {
-        let root = try fixture(); defer { try? FileManager.default.removeItem(at: root) }
+        let root = try fixture()
+        defer { try? FileManager.default.removeItem(at: root) }
         let tool = GlobTool(rootProvider: { root })
         let r = try await tool.execute(.object(["pattern": .string("**/*.swift")]))
         #expect(r.content.contains("A.swift"))

@@ -1,5 +1,5 @@
-import Foundation
 import AinkradHostRuntime
+import Foundation
 
 /// Connects and verifies a provider. Verification is injected so the step can be
 /// tested without network access; production passes `ModelCatalogService.test`.
@@ -52,12 +52,14 @@ enum SetupProviders {
     /// A keyless preset (`ollama`) passes `token: ""` and is probed with
     /// `.apiKey("")`, exactly as the Connections tab's Test
     /// does for a connection with no stored secret.
-    static func connect(preset: ProviderPreset,
-                        token: String,
-                        baseURL: String,
-                        connections: ConnectionStore,
-                        agentConfig: AgentConfigStore,
-                        verify: Verifier) async -> Outcome {
+    static func connect(
+        preset: ProviderPreset,
+        token: String,
+        baseURL: String,
+        connections: ConnectionStore,
+        agentConfig: AgentConfigStore,
+        verify: Verifier
+    ) async -> Outcome {
         let result = await verify(preset.kind, baseURL, .apiKey(token))
         guard result.ok else { return .failed(message: result.message, failure: result.failure) }
 
@@ -81,12 +83,14 @@ enum SetupProviders {
     /// removes the connection, leaving the same clean slate as a failed
     /// API-key attempt. The credential is never trusted just because it came
     /// from a trusted source; it is probed like any other.
-    static func finishSubscription(connection: Connection,
-                                   credential: ProviderCredential,
-                                   connections: ConnectionStore,
-                                   agentConfig: AgentConfigStore,
-                                   oauth: OAuthCredentialStore,
-                                   verify: Verifier) async -> Outcome {
+    static func finishSubscription(
+        connection: Connection,
+        credential: ProviderCredential,
+        connections: ConnectionStore,
+        agentConfig: AgentConfigStore,
+        oauth: OAuthCredentialStore,
+        verify: Verifier
+    ) async -> Outcome {
         let result = await verify(connection.kind, connection.baseURL, credential)
         guard result.ok else {
             rollback(connection, connections: connections, agentConfig: agentConfig, oauth: oauth)
@@ -102,10 +106,12 @@ enum SetupProviders {
     /// there is no partial-failure window. The single owner of this teardown —
     /// the sign-in-failed path in the view calls it too, rather than keeping a
     /// second copy that could drift.
-    static func rollback(_ connection: Connection,
-                         connections: ConnectionStore,
-                         agentConfig: AgentConfigStore,
-                         oauth: OAuthCredentialStore) {
+    static func rollback(
+        _ connection: Connection,
+        connections: ConnectionStore,
+        agentConfig: AgentConfigStore,
+        oauth: OAuthCredentialStore
+    ) {
         oauth.signOut(connection.id)
         connections.removeConnection(connection)
         if agentConfig.activeConnectionID == connection.id {
@@ -152,12 +158,14 @@ enum SetupProviders {
     /// `SageSettingsView+Connections.testConnection` exactly: a subscription
     /// connection authenticates with its OAuth bearer, everything else with its
     /// stored key.
-    static func adoptExistingConnection(connections: ConnectionStore,
-                                        agentConfig: AgentConfigStore,
-                                        oauth: OAuthCredentialStore,
-                                        verify: Verifier) async -> Adoption {
+    static func adoptExistingConnection(
+        connections: ConnectionStore,
+        agentConfig: AgentConfigStore,
+        oauth: OAuthCredentialStore,
+        verify: Verifier
+    ) async -> Adoption {
         guard let id = agentConfig.activeConnectionID,
-              let connection = connections.connections.first(where: { $0.id == id })
+            let connection = connections.connections.first(where: { $0.id == id })
         else { return .none }
 
         let credential: ProviderCredential
@@ -169,9 +177,10 @@ enum SetupProviders {
 
         let result = await verify(connection.kind, connection.baseURL, credential)
         guard result.ok else {
-            return .unverified(message: "Using your existing \(connection.displayName) connection, "
-                                      + "but Ainkrad couldn't check it just now — AI features may "
-                                      + "not work until it does.")
+            return .unverified(
+                message: "Using your existing \(connection.displayName) connection, "
+                    + "but Ainkrad couldn't check it just now — AI features may "
+                    + "not work until it does.")
         }
         return .verified(message: "Already connected · \(connection.displayName)")
     }
@@ -192,9 +201,11 @@ enum SetupProviders {
     /// never touched. This is only ever called from the first-run wizard, where
     /// the only source of connections is this step.
     @discardableResult
-    static func cleanUpAbandonedSubscriptions(connections: ConnectionStore,
-                                              agentConfig: AgentConfigStore,
-                                              oauth: OAuthCredentialStore) -> Int {
+    static func cleanUpAbandonedSubscriptions(
+        connections: ConnectionStore,
+        agentConfig: AgentConfigStore,
+        oauth: OAuthCredentialStore
+    ) -> Int {
         let stale = connections.connections.filter {
             $0.authMode == .subscription
                 && $0.id != agentConfig.activeConnectionID
@@ -246,10 +257,12 @@ final class SetupSubscriptionFlow {
     /// retry. Any other failure tears the whole flow down, including the paste
     /// field, returning the user to a state they can act on ("Sign in" again)
     /// rather than to a dead button.
-    func attemptFailed(duringPaste: Bool,
-                       connections: ConnectionStore,
-                       agentConfig: AgentConfigStore,
-                       oauth: OAuthCredentialStore) {
+    func attemptFailed(
+        duringPaste: Bool,
+        connections: ConnectionStore,
+        agentConfig: AgentConfigStore,
+        oauth: OAuthCredentialStore
+    ) {
         guard !duringPaste else { return }
         teardown(connections: connections, agentConfig: agentConfig, oauth: oauth)
     }
@@ -261,12 +274,15 @@ final class SetupSubscriptionFlow {
         pending = connected ? pending : nil
     }
 
-    func teardown(connections: ConnectionStore,
-                  agentConfig: AgentConfigStore,
-                  oauth: OAuthCredentialStore) {
+    func teardown(
+        connections: ConnectionStore,
+        agentConfig: AgentConfigStore,
+        oauth: OAuthCredentialStore
+    ) {
         if let pending {
-            SetupProviders.rollback(pending, connections: connections,
-                                    agentConfig: agentConfig, oauth: oauth)
+            SetupProviders.rollback(
+                pending, connections: connections,
+                agentConfig: agentConfig, oauth: oauth)
         }
         pending = nil
         awaitingPaste = false

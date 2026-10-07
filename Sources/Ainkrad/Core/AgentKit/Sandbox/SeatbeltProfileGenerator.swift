@@ -15,7 +15,7 @@ enum SeatbeltProfileGenerator {
     /// `sandbox-exec` against real processes.
     static let systemReadPaths = [
         "/usr", "/bin", "/sbin", "/System", "/Library",
-        "/private/etc",                              // zsh/bash global rc files (symlinked)
+        "/private/etc",  // zsh/bash global rc files (symlinked)
         "/private/var/select", "/private/var/db/dyld",
         "/dev/null", "/dev/urandom",
     ]
@@ -52,8 +52,10 @@ enum SeatbeltProfileGenerator {
         "(allow \(op) (subpath \"\(escapeLiteral(resolvedPath))\"))"
     }
 
-    static func generate(fs: FilesystemPolicy, network: NetworkPolicy,
-                          workspacePath: String) throws -> String {
+    static func generate(
+        fs: FilesystemPolicy, network: NetworkPolicy,
+        workspacePath: String
+    ) throws -> String {
         var lines: [String] = [
             "(version 1)",
             "(deny default)",

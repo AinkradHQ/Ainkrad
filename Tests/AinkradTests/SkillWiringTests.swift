@@ -1,9 +1,10 @@
+import AinkradAppKit
+import AinkradHostRuntime
 // Tests/AinkradTests/SkillWiringTests.swift
 import Foundation
 import Testing
+
 @testable import Ainkrad
-import AinkradAppKit
-import AinkradHostRuntime
 
 @Suite("Skill wiring")
 @MainActor
@@ -12,8 +13,10 @@ struct SkillWiringTests {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("sw-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: root) }
         let reg = SkillRegistry(paths: SkillPaths(root: root))
-        let registry = AgentToolRegistry(tools: [UseSkillTool(registry: reg),
-                                                 ProposeSkillTool(registry: reg)])
+        let registry = AgentToolRegistry(tools: [
+            UseSkillTool(registry: reg),
+            ProposeSkillTool(registry: reg),
+        ])
         #expect(registry.tool(named: "use_skill") != nil)
         #expect(registry.tool(named: "propose_skill") != nil)
     }
@@ -22,8 +25,9 @@ struct SkillWiringTests {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("sw2-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: root) }
         let url = SkillPaths(root: root).skillFile("demo")
-        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
-                                                withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true)
         try "---\nname: demo\ndescription: a demo\n---\nbody".write(to: url, atomically: true, encoding: .utf8)
         let reg = SkillRegistry(paths: SkillPaths(root: root))
         let hub = AgentContextRegistryHub()
@@ -41,8 +45,9 @@ struct SkillWiringTests {
         let t = TestHome.make("sw-boot")
         defer { t.cleanup() }
         let url = SkillPaths(root: t.home.shared(.skills)).skillFile("demo")
-        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
-                                                withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true)
         try "---\nname: demo\ndescription: a demo\n---\nbody".write(to: url, atomically: true, encoding: .utf8)
 
         let environment = AppEnvironment.bootstrap(home: t.home, defaults: t.defaults)
@@ -57,8 +62,10 @@ struct SkillWiringTests {
         // registry itself isn't exposed on AppEnvironment, so probe indirectly by
         // rebuilding the same tool pair against the retained registry and checking
         // they resolve against the same skill data the session's registry sees).
-        let probe = AgentToolRegistry(tools: [UseSkillTool(registry: environment.skillRegistry),
-                                              ProposeSkillTool(registry: environment.skillRegistry)])
+        let probe = AgentToolRegistry(tools: [
+            UseSkillTool(registry: environment.skillRegistry),
+            ProposeSkillTool(registry: environment.skillRegistry),
+        ])
         #expect(probe.tool(named: "use_skill") != nil)
         #expect(probe.tool(named: "propose_skill") != nil)
 

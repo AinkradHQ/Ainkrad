@@ -21,7 +21,7 @@ final class ToolHookRunner {
 
     func runPreToolUse(_ call: ToolCall) async -> ToolResult? {
         for hook in store.hooks(for: .preToolUse, toolName: call.name) {
-            guard let outcome = await run(hook, call: call) else { continue }   // router failure => don't block
+            guard let outcome = await run(hook, call: call) else { continue }  // router failure => don't block
             if outcome.isError {
                 return ToolResult(
                     content: "Blocked by PreToolUse hook (match \(hook.match)):\n\(outcome.output)",
@@ -32,7 +32,7 @@ final class ToolHookRunner {
     }
 
     func runPostToolUse(_ call: ToolCall, result: ToolResult) async -> ToolResult {
-        guard !result.isError else { return result }   // don't post-process a failed call
+        guard !result.isError else { return result }  // don't post-process a failed call
         var notes: [String] = []
         for hook in store.hooks(for: .postToolUse, toolName: call.name) {
             if let outcome = await run(hook, call: call), !outcome.output.isEmpty {
@@ -49,13 +49,16 @@ final class ToolHookRunner {
     /// model-influenced content (e.g. a path/command) can never break out of the
     /// quoting and execute as shell syntax.
     private func run(_ hook: ToolHook, call: ToolCall) async -> ExecutionResult? {
-        guard let (backend, profileBase) = try? await router.route(tier: .mainInteractive, policy: nil) else { return nil }
+        guard let (backend, profileBase) = try? await router.route(tier: .mainInteractive, policy: nil) else {
+            return nil
+        }
         var profile = profileBase
         profile.resourceLimits.timeoutSeconds = hook.timeoutSeconds
         let name = call.name
         let path = call.input["path"]?.stringValue ?? ""
         let command = call.input["command"]?.stringValue ?? ""
-        let exported = "export AINKRAD_TOOL_NAME=\(shellQuote(name)) "
+        let exported =
+            "export AINKRAD_TOOL_NAME=\(shellQuote(name)) "
             + "AINKRAD_TOOL_PATH=\(shellQuote(path)) "
             + "AINKRAD_TOOL_COMMAND=\(shellQuote(command)); "
         let line = exported + hook.command
