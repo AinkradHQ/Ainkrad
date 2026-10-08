@@ -96,6 +96,8 @@ final class HostSettingsDrafts {
     /// overlay presents it as an `AinkradConfirmDialog`; the catalog that
     /// asked has been rebuilt by then, so the request lives here.
     var pendingConfirm: SettingsConfirmRequest?
+    /// Theme files' modal (the load issues) is open.
+    var showsThemeFiles = false
     /// The one shortcut recorder the Keyboard rows share. Stopped when the
     /// settings overlay closes, so a key pressed later never rebinds anything.
     let recorder = ShortcutRecorder()
