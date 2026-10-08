@@ -185,7 +185,8 @@ struct TileLayoutView: View {
     /// renders the real `FloatingIslandView` — framed exactly like the empty
     /// workspace — so a translucent pane reveals the SAME island a user sees on
     /// an empty workspace, not a static blurred stand-in. A single faint scrim
-    /// keeps pane content legible over a busy sky.
+    /// keeps pane content legible over a busy sky. A theme without the island
+    /// art (`islandArt: false`) keeps only the scrim.
     private var workspaceBackdrop: some View {
         let tokens = environment.themeManager.hostSkin
         return ZStack {
@@ -196,10 +197,12 @@ struct TileLayoutView: View {
             // to "slide down" when a pane opens — so reserve the same hint
             // footprint (~two hint rows + their top padding) beneath it, keeping
             // the revealed island at the exact height it has on the main screen.
-            VStack(spacing: 0) {
-                FloatingIslandView()
-                    .frame(maxWidth: skin.size.s860, maxHeight: skin.size.s574)
-                Color.clear.frame(height: skin.size.s72)
+            if environment.themeManager.homeLanguage.islandArt {
+                VStack(spacing: 0) {
+                    FloatingIslandView()
+                        .frame(maxWidth: skin.size.s860, maxHeight: skin.size.s574)
+                    Color.clear.frame(height: skin.size.s72)
+                }
             }
             // Legibility scrim only — low enough that motion clearly shows
             // through, high enough that text over a busy sky stays readable.

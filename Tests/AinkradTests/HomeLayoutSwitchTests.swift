@@ -25,7 +25,11 @@ struct HomeLayoutSwitchTests {
         let t = TestHome.make("home-layout-switch")
         ThemeFixtures.write(
             Self.skyless, to: t.home.shared(.config).appendingPathComponent("Themes", isDirectory: true))
-        return (AppEnvironment.bootstrap(home: t.home, defaults: t.defaults), t.cleanup)
+        let env = AppEnvironment.bootstrap(home: t.home, defaults: t.defaults)
+        // Counters are keyed by the environment's address, which a freed one from an
+        // earlier test can share; start this environment from zero.
+        AmbientSkyView.debugFrameCounts[ObjectIdentifier(env)] = nil
+        return (env, t.cleanup)
     }
 
     private func appearanceGroups(_ env: AppEnvironment) throws -> [String] {
