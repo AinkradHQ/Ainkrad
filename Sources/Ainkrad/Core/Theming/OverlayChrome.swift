@@ -43,9 +43,10 @@ private struct HUDPanelChrome: ViewModifier {
             .background {
                 ZStack {
                     if store.overlayBlurEnabled {
-                        // The kit's `.panel` level is `.hudWindow`, the material
-                        // the host's own blur used — same pixels.
-                        VisualEffectBlur(level: .panel, blendingMode: blending)
+                        // The theme's material (blur, glass or solid). Under blur the
+                        // kit's `.panel` level is `.hudWindow`, the material the
+                        // host's own blur used — same pixels.
+                        AinkradMaterialBackground(level: .panel, blending: blending)
                     }
                     tokens.color(\.background).opacity(store.overlayBackgroundOpacity)
                 }
