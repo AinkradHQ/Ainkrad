@@ -36,12 +36,13 @@ struct ThemeCatalogTests {
         return root
     }
 
-    @Test("today's seven bundled themes load with no issues")
+    @Test("the bundle loads today's seven themes plus the Neon variant, with no issues")
     func bundleLoadsUnchanged() {
         let catalog = ThemeCatalog(bundle: .main)
-        #expect(catalog.issues.isEmpty)
-        #expect(Set(catalog.loadedThemes.keys) == Set(Theme.allCases.map(\.rawValue)))
-        #expect(catalog.languages.isEmpty)
+        #expect(catalog.issues.isEmpty, "\(catalog.issues)")
+        #expect(Set(catalog.loadedThemes.keys) == Set(Theme.allCases.map(\.rawValue)).union(["neon.dark"]))
+        #expect(catalog.languages.map(\.id) == ["neon"])
+        #expect(catalog.schemes(for: .dark).count == 7)
     }
 
     @Test("broken, unknown-base, shadowing and language-keyed files become issues, not traps")
@@ -59,9 +60,9 @@ struct ThemeCatalogTests {
     @Test("a variant and a scheme compose into the scheme's id with merged host keys")
     func composeVariantAndScheme() throws {
         let catalog = ThemeCatalog(bundle: .main, userRoots: [try fixtureRoot()])
-        #expect(catalog.languages.map(\.id) == ["test"])
+        #expect(catalog.languages.map(\.id) == ["neon", "test"])
         #expect(Array(catalog.variants(of: "test").keys) == ["test.dark"])
-        #expect(catalog.schemes(for: .dark).map(\.id) == ["testScheme"])
+        #expect(catalog.schemes(for: .dark).contains { $0.id == "testScheme" })
         #expect(catalog.schemes(for: .light).isEmpty)
 
         let file = try #require(catalog.compose(themeVariant: "test.dark", scheme: "testScheme"))
