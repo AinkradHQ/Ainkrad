@@ -291,7 +291,10 @@ packages:
     #   AppKitUI ABI since ebeeb02: 0 removed, 4639 added (abi-ui-diff). default.theme regenerated.
     # 3618e86: Epic 4 promotions: AinkradRailItem, AinkradCornerBrackets, AinkradBrandChevron, .ainkradRowBackground, .ainkradOverlayChrome, AinkradCommandField (#81-#86).
     # 73662dd: settings slider thumb follows its value (#89).
-    revision: 73662dd800eb501c5fa53b5cb42785db9944f3ed
+    # 7e32126: Design Languages E1 (AppKit R1): material.kind + AinkradMaterialBackground (#90), shape.style (#91),
+    #   kit panel shapes follow shape.style + chamfer-direct lint (#92), HostTerminalPalette, apiVersion 12 (#93).
+    #   AppKitUI ABI since 73662dd: additions only (abi-ui-diff exit 3). default.theme gains material.kind.
+    revision: 7e3212602ca4e3fa8fdf01c91e36f0e355ead678
 
 targets:
   AinkradHostRuntime:
