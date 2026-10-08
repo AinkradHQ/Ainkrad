@@ -140,11 +140,11 @@ struct SetupClaudeRoute: View {
             .padding(skin.spacing.md)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
-                ChamferShape(cut: skin.radius.sm)
+                skin.shape(cut: skin.radius.sm)
                     .fill(tokens.color(\.surfaceElevated).opacity(isRecommended ? skin.opacity.o62 : skin.opacity.o42))
             )
             .overlay(
-                ChamferShape(cut: skin.radius.sm).strokeBorder(
+                skin.shape(cut: skin.radius.sm).strokeBorder(
                     isRecommended ? tokens.color(\.accentSecondary).opacity(skin.opacity.o30) : .clear, lineWidth: 1)
             )
             .contentShape(Rectangle())
@@ -193,7 +193,7 @@ struct SetupPasteFallback: View {
         }
         .padding(skin.spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: skin.radius.sm).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o50)))
+        .background(skin.shape(cut: skin.radius.sm).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o50)))
     }
 }
 

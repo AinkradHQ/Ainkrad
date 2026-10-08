@@ -177,18 +177,18 @@ struct AppStoreDetailView: View {
             }
         }
         .frame(width: skin.size.s260, height: skin.size.s164)
-        .clipShape(ChamferShape(cut: skin.radius.md))
+        .clipShape(skin.shape(cut: skin.radius.md))
         .overlay(
-            ChamferShape(cut: skin.radius.md).strokeBorder(tokens.color(\.foreground).opacity(skin.opacity.o10), lineWidth: 1)
+            skin.shape(cut: skin.radius.md).strokeBorder(tokens.color(\.foreground).opacity(skin.opacity.o10), lineWidth: 1)
         )
-        .contentShape(ChamferShape(cut: skin.radius.md))
+        .contentShape(skin.shape(cut: skin.radius.md))
         .onTapGesture { onOpenScreenshot(urls, index) }
         .help("View full size")
     }
 
     private func screenshotBox(systemImage: String?, tint: Color) -> some View {
         ZStack {
-            ChamferShape(cut: skin.radius.md).fill(tokens.color(\.surfaceElevated))
+            skin.shape(cut: skin.radius.md).fill(tokens.color(\.surfaceElevated))
             if let systemImage {
                 Image(systemName: systemImage).foregroundStyle(tint.opacity(skin.opacity.o70))
             } else {

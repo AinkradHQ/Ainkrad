@@ -223,9 +223,9 @@ struct SetupAssistantStepView: View {
                 }
             }
             .padding(skin.spacing.md)
-            .background(ChamferShape(cut: skin.radius.md).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o50)))
+            .background(skin.shape(cut: skin.radius.md).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o50)))
             .overlay(
-                ChamferShape(cut: skin.radius.md)
+                skin.shape(cut: skin.radius.md)
                     .strokeBorder(
                         isSelected ? tokens.color(\.accentSecondary).opacity(skin.opacity.o50) : Color.clear, lineWidth: 1))
         }

@@ -45,7 +45,7 @@ struct SignalGlanceRow: View {
         }
         .padding(.horizontal, AinkradSpacing.sm + 2)
         .padding(.vertical, AinkradSpacing.sm)
-        .background(ChamferShape(cut: skin.cut.c6).fill(rowFill))
+        .background(skin.shape(cut: skin.cut.c6).fill(rowFill))
         // Severity as an edge, as on the toast; info has none.
         .overlay(alignment: .leading) {
             if event.severity != .info {
@@ -53,7 +53,7 @@ struct SignalGlanceRow: View {
                     .shadow(color: accent.opacity(skin.opacity.o60), radius: skin.size.s3)
             }
         }
-        .contentShape(ChamferShape(cut: skin.cut.c6))
+        .contentShape(skin.shape(cut: skin.cut.c6))
         .onTapGesture { onActivate(event) }
         .onHover { hovering = $0 }
         .animation(reduceMotion ? nil : AinkradMotion.hover, value: hovering)
