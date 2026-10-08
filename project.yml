@@ -294,7 +294,8 @@ packages:
     # 7e32126: Design Languages E1 (AppKit R1): material.kind + AinkradMaterialBackground (#90), shape.style (#91),
     #   kit panel shapes follow shape.style + chamfer-direct lint (#92), HostTerminalPalette, apiVersion 12 (#93).
     #   AppKitUI ABI since 73662dd: additions only (abi-ui-diff exit 3). default.theme gains material.kind.
-    revision: 7e3212602ca4e3fa8fdf01c91e36f0e355ead678
+    # 636baa4: kit panels follow material.panelOpacity (#94).
+    revision: 636baa4cb5925a4603a589eaad98139e3b93d888
 
 targets:
   AinkradHostRuntime:
