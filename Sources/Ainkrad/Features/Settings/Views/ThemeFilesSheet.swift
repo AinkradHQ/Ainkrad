@@ -40,7 +40,7 @@ struct ThemeFilesSheet: View {
                     .padding(AinkradSpacing.sm)
                 }
                 .frame(height: skin.size.s200)
-                .background(ChamferShape(cut: skin.cut.c6).fill(tokens.color(\.foreground).opacity(skin.opacity.o05)))
+                .background(skin.shape(cut: skin.cut.c6).fill(tokens.color(\.foreground).opacity(skin.opacity.o05)))
             }
 
             HStack {
