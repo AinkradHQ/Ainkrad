@@ -5,27 +5,43 @@ import AinkradAppKit
 import AinkradHostRuntime
 
 /// DEBUG-only design-system showcase: every SDK scale + component, rendered
-/// across every Neon colour scheme via a local switcher. Reachable from the
+/// under any installed (theme, appearance, colour scheme) via local pickers. Reachable from the
 /// Launcher's "Component Gallery" system action (⌘K). Never compiled into a
 /// release build — see `AppEnvironment.isComponentGalleryPresented` and
 /// `LauncherView`'s `galleryRowID`.
 ///
-/// The theme switcher drives its OWN `@State`, applied only to this view's
-/// subtree via `.environment(\.ainkradTheme, …)` — switching it here never
-/// touches `ThemeManager`, so the app's real theme and scheme (and every
-/// other surface) is unaffected.
+/// The pickers drive its OWN `@State`, composed through `catalog` and applied
+/// only to this view's subtree via `.ainkradSkin(…)` — the Gallery never sees
+/// `ThemeManager`, so the app's real theme and scheme (and every other
+/// surface) is unaffected and nothing is persisted.
 struct ComponentGalleryView: View {
-    init(onDismiss: @escaping () -> Void = {}) {
+    /// - Parameters:
+    ///   - catalog: the app's catalog (installed + `-AinkradThemesDir` themes);
+    ///     the bundle-only `galleryCatalog` (Neon) without an app.
+    ///   - theme, appearance: the first preview; the scheme is
+    ///     `-AinkradGalleryTheme` when it has that appearance, else the theme's own.
+    init(
+        catalog: ThemeCatalog = Self.galleryCatalog, theme: String = "neon", appearance: ThemeAppearance = .dark,
+        onDismiss: @escaping () -> Void = {}
+    ) {
+        self.catalog = catalog
         self.onDismiss = onDismiss
+        _galleryThemeID = State(initialValue: theme)
+        _galleryAppearance = State(initialValue: appearance)
+        _galleryTheme = State(
+            initialValue: parseDebugGalleryThemeArgument(
+                knownSchemeIDs: Set(catalog.schemes(for: appearance).map(\.id)))
+                ?? catalog.compose(theme: theme, appearance: appearance, scheme: nil)?.skin.id ?? "neonBlue")
     }
 
+    let catalog: ThemeCatalog
     let onDismiss: () -> Void
-    @Environment(\.ainkradSkin) private var skin
 
-    /// A colour-scheme id, shown under Neon.
-    @State var galleryTheme: String = {
-        parseDebugGalleryThemeArgument(knownSchemeIDs: Set(galleryCatalog.schemes(for: .dark).map(\.id))) ?? "neonBlue"
-    }()
+    /// The previewed theme (design language) id.
+    @State var galleryThemeID: String
+    @State var galleryAppearance: ThemeAppearance
+    /// The previewed colour-scheme id.
+    @State var galleryTheme: String
 
     /// The gallery's own catalog (bundle only): its sections also render
     /// outside the app (parity goldens), where there is no `ThemeManager`.
@@ -37,7 +53,25 @@ struct ComponentGalleryView: View {
             ?? galleryCatalog.compose(themeVariant: "neon.dark", scheme: "neonBlue"))?.skin ?? .standard
     }
 
-    var gallerySkin: AinkradSkin { Self.skin(forScheme: galleryTheme) }
+    /// `scheme` under `theme` at `appearance`; the theme's own scheme when that
+    /// one does not compose, Neon Blue when the theme has no such variant.
+    static func skin(
+        in catalog: ThemeCatalog, theme: String, appearance: ThemeAppearance, scheme: String
+    ) -> AinkradSkin {
+        (catalog.compose(theme: theme, appearance: appearance, scheme: scheme)
+            ?? catalog.compose(theme: "neon", appearance: .dark, scheme: "neonBlue"))?.skin ?? .standard
+    }
+
+    var gallerySkin: AinkradSkin {
+        Self.skin(in: catalog, theme: galleryThemeID, appearance: galleryAppearance, scheme: galleryTheme)
+    }
+
+    /// Picker options: every theme in `catalog`, the appearances the chosen
+    /// theme has, and the colour schemes of the chosen appearance.
+    var themeOptions: [(id: String, name: String)] { catalog.themes }
+    var appearanceOptions: [ThemeAppearance] { catalog.appearances(ofTheme: galleryThemeID) }
+    var schemeOptions: [ThemeColorScheme] { ThemeManager.pickerOrdered(catalog.schemes(for: galleryAppearance)) }
+
     /// Drives the live Basic Shell sample — the Gallery is not a host pane, so
     /// it seeds the pane-mode environment itself.
     @State var galleryPaneMode: PluginMode = .basic
@@ -105,7 +139,7 @@ struct ComponentGalleryView: View {
     var body: some View {
         GeometryReader { geo in
             ZStack {
-                skin.color(.palette("black", skin.chrome.overlay.backdropOpacity))
+                gallerySkin.color(.palette("black", gallerySkin.chrome.overlay.backdropOpacity))
                     .ignoresSafeArea()
                     .onTapGesture { onDismiss() }
 
@@ -120,6 +154,23 @@ struct ComponentGalleryView: View {
         .environment(\.ainkradTheme, galleryTokens)
         .environment(\.ainkradStatusColors, galleryStatusColors)
         .environment(\.ainkradTypography, galleryTypography)
+        .ainkradSkin(gallerySkin)
+        .onChange(of: galleryThemeID) { normalizeGallerySelection() }
+        .onChange(of: galleryAppearance) { normalizeGallerySelection() }
+    }
+
+    /// Keeps the appearance one the theme has, and the scheme one of that
+    /// appearance (else the theme's own scheme there).
+    private func normalizeGallerySelection() {
+        let appearances = appearanceOptions
+        if !appearances.contains(galleryAppearance), let first = appearances.first {
+            galleryAppearance = first
+        }
+        if !schemeOptions.contains(where: { $0.id == galleryTheme }),
+            let own = catalog.compose(theme: galleryThemeID, appearance: galleryAppearance, scheme: nil)
+        {
+            galleryTheme = own.skin.id
+        }
     }
 
     private var panel: some View {
@@ -218,10 +269,30 @@ struct ComponentGalleryView: View {
         .frame(height: 52)
     }
 
+    /// Theme and appearance pickers show only when there is a choice, so a
+    /// Neon-only catalog renders exactly the scheme row it always had.
     private var themeSwitcher: some View {
-        let schemes = ThemeManager.pickerOrdered(Self.galleryCatalog.schemes(for: .dark))
-        return AinkradSegmentedPicker(items: schemes.map(\.id), selection: $galleryTheme) { id in
-            schemes.first { $0.id == id }?.name ?? id
+        let themes = themeOptions
+        let appearances = appearanceOptions
+        let schemes = schemeOptions
+        return VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
+            if themes.count > 1 || appearances.count > 1 {
+                HStack(spacing: AinkradSpacing.md) {
+                    if themes.count > 1 {
+                        AinkradSegmentedPicker(items: themes.map(\.id), selection: $galleryThemeID) { id in
+                            themes.first { $0.id == id }?.name ?? id
+                        }
+                    }
+                    if appearances.count > 1 {
+                        AinkradSegmentedPicker(items: appearances, selection: $galleryAppearance) {
+                            $0.rawValue.capitalized
+                        }
+                    }
+                }
+            }
+            AinkradSegmentedPicker(items: schemes.map(\.id), selection: $galleryTheme) { id in
+                schemes.first { $0.id == id }?.name ?? id
+            }
         }
         .padding(.horizontal, AinkradSpacing.lg)
         .padding(.bottom, AinkradSpacing.sm)
