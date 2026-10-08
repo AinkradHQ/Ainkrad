@@ -20,9 +20,26 @@ struct WorkspaceStack: View {
     /// clean reflow) while the pane visually grows into place.
     @State private var focusPop: CGFloat = 1
 
+    /// The home structure the theme's language picks. No `default:` on
+    /// purpose: a new layout kind (Metro's `tileGrid`) must not compile until
+    /// it is handled here.
     var body: some View {
+        switch environment.themeManager.homeLanguage.layout {
+        case .islands: islandsHome
+        }
+    }
+
+    /// The Neon home: the sky (or, for a theme without one, the plain
+    /// background) behind the HUD bar and the workspace carousel. The sky is
+    /// swapped out rather than hidden, so its `TimelineView` stops entirely;
+    /// the stack after it keeps its identity, so panes survive a theme switch.
+    private var islandsHome: some View {
         ZStack {
-            AmbientSkyView()
+            if environment.themeManager.homeLanguage.sky {
+                AmbientSkyView()
+            } else {
+                skin.color(\.background).ignoresSafeArea()
+            }
 
             // Extends under the (hidden) title bar so the HUD is the
             // top of the screen itself — the traffic lights float
