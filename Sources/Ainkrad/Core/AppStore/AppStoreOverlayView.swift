@@ -167,7 +167,7 @@ struct AppStoreOverlayView: View {
                     VStack(spacing: skin.spacing.sm) {
                         Image(systemName: "exclamationmark.triangle")
                             .font(skin.font(AinkradFontToken(sizeKey: "t28", scaled: false)))
-                            .foregroundStyle(tokens.color(\.accentTertiary))
+                            .foregroundStyle(tokens.color(\.warning))
                         Text("Couldn't load image")
                             .font(AinkradFont.display(12))
                             .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o60))
@@ -248,7 +248,7 @@ struct AppStoreOverlayView: View {
             Spacer()
             if let error = store.error {
                 Text(error.message).font(skin.font(AinkradFontToken(sizeKey: "t10", scaled: false)))
-                    .foregroundStyle(tokens.color(\.accentTertiary))
+                    .foregroundStyle(tokens.color(\.warning))
                     .lineLimit(1)
                 AinkradIconButton(systemName: "xmark.circle") { store.error = nil }
             }
@@ -306,7 +306,7 @@ struct AppStoreOverlayView: View {
                         Text("\(failure.name) couldn’t be installed")
                             .font(AinkradFont.display(12, weight: .semibold))
                     }
-                    .foregroundStyle(tokens.color(\.accentTertiary))
+                    .foregroundStyle(tokens.color(\.warning))
                     Text(failure.text)
                         .font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false)))
                         .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o75))
@@ -316,7 +316,7 @@ struct AppStoreOverlayView: View {
                 Spacer(minLength: 0)
                 AinkradIconButton(systemName: "xmark.circle", tooltip: "Dismiss") { store.themeFailure = nil }
             }
-            .banner(tint: tokens.color(\.accentTertiary), fill: skin.opacity.o12, stroke: skin.opacity.o45, skin: skin)
+            .banner(tint: tokens.color(\.warning), fill: skin.opacity.o12, stroke: skin.opacity.o45, skin: skin)
         }
     }
 
@@ -334,7 +334,7 @@ struct AppStoreOverlayView: View {
                     Text(failures.count == 1 ? "1 app couldn’t be loaded" : "\(failures.count) apps couldn’t be loaded")
                         .font(AinkradFont.display(12, weight: .semibold))
                 }
-                .foregroundStyle(tokens.color(\.accentTertiary))
+                .foregroundStyle(tokens.color(\.warning))
                 ForEach(failures, id: \.url) { failure in
                     Text(AppStoreStore.failureText(failure))
                         .font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false)))
@@ -343,7 +343,7 @@ struct AppStoreOverlayView: View {
                         .textSelection(.enabled)
                 }
             }
-            .banner(tint: tokens.color(\.accentTertiary), fill: skin.opacity.o12, stroke: skin.opacity.o45, skin: skin)
+            .banner(tint: tokens.color(\.warning), fill: skin.opacity.o12, stroke: skin.opacity.o45, skin: skin)
         }
     }
 
