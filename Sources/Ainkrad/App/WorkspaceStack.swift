@@ -37,6 +37,10 @@ struct WorkspaceStack: View {
         ZStack {
             if environment.themeManager.homeLanguage.sky {
                 AmbientSkyView()
+            } else if skin.material.kind == "glass" {
+                // E3.2: the window is clear under glass, so this one layer
+                // shows the desktop behind the whole stack.
+                AinkradMaterialBackground(level: .hud, blending: .behindWindow).ignoresSafeArea()
             } else {
                 skin.color(\.background).ignoresSafeArea()
             }
