@@ -99,7 +99,7 @@ struct HoardBreadcrumbBar: View {
         }
         .padding(.horizontal, AinkradSpacing.sm)
         .padding(.vertical, skin.size.s4)
-        .background(ChamferShape(cut: skin.cut.c4).fill(theme.foreground.opacity(skin.opacity.o07)))
+        .background(skin.shape(cut: skin.cut.c4).fill(theme.foreground.opacity(skin.opacity.o07)))
     }
 
     private func commit() {

@@ -139,9 +139,9 @@ struct ToolCallCardView: View {
         .padding(.horizontal, skin.size.s10).padding(.vertical, skin.spacing.sm)
         .frame(maxWidth: .infinity, alignment: .leading)
         .frame(maxHeight: skin.size.s260)
-        .background(ChamferShape(cut: AinkradRadius.sm).fill(theme.background.opacity(skin.opacity.o45)))
+        .background(skin.shape(cut: AinkradRadius.sm).fill(theme.background.opacity(skin.opacity.o45)))
         .overlay {
-            ChamferShape(cut: AinkradRadius.sm)
+            skin.shape(cut: AinkradRadius.sm)
                 .stroke(
                     (isError ? statusColors.danger : (pendingApproval ? theme.accentPrimary : tint)).opacity(
                         pendingApproval ? 0.5 : 0.22),

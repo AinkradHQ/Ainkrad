@@ -88,7 +88,7 @@ private struct SidebarRootRow: View {
         }
         .padding(.horizontal, AinkradSpacing.sm)
         .padding(.vertical, rowPadding)
-        .background(ChamferShape(cut: skin.cut.c4).fill(fill))
+        .background(skin.shape(cut: skin.cut.c4).fill(fill))
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
         .onTapGesture(perform: onTap)

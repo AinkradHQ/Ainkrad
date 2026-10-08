@@ -67,9 +67,9 @@ struct SageDecisionBar: View {
         }
         .padding(.horizontal, skin.size.s14).padding(.vertical, skin.size.s9)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(skin.opacity.o60)))
+        .background(skin.shape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(skin.opacity.o60)))
         .overlay {
-            ChamferShape(cut: AinkradRadius.md).stroke(theme.accentPrimary.opacity(skin.opacity.o55), lineWidth: 1)
+            skin.shape(cut: AinkradRadius.md).stroke(theme.accentPrimary.opacity(skin.opacity.o55), lineWidth: 1)
         }
         .padding(.horizontal, skin.size.s14)
         .padding(.bottom, skin.spacing.xs)

@@ -49,7 +49,7 @@ struct HoardFilterField: View {
         .padding(.horizontal, AinkradSpacing.sm)
         .padding(.vertical, skin.size.s3)
         .background(
-            ChamferShape(cut: skin.cut.c4)
+            skin.shape(cut: skin.cut.c4)
                 .fill(theme.foreground.opacity(search.isScoped ? skin.opacity.o10 : skin.opacity.o06))
         )
         .animation(reduceMotion ? nil : .easeOut(duration: skin.motion.durations.d0_12), value: search.isScoped)
@@ -57,7 +57,7 @@ struct HoardFilterField: View {
         // A visible focus ring: without it, ⌥F looks like it did nothing even
         // when the caret is sitting in the field.
         .overlay(
-            ChamferShape(cut: skin.cut.c4)
+            skin.shape(cut: skin.cut.c4)
                 .strokeBorder(
                     theme.accentSecondary.opacity(
                         focus.wrappedValue == .search ? 0.7 : 0), lineWidth: 1)

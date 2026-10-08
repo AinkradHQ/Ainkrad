@@ -78,11 +78,11 @@ private struct TabChip: View {
         .padding(.vertical, skin.size.s4)
         .background {
             if isActive {
-                ChamferShape(cut: skin.cut.c5)
+                skin.shape(cut: skin.cut.c5)
                     .fill(theme.accentPrimary.opacity(skin.opacity.o20))
                     .matchedGeometryEffect(id: "activeTabFill", in: namespace)
             } else if hovering {
-                ChamferShape(cut: skin.cut.c5).fill(theme.foreground.opacity(skin.opacity.o06))
+                skin.shape(cut: skin.cut.c5).fill(theme.foreground.opacity(skin.opacity.o06))
             }
         }
         .contentShape(Rectangle())

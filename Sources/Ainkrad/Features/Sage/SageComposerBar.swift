@@ -160,7 +160,7 @@ struct SageComposerBar: View {
             .frame(height: Self.controlHeight)
         }
         .padding(.horizontal, skin.spacing.md).padding(.vertical, skin.size.s10)
-        .background(ChamferShape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(skin.opacity.o45)))
+        .background(skin.shape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(skin.opacity.o45)))
         .background(
             // Tab-cycle affordance (M7 Slice 5a Task 5): swallows a plain Tab
             // keyDown to advance the active agent, but ONLY when the draft is

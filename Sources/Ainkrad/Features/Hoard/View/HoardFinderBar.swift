@@ -120,7 +120,7 @@ struct HoardFinderBar: View {
         .padding(.horizontal, AinkradSpacing.md)
         .padding(.vertical, AinkradSpacing.sm)
         .background(
-            ChamferShape(cut: AinkradRadius.md)
+            skin.shape(cut: AinkradRadius.md)
                 .fill(tokens.color(\.accentSecondary).opacity(isHighlighted ? skin.opacity.o12 : 0))
         )
         // The Launcher's targeting brackets on the highlighted row, for the

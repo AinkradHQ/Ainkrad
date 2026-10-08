@@ -23,7 +23,7 @@ struct OperationsPanel: View {
             }
             .padding(AinkradSpacing.md)
             .frame(width: skin.size.s280)
-            .background(ChamferShape(cut: skin.cut.c8).fill(theme.surfaceElevated.opacity(skin.opacity.o95)))
+            .background(skin.shape(cut: skin.cut.c8).fill(theme.surfaceElevated.opacity(skin.opacity.o95)))
             .transition(.move(edge: .bottom).combined(with: .opacity))
             .animation(.easeOut(duration: skin.motion.durations.d0_2), value: engine.activeJobs.count)
         }
