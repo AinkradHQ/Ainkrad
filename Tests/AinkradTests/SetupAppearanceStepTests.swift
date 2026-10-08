@@ -13,12 +13,13 @@ struct SetupAppearanceStepTests {
         let env = AppEnvironment.bootstrap(home: t.home, defaults: t.defaults)
 
         SetupAppearance.apply(
-            theme: .tokyoNight, accentHex: "FF8800",
+            theme: "neon", colorScheme: "tokyoNight", accentHex: "FF8800",
             family: .jetBrainsMono, scale: .large,
             icon: .purple, iconAppearance: .dark,
             themeManager: env.themeManager, iconStore: env.appIconStore)
 
-        #expect(env.themeManager.currentTheme == .tokyoNight)
+        #expect(env.themeManager.currentThemeID == "neon")
+        #expect(env.themeManager.skin.id == "tokyoNight")
         #expect(env.themeManager.uiFontFamily == .jetBrainsMono)
         #expect(env.themeManager.uiFontScale == .large)
         #expect(env.appIconStore.choice == .purple)
@@ -32,7 +33,7 @@ struct SetupAppearanceStepTests {
         let env = AppEnvironment.bootstrap(home: t.home, defaults: t.defaults)
 
         SetupAppearance.apply(
-            theme: .nord, accentHex: "00FFAA",
+            theme: "neon", colorScheme: "nord", accentHex: "00FFAA",
             family: .exo2, scale: .medium,
             icon: .auto, iconAppearance: .system,
             themeManager: env.themeManager, iconStore: env.appIconStore)

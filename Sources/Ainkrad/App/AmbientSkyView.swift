@@ -63,8 +63,8 @@ struct AmbientSkyView: View {
     var body: some View {
         let tokens = environment.themeManager.hostSkin
         // Per-theme sky character (emphasis only — colors come from `tokens`).
-        // Read `currentTheme` (observed) so a theme switch repaints the sky.
-        let profile = environment.themeManager.currentTheme.skyProfile
+        // Read the composed `skyProfile` (observed) so a scheme switch repaints the sky.
+        let profile = environment.themeManager.skyProfile
         let sky = environment.skySettingsStore
         let animated = sky.motionEnabled && isLive && motionBudget.isAnimating
         // Register the per-effect switches as a body-level dependency: most

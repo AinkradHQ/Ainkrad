@@ -73,7 +73,11 @@ extension AppEnvironment {
         LegacyUserDefaultsMigration.runIfNeeded(persistence: persistence, defaults: defaults)
 
         let registry = BuiltInAppRegistry(persistence: persistence)
-        let themeManager = ThemeManager(persistence: persistence)
+        // Themes and colour schemes: the bundle, plus any dropped or store-installed
+        // under `<Home>/Config/Themes` (a bundled id is never shadowed).
+        let themeManager = ThemeManager(
+            persistence: persistence,
+            catalog: ThemeCatalog(userRoots: [home.shared(.config).appendingPathComponent("Themes", isDirectory: true)]))
 
         let workspaceManager = WorkspaceManager()
         AinkradSignposts.end(AinkradSignposts.launch, "core-a-persistence-keychain-registry", csp0)

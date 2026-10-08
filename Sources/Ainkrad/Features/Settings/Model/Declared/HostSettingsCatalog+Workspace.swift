@@ -70,19 +70,28 @@ extension HostSettingsCatalog {
         let accentTitle =
             manager.accentColorHex.map { "#" + $0.uppercased().trimmingCharacters(in: ["#"]) }
             ?? "Theme default"
+        let schemes = manager.colorSchemes
         return [
             SettingsField(
                 path: group.appending("picker"), label: "Theme",
                 help: "The whole workspace re-tints — window, islands, and the sky behind it.",
                 keywords: ["theme", "color", "dark mode", "neon", "palette"],
+                // Temporarily one select: the colour schemes under Neon, as the
+                // seven themes were. E0.5 splits it into Theme + Colour scheme.
                 kind: .select(
-                    options: Theme.allCases.map { SettingsOption(id: $0.rawValue, title: $0.displayName) },
+                    options: schemes.map { SettingsOption(id: $0.id, title: $0.name) },
                     selection: Binding(
-                        get: { manager.currentTheme.rawValue },
-                        set: { if let t = Theme(rawValue: $0) { manager.setTheme(t) } })),
-                defaultDescription: defaults.theme.displayName,
-                isModified: { manager.currentTheme != defaults.theme },
-                reset: { manager.setTheme(defaults.theme) }),
+                        get: { manager.skin.id },
+                        set: { manager.setColorScheme($0, for: manager.appearance) })),
+                defaultDescription: schemes.first { $0.id == manager.defaultColorSchemeID }?.name
+                    ?? manager.defaultColorSchemeID,
+                isModified: {
+                    manager.currentThemeID != defaults.theme || manager.skin.id != manager.defaultColorSchemeID
+                },
+                reset: {
+                    manager.setTheme(defaults.theme)
+                    manager.setColorScheme(nil, for: manager.appearance)
+                }),
             SettingsField(
                 path: group.appending("accent"), label: "Accent",
                 help: "Used for anything live: selection, focus, the things that are currently doing something.",

@@ -37,8 +37,8 @@ struct DocumentConformanceTests {
     @Test("GlobalSettings round-trips through a persistence store")
     func globalSettingsRoundTrips() {
         let store = InMemoryPersistenceStore()
-        store.save(GlobalSettings(theme: .cyberPurple))
-        #expect(store.load(GlobalSettings.self) == GlobalSettings(theme: .cyberPurple))
+        store.save(GlobalSettings(colorSchemeDark: "cyberPurple"))
+        #expect(store.load(GlobalSettings.self) == GlobalSettings(colorSchemeDark: "cyberPurple"))
     }
 
     @Test("RegistryStateDocument round-trips through a persistence store")

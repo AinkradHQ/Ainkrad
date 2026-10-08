@@ -13,7 +13,7 @@ final class LegacyUserDefaultsMigrationTests {
 
     private func seedLegacy() {
         defaults.set(
-            try! JSONEncoder().encode(GlobalSettings(theme: .cyberPurple)),
+            Data(#"{"theme":"cyberPurple"}"#.utf8),  // M1 wrote the v1 shape
             forKey: "global-settings")
         defaults.set(try! JSONEncoder().encode(["terminal": false]), forKey: "registry-enabled-state")
         // Terminal's settings type no longer lives in the host, so the
@@ -27,7 +27,8 @@ final class LegacyUserDefaultsMigrationTests {
         let store = InMemoryPersistenceStore()
         LegacyUserDefaultsMigration.runIfNeeded(persistence: store, defaults: defaults)
 
-        #expect(store.load(GlobalSettings.self)?.theme == .cyberPurple)
+        #expect(store.load(GlobalSettings.self)?.theme == "neon")
+        #expect(store.load(GlobalSettings.self)?.colorSchemeDark == "cyberPurple")
         #expect(store.load(RegistryStateDocument.self)?.enabled == ["terminal": false])
     }
 
@@ -62,10 +63,10 @@ final class LegacyUserDefaultsMigrationTests {
         LegacyUserDefaultsMigration.runIfNeeded(persistence: store, defaults: defaults)
 
         // Mutate the imported doc, then re-run: a second import would overwrite it.
-        store.save(GlobalSettings(theme: .neonBlue))
+        store.save(GlobalSettings(colorSchemeDark: "nord"))
         LegacyUserDefaultsMigration.runIfNeeded(persistence: store, defaults: defaults)
 
-        #expect(store.load(GlobalSettings.self)?.theme == .neonBlue)
+        #expect(store.load(GlobalSettings.self)?.colorSchemeDark == "nord")
     }
 
     @Test("no legacy data is a clean no-op that still sets the marker")

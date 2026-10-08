@@ -7,6 +7,7 @@ import Testing
 @testable import AinkradHostRuntime
 
 @Suite("DefaultThemeParityTests")
+@MainActor
 struct DefaultThemeParityTests {
 
     let runeTable: [String: (bg: String, fg: String, cursor: String, ansi: [String])] = [
@@ -63,10 +64,8 @@ struct DefaultThemeParityTests {
 
     @Test("all 7 themes palette, skyProfile and iconColorFamily equal legacy fixtures")
     func testPaletteSkyIconParity() {
-        for theme in Theme.allCases {
-            #expect(LegacyPalettes.hexes(theme.skin) == LegacyPalettes.table[theme], "\(theme.rawValue)")
-            #expect(theme.skyProfile == theme.skyProfile)
-            #expect(theme.iconColorFamily == theme.iconColorFamily)
+        for theme in neonSchemeIDs {
+            #expect(LegacyPalettes.hexes(NeonSchemes.skin(theme)) == LegacyPalettes.table[theme], "\(theme)")
         }
     }
 
@@ -81,10 +80,10 @@ struct DefaultThemeParityTests {
 
     @Test("all 7 themes terminal equal Rune table")
     func testTerminalParity() {
-        for theme in Theme.allCases {
-            let skin = ThemeCatalog.shared.themeFile(for: theme.rawValue).skin
+        for theme in neonSchemeIDs {
+            let skin = NeonSchemes.skin(theme)
             let terminal = skin.terminal
-            let rune = runeTable[theme.rawValue]!
+            let rune = runeTable[theme]!
 
             #expect(terminal.background == hexToken(rune.bg))
             #expect(terminal.foreground == hexToken(rune.fg))
@@ -99,9 +98,9 @@ struct DefaultThemeParityTests {
 
     @Test("syntax, text and every ladder identical across the 7 themes")
     func testLaddersSyntaxTextIdentical() {
-        let baseSkin = ThemeCatalog.shared.themeFile(for: Theme.neonBlue.rawValue).skin
-        for theme in Theme.allCases {
-            let skin = ThemeCatalog.shared.themeFile(for: theme.rawValue).skin
+        let baseSkin = NeonSchemes.skin("neonBlue")
+        for theme in neonSchemeIDs {
+            let skin = NeonSchemes.skin(theme)
             #expect(skin.syntax == baseSkin.syntax)
             #expect(skin.text == baseSkin.text)
             #expect(skin.spacing == baseSkin.spacing)
@@ -119,7 +118,10 @@ struct DefaultThemeParityTests {
 
     @Test("default.theme decodes == AinkradSkin.standard")
     func testDefaultThemeDecodesToStandard() {
-        let file = ThemeCatalog.shared.themeFile(for: "neonBlue")
+        guard let file = NeonSchemes.catalog.loadedThemes["neonBlue"]?.themeFile else {
+            Issue.record("default.theme (neonBlue) did not load")
+            return
+        }
         let standard = AinkradSkin.standard
         #expect(file.skin.id == standard.id)
         #expect(file.skin.name == standard.name)

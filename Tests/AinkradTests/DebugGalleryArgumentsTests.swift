@@ -38,33 +38,35 @@ struct DebugGalleryArgumentsTests {
     }
 
     // MARK: - AinkradGalleryTheme
+    private let known = Set(neonSchemeIDs)
+
     @Test("returns nil when -AinkradGalleryTheme is absent or empty")
     func absentOrEmptyTheme() {
         let emptyDict: [String: String] = [:]
         let lookup1: ArgumentLookup = { emptyDict[$0] }
-        #expect(parseDebugGalleryThemeArgument(lookup1) == nil)
+        #expect(parseDebugGalleryThemeArgument(lookup1, knownSchemeIDs: known) == nil)
 
         let whitespaceDict = ["AinkradGalleryTheme": "  "]
         let lookup2: ArgumentLookup = { whitespaceDict[$0] }
-        #expect(parseDebugGalleryThemeArgument(lookup2) == nil)
+        #expect(parseDebugGalleryThemeArgument(lookup2, knownSchemeIDs: known) == nil)
     }
 
-    @Test("returns matching Theme for valid rawValue")
+    @Test("returns the scheme id for a known old theme id")
     func validTheme() {
         let args1 = ["AinkradGalleryTheme": "neonBlue"]
         let lookup1: ArgumentLookup = { args1[$0] }
-        #expect(parseDebugGalleryThemeArgument(lookup1) == Theme.neonBlue)
+        #expect(parseDebugGalleryThemeArgument(lookup1, knownSchemeIDs: known) == "neonBlue")
 
         let args2 = ["AinkradGalleryTheme": "cyberPurple"]
         let lookup2: ArgumentLookup = { args2[$0] }
-        #expect(parseDebugGalleryThemeArgument(lookup2) == Theme.cyberPurple)
+        #expect(parseDebugGalleryThemeArgument(lookup2, knownSchemeIDs: known) == "cyberPurple")
     }
 
     @Test("returns nil for unknown theme ID")
     func unknownTheme() {
         let args = ["AinkradGalleryTheme": "nonexistentTheme"]
         let lookup: ArgumentLookup = { args[$0] }
-        #expect(parseDebugGalleryThemeArgument(lookup) == nil)
+        #expect(parseDebugGalleryThemeArgument(lookup, knownSchemeIDs: known) == nil)
     }
 
     // MARK: - AinkradGallerySection

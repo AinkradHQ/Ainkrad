@@ -34,14 +34,17 @@ func parseDebugOpenGalleryArgument(_ value: ArgumentLookup = { UserDefaults.stan
     return trimmed == "1" || trimmed == "true"
 }
 
-/// Parses `-AinkradGalleryTheme <themeID>` using a key-value lookup.
-/// Returns the matching Theme, or nil if missing or invalid. Logs if invalid.
-func parseDebugGalleryThemeArgument(_ value: ArgumentLookup = { UserDefaults.standard.string(forKey: $0) }) -> Theme? {
+/// Parses `-AinkradGalleryTheme <schemeID>` using a key-value lookup (the old
+/// theme ids are today's colour-scheme ids). Returns the id when it is one of
+/// `knownSchemeIDs`, or nil if missing or invalid. Logs if invalid.
+func parseDebugGalleryThemeArgument(
+    _ value: ArgumentLookup = { UserDefaults.standard.string(forKey: $0) }, knownSchemeIDs: Set<String>
+) -> String? {
     guard let rawThemeID = value("AinkradGalleryTheme") else { return nil }
     let themeID = rawThemeID.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !themeID.isEmpty else { return nil }
-    if let theme = Theme(rawValue: themeID) {
-        return theme
+    if knownSchemeIDs.contains(themeID) {
+        return themeID
     } else {
         Log.app.error("DEBUG launch arg: unknown AinkradGalleryTheme '\(themeID, privacy: .public)'")
         return nil

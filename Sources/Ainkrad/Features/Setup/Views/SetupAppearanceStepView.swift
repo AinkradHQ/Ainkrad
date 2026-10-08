@@ -4,17 +4,18 @@ import SwiftUI
 
 /// Applies the Appearance step's choices to the live stores.
 ///
-/// Order is load-bearing: `ThemeManager.setTheme` clears `accentColorHex`
-/// (ThemeManager.swift:45), so the accent must be set afterwards or it is lost.
+/// Order is load-bearing: `setTheme` and `setColorScheme` clear `accentColorHex`,
+/// so the accent must be set afterwards or it is lost.
 @MainActor
 enum SetupAppearance {
     static func apply(
-        theme: Theme, accentHex: String?,
+        theme: String, colorScheme: String?, accentHex: String?,
         family: UIFontFamily, scale: UIFontScale,
         icon: AppIconChoice, iconAppearance: AppIconAppearance,
         themeManager: ThemeManager, iconStore: AppIconStore
     ) {
         themeManager.setTheme(theme)
+        themeManager.setColorScheme(colorScheme, for: themeManager.appearance)
         themeManager.setAccentColorHex(accentHex)
         themeManager.setFontFamily(family)
         themeManager.setFontScale(scale)
@@ -160,21 +161,22 @@ struct SetupAppearanceStepView: View {
     private func themeGrid(tokens: AinkradSkin) -> some View {
         let columns = [GridItem(.adaptive(minimum: skin.size.s200, maximum: skin.size.s260), spacing: skin.size.s10)]
         return LazyVGrid(columns: columns, spacing: skin.size.s10) {
-            ForEach(Theme.allCases, id: \.self) { theme in
-                themeCard(theme, tokens: tokens)
+            ForEach(environment.themeManager.colorSchemes, id: \.id) { scheme in
+                themeCard(scheme, tokens: tokens)
             }
         }
     }
 
-    /// A kit list row per theme: its two accents as the leading swatch, and a
-    /// tick that reads as the current choice.
-    private func themeCard(_ theme: Theme, tokens: AinkradSkin) -> some View {
-        let isSelected = environment.themeManager.currentTheme == theme
-        let themeSkin = theme.skin
+    /// A kit list row per colour scheme: its two accents as the leading swatch,
+    /// and a tick that reads as the current choice.
+    private func themeCard(_ scheme: ThemeColorScheme, tokens: AinkradSkin) -> some View {
+        let manager = environment.themeManager
+        let isSelected = manager.skin.id == scheme.id
+        let themeSkin = manager.skin(forScheme: scheme.id) ?? manager.skin
 
         return AinkradListRow(
             isSelected: isSelected,
-            onTap: { environment.themeManager.setTheme(theme) },
+            onTap: { manager.setColorScheme(scheme.id, for: manager.appearance) },
             leading: {
                 ChamferShape(cut: skin.cut.c7)
                     .fill(
@@ -190,7 +192,7 @@ struct SetupAppearanceStepView: View {
                             .strokeBorder(skin.color(.palette("white", skin.opacity.o18)), lineWidth: 1)
                     )
             },
-            title: theme.displayName,
+            title: scheme.name,
             trailing: {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(skin.font(AinkradFontToken(sizeKey: "t13", scaled: false)))
@@ -211,8 +213,8 @@ struct SetupAppearanceStepView: View {
     /// regression the moment the user opens Settings afterward.
     private func accentColorRow(tokens: AinkradSkin, manager: ThemeManager) -> some View {
         HStack(spacing: skin.size.s9) {
-            ForEach(Theme.allCases, id: \.self) { theme in
-                accentSwatch(theme, tokens: tokens, manager: manager)
+            ForEach(manager.colorSchemes, id: \.id) { scheme in
+                accentSwatch(scheme, tokens: tokens, manager: manager)
             }
             AinkradColorPicker(
                 selection: Binding(
@@ -238,15 +240,15 @@ struct SetupAppearanceStepView: View {
     /// workspace visibly had an accent. It now shows the theme's own accent as
     /// the current one, which is what the user is actually looking at.
     private func accentSwatch(
-        _ theme: Theme, tokens: AinkradSkin,
+        _ scheme: ThemeColorScheme, tokens: AinkradSkin,
         manager: ThemeManager
     ) -> some View {
-        let color = theme.skin.color(\.accentPrimary)
+        let color = (manager.skin(forScheme: scheme.id) ?? manager.skin).color(\.accentPrimary)
         let hex = color.hexString ?? ""
         let isSelected = AccentSelection.isSelected(
             swatchHex: hex,
             overrideHex: manager.accentColorHex,
-            themeAccentHex: manager.currentTheme.skin.color(\.accentPrimary).hexString ?? "")
+            themeAccentHex: manager.skin.color(\.accentPrimary).hexString ?? "")
 
         // A raw `Button`: the kit's swatch chip carries a text label, and seven
         // labelled chips plus the well cannot fit the row a 280pt column gives.
@@ -275,8 +277,8 @@ struct SetupAppearanceStepView: View {
                 )
         }
         .buttonStyle(.plain)
-        .help(theme.displayName)
-        .accessibilityLabel("\(theme.displayName) accent")
+        .help(scheme.name)
+        .accessibilityLabel("\(scheme.name) accent")
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 

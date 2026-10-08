@@ -34,7 +34,7 @@ struct PaneGlassBackdrop: View {
     var body: some View {
         if isEnabled {
             let key = PaneGlassImageCache.Key(
-                theme: environment.themeManager.currentTheme.rawValue,
+                theme: environment.themeManager.composedKey,
                 tokens: environment.themeManager.hostSkin,
                 effects: environment.skySettingsStore.effectEnabled)
             GeometryReader { proxy in

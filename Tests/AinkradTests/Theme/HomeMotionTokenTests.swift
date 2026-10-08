@@ -9,9 +9,10 @@ import Testing
 /// must carry the keys and today's values — or the carousel, the focus pop
 /// and the emblem's breathing silently change feel.
 @Suite("Home motion tokens")
+@MainActor
 struct HomeMotionTokenTests {
     private var skins: [AinkradSkin] {
-        Theme.allCases.map { ThemeCatalog.shared.themeFile(for: $0.rawValue).skin }
+        neonSchemeIDs.map { NeonSchemes.skin($0) }
     }
 
     @Test func carouselAndFocusPopSpringsKeepTheirFeel() {

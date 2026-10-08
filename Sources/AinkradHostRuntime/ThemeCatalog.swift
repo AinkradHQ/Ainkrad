@@ -10,10 +10,9 @@ import Foundation
 ///
 /// A user file never replaces a bundled id; among user roots the first root wins.
 /// Every problem is kept in `issues` and the file is skipped — loading never traps.
+/// `ThemeManager` owns the one instance the app uses.
 // Safe because every read and write of `snapshot` and `composed` goes through `lock`.
-final class ThemeCatalog: @unchecked Sendable {
-    static let shared = ThemeCatalog()
-
+public final class ThemeCatalog: @unchecked Sendable {
     struct LoadedTheme: Sendable {
         let themeFile: AinkradThemeFile
         let hostSection: HostSkinSection?
@@ -33,7 +32,7 @@ final class ThemeCatalog: @unchecked Sendable {
 
     /// - Parameter userRoots: folders scanned recursively for `*.theme` and
     ///   `*.scheme`, highest priority first.
-    init(bundle: Bundle = .main, userRoots: [URL] = []) {
+    public init(bundle: Bundle = .main, userRoots: [URL] = []) {
         self.bundle = bundle
         self.userRoots = userRoots
         self.snapshot = Self.load(bundle: bundle, userRoots: userRoots)
@@ -70,7 +69,7 @@ final class ThemeCatalog: @unchecked Sendable {
     }
 
     /// Colour schemes for one appearance, sorted by name.
-    func schemes(for appearance: ThemeAppearance) -> [ThemeColorScheme] {
+    public func schemes(for appearance: ThemeAppearance) -> [ThemeColorScheme] {
         lock.withLock { snapshot.schemes.values }
             .filter { $0.appearance == appearance }
             .sorted { $0.name < $1.name }
@@ -79,7 +78,7 @@ final class ThemeCatalog: @unchecked Sendable {
     /// The skin of `themeVariant` coloured by `scheme`, or nil when either id is
     /// unknown or the pair does not compose. The composed skin's id is the scheme id.
     @MainActor
-    func compose(themeVariant variantID: String, scheme schemeID: String) -> AinkradThemeFile? {
+    public func compose(themeVariant variantID: String, scheme schemeID: String) -> AinkradThemeFile? {
         let key = "\(variantID)|\(schemeID)"
         let (cached, variant, scheme) = lock.withLock {
             (composed[key], snapshot.loadedThemes[variantID], snapshot.schemes[schemeID])
@@ -89,39 +88,6 @@ final class ThemeCatalog: @unchecked Sendable {
         guard let file = try? Self.compose(variantID: variantID, variant: variant, scheme: scheme) else { return nil }
         lock.withLock { composed[key] = file }
         return file
-    }
-
-    // MARK: - Base-skin lookup (today's callers)
-
-    func themeFile(for themeID: String) -> AinkradThemeFile {
-        if let loaded = loadedThemes[themeID] {
-            return loaded.themeFile
-        }
-        if let baseId = fallbackBaseId(for: themeID), let baseLoaded = loadedThemes[baseId] {
-            return baseLoaded.themeFile
-        }
-        return AinkradThemeFile(skin: .standard)
-    }
-
-    func hostSection(for themeID: String) -> HostSkinSection? {
-        if let loaded = loadedThemes[themeID], let section = loaded.hostSection {
-            return section
-        }
-        if let baseId = fallbackBaseId(for: themeID), let baseLoaded = loadedThemes[baseId],
-            let section = baseLoaded.hostSection
-        {
-            return section
-        }
-        return nil
-    }
-
-    private func fallbackBaseId(for themeID: String) -> String? {
-        switch themeID {
-        case "cyberPurple", "dracula", "nord", "tokyoNight", "gruvbox", "solarizedDark":
-            return "neonBlue"
-        default:
-            return nil
-        }
     }
 
     // MARK: - Loading

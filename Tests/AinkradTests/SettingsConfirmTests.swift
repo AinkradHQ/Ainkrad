@@ -58,8 +58,8 @@ struct SettingsConfirmTests {
 
     @Test("the settings sidebar and confirm read the skin values they replaced")
     func skinValuesKeepToday() {
-        for theme in Theme.allCases {
-            let skin = ThemeCatalog.shared.themeFile(for: theme.rawValue).skin
+        for theme in neonSchemeIDs {
+            let skin = NeonSchemes.skin(theme)
             #expect(skin.chrome.overlay.backdropOpacity == 0.42)
             #expect(skin.motion.durations.d0_12 == 0.12)
             #expect(skin.size.s18 == 18 && skin.size.s52 == 52 && skin.size.s34 == 34)

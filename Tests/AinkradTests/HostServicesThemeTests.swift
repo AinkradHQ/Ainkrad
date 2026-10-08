@@ -33,20 +33,21 @@ struct HostServicesThemeTests {
     func followsChange() async {
         let (host, tm) = makeHost()
 
-        tm.setTheme(.dracula)
+        tm.setColorScheme("dracula", for: .dark)
         for _ in 0..<20 where host.theme.tokens.themeID != "dracula" { await Task.yield() }
         #expect(host.theme.tokens.themeID == "dracula")
         #expect(host.theme.tokens.background.hexString == "1A1B23")
 
         // A second change must also propagate — guards the self-re-arm.
-        tm.setTheme(.nord)
+        tm.setColorScheme("nord", for: .dark)
         for _ in 0..<20 where host.theme.tokens.themeID != "nord" { await Task.yield() }
         #expect(host.theme.tokens.themeID == "nord")
     }
 
-    @Test("HostThemeTokens(from:) records the theme rawValue as id")
+    @Test("HostThemeTokens(skin:) records the scheme id (= the old theme raw value) as id")
     func fromThemeID() {
-        #expect(HostThemeTokens(from: .neonBlue).themeID == "neonBlue")
-        #expect(HostThemeTokens(from: .cyberPurple).themeID == "cyberPurple")
+        for id in neonSchemeIDs {
+            #expect(HostThemeTokens(skin: NeonSchemes.skin(id)).themeID == id)
+        }
     }
 }
