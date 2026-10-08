@@ -27,8 +27,8 @@ public final class ThemeCatalog: @unchecked Sendable {
     /// The theme-file format this host reads. A store entry with a higher `format` is hidden.
     public static let supportedFormat = 1
 
-    private let bundle: Bundle
-    private let userRoots: [URL]
+    let bundle: Bundle
+    let userRoots: [URL]
     private let lock = NSLock()
     private var snapshot = Snapshot()
     private var composed: [String: AinkradThemeFile] = [:]

@@ -13,17 +13,21 @@ final class AppStoreService: AppStoreServing {
     // A `.skill` install/uninstall with no installer configured fails gracefully
     // via `AppStoreError` rather than crashing.
     private let skillInstaller: SkillInstaller?
+    /// Store themes and colour schemes (the store UI, E4.4, calls it directly).
+    let themeInstaller: ThemeInstaller?
     private let persistence: PersistenceStore
 
     init(
         catalog: CatalogService, installer: PluginInstaller, mcpInstaller: MCPServerInstaller,
-        persistence: PersistenceStore, skillInstaller: SkillInstaller? = nil
+        persistence: PersistenceStore, skillInstaller: SkillInstaller? = nil,
+        themeInstaller: ThemeInstaller? = nil
     ) {
         self.catalog = catalog
         self.installer = installer
         self.mcpInstaller = mcpInstaller
         self.persistence = persistence
         self.skillInstaller = skillInstaller
+        self.themeInstaller = themeInstaller
     }
 
     var cachedCatalog: [CatalogEntry] { catalog.cached }

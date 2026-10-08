@@ -26,7 +26,7 @@ public final class ThemeManager {
     private var colorSchemeDark: String?
     private var colorSchemeLight: String?
     private let persistence: PersistenceStore
-    @ObservationIgnored let catalog: ThemeCatalog
+    @ObservationIgnored public let catalog: ThemeCatalog
 
     /// The composed skin of (theme, scheme, appearance); its `id` is the scheme
     /// id. The accent override is NOT applied here (R2): this is what the root
@@ -195,6 +195,14 @@ public final class ThemeManager {
             }
         }
         launchAppearance = requested
+        applyChange(clearingAccent: false)
+    }
+
+    /// Re-reads the theme files (a store install or removal) and recomposes, so
+    /// the change shows without a restart. Nothing is persisted and the custom
+    /// accent is kept; a stored id that is now missing falls back (and is kept).
+    public func reloadCatalog() {
+        catalog.reload()
         applyChange(clearingAccent: false)
     }
 
