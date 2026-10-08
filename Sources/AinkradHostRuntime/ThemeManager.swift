@@ -46,6 +46,9 @@ public final class ThemeManager {
     public private(set) var iconColorFamily: AppIconColor
     /// `"<variant>|<scheme>"` — what the composed skin was built from.
     public private(set) var composedKey: String
+    /// The resolved home keys of the composed theme (layout, sky, island art,
+    /// pane backdrop, app tile); Neon's when the theme sets none.
+    public private(set) var homeLanguage: HomeLanguage
     /// The resolved theme's own scheme for the current appearance.
     public private(set) var defaultColorSchemeID: String
     private var variantID: String
@@ -79,6 +82,7 @@ public final class ThemeManager {
         self.skyProfile = resolved.host.skyProfile
         self.iconColorFamily = resolved.host.iconColorFamily
         self.composedKey = resolved.key
+        self.homeLanguage = HomeLanguage.resolve(resolved.host.language).home
         self.defaultColorSchemeID = resolved.defaultScheme
         self.variantID = resolved.variantID
         AinkradFont.configure(scale: uiFontScale.multiplier, family: uiFontFamily)
@@ -248,6 +252,7 @@ public final class ThemeManager {
         skyProfile = resolved.host.skyProfile
         iconColorFamily = resolved.host.iconColorFamily
         composedKey = resolved.key
+        homeLanguage = HomeLanguage.resolve(resolved.host.language).home
         defaultColorSchemeID = resolved.defaultScheme
         variantID = resolved.variantID
         onThemeChange?()

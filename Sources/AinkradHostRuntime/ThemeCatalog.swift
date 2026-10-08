@@ -163,6 +163,9 @@ public final class ThemeCatalog: @unchecked Sendable {
                 }
             }
             snapshot.loadedThemes[id] = LoadedTheme(themeFile: file, hostSection: section)
+            for problem in HomeLanguage.resolve(section?.language).problems {
+                snapshot.issues.append(ThemeCatalogIssue(subject: "theme \(id)", message: problem, isWarning: true))
+            }
         }
 
         // Every scheme is test-composed once against a variant of its appearance

@@ -74,6 +74,12 @@ struct LanguageSection: Equatable, Codable, Sendable {
     let appearance: ThemeAppearance
     let defaultColorScheme: String
     let fontFamily: String
+    /// The home keys, raw; `HomeLanguage.resolve` applies the Neon defaults and fallbacks.
+    var layout: String?
+    var sky: Bool?
+    var islandArt: Bool?
+    var paneBackdrop: String?
+    var appTile: String?
 
     init(
         id: String = "neon", name: String = "Neon", appearance: ThemeAppearance = .dark,
@@ -95,5 +101,10 @@ struct LanguageSection: Equatable, Codable, Sendable {
         self.defaultColorScheme =
             try container.decodeIfPresent(String.self, forKey: .defaultColorScheme) ?? neon.defaultColorScheme
         self.fontFamily = try container.decodeIfPresent(String.self, forKey: .fontFamily) ?? neon.fontFamily
+        self.layout = try container.decodeIfPresent(String.self, forKey: .layout)
+        self.sky = try container.decodeIfPresent(Bool.self, forKey: .sky)
+        self.islandArt = try container.decodeIfPresent(Bool.self, forKey: .islandArt)
+        self.paneBackdrop = try container.decodeIfPresent(String.self, forKey: .paneBackdrop)
+        self.appTile = try container.decodeIfPresent(String.self, forKey: .appTile)
     }
 }
