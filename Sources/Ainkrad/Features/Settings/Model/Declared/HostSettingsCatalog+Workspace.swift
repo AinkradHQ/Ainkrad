@@ -199,6 +199,17 @@ extension HostSettingsCatalog {
         ]
     }
 
+    /// The Living Sky group, or `nil` when the theme's language has no sky.
+    /// Hidden, never reset: the stored sky settings are untouched, so a theme
+    /// with a sky shows them exactly as they were.
+    static func livingSkyGroup(_ environment: AppEnvironment, page: SettingsPath) -> SettingsGroup? {
+        guard environment.themeManager.homeLanguage.sky else { return nil }
+        return SettingsGroup(
+            path: page.appending("livingSky"), title: "Living Sky",
+            footerNote: "The island artwork itself is never animated.",
+            fields: livingSkyFields(environment, group: page.appending("livingSky")))
+    }
+
     static func livingSkyFields(_ environment: AppEnvironment, group: SettingsPath) -> [SettingsField] {
         let sky = environment.skySettingsStore
         var fields = [
