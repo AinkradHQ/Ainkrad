@@ -22,6 +22,7 @@ struct AppStoreCard: View {
     let onUpdate: () -> Void
     let onUninstall: () -> Void
     let onToggleEnabled: (Bool) -> Void
+    var onApply: () -> Void = {}
 
     @Environment(\.ainkradSkin) private var skin
 
@@ -42,6 +43,10 @@ struct AppStoreCard: View {
                         Spacer()
                         if row.status == .updateAvailable {
                             AinkradBadge(text: "UPDATE", status: .warning)
+                        } else if let accent = row.swatch.dropFirst().first {
+                            AinkradSwatchChip(label: row.appearancesText ?? "Colours", swatch: accent)
+                        } else if row.kind.isTheme, let appearances = row.appearancesText {
+                            AinkradChip(label: appearances)
                         } else if row.kind == .mcpServer {
                             AinkradBadge(text: "MCP", status: .success)
                         } else if isDevPlugin {
@@ -64,7 +69,8 @@ struct AppStoreCard: View {
 
                 AppStoreActionControls(
                     row: row, tokens: tokens, isBusy: isBusy,
-                    onInstall: onInstall, onUpdate: onUpdate, onUninstall: onUninstall, onToggleEnabled: onToggleEnabled
+                    onInstall: onInstall, onUpdate: onUpdate, onUninstall: onUninstall, onToggleEnabled: onToggleEnabled,
+                    onApply: onApply
                 )
             }
             .frame(maxHeight: .infinity, alignment: .top)

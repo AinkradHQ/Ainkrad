@@ -38,6 +38,8 @@ struct AppStoreActionControls: View {
     let onUpdate: () -> Void
     let onUninstall: () -> Void
     let onToggleEnabled: (Bool) -> Void
+    /// Themes tab: make this installed theme or colour scheme the one in use.
+    var onApply: () -> Void = {}
 
     @Environment(\.ainkradReduceMotion) private var reduceMotion
     @Environment(\.ainkradSkin) private var skin
@@ -59,6 +61,9 @@ struct AppStoreActionControls: View {
                 )
                 .help("The update is installed. Ainkrad keeps running the old version until it restarts.")
                 .transition(rowTransition)
+            case .installed where row.kind.isTheme:
+                applyControl
+                manageControls
             case .installed:
                 installedLabel
                     .transition(rowTransition)
@@ -72,7 +77,10 @@ struct AppStoreActionControls: View {
     /// Uninstall, shown beside an installed app's primary control. Empty on
     /// grid cards.
     @ViewBuilder private var manageControls: some View {
-        if style.showsEnableToggle && row.kind != .mcpServer {
+        if row.kind.isTheme {
+            // A theme has no enable toggle; while an update waits it can still be applied.
+            if style == .detail && row.status == .updateAvailable { applyControl }
+        } else if style.showsEnableToggle && row.kind != .mcpServer {
             enableToggle
                 .transition(rowTransition)
         } else if style.showsEnableToggle && row.kind == .mcpServer {
@@ -89,10 +97,23 @@ struct AppStoreActionControls: View {
         reduceMotion ? .identity : .scale(scale: 0.9).combined(with: .opacity)
     }
 
-    private var installedLabel: some View {
+    private var installedLabel: some View { statusLabel("Installed") }
+
+    /// Apply, or "In Use" once this theme or scheme is the current one.
+    @ViewBuilder private var applyControl: some View {
+        if row.isApplied {
+            statusLabel("In Use").transition(rowTransition)
+        } else {
+            actionButton("Apply", style: .secondary, morphsBusy: false, action: onApply)
+                .help("Use this \(row.kind == .theme ? "theme" : "colour scheme") now")
+                .transition(rowTransition)
+        }
+    }
+
+    private func statusLabel(_ title: String) -> some View {
         HStack(spacing: skin.spacing.xs) {
             Image(systemName: "checkmark.circle.fill").font(font(style.smallFontKey))
-            Text("Installed").font(font(style.fontKey, weight: "medium"))
+            Text(title).font(font(style.fontKey, weight: "medium"))
         }
         .foregroundStyle(tokens.color(\.accentTertiary))
     }

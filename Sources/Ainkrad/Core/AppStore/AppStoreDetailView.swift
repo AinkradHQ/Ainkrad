@@ -22,6 +22,9 @@ struct AppStoreDetailView: View {
     let onToggleEnabled: (Bool) -> Void
     /// Opens the full-screen lightbox on the tapped screenshot (gallery, index).
     let onOpenScreenshot: ([URL], Int) -> Void
+    /// Themes tab: the store entry (screenshots), and Apply.
+    var themeEntry: ThemeCatalogEntry? = nil
+    var onApply: () -> Void = {}
 
     @Environment(\.ainkradSkin) private var skin
 
@@ -40,13 +43,29 @@ struct AppStoreDetailView: View {
                         .font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false)))
                         .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o50))
                 }
+                if row.kind.isTheme, let appearances = row.appearancesText {
+                    VStack(alignment: .leading, spacing: skin.spacing.sm) {
+                        AinkradSectionHeader(title: row.kind == .theme ? "Appearances" : "Appearance")
+                        AinkradChip(label: appearances)
+                    }
+                }
+                if row.swatch.count == 3 {
+                    VStack(alignment: .leading, spacing: skin.spacing.sm) {
+                        AinkradSectionHeader(title: "Colours")
+                        HStack(spacing: skin.spacing.sm) {
+                            ForEach(Array(zip(["Background", "Accent", "Secondary"], row.swatch)), id: \.0) { label, color in
+                                AinkradSwatchChip(label: label, swatch: color)
+                            }
+                        }
+                    }
+                }
                 if let secretKeys = requiredSecretKeys {
                     VStack(alignment: .leading, spacing: skin.spacing.sm) {
                         AinkradSectionHeader(title: "Requires Secrets")
                         requiredSecretsRow(secretKeys)
                     }
                 }
-                if let screenshots = entry?.screenshots, !screenshots.isEmpty {
+                if let screenshots = entry?.screenshots ?? themeEntry?.screenshots, !screenshots.isEmpty {
                     VStack(alignment: .leading, spacing: skin.spacing.sm) {
                         AinkradSectionHeader(title: "Screenshots")
                         screenshotGallery(screenshots)
@@ -77,7 +96,7 @@ struct AppStoreDetailView: View {
                 Text(row.displayName)
                     .font(AinkradFont.display(20, weight: .semibold))
                     .foregroundStyle(tokens.color(\.foreground))
-                if let author = entry?.author, !author.isEmpty {
+                if let author = entry?.author ?? row.author, !author.isEmpty {
                     Text("by \(author)")
                         .font(skin.font(AinkradFontToken(sizeKey: "t12", scaled: false)))
                         .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o60))
@@ -102,6 +121,8 @@ struct AppStoreDetailView: View {
         case .builtIn: return "Built-in"
         case .plugin: return "Plugin"
         case .mcpServer: return "MCP Server"
+        case .theme: return "Theme"
+        case .colorScheme: return "Colour Scheme"
         }
     }
 
@@ -117,7 +138,7 @@ struct AppStoreDetailView: View {
     /// `version · author · kind` — author omitted when nil/empty.
     private var informationLine: String {
         var parts = [row.versionLine]
-        if let author = entry?.author, !author.isEmpty { parts.append(author) }
+        if let author = entry?.author ?? row.author, !author.isEmpty { parts.append(author) }
         parts.append(kindLabel)
         return parts.joined(separator: " · ")
     }
@@ -128,7 +149,8 @@ struct AppStoreDetailView: View {
     private var actions: some View {
         AppStoreActionControls(
             row: row, tokens: tokens, isBusy: isBusy, style: .detail,
-            onInstall: onInstall, onUpdate: onUpdate, onUninstall: onUninstall, onToggleEnabled: onToggleEnabled)
+            onInstall: onInstall, onUpdate: onUpdate, onUninstall: onUninstall, onToggleEnabled: onToggleEnabled,
+            onApply: onApply)
     }
 
     // MARK: - Screenshot gallery

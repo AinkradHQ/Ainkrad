@@ -86,6 +86,10 @@ struct SetupAppearanceStepView: View {
                     ) {
                         VStack(alignment: .leading, spacing: skin.size.s14) {
                             themeRow(tokens: tokens)
+                            // A fresh install has only Neon; the rest are in the store.
+                            AinkradButton(title: "More themes in the App Store", style: .ghost, icon: "paintbrush") {
+                                environment.presentThemeStore()
+                            }
                             themeGrid(tokens: tokens)
                         }
                     }

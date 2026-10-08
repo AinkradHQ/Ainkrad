@@ -8,12 +8,25 @@ import Observation
 @Observable
 final class AppStoreStore {
     enum Filter: CaseIterable, Hashable { case all, installed, updates }
+    /// Apps, or themes and colour schemes (E4.4).
+    enum Tab: CaseIterable, Hashable { case apps, themes }
 
     var filter: Filter = .all
+    var tab: Tab = .apps
     /// Live search over `rows`, composed with `filter` (AIN-148). Client-side
     /// only — filters whatever's already loaded, no network.
     var searchQuery: String = ""
     private(set) var rows: [AppStoreRow] = []
+    /// The Themes tab's rows, kept apart from `rows` so a theme id can never
+    /// shadow an app id.
+    private(set) var themeRows: [AppStoreRow] = []
+    /// The last refused theme install or update, with the installer's problem text.
+    var themeFailure: ThemeFailure?
+
+    struct ThemeFailure: Equatable {
+        let name: String
+        let text: String
+    }
     private(set) var busy: Set<String> = []
     /// Apps whose new bundle is on disk while the old one is still mapped.
     private(set) var needsRestart: Set<String> = []
@@ -39,6 +52,8 @@ final class AppStoreStore {
 
     private let service: AppStoreServing
     private let registry: BuiltInAppRegistry
+    /// Applies installed themes and says which are in use; nil in app-only tests.
+    private let themeManager: ThemeManager?
 
     /// What kind of long operation finished, for `onOperationFinished`.
     enum Operation: String, Sendable {
@@ -51,10 +66,14 @@ final class AppStoreStore {
     @ObservationIgnored
     var onOperationFinished: ((Operation, String, Error?) -> Void)?
 
-    init(service: AppStoreServing, registry: BuiltInAppRegistry) {
+    init(service: AppStoreServing, registry: BuiltInAppRegistry, themeManager: ThemeManager? = nil) {
         self.service = service
         self.registry = registry
+        self.themeManager = themeManager
     }
+
+    /// The current tab's rows.
+    var currentRows: [AppStoreRow] { tab == .apps ? rows : themeRows }
 
     /// Plugin bundles that were found on disk but refused to load this launch,
     /// with the reason each was rejected.
@@ -85,9 +104,14 @@ final class AppStoreStore {
     /// current filter having nothing in it.
     var emptyState: EmptyState {
         let trimmedQuery = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        let things = tab == .apps ? "apps" : "themes"
         if !trimmedQuery.isEmpty {
             return EmptyState(
-                icon: "magnifyingglass", title: "No Matches", message: "No apps match \"\(trimmedQuery)\".")
+                icon: "magnifyingglass", title: "No Matches", message: "No \(things) match \"\(trimmedQuery)\".")
+        }
+        if tab == .themes && filter == .all {
+            return EmptyState(
+                icon: "paintbrush", title: "No Themes", message: "No themes available — check back later.")
         }
         switch filter {
         case .all:
@@ -103,15 +127,15 @@ final class AppStoreStore {
     /// The row for whichever app's detail page is open (AIN-147), if any.
     var selectedRow: AppStoreRow? {
         guard let selectedAppID else { return nil }
-        return rows.first { $0.id == selectedAppID }
+        return currentRows.first { $0.id == selectedAppID }
     }
 
     var visibleRows: [AppStoreRow] {
         let filtered: [AppStoreRow]
         switch filter {
-        case .all: filtered = rows
-        case .installed: filtered = rows.filter { $0.status != .available }
-        case .updates: filtered = rows.filter { $0.status == .updateAvailable }
+        case .all: filtered = currentRows
+        case .installed: filtered = currentRows.filter { $0.status != .available }
+        case .updates: filtered = currentRows.filter { $0.status == .updateAvailable }
         }
         guard !searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return filtered }
         return filtered.filter { Self.matches($0, query: searchQuery) }
@@ -181,6 +205,8 @@ final class AppStoreStore {
         rows =
             installedRows.sorted { $0.displayName < $1.displayName }
             + availableRows.sorted { $0.displayName < $1.displayName }
+        themeRows = Self.themeRows(
+            entries: service.themeCatalog, installed: service.installedThemes(), themeManager: themeManager)
     }
 
     /// Fetch the catalog (offline → cache) then recompute rows.
@@ -192,6 +218,7 @@ final class AppStoreStore {
     }
 
     func install(_ id: String) async {
+        if isThemeRow(id) { return await installTheme(id) }
         if service.hasRetainedData(appID: id) {
             pendingReinstall = id
             return
@@ -217,10 +244,17 @@ final class AppStoreStore {
     func cancelReinstall() { pendingReinstall = nil }
 
     func update(_ id: String) async {
+        if isThemeRow(id) { return await installTheme(id) }
         await run(id, .update) { try await self.service.update(appID: id) }
     }
 
     func uninstall(_ id: String) {
+        if isThemeRow(id) {
+            do { try service.uninstallTheme(id: id) } catch {
+                themeFailure = ThemeFailure(name: themeName(id), text: Self.themeFailureText(error))
+            }
+            return reloadRows()
+        }
         do { try service.uninstall(appID: id) } catch let e as AppStoreError { error = e } catch {
             self.error = .notInstalled(id)
         }
@@ -229,6 +263,42 @@ final class AppStoreStore {
 
     func setEnabled(_ enabled: Bool, for id: String) {
         registry.setEnabled(enabled, for: id)
+        reloadRows()
+    }
+
+    // MARK: Themes (E4.4)
+
+    /// Makes an installed theme or colour scheme the one in use, through
+    /// `ThemeManager` like Settings does.
+    func apply(_ id: String) {
+        guard let themeManager, let row = themeRows.first(where: { $0.id == id }) else { return }
+        if row.kind == .theme {
+            themeManager.setTheme(id)
+        } else if let appearance = ThemeAppearance.allCases.first(where: { appearance in
+            themeManager.colorSchemes(for: appearance).contains { $0.id == id }
+        }) {
+            themeManager.setColorScheme(id, for: appearance)
+        }
+        reloadRows()
+    }
+
+    /// The store entry behind a Themes-tab row, for the detail page.
+    func themeEntry(for id: String) -> ThemeCatalogEntry? { service.themeCatalog.first { $0.id == id } }
+
+    private func isThemeRow(_ id: String) -> Bool { tab == .themes && themeRows.contains { $0.id == id } }
+
+    private func themeName(_ id: String) -> String { themeRows.first { $0.id == id }?.displayName ?? id }
+
+    /// Install or update (the installer replaces an installed copy). Live at
+    /// once through `ThemeManager.reloadCatalog()`, so never `needsRestart`.
+    private func installTheme(_ id: String) async {
+        guard let entry = themeEntry(for: id) else { return }
+        busy.insert(id)
+        themeFailure = nil
+        do { try await service.installTheme(entry) } catch {
+            themeFailure = ThemeFailure(name: entry.displayName, text: Self.themeFailureText(error))
+        }
+        busy.remove(id)
         reloadRows()
     }
 

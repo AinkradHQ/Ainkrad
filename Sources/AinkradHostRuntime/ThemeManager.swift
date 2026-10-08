@@ -92,6 +92,12 @@ public final class ThemeManager {
     /// Installed themes (design languages), sorted by name.
     public var themes: [(id: String, name: String)] { catalog.languages.map { ($0.id, $0.name) } }
 
+    /// The appearances installed theme `id` has a variant for, dark first.
+    public func appearances(ofTheme id: String) -> [ThemeAppearance] {
+        let found = Set(catalog.variants(of: id).values.compactMap { $0.hostSection?.language?.appearance })
+        return ThemeAppearance.allCases.filter(found.contains)
+    }
+
     /// The theme in use: the stored id, or Neon while that one is not installed.
     public var activeThemeID: String {
         catalog.loadedThemes[variantID]?.hostSection?.language?.id ?? currentThemeID
