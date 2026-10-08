@@ -24,6 +24,9 @@ public final class ThemeCatalog: @unchecked Sendable {
         var issues: [ThemeCatalogIssue] = []
     }
 
+    /// The theme-file format this host reads. A store entry with a higher `format` is hidden.
+    public static let supportedFormat = 1
+
     private let bundle: Bundle
     private let userRoots: [URL]
     private let lock = NSLock()

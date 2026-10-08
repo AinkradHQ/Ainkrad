@@ -39,4 +39,54 @@ struct CatalogServiceTests {
         let got = await svc.refresh()
         #expect(got.map(\.appID) == ["cached"])
     }
+
+    // MARK: - Themes (schema 2)
+
+    private let url = URL(string: "https://example.com/catalog.json")!
+
+    private func service(_ http: StubHTTPClient, _ store: InMemoryPersistenceStore) -> CatalogService {
+        CatalogService(source: RemoteCatalogSource(url: url, http: http), persistence: store)
+    }
+
+    @Test("refresh caches themes and hides entries with a newer format; apps unchanged")
+    func refreshCachesThemes() async {
+        let store = InMemoryPersistenceStore()
+        let svc = service(StubHTTPClient(responses: [url: .success(RemoteCatalogSourceTests.schema2Fixture)]), store)
+        let apps = await svc.refresh()
+        #expect(apps.map(\.appID) == ["gitmage"])
+        #expect(svc.themes.map(\.id) == ["glass"])
+        #expect(store.load(ThemeCatalogCacheDocument.self)?.entries.map(\.id) == ["glass", "future"])
+    }
+
+    @Test("with the network failing, the cached themes are returned")
+    func themesOfflineFallback() async {
+        let store = InMemoryPersistenceStore()
+        _ = await service(StubHTTPClient(responses: [url: .success(RemoteCatalogSourceTests.schema2Fixture)]), store)
+            .refresh()
+
+        let svc = service(StubHTTPClient(responses: [url: .failure(HTTPError.status(503))]), store)
+        let apps = await svc.refresh()
+        #expect(apps.map(\.appID) == ["gitmage"])
+        #expect(svc.themes.map(\.id) == ["glass"])
+    }
+
+    @Test("a v1 catalog lists no themes and clears a stale theme cache")
+    func v1CatalogHasNoThemes() async {
+        let store = InMemoryPersistenceStore()
+        _ = await service(StubHTTPClient(responses: [url: .success(RemoteCatalogSourceTests.schema2Fixture)]), store)
+            .refresh()
+
+        let v1 = #"{"schemaVersion":1,"apps":[]}"#.data(using: .utf8)!
+        let svc = service(StubHTTPClient(responses: [url: .success(v1)]), store)
+        _ = await svc.refresh()
+        #expect(svc.themes.isEmpty)
+    }
+
+    @Test("a source without themes (stub) lists none")
+    func stubSourceHasNoThemes() async {
+        let svc = CatalogService(
+            source: StubSource(result: .success([entry("a")])), persistence: InMemoryPersistenceStore())
+        _ = await svc.refresh()
+        #expect(svc.themes.isEmpty)
+    }
 }
