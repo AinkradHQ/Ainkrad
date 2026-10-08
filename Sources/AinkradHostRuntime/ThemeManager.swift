@@ -3,8 +3,9 @@ import AppKit
 import Observation
 import SwiftUI
 
-/// Holds the active theme, exposes its skin, and is the single place the
-/// theme is applied: update state and persist. See ADR-0006 Theming Approach.
+/// Holds the active theme (a design language) and colour scheme, composes
+/// their skin, and is the single place either is applied: update state and
+/// persist. See ADR-0006 Theming Approach.
 ///
 /// Also owns UI font scale/family and an optional custom accent color
 /// override (AIN-143 — Settings → Appearance → Typography). `hostSkin` folds
@@ -14,16 +15,23 @@ import SwiftUI
 @MainActor
 @Observable
 public final class ThemeManager {
-    public private(set) var currentTheme: Theme
+    /// The stored theme id. Kept even when it is not installed (it resolves
+    /// to Neon meanwhile), so a reinstalled store theme comes back.
+    public private(set) var currentThemeID: String
+    /// Light or dark. Fixed to `.dark` until the appearance setting lands (E1.6).
+    public let appearance: ThemeAppearance = .dark
     public private(set) var uiFontScale: UIFontScale
     public private(set) var uiFontFamily: UIFontFamily
     public private(set) var accentColorHex: String?
+    private var colorSchemeDark: String?
+    private var colorSchemeLight: String?
     private let persistence: PersistenceStore
+    @ObservationIgnored let catalog: ThemeCatalog
 
-    /// The current theme's skin (accent override is NOT applied to skin — R2).
-    /// This is what the root injects, so AppKit components never see the
-    /// custom accent; that quirk is kept for parity until the themes milestone.
-    public var skin: AinkradSkin { currentTheme.skin }
+    /// The composed skin of (theme, scheme, appearance); its `id` is the scheme
+    /// id. The accent override is NOT applied here (R2): this is what the root
+    /// injects, so AppKit components never see the custom accent.
+    public private(set) var skin: AinkradSkin
 
     /// `skin` with the custom accent (if any) as `palette.accentPrimary`. Host
     /// chrome reads its colours here, never from the environment's skin.
@@ -31,36 +39,111 @@ public final class ThemeManager {
     /// read this many times per body.
     public private(set) var hostSkin: AinkradSkin
 
+    /// Sky emphasis and Auto app-icon family of the composed skin.
+    public private(set) var skyProfile: SkyProfile
+    public private(set) var iconColorFamily: AppIconColor
+    /// `"<variant>|<scheme>"` — what the composed skin was built from.
+    public private(set) var composedKey: String
+    /// The resolved theme's own scheme for the current appearance.
+    public private(set) var defaultColorSchemeID: String
+    private var variantID: String
+
     /// Fired after a theme change is applied + persisted. Used by the app-icon
     /// store to re-apply the Dock icon when the color is Auto. Mirrors
     /// `WorkspaceManager.onStateChange`.
     public var onThemeChange: (() -> Void)?
 
-    public init(persistence: PersistenceStore) {
+    public init(persistence: PersistenceStore, catalog: ThemeCatalog = ThemeCatalog()) {
         self.persistence = persistence
+        self.catalog = catalog
         let settings = persistence.load(GlobalSettings.self) ?? GlobalSettings()
-        self.currentTheme = settings.theme
+        self.currentThemeID = settings.theme
+        self.colorSchemeDark = settings.colorSchemeDark
+        self.colorSchemeLight = settings.colorSchemeLight
         self.uiFontScale = settings.uiFontScale
         self.uiFontFamily = settings.uiFontFamily
         self.accentColorHex = settings.accentColorHex
-        self.hostSkin = Self.hostSkin(settings.theme, accentHex: settings.accentColorHex)
+        let resolved = Self.resolve(
+            catalog: catalog, themeID: settings.theme, appearance: .dark,
+            storedScheme: settings.colorSchemeDark)
+        self.skin = resolved.skin
+        self.hostSkin = Self.hostSkin(resolved.skin, accentHex: settings.accentColorHex)
+        self.skyProfile = resolved.host.skyProfile
+        self.iconColorFamily = resolved.host.iconColorFamily
+        self.composedKey = resolved.key
+        self.defaultColorSchemeID = resolved.defaultScheme
+        self.variantID = resolved.variantID
         AinkradFont.configure(scale: uiFontScale.multiplier, family: uiFontFamily)
+    }
+
+    /// The explicit scheme choice for one appearance; `nil` = the theme's default.
+    public func colorSchemeID(for appearance: ThemeAppearance) -> String? {
+        appearance == .dark ? colorSchemeDark : colorSchemeLight
+    }
+
+    /// Colour schemes for the current appearance, in picker order.
+    public var colorSchemes: [ThemeColorScheme] { Self.pickerOrdered(catalog.schemes(for: appearance)) }
+
+    /// The current theme variant coloured by `schemeID` (a preview swatch), or
+    /// nil when that scheme is not installed. Does not change the selection.
+    public func skin(forScheme schemeID: String) -> AinkradSkin? {
+        catalog.compose(themeVariant: variantID, scheme: schemeID)?.skin
+    }
+
+    /// Today's order of the seven bundled schemes, so the temporary combined
+    /// picker reads exactly as before. Other schemes follow by name.
+    // ponytail: fixed rank for the bundled seven; E0.5's picker decides the real order.
+    public static func pickerOrdered(_ schemes: [ThemeColorScheme]) -> [ThemeColorScheme] {
+        let bundled = ["neonBlue", "cyberPurple", "dracula", "nord", "tokyoNight", "gruvbox", "solarizedDark"]
+        func rank(_ id: String) -> Int { bundled.firstIndex(of: id) ?? bundled.count }
+        return schemes.sorted { (rank($0.id), $0.name) < (rank($1.id), $1.name) }
     }
 
     /// Selecting a theme adopts that theme's own accent — any custom accent
     /// override is cleared, so the accent always follows the theme on switch.
-    /// (A custom accent can be re-picked afterward; it sticks until the next
-    /// theme change.)
-    public func setTheme(_ theme: Theme) {
-        currentTheme = theme
-        accentColorHex = nil
-        hostSkin = Self.hostSkin(theme, accentHex: nil)
+    public func setTheme(_ id: String) {
+        currentThemeID = id
         persist {
-            $0.theme = theme
+            $0.theme = id
             $0.accentColorHex = nil
         }
+        applyChange()
+        Log.settings.info("Theme changed to \(id, privacy: .public)")
+    }
+
+    /// Selecting a colour scheme also adopts its accent (today's rule). `nil`
+    /// clears the choice back to the theme's default.
+    public func setColorScheme(_ id: String?, for appearance: ThemeAppearance) {
+        switch appearance {
+        case .dark: colorSchemeDark = id
+        case .light: colorSchemeLight = id
+        }
+        persist {
+            switch appearance {
+            case .dark: $0.colorSchemeDark = id
+            case .light: $0.colorSchemeLight = id
+            }
+            $0.accentColorHex = nil
+        }
+        applyChange()
+        Log.settings.info(
+            "Colour scheme (\(appearance.rawValue, privacy: .public)) changed to \(id ?? "default", privacy: .public)")
+    }
+
+    /// Recomposes after a theme or scheme change; the custom accent is cleared.
+    private func applyChange() {
+        let resolved = Self.resolve(
+            catalog: catalog, themeID: currentThemeID, appearance: appearance,
+            storedScheme: colorSchemeID(for: appearance))
+        accentColorHex = nil
+        skin = resolved.skin
+        hostSkin = Self.hostSkin(resolved.skin, accentHex: nil)
+        skyProfile = resolved.host.skyProfile
+        iconColorFamily = resolved.host.iconColorFamily
+        composedKey = resolved.key
+        defaultColorSchemeID = resolved.defaultScheme
+        variantID = resolved.variantID
         onThemeChange?()
-        Log.settings.info("Theme changed to \(theme.rawValue, privacy: .public)")
     }
 
     public func setFontScale(_ scale: UIFontScale) {
@@ -79,7 +162,7 @@ public final class ThemeManager {
     /// restores the current theme's own accent.
     public func setAccentColorHex(_ hex: String?) {
         accentColorHex = hex
-        hostSkin = Self.hostSkin(currentTheme, accentHex: hex)
+        hostSkin = Self.hostSkin(skin, accentHex: hex)
         persist { $0.accentColorHex = hex }
     }
 
@@ -89,14 +172,64 @@ public final class ThemeManager {
         setAccentColorHex(color.hexString)
     }
 
-    private static func hostSkin(_ theme: Theme, accentHex: String?) -> AinkradSkin {
-        var skin = theme.skin
+    private static func hostSkin(_ skin: AinkradSkin, accentHex: String?) -> AinkradSkin {
+        var skin = skin
         if let accentHex, let value = UInt32(accentHex.trimmingCharacters(in: ["#"]), radix: 16) {
             skin.palette.accentPrimary = .hex(
                 Double((value >> 16) & 0xFF) / 255, Double((value >> 8) & 0xFF) / 255,
                 Double(value & 0xFF) / 255, 1)
         }
         return skin
+    }
+
+    // MARK: - Resolution
+
+    private struct Resolved {
+        let variantID: String
+        let schemeID: String
+        let defaultScheme: String
+        let skin: AinkradSkin
+        let host: HostSkinSection
+        var key: String { "\(variantID)|\(schemeID)" }
+    }
+
+    /// The variant of `themeID` at `appearance` coloured by the stored scheme.
+    /// An unknown theme falls back to Neon and an unknown scheme to the
+    /// theme's default; both are logged and neither is written back.
+    private static func resolve(
+        catalog: ThemeCatalog, themeID: String, appearance: ThemeAppearance, storedScheme: String?
+    ) -> Resolved {
+        func variant(of id: String) -> (id: String, language: LanguageSection)? {
+            catalog.variants(of: id)
+                .compactMap { key, value in value.hostSection?.language.map { (key, $0) } }
+                .filter { $0.1.appearance == appearance }
+                .min { $0.0 < $1.0 }
+        }
+        var chosen = variant(of: themeID)
+        if chosen == nil {
+            Log.settings.error("Theme \(themeID, privacy: .public) is not installed; using Neon")
+            chosen = variant(of: "neon")
+        }
+        guard let chosen else {
+            Log.settings.error("Neon theme variant is missing; using the standard skin")
+            return Resolved(
+                variantID: "", schemeID: "", defaultScheme: "", skin: .standard,
+                host: HostSkinSection(skyProfile: .neutral, iconColorFamily: .blue))
+        }
+        var schemeID = storedScheme ?? chosen.language.defaultColorScheme
+        var file = catalog.compose(themeVariant: chosen.id, scheme: schemeID)
+        if file == nil {
+            Log.settings.error("Colour scheme \(schemeID, privacy: .public) is not installed; using the theme default")
+            schemeID = chosen.language.defaultColorScheme
+            file = catalog.compose(themeVariant: chosen.id, scheme: schemeID)
+        }
+        let skin = file?.skin ?? catalog.loadedThemes[chosen.id]?.themeFile.skin ?? .standard
+        let host =
+            file?.host.flatMap { try? JSONDecoder().decode(HostSkinSection.self, from: $0) }
+            ?? HostSkinSection(skyProfile: .neutral, iconColorFamily: .blue, language: chosen.language)
+        return Resolved(
+            variantID: chosen.id, schemeID: schemeID, defaultScheme: chosen.language.defaultColorScheme,
+            skin: skin, host: host)
     }
 
     private func persist(_ mutate: (inout GlobalSettings) -> Void) {

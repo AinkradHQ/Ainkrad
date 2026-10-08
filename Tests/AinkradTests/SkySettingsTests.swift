@@ -84,7 +84,7 @@ struct SkySettingsStoreTests {
     func masterAndSpeedPersist() {
         let persistence = InMemoryPersistenceStore()
         var existing = GlobalSettings()
-        existing.theme = .dracula
+        existing.colorSchemeDark = "dracula"
         persistence.save(existing)
 
         let store = SkySettingsStore(persistence: persistence)
@@ -94,7 +94,7 @@ struct SkySettingsStoreTests {
         let saved = persistence.load(GlobalSettings.self)
         #expect(saved?.skyMotionEnabled == false)
         #expect(saved?.skyMotionSpeed == 1.5)
-        #expect(saved?.theme == .dracula)  // preserved, not clobbered
+        #expect(saved?.colorSchemeDark == "dracula")  // preserved, not clobbered
 
         // A fresh store sees the persisted state.
         let reloaded = SkySettingsStore(persistence: persistence)

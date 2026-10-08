@@ -6,6 +6,7 @@ import Testing
 @testable import AinkradHostRuntime
 
 @Suite("OverlayChrome")
+@MainActor
 struct OverlayChromeTests {
     @Test("chrome corner radius derives from the shared panel radius")
     func cornerRadiusUsesScale() {
@@ -22,10 +23,10 @@ struct OverlayChromeTests {
     /// skin each bundled theme actually loads.
     @Test("the statics equal every bundled theme's skin")
     func staticsMatchEveryTheme() {
-        for theme in Theme.allCases {
-            let skin = ThemeCatalog.shared.themeFile(for: theme.rawValue).skin
-            #expect(CGFloat(skin.radius.panel) == OverlayChrome.cornerRadius, "\(theme.rawValue)")
-            #expect(skin.chrome.overlay.backdropOpacity == OverlayChrome.backdropOpacity, "\(theme.rawValue)")
+        for theme in neonSchemeIDs {
+            let skin = NeonSchemes.skin(theme)
+            #expect(CGFloat(skin.radius.panel) == OverlayChrome.cornerRadius, "\(theme)")
+            #expect(skin.chrome.overlay.backdropOpacity == OverlayChrome.backdropOpacity, "\(theme)")
         }
     }
 

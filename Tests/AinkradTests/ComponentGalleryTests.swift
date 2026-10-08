@@ -5,12 +5,13 @@ import Testing
 @testable import Ainkrad
 
 @Suite("Gallery theme injection")
+@MainActor
 struct ComponentGalleryTests {
-    @Test("every Theme maps to a HostThemeTokens the SDK can consume")
+    @Test("every gallery scheme maps to a HostThemeTokens the SDK can consume")
     func mapsAllThemes() {
-        for theme in Theme.allCases {
-            let t = HostThemeTokens(from: theme)  // existing bridge in HostServicesImpl
-            #expect(t.themeID == theme.rawValue)
+        for theme in neonSchemeIDs {
+            let t = HostThemeTokens(skin: ComponentGalleryView.skin(forScheme: theme))
+            #expect(t.themeID == theme)
         }
     }
 }

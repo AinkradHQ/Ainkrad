@@ -221,7 +221,8 @@ final class AppEnvironmentTests {
         let t = TestHome.make("appenv-boot")
         defer { t.cleanup() }
         let environment = AppEnvironment.bootstrap(home: t.home, defaults: t.defaults)
-        #expect(environment.themeManager.currentTheme == .neonBlue)
+        #expect(environment.themeManager.currentThemeID == "neon")
+        #expect(environment.themeManager.skin.id == "neonBlue")
         // Terminal is an App Store plugin, not built-in; Sage, Scry and
         // Hoard are the compiled-in built-ins the host registers itself
         // (M5 Phase B, M7 Slice 7, Hoard M1).

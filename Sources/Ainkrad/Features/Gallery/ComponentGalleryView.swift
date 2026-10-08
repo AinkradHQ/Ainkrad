@@ -5,14 +5,14 @@ import AinkradAppKit
 import AinkradHostRuntime
 
 /// DEBUG-only design-system showcase: every SDK scale + component, rendered
-/// across all 7 themes via a local theme switcher. Reachable from the
+/// across every Neon colour scheme via a local switcher. Reachable from the
 /// Launcher's "Component Gallery" system action (⌘K). Never compiled into a
 /// release build — see `AppEnvironment.isComponentGalleryPresented` and
 /// `LauncherView`'s `galleryRowID`.
 ///
 /// The theme switcher drives its OWN `@State`, applied only to this view's
 /// subtree via `.environment(\.ainkradTheme, …)` — switching it here never
-/// touches `ThemeManager.currentTheme`, so the app's real theme (and every
+/// touches `ThemeManager`, so the app's real theme and scheme (and every
 /// other surface) is unaffected.
 struct ComponentGalleryView: View {
     init(onDismiss: @escaping () -> Void = {}) {
@@ -22,9 +22,22 @@ struct ComponentGalleryView: View {
     let onDismiss: () -> Void
     @Environment(\.ainkradSkin) private var skin
 
-    @State var galleryTheme: Theme = {
-        parseDebugGalleryThemeArgument() ?? .neonBlue
+    /// A colour-scheme id, shown under Neon.
+    @State var galleryTheme: String = {
+        parseDebugGalleryThemeArgument(knownSchemeIDs: Set(galleryCatalog.schemes(for: .dark).map(\.id))) ?? "neonBlue"
     }()
+
+    /// The gallery's own catalog (bundle only): its sections also render
+    /// outside the app (parity goldens), where there is no `ThemeManager`.
+    static let galleryCatalog = ThemeCatalog()
+
+    /// `schemeID` composed under Neon; an unknown id shows Neon Blue.
+    static func skin(forScheme schemeID: String) -> AinkradSkin {
+        (galleryCatalog.compose(themeVariant: "neon.dark", scheme: schemeID)
+            ?? galleryCatalog.compose(themeVariant: "neon.dark", scheme: "neonBlue"))?.skin ?? .standard
+    }
+
+    var gallerySkin: AinkradSkin { Self.skin(forScheme: galleryTheme) }
     /// Drives the live Basic Shell sample — the Gallery is not a host pane, so
     /// it seeds the pane-mode environment itself.
     @State var galleryPaneMode: PluginMode = .basic
@@ -78,12 +91,13 @@ struct ComponentGalleryView: View {
     @State var wave5SheetPresented = false
     @State var wave5DrawerPresented = false
 
-    var galleryTokens: HostThemeTokens { HostThemeTokens(from: galleryTheme) }
+    var galleryTokens: HostThemeTokens { HostThemeTokens(skin: gallerySkin) }
     var galleryStatusColors: AinkradStatusColors {
-        AinkradStatusColors(
-            success: galleryTheme.skin.color(\.success),
-            warning: galleryTheme.skin.color(\.warning),
-            danger: galleryTheme.skin.color(\.danger)
+        let skin = gallerySkin
+        return AinkradStatusColors(
+            success: skin.color(\.success),
+            warning: skin.color(\.warning),
+            danger: skin.color(\.danger)
         )
     }
     var galleryTypography: AinkradTypography { .default }
@@ -205,9 +219,12 @@ struct ComponentGalleryView: View {
     }
 
     private var themeSwitcher: some View {
-        AinkradSegmentedPicker(items: Theme.allCases, selection: $galleryTheme) { $0.displayName }
-            .padding(.horizontal, AinkradSpacing.lg)
-            .padding(.bottom, AinkradSpacing.sm)
+        let schemes = ThemeManager.pickerOrdered(Self.galleryCatalog.schemes(for: .dark))
+        return AinkradSegmentedPicker(items: schemes.map(\.id), selection: $galleryTheme) { id in
+            schemes.first { $0.id == id }?.name ?? id
+        }
+        .padding(.horizontal, AinkradSpacing.lg)
+        .padding(.bottom, AinkradSpacing.sm)
     }
 }
 #endif

@@ -26,7 +26,7 @@ struct ThemeCatalogTests {
             """,
             "broken.theme": "{ not json",
             "orphan.theme": #"{"schemaVersion": 1, "id": "orphan", "base": "nope"}"#,
-            "nord-copy.theme": #"{"schemaVersion": 1, "id": "nord", "base": "neonBlue"}"#,
+            "neon-copy.theme": #"{"schemaVersion": 1, "id": "neonBlue", "name": "Fake", "base": "neonBlue"}"#,
             "shapey.scheme": #"{"id": "shapey", "appearance": "dark", "shape": {"style": "rounded"}}"#,
             ".hidden.theme": "{ hidden files are skipped",
         ]
@@ -36,13 +36,13 @@ struct ThemeCatalogTests {
         return root
     }
 
-    @Test("the bundle loads today's seven themes plus the Neon variant, with no issues")
+    @Test("the bundle loads the base skin, the Neon variant and seven schemes, with no issues")
     func bundleLoadsUnchanged() {
         let catalog = ThemeCatalog(bundle: .main)
         #expect(catalog.issues.isEmpty, "\(catalog.issues)")
-        #expect(Set(catalog.loadedThemes.keys) == Set(Theme.allCases.map(\.rawValue)).union(["neon.dark"]))
+        #expect(Set(catalog.loadedThemes.keys) == ["neonBlue", "neon.dark"])
         #expect(catalog.languages.map(\.id) == ["neon"])
-        #expect(catalog.schemes(for: .dark).count == 7)
+        #expect(Set(catalog.schemes(for: .dark).map(\.id)) == Set(neonSchemeIDs))
     }
 
     @Test("broken, unknown-base, shadowing and language-keyed files become issues, not traps")
@@ -51,10 +51,10 @@ struct ThemeCatalogTests {
         #expect(catalog.issues.count == 4, "\(catalog.issues)")
         #expect(catalog.issues.contains { $0.subject == "broken.theme" })
         #expect(catalog.issues.contains { $0.subject == "theme orphan" })
-        #expect(catalog.issues.contains { $0.subject == "nord-copy.theme" })
+        #expect(catalog.issues.contains { $0.subject == "neon-copy.theme" })
         #expect(catalog.issues.contains { $0.message == "key shape is not allowed in a colour scheme" })
-        // The shadowing file did not replace the bundled Nord.
-        #expect(catalog.themeFile(for: "nord").skin.name == "Nord")
+        // The shadowing file did not replace the bundled base skin.
+        #expect(catalog.loadedThemes["neonBlue"]?.themeFile.skin.name != "Fake")
     }
 
     @Test("a variant and a scheme compose into the scheme's id with merged host keys")

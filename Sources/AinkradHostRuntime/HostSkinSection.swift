@@ -61,7 +61,7 @@ struct HostSkinSection: Equatable, Codable, Sendable {
 }
 
 /// Light or dark: which system appearance a theme variant or colour scheme is for.
-enum ThemeAppearance: String, Codable, Sendable, CaseIterable {
+public enum ThemeAppearance: String, Codable, Sendable, CaseIterable {
     case dark
     case light
 }

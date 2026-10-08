@@ -85,13 +85,8 @@ public enum GalleryParityRenderer {
 struct GalleryParityTests {
     @Test("renders all gallery section goldens accurately", arguments: gallerySections, galleryThemeNames)
     func testGallerySectionParity(section: String, themeName: String) throws {
-        guard let theme = Theme(rawValue: themeName) else {
-            Issue.record("Unknown theme name \(themeName)")
-            return
-        }
-
         let galleryView = ComponentGalleryView()
-        let sectionView = galleryView.gallerySectionView(named: section, theme: theme)
+        let sectionView = galleryView.gallerySectionView(named: section, theme: themeName)
             .padding(20)
 
         guard let rep = GalleryParityRenderer.render(sectionView, width: 1280) else {

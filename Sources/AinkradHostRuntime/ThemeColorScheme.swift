@@ -4,10 +4,10 @@ import Foundation
 /// (`palette`, `terminal`, `syntax` and the sky/icon `host` keys). Language
 /// keys (shape, material, motion, …) are not allowed in a scheme.
 /// Named `ThemeColorScheme` so it never collides with SwiftUI's `ColorScheme`.
-struct ThemeColorScheme: Sendable {
-    let id: String
-    let name: String
-    let appearance: ThemeAppearance
+public struct ThemeColorScheme: Sendable {
+    public let id: String
+    public let name: String
+    public let appearance: ThemeAppearance
     /// The file's top-level JSON object, kept as data so composition can
     /// rebuild it without a second disk read.
     let raw: Data

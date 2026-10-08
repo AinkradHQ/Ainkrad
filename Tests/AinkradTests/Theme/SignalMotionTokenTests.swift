@@ -9,9 +9,10 @@ import Testing
 /// theme must carry the keys and today's values — or the dropdown's card-stack
 /// expand, the glance row's expand and the bell's hover silently change feel.
 @Suite("Signal motion tokens")
+@MainActor
 struct SignalMotionTokenTests {
     private var skins: [AinkradSkin] {
-        Theme.allCases.map { ThemeCatalog.shared.themeFile(for: $0.rawValue).skin }
+        neonSchemeIDs.map { NeonSchemes.skin($0) }
     }
 
     @Test func groupAndRowExpandSpringsKeepTheirFeel() {
