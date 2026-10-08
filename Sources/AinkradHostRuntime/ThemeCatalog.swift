@@ -71,6 +71,23 @@ public final class ThemeCatalog: @unchecked Sendable {
         loadedThemes.filter { $0.value.hostSection?.language?.id == languageID }
     }
 
+    /// Installed themes (design languages), sorted by name.
+    public var themes: [(id: String, name: String)] { languages.map { ($0.id, $0.name) } }
+
+    /// The appearances theme `id` has a variant for, dark first.
+    public func appearances(ofTheme id: String) -> [ThemeAppearance] {
+        let found = Set(variants(of: id).values.compactMap { $0.hostSection?.language?.appearance })
+        return ThemeAppearance.allCases.filter(found.contains)
+    }
+
+    /// The variant file of theme `id` at `appearance`.
+    func variant(of id: String, at appearance: ThemeAppearance) -> (id: String, language: LanguageSection)? {
+        variants(of: id)
+            .compactMap { key, value in value.hostSection?.language.map { (key, $0) } }
+            .filter { $0.1.appearance == appearance }
+            .min { $0.0 < $1.0 }
+    }
+
     /// Colour schemes for one appearance, sorted by name.
     public func schemes(for appearance: ThemeAppearance) -> [ThemeColorScheme] {
         lock.withLock { snapshot.schemes.values }
@@ -91,6 +108,16 @@ public final class ThemeCatalog: @unchecked Sendable {
         guard let file = try? Self.compose(variantID: variantID, variant: variant, scheme: scheme) else { return nil }
         lock.withLock { composed[key] = file }
         return file
+    }
+
+    /// Theme `id` at `appearance` coloured by `scheme`, or by that variant's own
+    /// default when `scheme` is nil or does not compose. Nil when the theme has
+    /// no variant at `appearance`.
+    @MainActor
+    public func compose(theme id: String, appearance: ThemeAppearance, scheme: String?) -> AinkradThemeFile? {
+        guard let variant = variant(of: id, at: appearance) else { return nil }
+        return scheme.flatMap { compose(themeVariant: variant.id, scheme: $0) }
+            ?? compose(themeVariant: variant.id, scheme: variant.language.defaultColorScheme)
     }
 
     // MARK: - Loading

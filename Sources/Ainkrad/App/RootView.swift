@@ -114,7 +114,7 @@ struct RootView: View {
 
             #if DEBUG
             if environment.isComponentGalleryPresented {
-                ComponentGalleryView {
+                ComponentGalleryView(catalog: environment.themeManager.catalog) {
                     environment.isComponentGalleryPresented = false
                 }
                 .transition(.opacity)
