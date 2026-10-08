@@ -171,7 +171,7 @@ struct AppStoreDetailView: View {
             case .success(let image):
                 image.resizable().aspectRatio(contentMode: .fill)
             case .failure:
-                screenshotBox(systemImage: "exclamationmark.triangle", tint: tokens.color(\.accentTertiary))
+                screenshotBox(systemImage: "exclamationmark.triangle", tint: tokens.color(\.warning))
             default:
                 screenshotBox(systemImage: nil, tint: tokens.color(\.foreground))
             }
