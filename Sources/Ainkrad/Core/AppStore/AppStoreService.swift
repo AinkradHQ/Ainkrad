@@ -13,7 +13,7 @@ final class AppStoreService: AppStoreServing {
     // A `.skill` install/uninstall with no installer configured fails gracefully
     // via `AppStoreError` rather than crashing.
     private let skillInstaller: SkillInstaller?
-    /// Store themes and colour schemes (the store UI, E4.4, calls it directly).
+    /// Store themes and colour schemes.
     let themeInstaller: ThemeInstaller?
     private let persistence: PersistenceStore
 
@@ -108,6 +108,22 @@ final class AppStoreService: AppStoreServing {
             guard let cur = installed[entry.appID] else { return false }
             return PluginVersion.isNewer(entry.version, than: cur.version)
         }
+    }
+
+    var themeCatalog: [ThemeCatalogEntry] { catalog.themes }
+
+    func installedThemes() -> [String: InstalledThemesDocument.Entry] {
+        persistence.load(InstalledThemesDocument.self)?.installed ?? [:]
+    }
+
+    func installTheme(_ entry: ThemeCatalogEntry) async throws {
+        guard let themeInstaller else { throw AppStoreError.invalidBundle("theme installer unavailable") }
+        try await themeInstaller.install(entry)
+    }
+
+    func uninstallTheme(id: String) throws {
+        guard let themeInstaller else { throw AppStoreError.invalidBundle("theme installer unavailable") }
+        try themeInstaller.uninstall(id: id)
     }
 
     func hasRetainedData(appID: String) -> Bool { installer.hasRetainedData(appID: appID) }

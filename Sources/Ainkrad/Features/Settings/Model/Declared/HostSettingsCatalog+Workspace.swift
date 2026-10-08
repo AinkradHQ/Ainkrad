@@ -89,6 +89,13 @@ extension HostSettingsCatalog {
         if manager.defaultColorSchemeID(for: .light) != nil {
             fields.append(colorSchemeField(manager, .light, group: group))
         }
+        // A fresh install has only Neon; every other theme comes from the store.
+        fields.append(
+            SettingsField(
+                path: group.appending("more-themes"), label: "More themes",
+                help: "Themes and colour schemes from the App Store. Installed ones show up here at once.",
+                keywords: ["theme", "store", "app store", "download", "install", "colour scheme", "more"],
+                kind: .action(title: "More themes…") { environment.presentThemeStore() }))
         let filesField = SettingsField(
             path: group.appending("files"), label: "Theme files",
             help: "Themes and colour schemes are loaded from the app and from your Home's Config/Themes folder.",

@@ -195,7 +195,7 @@ extension AppEnvironment {
             catalog: catalogService, installer: installer,
             mcpInstaller: mcpInstaller, persistence: persistence,
             skillInstaller: skillInstaller, themeInstaller: themeInstaller)
-        let appStoreStore = AppStoreStore(service: appStore, registry: registry)
+        let appStoreStore = AppStoreStore(service: appStore, registry: registry, themeManager: themeManager)
 
         let appIconStore = AppIconStore(
             persistence: persistence,

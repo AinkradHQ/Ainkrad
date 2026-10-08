@@ -84,8 +84,9 @@ struct AppStoreOverlayView: View {
     private func panel(tokens: AinkradSkin) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             if let row = store.selectedRow {
+                themeFailureBanner(tokens: tokens).padding(.top, skin.size.s14)
                 AppStoreDetailView(
-                    entry: store.entry(for: row.id), row: row, tokens: tokens, isBusy: store.busy.contains(row.id),
+                    entry: row.kind.isTheme ? nil : store.entry(for: row.id), row: row, tokens: tokens, isBusy: store.busy.contains(row.id),
                     onBack: { store.closeDetail() },
                     onInstall: {
                         environment.sounds.play(.install)
@@ -103,10 +104,13 @@ struct AppStoreOverlayView: View {
                     onOpenScreenshot: { urls, index in
                         environment.sounds.play(.overlayOpen)
                         store.openLightbox(urls, at: index)
-                    })
+                    },
+                    themeEntry: row.kind.isTheme ? store.themeEntry(for: row.id) : nil,
+                    onApply: { store.apply(row.id) })
             } else {
                 header(tokens: tokens)
                 filterBar(tokens: tokens)
+                themeFailureBanner(tokens: tokens)
                 trustPostureBanner(tokens: tokens)
                 loadFailureBanner(tokens: tokens)
                 content(tokens: tokens)
@@ -210,6 +214,10 @@ struct AppStoreOverlayView: View {
             Text("APP STORE").font(AinkradFont.display(14, weight: .semibold)).kerning(1)
                 .foregroundStyle(tokens.color(\.foreground))
             Spacer()
+            AinkradSegmentedPicker(items: AppStoreStore.Tab.allCases, selection: $store.tab) { tab in
+                tab == .apps ? "Apps" : "Themes"
+            }
+            Spacer()
             // Refresh morphs to a spinner in place while refreshing — both
             // views stay mounted, only `.opacity` toggles. Local because the
             // kit icon button has no loading state.
@@ -229,12 +237,13 @@ struct AppStoreOverlayView: View {
     }
 
     private func filterBar(tokens: AinkradSkin) -> some View {
-        let updateCount = store.rows.filter { $0.status == .updateAvailable }.count
+        let updateCount = store.currentRows.filter { $0.status == .updateAvailable }.count
         return HStack(spacing: skin.spacing.sm) {
             AinkradSegmentedPicker(items: AppStoreStore.Filter.allCases, selection: $store.filter) { filter in
                 filterLabel(filter, updateCount: updateCount)
             }
-            AinkradSearchField(text: $store.searchQuery, placeholder: "Search apps…")
+            AinkradSearchField(
+                text: $store.searchQuery, placeholder: store.tab == .apps ? "Search apps…" : "Search themes…")
                 .frame(width: skin.size.s220)
             Spacer()
             if let error = store.error {
@@ -281,6 +290,33 @@ struct AppStoreOverlayView: View {
             }
             .foregroundStyle(tokens.color(\.accentSecondary))
             .banner(tint: tokens.color(\.accentSecondary), fill: skin.opacity.o10, stroke: skin.opacity.o35, skin: skin)
+        }
+    }
+
+    /// A refused theme install: the installer's problem lines (a bad checksum,
+    /// an id mismatch, a key the host does not know), which the one-line
+    /// `AppStoreError.message` would flatten to "Invalid app bundle.".
+    @ViewBuilder private func themeFailureBanner(tokens: AinkradSkin) -> some View {
+        if let failure = store.themeFailure {
+            HStack(alignment: .top, spacing: skin.size.s6) {
+                VStack(alignment: .leading, spacing: skin.spacing.xs) {
+                    HStack(spacing: skin.size.s6) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false)))
+                        Text("\(failure.name) couldn’t be installed")
+                            .font(AinkradFont.display(12, weight: .semibold))
+                    }
+                    .foregroundStyle(tokens.color(\.accentTertiary))
+                    Text(failure.text)
+                        .font(skin.font(AinkradFontToken(sizeKey: "t11", scaled: false)))
+                        .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o75))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .textSelection(.enabled)
+                }
+                Spacer(minLength: 0)
+                AinkradIconButton(systemName: "xmark.circle", tooltip: "Dismiss") { store.themeFailure = nil }
+            }
+            .banner(tint: tokens.color(\.accentTertiary), fill: skin.opacity.o12, stroke: skin.opacity.o45, skin: skin)
         }
     }
 
@@ -341,12 +377,25 @@ struct AppStoreOverlayView: View {
                             onToggleEnabled: {
                                 environment.sounds.play(.toggle)
                                 store.setEnabled($0, for: row.id)
-                            })
+                            },
+                            onApply: { store.apply(row.id) })
                     }
                 }
                 .padding(skin.size.s18)
             }
         }
+    }
+}
+
+extension AppEnvironment {
+    /// Opens the App Store on the Themes tab — Settings → Appearance's "More
+    /// themes…" row and the Setup appearance step's hint. A fresh install has
+    /// only Neon, so these are how anyone finds another theme.
+    func presentThemeStore() {
+        appStoreStore.tab = .themes
+        appStoreStore.closeDetail()
+        isSettingsPresented = false
+        isAppStorePresented = true
     }
 }
 
