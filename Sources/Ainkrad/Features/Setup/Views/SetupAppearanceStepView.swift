@@ -82,9 +82,12 @@ struct SetupAppearanceStepView: View {
                         index: 1,
                         title: "Theme",
                         hint: "The whole workspace re-tints — window, islands, and the sky "
-                            + "behind this screen."
+                            + "behind this screen. Pick a theme, then its colours."
                     ) {
-                        themeGrid(tokens: tokens)
+                        VStack(alignment: .leading, spacing: skin.size.s14) {
+                            themeRow(tokens: tokens)
+                            themeGrid(tokens: tokens)
+                        }
                     }
                     group(
                         index: 2,
@@ -158,25 +161,45 @@ struct SetupAppearanceStepView: View {
 
     // MARK: - Theme
 
-    private func themeGrid(tokens: AinkradSkin) -> some View {
-        let columns = [GridItem(.adaptive(minimum: skin.size.s200, maximum: skin.size.s260), spacing: skin.size.s10)]
-        return LazyVGrid(columns: columns, spacing: skin.size.s10) {
-            ForEach(environment.themeManager.colorSchemes, id: \.id) { scheme in
-                themeCard(scheme, tokens: tokens)
+    private var choiceColumns: [GridItem] {
+        [GridItem(.adaptive(minimum: skin.size.s200, maximum: skin.size.s260), spacing: skin.size.s10)]
+    }
+
+    /// One card per installed theme (design language).
+    // ponytail: every theme card shows the current skin's accents; a per-theme preview is E5.6.
+    private func themeRow(tokens: AinkradSkin) -> some View {
+        let manager = environment.themeManager
+        return LazyVGrid(columns: choiceColumns, spacing: skin.size.s10) {
+            ForEach(manager.themes, id: \.id) { theme in
+                choiceCard(
+                    theme.name, isSelected: manager.activeThemeID == theme.id, swatch: manager.skin,
+                    tokens: tokens, onTap: { manager.setTheme(theme.id) })
             }
         }
     }
 
-    /// A kit list row per colour scheme: its two accents as the leading swatch,
-    /// and a tick that reads as the current choice.
-    private func themeCard(_ scheme: ThemeColorScheme, tokens: AinkradSkin) -> some View {
+    /// One card per colour scheme of the current appearance.
+    private func themeGrid(tokens: AinkradSkin) -> some View {
         let manager = environment.themeManager
-        let isSelected = manager.skin.id == scheme.id
-        let themeSkin = manager.skin(forScheme: scheme.id) ?? manager.skin
+        return LazyVGrid(columns: choiceColumns, spacing: skin.size.s10) {
+            ForEach(manager.colorSchemes, id: \.id) { scheme in
+                choiceCard(
+                    scheme.name, isSelected: manager.skin.id == scheme.id,
+                    swatch: manager.skin(forScheme: scheme.id) ?? manager.skin, tokens: tokens,
+                    onTap: { manager.setColorScheme(scheme.id, for: manager.appearance) })
+            }
+        }
+    }
 
-        return AinkradListRow(
+    /// A kit list row: the swatch skin's two accents as the leading chip, and
+    /// a tick that reads as the current choice.
+    private func choiceCard(
+        _ title: String, isSelected: Bool, swatch themeSkin: AinkradSkin, tokens: AinkradSkin,
+        onTap: @escaping () -> Void
+    ) -> some View {
+        AinkradListRow(
             isSelected: isSelected,
-            onTap: { manager.setColorScheme(scheme.id, for: manager.appearance) },
+            onTap: onTap,
             leading: {
                 ChamferShape(cut: skin.cut.c7)
                     .fill(
@@ -192,7 +215,7 @@ struct SetupAppearanceStepView: View {
                             .strokeBorder(skin.color(.palette("white", skin.opacity.o18)), lineWidth: 1)
                     )
             },
-            title: scheme.name,
+            title: title,
             trailing: {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(skin.font(AinkradFontToken(sizeKey: "t13", scaled: false)))

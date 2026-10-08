@@ -82,7 +82,29 @@ public final class ThemeManager {
     }
 
     /// Colour schemes for the current appearance, in picker order.
-    public var colorSchemes: [ThemeColorScheme] { Self.pickerOrdered(catalog.schemes(for: appearance)) }
+    public var colorSchemes: [ThemeColorScheme] { colorSchemes(for: appearance) }
+
+    /// Colour schemes for `appearance`, in picker order.
+    public func colorSchemes(for appearance: ThemeAppearance) -> [ThemeColorScheme] {
+        Self.pickerOrdered(catalog.schemes(for: appearance))
+    }
+
+    /// Installed themes (design languages), sorted by name.
+    public var themes: [(id: String, name: String)] { catalog.languages.map { ($0.id, $0.name) } }
+
+    /// The theme in use: the stored id, or Neon while that one is not installed.
+    public var activeThemeID: String {
+        catalog.loadedThemes[variantID]?.hostSection?.language?.id ?? currentThemeID
+    }
+
+    /// The active theme's own scheme at `appearance`; nil when the theme has
+    /// no variant at that appearance (Neon has no light one).
+    public func defaultColorSchemeID(for appearance: ThemeAppearance) -> String? {
+        Self.variant(catalog, of: activeThemeID, at: appearance)?.language.defaultColorScheme
+    }
+
+    /// Theme and colour-scheme files that could not load, one line each.
+    public var catalogIssues: [String] { catalog.issues.map(\.description) }
 
     /// The current theme variant coloured by `schemeID` (a preview swatch), or
     /// nil when that scheme is not installed. Does not change the selection.
@@ -90,9 +112,9 @@ public final class ThemeManager {
         catalog.compose(themeVariant: variantID, scheme: schemeID)?.skin
     }
 
-    /// Today's order of the seven bundled schemes, so the temporary combined
-    /// picker reads exactly as before. Other schemes follow by name.
-    // ponytail: fixed rank for the bundled seven; E0.5's picker decides the real order.
+    /// Today's order of the seven bundled schemes, so the scheme pickers read
+    /// as before. Other schemes follow by name.
+    // ponytail: fixed rank for the bundled seven; a scheme file could carry its own order if that matters.
     public static func pickerOrdered(_ schemes: [ThemeColorScheme]) -> [ThemeColorScheme] {
         let bundled = ["neonBlue", "cyberPurple", "dracula", "nord", "tokyoNight", "gruvbox", "solarizedDark"]
         func rank(_ id: String) -> Int { bundled.firstIndex(of: id) ?? bundled.count }
@@ -101,10 +123,31 @@ public final class ThemeManager {
 
     /// Selecting a theme adopts that theme's own accent — any custom accent
     /// override is cleared, so the accent always follows the theme on switch.
+    /// An explicit colour scheme is kept per appearance while it is still
+    /// installed (otherwise the theme's default applies), and the theme's
+    /// typeface is adopted (R9) — the user can pick another afterwards.
     public func setTheme(_ id: String) {
+        // Re-picking the current theme must not reset the user's accent or typeface.
+        guard id != currentThemeID else { return }
         currentThemeID = id
+        func kept(_ scheme: String?, _ appearance: ThemeAppearance) -> String? {
+            scheme.flatMap { scheme in catalog.schemes(for: appearance).contains { $0.id == scheme } ? scheme : nil }
+        }
+        colorSchemeDark = kept(colorSchemeDark, .dark)
+        colorSchemeLight = kept(colorSchemeLight, .light)
+        if let font = catalog.languages.first(where: { $0.id == id })?.fontFamily {
+            if let family = UIFontFamily(rawValue: font) {
+                uiFontFamily = family
+                AinkradFont.configure(scale: uiFontScale.multiplier, family: family)
+            } else {
+                Log.settings.error("Theme \(id, privacy: .public) names unknown font family \(font, privacy: .public)")
+            }
+        }
         persist {
             $0.theme = id
+            $0.colorSchemeDark = colorSchemeDark
+            $0.colorSchemeLight = colorSchemeLight
+            $0.uiFontFamily = uiFontFamily
             $0.accentColorHex = nil
         }
         applyChange()
@@ -199,16 +242,10 @@ public final class ThemeManager {
     private static func resolve(
         catalog: ThemeCatalog, themeID: String, appearance: ThemeAppearance, storedScheme: String?
     ) -> Resolved {
-        func variant(of id: String) -> (id: String, language: LanguageSection)? {
-            catalog.variants(of: id)
-                .compactMap { key, value in value.hostSection?.language.map { (key, $0) } }
-                .filter { $0.1.appearance == appearance }
-                .min { $0.0 < $1.0 }
-        }
-        var chosen = variant(of: themeID)
+        var chosen = variant(catalog, of: themeID, at: appearance)
         if chosen == nil {
             Log.settings.error("Theme \(themeID, privacy: .public) is not installed; using Neon")
-            chosen = variant(of: "neon")
+            chosen = variant(catalog, of: "neon", at: appearance)
         }
         guard let chosen else {
             Log.settings.error("Neon theme variant is missing; using the standard skin")
@@ -230,6 +267,16 @@ public final class ThemeManager {
         return Resolved(
             variantID: chosen.id, schemeID: schemeID, defaultScheme: chosen.language.defaultColorScheme,
             skin: skin, host: host)
+    }
+
+    /// The variant file of theme `id` at `appearance`.
+    private static func variant(
+        _ catalog: ThemeCatalog, of id: String, at appearance: ThemeAppearance
+    ) -> (id: String, language: LanguageSection)? {
+        catalog.variants(of: id)
+            .compactMap { key, value in value.hostSection?.language.map { (key, $0) } }
+            .filter { $0.1.appearance == appearance }
+            .min { $0.0 < $1.0 }
     }
 
     private func persist(_ mutate: (inout GlobalSettings) -> Void) {

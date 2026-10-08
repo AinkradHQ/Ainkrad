@@ -143,10 +143,8 @@ final class ThemeManagerTests {
         #expect(manager.accentColorHex == nil)
         #expect(manager.hostSkin.color(\.accentPrimary).hexString == LegacyPalettes.table["gruvbox"]?[3])
 
-        // A theme change clears it too.
-        manager.setAccentColorHex("FF00AA")
-        manager.setTheme("neon")
-        #expect(manager.accentColorHex == nil)
+        // A change to another theme clears it too: `setThemeAdoptsFontFamily`
+        // (the bundle has only Neon, and re-picking it is a no-op).
 
         // And it's cleared in persistence too.
         let reloaded = makeManager()
@@ -174,5 +172,93 @@ final class ThemeManagerTests {
         let reloaded = ThemeManager(persistence: store)
         #expect(reloaded.uiFontScale == .large)
         #expect(reloaded.uiFontFamily == .jetBrainsMono)
+    }
+
+    // MARK: - E0.5: switching theme
+
+    @MainActor
+    private func fixtureManager() -> ThemeManager {
+        ThemeManager(
+            persistence: store,
+            catalog: ThemeCatalog(bundle: .main, userRoots: [ThemeFixtures.tempDir(ThemeFixtures.lightVariant)]))
+    }
+
+    @Test("setTheme keeps an explicit scheme that is still installed and drops one that is not")
+    @MainActor
+    func setThemeKeepsInstalledSchemes() {
+        defer { AinkradFont.configure(scale: 1, family: .exo2) }
+        let manager = fixtureManager()
+        manager.setColorScheme("gruvbox", for: .dark)
+        manager.setColorScheme("paper", for: .light)
+        manager.setTheme("glassy")
+        #expect(manager.colorSchemeID(for: .dark) == "gruvbox")
+        #expect(manager.colorSchemeID(for: .light) == "paper")
+        #expect(manager.skin.id == "gruvbox")
+
+        store.save(GlobalSettings(theme: "neon", colorSchemeDark: "uninstalled", colorSchemeLight: "gone"))
+        let stale = fixtureManager()
+        stale.setTheme("glassy")
+        #expect(stale.colorSchemeID(for: .dark) == nil)
+        #expect(stale.colorSchemeID(for: .light) == nil)
+        #expect(stale.skin.id == "nord")  // glassy's own dark default
+        let saved = store.load(GlobalSettings.self)
+        #expect(saved?.colorSchemeDark == nil)
+        #expect(saved?.colorSchemeLight == nil)
+    }
+
+    @Test("setTheme adopts the theme's font family and resets the accent (R9)")
+    @MainActor
+    func setThemeAdoptsFontFamily() {
+        defer { AinkradFont.configure(scale: 1, family: .exo2) }
+        let manager = fixtureManager()
+        manager.setFontFamily(.jetBrainsMono)
+        manager.setAccentColorHex("FF00AA")
+        manager.setTheme("glassy")
+        #expect(manager.uiFontFamily == .system)
+        #expect(manager.accentColorHex == nil)
+        #expect(store.load(GlobalSettings.self)?.uiFontFamily == .system)
+
+        manager.setTheme("neon")
+        #expect(manager.uiFontFamily == .exo2)
+
+        // An unknown family is logged and the current one kept.
+        manager.setFontFamily(.jetBrainsMono)
+        manager.setTheme("odd")
+        #expect(manager.uiFontFamily == .jetBrainsMono)
+        // An uninstalled theme has no family to adopt.
+        manager.setTheme("missing")
+        #expect(manager.uiFontFamily == .jetBrainsMono)
+    }
+
+    @Test("re-picking the current theme keeps the user's typeface and accent")
+    @MainActor
+    func samethemeIsANoOp() {
+        defer { AinkradFont.configure(scale: 1, family: .exo2) }
+        let manager = fixtureManager()
+        manager.setFontFamily(.jetBrainsMono)
+        manager.setAccentColorHex("FF00AA")
+        manager.setTheme(manager.currentThemeID)
+        #expect(manager.uiFontFamily == .jetBrainsMono)
+        #expect(manager.accentColorHex == "FF00AA")
+    }
+
+    @Test("themes, the active theme and per-appearance defaults come from the catalog")
+    @MainActor
+    func themeListAndDefaults() {
+        let manager = fixtureManager()
+        #expect(manager.themes.map(\.id) == ["glassy", "neon", "odd"])
+        #expect(manager.activeThemeID == "neon")
+        #expect(manager.defaultColorSchemeID(for: .dark) == "neonBlue")
+        #expect(manager.defaultColorSchemeID(for: .light) == nil)
+        #expect(manager.colorSchemes(for: .light).map(\.id) == ["paper"])
+
+        store.save(GlobalSettings(theme: "glassy"))
+        let glassy = fixtureManager()
+        #expect(glassy.activeThemeID == "glassy")
+        #expect(glassy.defaultColorSchemeID(for: .light) == "paper")
+        #expect(glassy.defaultColorSchemeID(for: .dark) == "nord")
+
+        store.save(GlobalSettings(theme: "uninstalled"))
+        #expect(fixtureManager().activeThemeID == "neon")
     }
 }

@@ -70,28 +70,34 @@ extension HostSettingsCatalog {
         let accentTitle =
             manager.accentColorHex.map { "#" + $0.uppercased().trimmingCharacters(in: ["#"]) }
             ?? "Theme default"
-        let schemes = manager.colorSchemes
-        return [
+        let themes = manager.themes
+        let issues = manager.catalogIssues
+        var fields = [
             SettingsField(
                 path: group.appending("picker"), label: "Theme",
-                help: "The whole workspace re-tints — window, islands, and the sky behind it.",
-                keywords: ["theme", "color", "dark mode", "neon", "palette"],
-                // Temporarily one select: the colour schemes under Neon, as the
-                // seven themes were. E0.5 splits it into Theme + Colour scheme.
+                help: "The design language — shapes, type and the whole workspace, sky included.",
+                keywords: ["theme", "design", "language", "look", "neon"],
                 kind: .select(
-                    options: schemes.map { SettingsOption(id: $0.id, title: $0.name) },
-                    selection: Binding(
-                        get: { manager.skin.id },
-                        set: { manager.setColorScheme($0, for: manager.appearance) })),
-                defaultDescription: schemes.first { $0.id == manager.defaultColorSchemeID }?.name
-                    ?? manager.defaultColorSchemeID,
-                isModified: {
-                    manager.currentThemeID != defaults.theme || manager.skin.id != manager.defaultColorSchemeID
-                },
-                reset: {
-                    manager.setTheme(defaults.theme)
-                    manager.setColorScheme(nil, for: manager.appearance)
-                }),
+                    options: themes.map { SettingsOption(id: $0.id, title: $0.name) },
+                    selection: Binding(get: { manager.activeThemeID }, set: { manager.setTheme($0) })),
+                defaultDescription: themes.first { $0.id == defaults.theme }?.name ?? defaults.theme,
+                isModified: { manager.currentThemeID != defaults.theme },
+                reset: { manager.setTheme(defaults.theme) }),
+            colorSchemeField(manager, .dark, group: group),
+        ]
+        // Only a theme with a light variant has a light scheme to pick.
+        if manager.defaultColorSchemeID(for: .light) != nil {
+            fields.append(colorSchemeField(manager, .light, group: group))
+        }
+        let filesField = SettingsField(
+            path: group.appending("files"), label: "Theme files",
+            help: "Themes and colour schemes are loaded from the app and from your Home's Config/Themes folder.",
+            keywords: ["theme", "colour", "color scheme", "files", "errors"],
+            kind: .action(
+                title: issues.isEmpty
+                    ? "All loaded" : "\(issues.count) file\(issues.count == 1 ? "" : "s") could not load"
+            ) { environment.settingsDrafts.showsThemeFiles = true })
+        return fields + [
             SettingsField(
                 path: group.appending("accent"), label: "Accent",
                 help: "Used for anything live: selection, focus, the things that are currently doing something.",
@@ -131,7 +137,34 @@ extension HostSettingsCatalog {
                     + "Ainkrad. Independent of the macOS Reduce Motion setting.",
                 get: { $0.uiReduceMotion }, set: { $0.setUiReduceMotion($1) },
                 default: defaults.uiReduceMotion),
+            filesField,
         ]
+    }
+
+    /// One colour-scheme select per appearance; nil (the reset) follows the theme.
+    private static func colorSchemeField(
+        _ manager: ThemeManager, _ appearance: ThemeAppearance, group: SettingsPath
+    ) -> SettingsField {
+        let schemes = manager.colorSchemes(for: appearance)
+        let fallback = manager.defaultColorSchemeID(for: appearance) ?? ""
+        let defaultName = schemes.first { $0.id == fallback }?.name ?? fallback
+        return SettingsField(
+            path: group.appending("scheme-\(appearance.rawValue)"),
+            label: appearance == .dark ? "Dark colour scheme" : "Light colour scheme",
+            help: "The colours on top of the theme: palette, terminal and the sky's tint.",
+            keywords: ["theme", "colour", "color", "color scheme", "palette", "light", "dark", "dark mode"],
+            kind: .select(
+                options: schemes.map { SettingsOption(id: $0.id, title: $0.name) },
+                selection: Binding(
+                    get: {
+                        manager.colorSchemeID(for: appearance).flatMap { id in
+                            schemes.contains { $0.id == id } ? id : nil
+                        } ?? fallback
+                    },
+                    set: { manager.setColorScheme($0, for: appearance) })),
+            defaultDescription: "Theme default (\(defaultName))",
+            isModified: { manager.colorSchemeID(for: appearance) != nil },
+            reset: { manager.setColorScheme(nil, for: appearance) })
     }
 
     static func overlayFields(_ environment: AppEnvironment, group: SettingsPath) -> [SettingsField] {
