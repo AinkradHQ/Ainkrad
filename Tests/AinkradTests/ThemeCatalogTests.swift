@@ -105,6 +105,38 @@ struct ThemeCatalogTests {
         #expect(catalog.issues.contains { $0.message.contains("already provided by \(themesDir.path)") })
     }
 
+    @Test("home keys: Neon by default, unknown values and sky-less sky backdrops fall back with one warning each")
+    func homeLanguageKeys() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("home-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let files = [
+            "grid-dark.theme": #"""
+            {"schemaVersion": 1, "id": "grid.dark", "base": "neonBlue",
+             "host": {"language": {"id": "grid", "layout": "tileGrid", "appTile": "plain"}}}
+            """#,
+            "bare-dark.theme": #"""
+            {"schemaVersion": 1, "id": "bare.dark", "base": "neonBlue",
+             "host": {"language": {"id": "bare", "sky": false, "islandArt": false, "paneBackdrop": "sky"}}}
+            """#,
+        ]
+        for (name, body) in files {
+            try body.write(to: root.appendingPathComponent(name), atomically: true, encoding: .utf8)
+        }
+        let catalog = ThemeCatalog(bundle: .main, userRoots: [root])
+        func home(_ id: String) -> HomeLanguage {
+            HomeLanguage.resolve(catalog.loadedThemes[id]?.hostSection?.language).home
+        }
+
+        #expect(home("neon.dark") == .neon)
+        #expect(home("grid.dark") == HomeLanguage(appTile: .plain))
+        #expect(home("bare.dark") == HomeLanguage(sky: false, islandArt: false, paneBackdrop: .material))
+        let warnings = catalog.issues.filter(\.isWarning)
+        #expect(warnings.count == 2, "\(catalog.issues)")
+        #expect(warnings.contains { $0.subject == "theme grid.dark" && $0.message.hasPrefix("layout 'tileGrid'") })
+        #expect(warnings.contains { $0.subject == "theme bare.dark" && $0.message.hasPrefix("paneBackdrop 'sky'") })
+        #expect(catalog.languages.contains { $0.id == "grid" })
+    }
+
     @Test("the first user root wins an id collision")
     func firstRootWins() throws {
         let first = try fixtureRoot()

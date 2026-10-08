@@ -270,6 +270,12 @@ final class ThemeManagerTests {
         #expect(manager.skin.id == "neonBlue")
     }
 
+    @Test("Neon resolves to today's home language")
+    @MainActor
+    func neonHomeLanguage() {
+        #expect(makeManager().homeLanguage == .neon)
+    }
+
     @Test("themes, the active theme and per-appearance defaults come from the catalog")
     @MainActor
     func themeListAndDefaults() {
