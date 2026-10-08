@@ -105,6 +105,23 @@ struct AppearanceSettingsTests {
         #expect(env.settingsDrafts.showsThemeFiles)
     }
 
+    @Test("a warning is listed but not counted as a file that could not load")
+    func themeFilesRowSeparatesWarnings() {
+        for (files, title) in [
+            (ThemeFixtures.warned, "All loaded, 1 warning"),
+            (ThemeFixtures.broken.merging(ThemeFixtures.warned) { $1 }, "2 files could not load"),
+        ] {
+            let (env, cleanup) = environment(files)
+            defer { cleanup() }
+            guard case .action(let shown, _) = fields(env)["Theme files"]?.kind else {
+                Issue.record("Theme files is not an action")
+                return
+            }
+            #expect(shown == title)
+            #expect(env.themeManager.catalogIssues.contains { $0.contains("warning: ") })
+        }
+    }
+
     @Test("search keywords cover theme, colour, color scheme, palette, light and dark")
     func keywords() {
         let (env, cleanup) = environment([:])

@@ -31,12 +31,8 @@ final class AinkradAppDelegate: NSObject, NSApplicationDelegate {
         quitCoordinator?.requestTerminate() ?? .terminateNow
     }
 
-    // Cardinal HUD is a dark-only design language — force dark appearance
-    // regardless of the macOS system setting so traffic-lights, native
-    // NSVisualEffectView materials, and any other AppKit-owned chrome
-    // always render dark.
+    // `NSApp.appearance` follows the composed theme appearance; `AinkradApp` sets it.
     func applicationDidFinishLaunching(_ notification: Notification) {
-        NSApp.appearance = NSAppearance(named: .darkAqua)
         // Before anything can post. macOS delivers a response to whatever
         // delegate is registered at the time, so a delegate installed later
         // means the first click of the session goes nowhere and reports nothing.

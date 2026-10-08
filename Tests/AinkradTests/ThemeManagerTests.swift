@@ -180,7 +180,8 @@ final class ThemeManagerTests {
     private func fixtureManager() -> ThemeManager {
         ThemeManager(
             persistence: store,
-            catalog: ThemeCatalog(bundle: .main, userRoots: [ThemeFixtures.tempDir(ThemeFixtures.lightVariant)]))
+            catalog: ThemeCatalog(bundle: .main, userRoots: [ThemeFixtures.tempDir(ThemeFixtures.lightVariant)]),
+            systemAppearance: StubSystemAppearance(.dark))
     }
 
     @Test("setTheme keeps an explicit scheme that is still installed and drops one that is not")
@@ -247,14 +248,16 @@ final class ThemeManagerTests {
     func launchOverrideIsNotPersisted() {
         let manager = fixtureManager()
         manager.setAccentColorHex("FF00AA")
-        manager.applyLaunchOverride(theme: "glassy", colorScheme: "dracula", appearance: .light)
+        // E1.6: the appearance override now composes glassy's light variant.
+        manager.applyLaunchOverride(theme: "glassy", colorScheme: "paper", appearance: .light)
         #expect(manager.currentThemeID == "glassy")
-        #expect(manager.skin.id == "dracula")
+        #expect(manager.skin.id == "paper")
         #expect(manager.accentColorHex == "FF00AA")
         #expect(manager.launchAppearance == .light)
         let saved = store.load(GlobalSettings.self)
         #expect(saved?.theme == "neon")
         #expect(saved?.colorSchemeDark == nil)
+        #expect(saved?.colorSchemeLight == nil)
     }
 
     @Test("a launch override with unknown ids is ignored")

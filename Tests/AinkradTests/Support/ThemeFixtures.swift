@@ -28,6 +28,11 @@ enum ThemeFixtures {
         "orphan.theme": #"{"schemaVersion": 1, "id": "orphan", "base": "nope"}"#,
     ]
 
+    /// Loads, with one non-fatal AppKit warning (an unknown `material.kind`).
+    static let warned: [String: String] = [
+        "warned.theme": #"{"schemaVersion": 1, "id": "warned", "base": "neonBlue", "material": {"kind": "plasma"}}"#
+    ]
+
     /// Writes `files` into `dir` (created if needed) and returns it.
     @discardableResult
     static func write(_ files: [String: String], to dir: URL) -> URL {

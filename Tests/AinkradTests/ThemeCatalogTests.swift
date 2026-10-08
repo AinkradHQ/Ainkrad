@@ -57,6 +57,16 @@ struct ThemeCatalogTests {
         #expect(catalog.loadedThemes["neonBlue"]?.themeFile.skin.name != "Fake")
     }
 
+    @Test("an AppKit warning stays listed, labelled, next to a theme that loaded")
+    func warningIsNotAFailure() throws {
+        let catalog = ThemeCatalog(bundle: .main, userRoots: [ThemeFixtures.tempDir(ThemeFixtures.warned)])
+        #expect(catalog.loadedThemes["warned"] != nil)
+        let issue = try #require(catalog.issues.first { $0.subject == "theme warned" })
+        #expect(catalog.issues.count == 1, "\(catalog.issues)")
+        #expect(issue.isWarning)
+        #expect(issue.description.hasPrefix("theme warned: warning: "))
+    }
+
     @Test("a variant and a scheme compose into the scheme's id with merged host keys")
     func composeVariantAndScheme() throws {
         let catalog = ThemeCatalog(bundle: .main, userRoots: [try fixtureRoot()])

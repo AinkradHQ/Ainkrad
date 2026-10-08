@@ -146,7 +146,11 @@ public final class ThemeCatalog: @unchecked Sendable {
 
         let result = ainkradLoadThemes(themeData)
         for issue in result.issues {
-            snapshot.issues.append(ThemeCatalogIssue(subject: "theme \(issue.fileId ?? "?")", message: issue.error.description))
+            var isWarning = false
+            if case .unknownValue = issue.error { isWarning = true }
+            snapshot.issues.append(
+                ThemeCatalogIssue(
+                    subject: "theme \(issue.fileId ?? "?")", message: issue.error.description, isWarning: isWarning))
         }
         for (id, file) in result.themes {
             var section: HostSkinSection?
