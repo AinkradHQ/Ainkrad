@@ -9,7 +9,12 @@ extension AppEnvironment {
     /// default and no fallback, so no subsystem can compute a storage path of
     /// its own. Tests pass a throwaway `Home` (`TestHome.make()`).
     /// `defaults` is the legacy import source (`.standard`).
-    static func bootstrap(home: Home, defaults: UserDefaults = .standard) -> AppEnvironment {
+    /// - Parameter systemAppearance: the live system light/dark source; tests pass a stub so a theme
+    ///   with both variants does not follow the Mac running the suite.
+    static func bootstrap(
+        home: Home, defaults: UserDefaults = .standard,
+        systemAppearance: any SystemAppearanceSource = LiveSystemAppearance()
+    ) -> AppEnvironment {
         let sp0 = AinkradSignposts.begin(AinkradSignposts.launch, "boot-core-stores")
         let (
             persistence, secrets, registry, themeManager, workspaceManager, pluginDirs,
@@ -19,7 +24,7 @@ extension AppEnvironment {
             skillsRoot, appStore, appStoreStore, appIconStore,
             generalSettingsStore, skySettingsStore, sounds, connectionStore, discoveredModelsStore,
             assistantDocuments
-        ) = bootstrapCoreStores(home: home, defaults: defaults)
+        ) = bootstrapCoreStores(home: home, defaults: defaults, systemAppearance: systemAppearance)
         AinkradSignposts.end(AinkradSignposts.launch, "boot-core-stores", sp0)
 
         let sp1 = AinkradSignposts.begin(AinkradSignposts.launch, "boot-agentkit-core")

@@ -18,8 +18,9 @@ public final class ThemeManager {
     /// The stored theme id. Kept even when it is not installed (it resolves
     /// to Neon meanwhile), so a reinstalled store theme comes back.
     public private(set) var currentThemeID: String
-    /// Light or dark. Fixed to `.dark` until the appearance setting lands (E1.6).
-    public let appearance: ThemeAppearance = .dark
+    /// Light or dark, as composed: the system's (or `-AinkradAppearance`'s)
+    /// when the theme has that variant, else the variant it has (Neon: dark).
+    public private(set) var appearance: ThemeAppearance
     public private(set) var uiFontScale: UIFontScale
     public private(set) var uiFontFamily: UIFontFamily
     public private(set) var accentColorHex: String?
@@ -27,6 +28,7 @@ public final class ThemeManager {
     private var colorSchemeLight: String?
     private let persistence: PersistenceStore
     @ObservationIgnored public let catalog: ThemeCatalog
+    @ObservationIgnored private let systemAppearance: any SystemAppearanceSource
 
     /// The composed skin of (theme, scheme, appearance); its `id` is the scheme
     /// id. The accent override is NOT applied here (R2): this is what the root
@@ -53,9 +55,13 @@ public final class ThemeManager {
     /// `WorkspaceManager.onStateChange`.
     public var onThemeChange: (() -> Void)?
 
-    public init(persistence: PersistenceStore, catalog: ThemeCatalog = ThemeCatalog()) {
+    public init(
+        persistence: PersistenceStore, catalog: ThemeCatalog = ThemeCatalog(),
+        systemAppearance: any SystemAppearanceSource = LiveSystemAppearance()
+    ) {
         self.persistence = persistence
         self.catalog = catalog
+        self.systemAppearance = systemAppearance
         let settings = persistence.load(GlobalSettings.self) ?? GlobalSettings()
         self.currentThemeID = settings.theme
         self.colorSchemeDark = settings.colorSchemeDark
@@ -63,9 +69,11 @@ public final class ThemeManager {
         self.uiFontScale = settings.uiFontScale
         self.uiFontFamily = settings.uiFontFamily
         self.accentColorHex = settings.accentColorHex
+        let appearance = Self.appearance(catalog, of: settings.theme, wanted: systemAppearance.current)
+        self.appearance = appearance
         let resolved = Self.resolve(
-            catalog: catalog, themeID: settings.theme, appearance: .dark,
-            storedScheme: settings.colorSchemeDark)
+            catalog: catalog, themeID: settings.theme, appearance: appearance,
+            storedScheme: appearance == .dark ? settings.colorSchemeDark : settings.colorSchemeLight)
         self.skin = resolved.skin
         self.hostSkin = Self.hostSkin(resolved.skin, accentHex: settings.accentColorHex)
         self.skyProfile = resolved.host.skyProfile
@@ -74,6 +82,15 @@ public final class ThemeManager {
         self.defaultColorSchemeID = resolved.defaultScheme
         self.variantID = resolved.variantID
         AinkradFont.configure(scale: uiFontScale.multiplier, family: uiFontFamily)
+        systemAppearance.observe { [weak self] in self?.systemAppearanceChanged() }
+    }
+
+    /// Recomposes only when the composed appearance actually flips; the
+    /// catalog caches composed skins, so flipping back does not decode again.
+    private func systemAppearanceChanged() {
+        let wanted = launchAppearance ?? systemAppearance.current
+        guard Self.appearance(catalog, of: currentThemeID, wanted: wanted) != appearance else { return }
+        applyChange(clearingAccent: false)
     }
 
     /// The explicit scheme choice for one appearance; `nil` = the theme's default.
@@ -109,8 +126,10 @@ public final class ThemeManager {
         Self.variant(catalog, of: activeThemeID, at: appearance)?.language.defaultColorScheme
     }
 
-    /// Theme and colour-scheme files that could not load, one line each.
+    /// Theme and colour-scheme load problems, one line each; warnings are labelled.
     public var catalogIssues: [String] { catalog.issues.map(\.description) }
+    /// How many of `catalogIssues` are files that could not load (not warnings).
+    public var catalogFailureCount: Int { catalog.issues.filter { !$0.isWarning }.count }
 
     /// The current theme variant coloured by `schemeID` (a preview swatch), or
     /// nil when that scheme is not installed. Does not change the selection.
@@ -190,6 +209,9 @@ public final class ThemeManager {
                 Log.settings.error("DEBUG launch arg: unknown AinkradTheme '\(theme, privacy: .public)'")
             }
         }
+        launchAppearance = requested
+        // The scheme is checked against the appearance this override composes to.
+        let appearance = Self.appearance(catalog, of: currentThemeID, wanted: requested ?? systemAppearance.current)
         if let colorScheme {
             if catalog.schemes(for: appearance).contains(where: { $0.id == colorScheme }) {
                 switch appearance {
@@ -200,7 +222,6 @@ public final class ThemeManager {
                 Log.settings.error("DEBUG launch arg: unknown AinkradColorScheme '\(colorScheme, privacy: .public)'")
             }
         }
-        launchAppearance = requested
         applyChange(clearingAccent: false)
     }
 
@@ -212,11 +233,12 @@ public final class ThemeManager {
         applyChange(clearingAccent: false)
     }
 
-    /// `-AinkradAppearance`, stored for the appearance setting to act on (E1.6).
+    /// `-AinkradAppearance`: replaces the system appearance while set.
     public private(set) var launchAppearance: ThemeAppearance?
 
     /// Recomposes after a theme or scheme change; a user change clears the custom accent.
     private func applyChange(clearingAccent: Bool = true) {
+        appearance = Self.appearance(catalog, of: currentThemeID, wanted: launchAppearance ?? systemAppearance.current)
         let resolved = Self.resolve(
             catalog: catalog, themeID: currentThemeID, appearance: appearance,
             storedScheme: colorSchemeID(for: appearance))
@@ -309,6 +331,17 @@ public final class ThemeManager {
         return Resolved(
             variantID: chosen.id, schemeID: schemeID, defaultScheme: chosen.language.defaultColorScheme,
             skin: skin, host: host)
+    }
+
+    /// `wanted` when theme `id` (Neon while `id` is not installed) has that
+    /// variant, else the other one when it has that.
+    private static func appearance(
+        _ catalog: ThemeCatalog, of id: String, wanted: ThemeAppearance
+    ) -> ThemeAppearance {
+        let id = catalog.variants(of: id).isEmpty ? "neon" : id
+        if variant(catalog, of: id, at: wanted) != nil { return wanted }
+        let other: ThemeAppearance = wanted == .dark ? .light : .dark
+        return variant(catalog, of: id, at: other) != nil ? other : wanted
     }
 
     /// The variant file of theme `id` at `appearance`.

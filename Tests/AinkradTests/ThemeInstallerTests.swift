@@ -55,7 +55,8 @@ struct ThemeInstallerTests {
         func make(settings: GlobalSettings? = nil) -> (ThemeInstaller, ThemeManager) {
             if let settings { persistence.save(settings) }
             let manager = ThemeManager(
-                persistence: persistence, catalog: ThemeCatalog(bundle: .main, userRoots: [themesRoot]))
+                persistence: persistence, catalog: ThemeCatalog(bundle: .main, userRoots: [themesRoot]),
+                systemAppearance: StubSystemAppearance(.dark))
             let installer = ThemeInstaller(
                 http: http, storeRoot: storeRoot, persistence: persistence, themeManager: manager)
             return (installer, manager)

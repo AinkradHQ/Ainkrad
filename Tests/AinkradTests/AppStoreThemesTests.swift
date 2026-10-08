@@ -75,7 +75,7 @@ struct StoreThemeHarness {
 
     init(_ label: String = "store-themes") {
         let t = TestHome.make(label)
-        env = AppEnvironment.bootstrap(home: t.home, defaults: t.defaults)
+        env = AppEnvironment.bootstrap(home: t.home, defaults: t.defaults, systemAppearance: StubSystemAppearance(.dark))
         cleanup = t.cleanup
         let persistence = env.persistence
         let themeInstaller = ThemeInstaller(

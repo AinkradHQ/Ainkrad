@@ -54,6 +54,7 @@ public final class HostServicesImpl: HostServices, PluginInstanceIdentity {
         // express success/warning/danger through the theme — which is why they
         // all hardcoded system colors.
         self.theme.updateStatusColors(HostStatusColors(from: themeManager.skin))
+        self.theme.updateTerminalPalette(HostTerminalPalette(themeManager.skin.terminal))
         self.context = HostContextRegistry(appID: appID, hub: hub)
         self.actions = HostActionRegistry(appID: appID, hub: actionHub)
         self.apps = HostAppLauncher(appID: appID, hub: launchHub)
@@ -76,6 +77,7 @@ public final class HostServicesImpl: HostServices, PluginInstanceIdentity {
                 guard let self else { return }
                 self.theme.update(HostThemeTokens(skin: self.themeManager.skin))
                 self.theme.updateStatusColors(HostStatusColors(from: self.themeManager.skin))
+                self.theme.updateTerminalPalette(HostTerminalPalette(self.themeManager.skin.terminal))
                 self.armThemeSync()
             }
         }

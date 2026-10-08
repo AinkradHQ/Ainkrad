@@ -14,7 +14,9 @@ extension AppEnvironment {
     /// layer, the legacy-defaults migration, plugin loading/App Store
     /// plumbing, app appearance/icon/sound stores, and the connection +
     /// discovered-models stores.
-    static func bootstrapCoreStores(home: Home, defaults: UserDefaults) -> (
+    static func bootstrapCoreStores(
+        home: Home, defaults: UserDefaults, systemAppearance: any SystemAppearanceSource
+    ) -> (
         persistence: PersistenceStore,
         secrets: SecretStore,
         registry: BuiltInAppRegistry,
@@ -82,7 +84,8 @@ extension AppEnvironment {
         let debugTheme = parseDebugThemeArguments()
         if let dir = debugTheme.themesDir { themeRoots.insert(dir, at: 0) }
         #endif
-        let themeManager = ThemeManager(persistence: persistence, catalog: ThemeCatalog(userRoots: themeRoots))
+        let themeManager = ThemeManager(
+            persistence: persistence, catalog: ThemeCatalog(userRoots: themeRoots), systemAppearance: systemAppearance)
         #if DEBUG
         if debugTheme.theme != nil || debugTheme.colorScheme != nil || debugTheme.appearance != nil {
             themeManager.applyLaunchOverride(

@@ -71,7 +71,8 @@ extension HostSettingsCatalog {
             manager.accentColorHex.map { "#" + $0.uppercased().trimmingCharacters(in: ["#"]) }
             ?? "Theme default"
         let themes = manager.themes
-        let issues = manager.catalogIssues
+        let failures = manager.catalogFailureCount
+        let warnings = manager.catalogIssues.count - failures
         var fields = [
             SettingsField(
                 path: group.appending("picker"), label: "Theme",
@@ -101,8 +102,9 @@ extension HostSettingsCatalog {
             help: "Themes and colour schemes are loaded from the app and from your Home's Config/Themes folder.",
             keywords: ["theme", "colour", "color scheme", "files", "errors"],
             kind: .action(
-                title: issues.isEmpty
-                    ? "All loaded" : "\(issues.count) file\(issues.count == 1 ? "" : "s") could not load"
+                title: failures > 0
+                    ? "\(failures) file\(failures == 1 ? "" : "s") could not load"
+                    : warnings > 0 ? "All loaded, \(warnings) warning\(warnings == 1 ? "" : "s")" : "All loaded"
             ) { environment.settingsDrafts.showsThemeFiles = true })
         return fields + [
             SettingsField(

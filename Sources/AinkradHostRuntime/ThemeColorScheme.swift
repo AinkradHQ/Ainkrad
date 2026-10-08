@@ -43,6 +43,8 @@ public struct ThemeColorScheme: Sendable {
 struct ThemeCatalogIssue: Equatable, Sendable, CustomStringConvertible {
     let subject: String
     let message: String
+    /// The file still loaded (AppKit's `unknownValue`); listed, not counted as a failure.
+    var isWarning = false
 
-    var description: String { "\(subject): \(message)" }
+    var description: String { "\(subject): \(isWarning ? "warning: " : "")\(message)" }
 }
