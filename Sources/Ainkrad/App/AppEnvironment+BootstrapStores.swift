@@ -75,7 +75,8 @@ extension AppEnvironment {
         let registry = BuiltInAppRegistry(persistence: persistence)
         // Themes and colour schemes: the bundle, plus any dropped or store-installed
         // under `<Home>/Config/Themes` (a bundled id is never shadowed).
-        var themeRoots = [home.shared(.config).appendingPathComponent("Themes", isDirectory: true)]
+        let homeThemesRoot = home.shared(.config).appendingPathComponent("Themes", isDirectory: true)
+        var themeRoots = [homeThemesRoot]
         #if DEBUG
         // `-AinkradThemesDir` is scanned first, so files being authored win over installed copies.
         let debugTheme = parseDebugThemeArguments()
@@ -185,10 +186,15 @@ extension AppEnvironment {
         let skillInstaller = SkillInstaller(
             http: URLSessionHTTPClient(), paths: SkillPaths(root: skillsRoot),
             persistence: persistence)
+        // Store themes land in a subfolder of the Home themes root the catalog already scans.
+        let themeInstaller = ThemeInstaller(
+            http: URLSessionHTTPClient(),
+            storeRoot: homeThemesRoot.appendingPathComponent("Store", isDirectory: true),
+            persistence: persistence, themeManager: themeManager)
         let appStore = AppStoreService(
             catalog: catalogService, installer: installer,
             mcpInstaller: mcpInstaller, persistence: persistence,
-            skillInstaller: skillInstaller)
+            skillInstaller: skillInstaller, themeInstaller: themeInstaller)
         let appStoreStore = AppStoreStore(service: appStore, registry: registry)
 
         let appIconStore = AppIconStore(
