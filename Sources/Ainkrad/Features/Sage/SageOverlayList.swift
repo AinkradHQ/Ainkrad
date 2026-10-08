@@ -31,8 +31,8 @@ struct SageOverlayList<Content: View>: View {
         // content MUST draw its own panel chrome — same chamfer fill + accent
         // stroke + glow the kit's own dropdowns use (`MultiSelectPanelView`).
         // Without this the overlay renders see-through over the transcript.
-        .background(ChamferShape(cut: skin.cut.c8).fill(theme.surfaceElevated.opacity(skin.opacity.o97)))
-        .overlay(ChamferShape(cut: skin.cut.c8).strokeBorder(theme.accentSecondary.opacity(skin.opacity.o55), lineWidth: 1.25))
+        .background(skin.shape(cut: skin.cut.c8).fill(theme.surfaceElevated.opacity(skin.opacity.o97)))
+        .overlay(skin.shape(cut: skin.cut.c8).strokeBorder(theme.accentSecondary.opacity(skin.opacity.o55), lineWidth: 1.25))
         .shadow(color: theme.accentSecondary.opacity(skin.opacity.o35), radius: skin.size.s10, y: 4)
         .frame(minWidth: skin.size.s280)
     }

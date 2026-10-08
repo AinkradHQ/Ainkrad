@@ -118,7 +118,7 @@ struct UsageDashboardView: View {
                 .foregroundStyle(theme.accentSecondary.opacity(skin.opacity.o85))
             VStack(alignment: .leading, spacing: skin.size.s2) { content() }
                 .padding(AinkradSpacing.md)
-                .background(ChamferShape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(skin.opacity.o40)))
+                .background(skin.shape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(skin.opacity.o40)))
         }
     }
 }

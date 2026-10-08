@@ -161,7 +161,7 @@ private struct HoardContextMenuRow: View {
             .padding(.horizontal, AinkradSpacing.sm)
             .padding(.vertical, AinkradSpacing.xs)
             .background(
-                ChamferShape(cut: skin.cut.c4).fill(
+                skin.shape(cut: skin.cut.c4).fill(
                     hovering ? tokens.color(\.accentSecondary).opacity(skin.opacity.o14) : .clear)
             )
             .contentShape(Rectangle())

@@ -33,7 +33,7 @@ struct SkillSuggestionChip: View {
             }
             .padding(.horizontal, skin.spacing.md)
             .padding(.vertical, skin.spacing.sm)
-            .background(ChamferShape().fill(theme.surfaceElevated))
+            .background(skin.shape(cut: 10).fill(theme.surfaceElevated))
         }
     }
 }

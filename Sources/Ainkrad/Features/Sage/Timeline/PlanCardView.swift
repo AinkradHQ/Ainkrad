@@ -48,9 +48,9 @@ struct PlanCardView: View {
         }
         .padding(.horizontal, skin.size.s10).padding(.vertical, skin.spacing.sm)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: AinkradRadius.sm).fill(theme.background.opacity(skin.opacity.o45)))
+        .background(skin.shape(cut: AinkradRadius.sm).fill(theme.background.opacity(skin.opacity.o45)))
         .overlay {
-            ChamferShape(cut: AinkradRadius.sm).stroke(theme.accentSecondary.opacity(skin.opacity.o22), lineWidth: 1)
+            skin.shape(cut: AinkradRadius.sm).stroke(theme.accentSecondary.opacity(skin.opacity.o22), lineWidth: 1)
         }
     }
 

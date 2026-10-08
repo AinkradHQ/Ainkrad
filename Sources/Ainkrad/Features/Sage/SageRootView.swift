@@ -367,13 +367,13 @@ struct SageRootView: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(maxWidth: skin.size.s160, maxHeight: skin.size.s160)
-                .clipShape(ChamferShape(cut: AinkradRadius.md))
+                .clipShape(skin.shape(cut: AinkradRadius.md))
         } else {
             Text("[image]")
                 .font(AinkradFont.display(12))
                 .foregroundStyle(theme.foreground.opacity(skin.opacity.o60))
                 .padding(.horizontal, skin.size.s10).padding(.vertical, skin.size.s6)
-                .background(ChamferShape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(skin.opacity.o30)))
+                .background(skin.shape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(skin.opacity.o30)))
         }
     }
 
@@ -388,7 +388,7 @@ struct SageRootView: View {
                         .font(AinkradFont.display(13))
                         .foregroundStyle(theme.foreground.opacity(skin.opacity.o90))
                         .padding(.horizontal, skin.spacing.md).padding(.vertical, skin.size.s9)
-                        .background(ChamferShape(cut: AinkradRadius.md).fill(theme.accentPrimary.opacity(skin.opacity.o18)))
+                        .background(skin.shape(cut: AinkradRadius.md).fill(theme.accentPrimary.opacity(skin.opacity.o18)))
                         .shadow(color: theme.accentPrimary.opacity(skin.opacity.o12), radius: skin.size.s6)
                 } else {
                     SageMarkdownText(text: message.text, typography: assistantTypography)
@@ -421,7 +421,7 @@ struct SageRootView: View {
         }
         .padding(.horizontal, skin.spacing.md).padding(.vertical, skin.size.s9)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(skin.opacity.o45)))
+        .background(skin.shape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(skin.opacity.o45)))
         .overlay(alignment: .leading) {
             Rectangle().fill(statusColors.danger).frame(width: skin.size.s2)
         }

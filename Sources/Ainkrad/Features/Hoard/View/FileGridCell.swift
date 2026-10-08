@@ -33,9 +33,9 @@ struct FileGridCell: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, AinkradSpacing.sm)
         .padding(.horizontal, AinkradSpacing.xs)
-        .background(ChamferShape(cut: skin.cut.c6).fill(fill))
+        .background(skin.shape(cut: skin.cut.c6).fill(fill))
         .overlay(
-            ChamferShape(cut: skin.cut.c6)
+            skin.shape(cut: skin.cut.c6)
                 .strokeBorder(theme.accentSecondary, lineWidth: isCursor ? 1.5 : 0)
         )
         .opacity(entry.isHidden ? skin.opacity.o55 : 1)
