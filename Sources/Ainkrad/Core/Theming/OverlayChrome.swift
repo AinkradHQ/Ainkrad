@@ -51,16 +51,16 @@ private struct HUDPanelChrome: ViewModifier {
                     tokens.color(\.background).opacity(store.overlayBackgroundOpacity)
                 }
             }
-            .clipShape(ChamferShape(cut: skin.radius.panel))
+            .clipShape(skin.shape(cut: skin.radius.panel))
             // Accent border must follow the CHAMFER (the SDK `.ainkradEdgeRing`
             // strokes a RoundedRectangle, which made overlays read as rounded
-            // despite the chamfer clip). Stroke the same ChamferShape so the
+            // despite the chamfer clip). Stroke the same skin shape so the
             // frame reads as Cardinal HUD. The colours stay on `tokens`, which
             // carry the user's custom accent; the skin's `overlay.edgeFrom/edgeTo`
             // would drop it (theme-foundation fact 2), so only their alphas and
             // the width come from the skin.
             .overlay(
-                ChamferShape(cut: skin.radius.panel)
+                skin.shape(cut: skin.radius.panel)
                     .strokeBorder(
                         LinearGradient(
                             colors: [

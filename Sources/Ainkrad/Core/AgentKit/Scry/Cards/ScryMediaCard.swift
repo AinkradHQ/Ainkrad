@@ -53,7 +53,7 @@ struct ScryMediaCard: View {
                 } else {
                     VideoPlayer(player: player)
                         .aspectRatio(16.0 / 9.0, contentMode: .fit)
-                        .clipShape(ChamferShape(cut: AinkradRadius.md))
+                        .clipShape(skin.shape(cut: AinkradRadius.md))
                 }
             } else if hasResolved {
                 // `.task` has actually run and found nothing playable — a

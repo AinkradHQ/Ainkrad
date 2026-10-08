@@ -114,7 +114,7 @@ struct WorkspaceAppRow: View {
                 .fixedSize()
                 .padding(.horizontal, skin.size.s3)
                 .padding(.vertical, skin.size.s1)
-                .background(ChamferShape(cut: skin.cut.c3).fill(tokens.color(\.accentSecondary).opacity(skin.opacity.o12)))
+                .background(skin.shape(cut: skin.cut.c3).fill(tokens.color(\.accentSecondary).opacity(skin.opacity.o12)))
                 .help("Focus this pane with \(shortcut) in Tabs mode")
         }
     }

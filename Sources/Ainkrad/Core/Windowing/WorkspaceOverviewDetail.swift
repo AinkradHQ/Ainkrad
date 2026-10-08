@@ -104,7 +104,7 @@ extension WorkspaceOverviewView {
         .frame(maxWidth: .infinity)
         .frame(height: Self.emptyWorkspaceHeight)
         .background(
-            ChamferShape(cut: skin.radius.sm)
+            skin.shape(cut: skin.radius.sm)
                 .strokeBorder(
                     tokens.color(\.foreground).opacity(skin.opacity.o16),
                     style: StrokeStyle(lineWidth: 1, dash: [4, 3])

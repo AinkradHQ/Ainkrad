@@ -48,10 +48,10 @@ struct PaneShortcutBadge: View {
                     .padding(.horizontal, skin.size.s6)
                     .padding(.vertical, skin.size.s2)
                     .background(
-                        ChamferShape(cut: skin.cut.c4).fill(tokens.color(\.accentSecondary).opacity(skin.opacity.o16))
+                        skin.shape(cut: skin.cut.c4).fill(tokens.color(\.accentSecondary).opacity(skin.opacity.o16))
                     )
                     .overlay(
-                        ChamferShape(cut: skin.cut.c4)
+                        skin.shape(cut: skin.cut.c4)
                             .strokeBorder(tokens.color(\.accentSecondary).opacity(skin.opacity.o45), lineWidth: 1)
                     )
             }
@@ -66,10 +66,10 @@ struct PaneShortcutBadge: View {
         .padding(.horizontal, skin.spacing.md)
         .padding(.vertical, skin.spacing.sm)
         .background(
-            ChamferShape(cut: skin.radius.sm).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o92))
+            skin.shape(cut: skin.radius.sm).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o92))
         )
         .overlay(
-            ChamferShape(cut: skin.radius.sm)
+            skin.shape(cut: skin.radius.sm)
                 .strokeBorder(tokens.color(\.accentPrimary).opacity(skin.opacity.o35), lineWidth: 1)
         )
         .shadow(color: skin.color(.palette("black", skin.opacity.o35)), radius: skin.size.s12, y: 4)

@@ -27,7 +27,7 @@ struct PaneActivationRing: View {
 
     var body: some View {
         ZStack {
-            ChamferShape(cut: skin.radius.md)
+            skin.shape(cut: skin.radius.md)
                 .strokeBorder(borderColor, lineWidth: 1 + pulse * 0.6)
 
             TargetingBrackets(length: skin.size.s10)

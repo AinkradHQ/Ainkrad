@@ -67,12 +67,12 @@ struct WorkspaceLayoutPreview: View {
             }
         }
         .background(
-            ChamferShape(cut: outerCornerCut)
+            skin.shape(cut: outerCornerCut)
                 .fill(tokens.color(\.background).opacity(skin.opacity.o35))
         )
-        .clipShape(ChamferShape(cut: outerCornerCut))
+        .clipShape(skin.shape(cut: outerCornerCut))
         .overlay(
-            ChamferShape(cut: outerCornerCut)
+            skin.shape(cut: outerCornerCut)
                 .strokeBorder(tokens.color(\.foreground).opacity(skin.opacity.o10), lineWidth: 1)
         )
     }
@@ -80,7 +80,7 @@ struct WorkspaceLayoutPreview: View {
     /// An empty workspace is a real state, not a missing preview — the dashed
     /// frame says "nothing here yet" rather than "failed to draw".
     private var emptyState: some View {
-        ChamferShape(cut: outerCornerCut)
+        skin.shape(cut: outerCornerCut)
             .strokeBorder(
                 tokens.color(\.foreground).opacity(skin.opacity.o18),
                 style: StrokeStyle(lineWidth: 1, dash: [3, 2])
@@ -125,7 +125,7 @@ struct WorkspaceLayoutPreview: View {
             HStack(spacing: gap) {
                 ForEach(layout.blocks) { block in
                     let isActive = block.id == focused.id
-                    ChamferShape(cut: paneCornerCut)
+                    skin.shape(cut: paneCornerCut)
                         .fill(
                             isActive
                                 ? tokens.color(\.accentPrimary).opacity(skin.opacity.o50)
@@ -156,10 +156,10 @@ struct WorkspaceLayoutPreview: View {
     /// the focused pane's accent border — the same signal the real pane wears.
     private func paneCell(_ block: Block) -> some View {
         let isFocused = block.id == layout.focusedBlockID && layout.blocks.count > 1
-        return ChamferShape(cut: paneCornerCut)
+        return skin.shape(cut: paneCornerCut)
             .fill(tokens.color(\.surface).opacity(skin.opacity.o75))
             .overlay(
-                ChamferShape(cut: paneCornerCut)
+                skin.shape(cut: paneCornerCut)
                     .strokeBorder(
                         isFocused
                             ? tokens.color(\.accentPrimary).opacity(skin.opacity.o70)

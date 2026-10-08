@@ -208,7 +208,7 @@ struct LauncherView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, skin.spacing.md)
         .background(
-            ChamferShape(cut: skin.radius.md).fill(tokens.color(\.accentSecondary).opacity(isSelected ? skin.opacity.o12 : 0))
+            skin.shape(cut: skin.radius.md).fill(tokens.color(\.accentSecondary).opacity(isSelected ? skin.opacity.o12 : 0))
         )
         .overlay(
             AinkradCornerBrackets(length: skin.size.s10)
