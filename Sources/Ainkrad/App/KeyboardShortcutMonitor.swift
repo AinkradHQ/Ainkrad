@@ -40,6 +40,12 @@ struct KeyboardShortcutMonitor: NSViewRepresentable {
         private var fullScreenEnterObserver: NSObjectProtocol?
         private var fullScreenExitObserver: NSObjectProtocol?
         private var titlebarObservation: NSKeyValueObservation?
+        /// The window's own background, captured on attach and restored when a
+        /// glass theme gives way to an opaque one.
+        private var opaqueBackground: NSColor?
+        /// Bumped on every attach/detach so a pending theme observation from an
+        /// earlier attach cannot re-arm a second chain.
+        private var surfaceGeneration = 0
 
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
@@ -52,6 +58,10 @@ struct KeyboardShortcutMonitor: NSViewRepresentable {
                 window.titlebarAppearsTransparent = true
                 window.titlebarSeparatorStyle = .none
                 window.isMovableByWindowBackground = false
+                // E3.2: a glass theme makes the window see-through so the
+                // behind-window layer in `WorkspaceStack` shows the desktop.
+                if opaqueBackground == nil { opaqueBackground = window.backgroundColor }
+                trackWindowSurface()
                 // Initial value on attach — the notifications below only
                 // fire on a subsequent transition (AIN-109).
                 let isFullScreen = window.styleMask.contains(.fullScreen)
@@ -119,8 +129,43 @@ struct KeyboardShortcutMonitor: NSViewRepresentable {
                 }
                 titlebarObservation?.invalidate()
                 titlebarObservation = nil
+                surfaceGeneration += 1
                 removeFullScreenObservers()
             }
+        }
+
+        /// Window opacity per material kind (E3.2): `glass` is a clear,
+        /// non-opaque window; every other kind is the opaque window as AppKit
+        /// made it. Full screen needs no case of its own — the glass layer
+        /// fills the window there too.
+        static func windowSurface(
+            materialKind: String, opaqueBackground: NSColor
+        ) -> (isOpaque: Bool, backgroundColor: NSColor) {
+            materialKind == "glass" ? (false, .clear) : (true, opaqueBackground)
+        }
+
+        /// Applies the window surface for the composed skin now, then again on
+        /// every skin change while this view stays in its window.
+        private func trackWindowSurface() {
+            surfaceGeneration += 1
+            let generation = surfaceGeneration
+            guard let themeManager = environment?.themeManager else { return }
+            withObservationTracking {
+                applyWindowSurface(materialKind: themeManager.skin.material.kind)
+            } onChange: { [weak self] in
+                // Fires before `skin` changes: re-read on the next main-actor hop.
+                Task { @MainActor in
+                    guard let self, self.surfaceGeneration == generation, self.window != nil else { return }
+                    self.trackWindowSurface()
+                }
+            }
+        }
+
+        private func applyWindowSurface(materialKind: String) {
+            guard let window, let opaqueBackground else { return }
+            let surface = Self.windowSurface(materialKind: materialKind, opaqueBackground: opaqueBackground)
+            if window.isOpaque != surface.isOpaque { window.isOpaque = surface.isOpaque }
+            if window.backgroundColor != surface.backgroundColor { window.backgroundColor = surface.backgroundColor }
         }
 
         /// Drives `environment.isFullScreen` from the window's full-screen
