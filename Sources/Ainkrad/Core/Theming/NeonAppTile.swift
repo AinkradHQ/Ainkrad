@@ -88,7 +88,7 @@ struct NeonAppTile: View {
                         .foregroundStyle(tokens.color(\.background))
                         .padding(.horizontal, size * 0.10)
                         .padding(.vertical, size * 0.03)
-                        .background(ChamferShape(cut: size * skin.cut.r0_10).fill(badgeTint))
+                        .background(skin.shape(cut: size * skin.cut.r0_10).fill(badgeTint))
                         .shadow(color: badgeTint.opacity(skin.opacity.o60), radius: size * 0.08)
                         .offset(x: size * 0.22, y: -size * 0.12)
                         .transition(.scale.combined(with: .opacity))

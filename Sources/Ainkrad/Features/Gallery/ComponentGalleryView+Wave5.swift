@@ -269,7 +269,7 @@ extension ComponentGalleryView {
                 isFollowing: wave5LogFollowing
             )
             .frame(height: 180)
-            .background(ChamferShape(cut: AinkradRadius.sm).fill(galleryTokens.surface.opacity(0.9)))
+            .background(gallerySkin.shape(cut: AinkradRadius.sm).fill(galleryTokens.surface.opacity(0.9)))
             .task {
                 // A live tail, so follow mode has something to follow.
                 var tick = 0

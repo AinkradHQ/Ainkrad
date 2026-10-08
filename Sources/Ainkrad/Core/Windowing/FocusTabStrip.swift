@@ -146,7 +146,7 @@ private struct FocusTab: View {
                     .padding(.horizontal, skin.size.s3)
                     .padding(.vertical, skin.size.s1)
                     .background(
-                        ChamferShape(cut: skin.cut.c3)
+                        skin.shape(cut: skin.cut.c3)
                             .fill(tokens.color(\.accentSecondary).opacity(isActive ? skin.opacity.o16 : skin.opacity.o08))
                     )
             }
@@ -218,17 +218,17 @@ private struct FocusTab: View {
             // moving coordinate space, so it flew in from the wrong place — or
             // from off-screen — on switches; that was the jump on every click.
             // Two cross-fading fills cannot fly anywhere.
-            ChamferShape(cut: skin.radius.sm)
+            skin.shape(cut: skin.radius.sm)
                 .fill(tokens.color(\.accentPrimary).opacity(skin.opacity.o18))
                 .opacity(isActive ? 1 : 0)
                 .overlay {
-                    ChamferShape(cut: skin.radius.sm)
+                    skin.shape(cut: skin.radius.sm)
                         .fill(tokens.color(\.foreground).opacity(skin.opacity.o06))
                         .opacity(!isActive && hovering ? 1 : 0)
                 }
         }
         .overlay {
-            ChamferShape(cut: skin.radius.sm)
+            skin.shape(cut: skin.radius.sm)
                 .strokeBorder(tokens.color(\.accentPrimary).opacity(skin.opacity.o45), lineWidth: 1)
                 .opacity(isActive ? 1 : 0)
         }
