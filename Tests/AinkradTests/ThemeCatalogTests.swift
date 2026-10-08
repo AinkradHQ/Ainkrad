@@ -86,6 +86,15 @@ struct ThemeCatalogTests {
         #expect(catalog.schemes(for: .dark).contains { $0.id == "late" })
     }
 
+    @Test("a Debug themes dir ahead of Home loads its files and a Home copy of an id becomes an issue")
+    func themesDirAheadOfHome() throws {
+        let themesDir = try fixtureRoot()
+        let home = try fixtureRoot()
+        let catalog = ThemeCatalog(bundle: .main, userRoots: [themesDir, home])
+        #expect(catalog.variants(of: "test").keys.contains("test.dark"))
+        #expect(catalog.issues.contains { $0.message.contains("already provided by \(themesDir.path)") })
+    }
+
     @Test("the first user root wins an id collision")
     func firstRootWins() throws {
         let first = try fixtureRoot()
