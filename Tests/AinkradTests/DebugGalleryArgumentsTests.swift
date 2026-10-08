@@ -91,4 +91,30 @@ struct DebugGalleryArgumentsTests {
         let lookup2: ArgumentLookup = { args2[$0] }
         #expect(parseDebugGallerySectionArgument(lookup2) == "wave5")
     }
+
+    // MARK: - Theme arguments
+    @Test("theme arguments parse ids, appearance and an existing themes dir")
+    func themeArguments() {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("themes-\(UUID().uuidString)")
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let args = [
+            "AinkradTheme": " glass ", "AinkradColorScheme": "nord", "AinkradAppearance": "Light",
+            "AinkradThemesDir": dir.path,
+        ]
+        let parsed = parseDebugThemeArguments { args[$0] }
+        #expect(parsed.theme == "glass")
+        #expect(parsed.colorScheme == "nord")
+        #expect(parsed.appearance == .light)
+        #expect(parsed.themesDir == dir.standardizedFileURL)
+    }
+
+    @Test("a bad appearance, a missing themes dir and empty ids are ignored")
+    func themeArgumentsIgnored() {
+        let args = [
+            "AinkradTheme": "  ", "AinkradAppearance": "sepia",
+            "AinkradThemesDir": "/nonexistent/\(UUID().uuidString)",
+        ]
+        #expect(parseDebugThemeArguments { args[$0] } == DebugThemeArguments())
+        #expect(parseDebugThemeArguments { _ in nil } == DebugThemeArguments())
+    }
 }

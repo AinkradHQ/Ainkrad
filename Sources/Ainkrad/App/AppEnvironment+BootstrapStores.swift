@@ -75,9 +75,19 @@ extension AppEnvironment {
         let registry = BuiltInAppRegistry(persistence: persistence)
         // Themes and colour schemes: the bundle, plus any dropped or store-installed
         // under `<Home>/Config/Themes` (a bundled id is never shadowed).
-        let themeManager = ThemeManager(
-            persistence: persistence,
-            catalog: ThemeCatalog(userRoots: [home.shared(.config).appendingPathComponent("Themes", isDirectory: true)]))
+        var themeRoots = [home.shared(.config).appendingPathComponent("Themes", isDirectory: true)]
+        #if DEBUG
+        // `-AinkradThemesDir` is scanned first, so files being authored win over installed copies.
+        let debugTheme = parseDebugThemeArguments()
+        if let dir = debugTheme.themesDir { themeRoots.insert(dir, at: 0) }
+        #endif
+        let themeManager = ThemeManager(persistence: persistence, catalog: ThemeCatalog(userRoots: themeRoots))
+        #if DEBUG
+        if debugTheme.theme != nil || debugTheme.colorScheme != nil || debugTheme.appearance != nil {
+            themeManager.applyLaunchOverride(
+                theme: debugTheme.theme, colorScheme: debugTheme.colorScheme, appearance: debugTheme.appearance)
+        }
+        #endif
 
         let workspaceManager = WorkspaceManager()
         AinkradSignposts.end(AinkradSignposts.launch, "core-a-persistence-keychain-registry", csp0)

@@ -242,6 +242,31 @@ final class ThemeManagerTests {
         #expect(manager.accentColorHex == "FF00AA")
     }
 
+    @Test("a launch override switches theme and scheme in memory only and keeps the accent")
+    @MainActor
+    func launchOverrideIsNotPersisted() {
+        let manager = fixtureManager()
+        manager.setAccentColorHex("FF00AA")
+        manager.applyLaunchOverride(theme: "glassy", colorScheme: "dracula", appearance: .light)
+        #expect(manager.currentThemeID == "glassy")
+        #expect(manager.skin.id == "dracula")
+        #expect(manager.accentColorHex == "FF00AA")
+        #expect(manager.launchAppearance == .light)
+        let saved = store.load(GlobalSettings.self)
+        #expect(saved?.theme == "neon")
+        #expect(saved?.colorSchemeDark == nil)
+    }
+
+    @Test("a launch override with unknown ids is ignored")
+    @MainActor
+    func launchOverrideIgnoresUnknownIDs() {
+        let manager = fixtureManager()
+        manager.applyLaunchOverride(theme: "nope", colorScheme: "paper", appearance: nil)
+        #expect(manager.currentThemeID == "neon")
+        // `paper` is a light scheme; the effective appearance is dark.
+        #expect(manager.skin.id == "neonBlue")
+    }
+
     @Test("themes, the active theme and per-appearance defaults come from the catalog")
     @MainActor
     func themeListAndDefaults() {

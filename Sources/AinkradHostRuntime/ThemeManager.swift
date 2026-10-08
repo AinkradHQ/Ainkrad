@@ -173,14 +173,42 @@ public final class ThemeManager {
             "Colour scheme (\(appearance.rawValue, privacy: .public)) changed to \(id ?? "default", privacy: .public)")
     }
 
-    /// Recomposes after a theme or scheme change; the custom accent is cleared.
-    private func applyChange() {
+    /// Debug launch override (`-AinkradTheme`, `-AinkradColorScheme`,
+    /// `-AinkradAppearance`): applied in memory only, never persisted, and the
+    /// custom accent is kept. An id that is not installed is logged and ignored.
+    public func applyLaunchOverride(theme: String?, colorScheme: String?, appearance requested: ThemeAppearance?) {
+        if let theme {
+            if catalog.languages.contains(where: { $0.id == theme }) {
+                currentThemeID = theme
+            } else {
+                Log.settings.error("DEBUG launch arg: unknown AinkradTheme '\(theme, privacy: .public)'")
+            }
+        }
+        if let colorScheme {
+            if catalog.schemes(for: appearance).contains(where: { $0.id == colorScheme }) {
+                switch appearance {
+                case .dark: colorSchemeDark = colorScheme
+                case .light: colorSchemeLight = colorScheme
+                }
+            } else {
+                Log.settings.error("DEBUG launch arg: unknown AinkradColorScheme '\(colorScheme, privacy: .public)'")
+            }
+        }
+        launchAppearance = requested
+        applyChange(clearingAccent: false)
+    }
+
+    /// `-AinkradAppearance`, stored for the appearance setting to act on (E1.6).
+    public private(set) var launchAppearance: ThemeAppearance?
+
+    /// Recomposes after a theme or scheme change; a user change clears the custom accent.
+    private func applyChange(clearingAccent: Bool = true) {
         let resolved = Self.resolve(
             catalog: catalog, themeID: currentThemeID, appearance: appearance,
             storedScheme: colorSchemeID(for: appearance))
-        accentColorHex = nil
+        if clearingAccent { accentColorHex = nil }
         skin = resolved.skin
-        hostSkin = Self.hostSkin(resolved.skin, accentHex: nil)
+        hostSkin = Self.hostSkin(resolved.skin, accentHex: accentColorHex)
         skyProfile = resolved.host.skyProfile
         iconColorFamily = resolved.host.iconColorFamily
         composedKey = resolved.key
