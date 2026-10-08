@@ -158,7 +158,7 @@ struct SetupMotionSoundStepView: View {
             // Tint, no border and no rule — the emphasis is the surface itself,
             // per the no-separator design language.
             .background(
-                ChamferShape(cut: skin.radius.md)
+                skin.shape(cut: skin.radius.md)
                     .fill(tokens.color(\.accentPrimary).opacity(skin.opacity.o10))
             )
             .accessibilityIdentifier("setup.motion.reduceMotion")
@@ -211,7 +211,7 @@ struct SetupMotionSoundStepView: View {
         }
         .padding(skin.size.s14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: skin.radius.md).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o45)))
+        .background(skin.shape(cut: skin.radius.md).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o45)))
     }
 
     // MARK: - Sound
@@ -264,7 +264,7 @@ struct SetupMotionSoundStepView: View {
         }
         .padding(skin.size.s14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: skin.radius.md).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o45)))
+        .background(skin.shape(cut: skin.radius.md).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o45)))
     }
 
     // MARK: - Shared pieces
@@ -301,7 +301,7 @@ struct SetupMotionSoundStepView: View {
         }
         .padding(skin.size.s14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: skin.radius.md).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o45)))
+        .background(skin.shape(cut: skin.radius.md).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o45)))
     }
 
     /// Staging, routed through `SetupStageMotion` — never a bare

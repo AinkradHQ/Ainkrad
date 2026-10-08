@@ -177,7 +177,7 @@ struct AppStoreOverlayView: View {
                 }
             }
             .padding(skin.size.s48)
-            .clipShape(ChamferShape(cut: skin.radius.md))
+            .clipShape(skin.shape(cut: skin.radius.md))
             .shadow(color: skin.color(.palette("black", skin.opacity.o60)), radius: skin.size.s30, y: skin.size.s10)
             .allowsHitTesting(false)  // clicks on the image fall through to nothing (backdrop closes)
 
@@ -406,8 +406,8 @@ extension View {
     fileprivate func banner(tint: Color, fill: Double, stroke: Double, skin: AinkradSkin) -> some View {
         frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, skin.spacing.md).padding(.vertical, skin.size.s10)
-            .background(ChamferShape(cut: skin.radius.sm).fill(tint.opacity(fill)))
-            .overlay(ChamferShape(cut: skin.radius.sm).strokeBorder(tint.opacity(stroke), lineWidth: 1))
+            .background(skin.shape(cut: skin.radius.sm).fill(tint.opacity(fill)))
+            .overlay(skin.shape(cut: skin.radius.sm).strokeBorder(tint.opacity(stroke), lineWidth: 1))
             .padding(.horizontal, skin.size.s18).padding(.bottom, skin.spacing.sm)
     }
 }

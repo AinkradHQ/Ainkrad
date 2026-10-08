@@ -205,7 +205,7 @@ struct SetupAppearanceStepView: View {
             isSelected: isSelected,
             onTap: onTap,
             leading: {
-                ChamferShape(cut: skin.cut.c7)
+                skin.shape(cut: skin.cut.c7)
                     .fill(
                         LinearGradient(
                             colors: [themeSkin.color(\.accentPrimary), themeSkin.color(\.accentSecondary)],
@@ -215,7 +215,7 @@ struct SetupAppearanceStepView: View {
                     )
                     .frame(width: skin.size.s30, height: skin.size.s30)
                     .overlay(
-                        ChamferShape(cut: skin.cut.c7)
+                        skin.shape(cut: skin.cut.c7)
                             .strokeBorder(skin.color(.palette("white", skin.opacity.o18)), lineWidth: 1)
                     )
             },
@@ -282,11 +282,11 @@ struct SetupAppearanceStepView: View {
         return Button {  // design-lint: allow raw-control kit gap, label-free colour swatch
             manager.setAccentColorHex(hex)
         } label: {
-            ChamferShape(cut: skin.cut.c7)
+            skin.shape(cut: skin.cut.c7)
                 .fill(color)
                 .frame(width: skin.size.s30, height: skin.size.s30)
                 .overlay(
-                    ChamferShape(cut: skin.cut.c7).strokeBorder(
+                    skin.shape(cut: skin.cut.c7).strokeBorder(
                         isSelected
                             ? tokens.color(\.foreground).opacity(skin.opacity.o95)
                             : skin.color(.palette("white", skin.opacity.o16)),
