@@ -11,9 +11,12 @@ extension AppEnvironment {
     /// `defaults` is the legacy import source (`.standard`).
     /// - Parameter systemAppearance: the live system light/dark source; tests pass a stub so a theme
     ///   with both variants does not follow the Mac running the suite.
+    /// - Parameter launchArguments: where the DEBUG theme launch arguments are read
+    ///   (`-AinkradTheme` etc.); `preview()` passes its own so off-screen snapshots can set them.
     static func bootstrap(
         home: Home, defaults: UserDefaults = .standard,
-        systemAppearance: any SystemAppearanceSource = LiveSystemAppearance()
+        systemAppearance: any SystemAppearanceSource = LiveSystemAppearance(),
+        launchArguments: @escaping ArgumentLookup = { UserDefaults.standard.string(forKey: $0) }
     ) -> AppEnvironment {
         let sp0 = AinkradSignposts.begin(AinkradSignposts.launch, "boot-core-stores")
         let (
@@ -24,7 +27,8 @@ extension AppEnvironment {
             skillsRoot, appStore, appStoreStore, appIconStore,
             generalSettingsStore, skySettingsStore, sounds, connectionStore, discoveredModelsStore,
             assistantDocuments
-        ) = bootstrapCoreStores(home: home, defaults: defaults, systemAppearance: systemAppearance)
+        ) = bootstrapCoreStores(
+            home: home, defaults: defaults, systemAppearance: systemAppearance, launchArguments: launchArguments)
         AinkradSignposts.end(AinkradSignposts.launch, "boot-core-stores", sp0)
 
         let sp1 = AinkradSignposts.begin(AinkradSignposts.launch, "boot-agentkit-core")

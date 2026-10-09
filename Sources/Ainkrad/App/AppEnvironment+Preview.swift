@@ -24,7 +24,12 @@ extension AppEnvironment {
     /// catalog tests depend on NOT happening. Per-call isolation is kept;
     /// only the on-disk/on-suite footprint is reclaimed, once the caller
     /// drops its last reference.
-    static func preview() -> AppEnvironment {
+    ///
+    /// `launchArguments` stands in for the DEBUG theme launch arguments, keyed without
+    /// the dash (`["AinkradTheme": "glass", "AinkradThemesDir": dir]`), so an
+    /// off-screen snapshot can pick a theme, scheme and appearance. The process's own
+    /// arguments are never read here.
+    static func preview(launchArguments: [String: String] = [:]) -> AppEnvironment {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("AinkradPreview-\(UUID().uuidString)", isDirectory: true)
         let suiteName = "com.ainkrad.preview.\(UUID().uuidString)"
@@ -37,7 +42,7 @@ extension AppEnvironment {
         let home = Home(
             vaultRoot: root.appendingPathComponent("vault", isDirectory: true),
             cacheRoot: root.appendingPathComponent("cache", isDirectory: true))
-        let environment = bootstrap(home: home, defaults: defaults)
+        let environment = bootstrap(home: home, defaults: defaults, launchArguments: { launchArguments[$0] })
         environment.previewTeardown = {
             try? FileManager.default.removeItem(at: root)
             UserDefaults().removePersistentDomain(forName: suiteName)
