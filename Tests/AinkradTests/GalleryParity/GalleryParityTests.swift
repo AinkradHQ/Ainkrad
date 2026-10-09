@@ -41,8 +41,11 @@ public enum GalleryParityRenderer {
             backing: .buffered,
             defer: false
         )
-        window.isOpaque = false
-        window.backgroundColor = .clear
+        // Opaque black, like the view's own background: a `.behindWindow` blur
+        // sample (themeFoundation) would otherwise blur whatever is on the real
+        // screen at this window's position, so the golden changed run to run.
+        window.isOpaque = true
+        window.backgroundColor = .black
         window.contentView = hostingView
         window.layoutIfNeeded()
 
