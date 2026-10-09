@@ -80,7 +80,7 @@ struct DiffReviewView: View {
         }
         .opacity(rejected ? skin.opacity.o50 : 1)
         .padding(.horizontal, skin.spacing.sm).padding(.vertical, skin.size.s6)
-        .background(ChamferShape(cut: AinkradRadius.sm).fill(theme.background.opacity(skin.opacity.o40)))
+        .background(skin.shape(cut: AinkradRadius.sm).fill(theme.background.opacity(skin.opacity.o40)))
     }
 
     @ViewBuilder private func unifiedRows(_ hunk: DiffHunk) -> some View {

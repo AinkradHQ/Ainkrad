@@ -98,6 +98,9 @@ struct RootView: View {
                     environment.isAppStorePresented = false
                 }
                 .transition(.opacity)
+                // Opened from the setup gate's appearance step (more themes):
+                // above the gate, and closing it returns there.
+                .zIndex(environment.isSetupPresented ? 101 : 0)
             }
 
             signalOverlays
@@ -111,7 +114,7 @@ struct RootView: View {
 
             #if DEBUG
             if environment.isComponentGalleryPresented {
-                ComponentGalleryView {
+                ComponentGalleryView(catalog: environment.themeManager.catalog) {
                     environment.isComponentGalleryPresented = false
                 }
                 .transition(.opacity)

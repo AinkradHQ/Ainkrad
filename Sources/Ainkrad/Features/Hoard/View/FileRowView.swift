@@ -72,7 +72,7 @@ struct FileRowView: View {
         .monospacedDigit()
         .padding(.horizontal, AinkradSpacing.sm)
         .padding(.vertical, rowPadding)
-        .background(ChamferShape(cut: skin.cut.c4).fill(rowFill))
+        .background(skin.shape(cut: skin.cut.c4).fill(rowFill))
         .overlay(alignment: .leading) {
             Rectangle()
                 .fill(theme.accentSecondary)

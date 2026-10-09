@@ -10,12 +10,12 @@ public enum AppIconAppearance: String, Codable, CaseIterable, Sendable { case sy
 /// resource-name prefix (`blue`/`purple`).
 public enum AppIconColor: String, CaseIterable, Codable, Sendable { case blue, purple }
 
-/// Pure mapping from the user's settings + theme + current system appearance to
+/// Pure mapping from the user's settings + the theme's icon family + current system appearance to
 /// the bundled composed `.icns` resource base-name. AppKit-free and unit-tested.
 public enum AppIconResolver {
-    public static func color(for choice: AppIconChoice, theme: Theme) -> AppIconColor {
+    public static func color(for choice: AppIconChoice, themeFamily: AppIconColor) -> AppIconColor {
         switch choice {
-        case .auto: return theme.iconColorFamily
+        case .auto: return themeFamily
         case .blue: return .blue
         case .purple: return .purple
         }
@@ -30,10 +30,10 @@ public enum AppIconResolver {
     }
 
     public static func resourceName(
-        for choice: AppIconChoice, theme: Theme,
+        for choice: AppIconChoice, themeFamily: AppIconColor,
         appearance: AppIconAppearance, systemDark: Bool
     ) -> String {
-        let family = color(for: choice, theme: theme).rawValue
+        let family = color(for: choice, themeFamily: themeFamily).rawValue
         return "\(family)-\(isDark(appearance, systemDark: systemDark) ? "dark" : "light")"
     }
 }

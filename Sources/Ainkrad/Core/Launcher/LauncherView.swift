@@ -128,7 +128,7 @@ struct LauncherView: View {
         // The user's overlay opacity and blur settings, as every summoned
         // overlay reads them.
         .ainkradOverlayChrome(
-            backgroundOpacity: environment.generalSettingsStore.overlayBackgroundOpacity,
+            backgroundOpacity: environment.generalSettingsStore.overlayOpacity(in: skin),
             blurEnabled: environment.generalSettingsStore.overlayBlurEnabled,
             blending: .withinWindow
         )
@@ -150,7 +150,9 @@ struct LauncherView: View {
         )
         .overlay(
             AinkradCornerBrackets()
-                .stroke(isSelected ? tokens.color(\.accentSecondary).opacity(skin.opacity.o90) : .clear, lineWidth: 1.5)
+                .stroke(
+                    isSelected ? tokens.color(\.accentSecondary).opacity(skin.opacity.o90) : .clear,
+                    lineWidth: 1.5 * skin.bracketStrokeScale)
                 .padding(skin.size.s1)
         )
         .contentShape(Rectangle())
@@ -208,11 +210,13 @@ struct LauncherView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, skin.spacing.md)
         .background(
-            ChamferShape(cut: skin.radius.md).fill(tokens.color(\.accentSecondary).opacity(isSelected ? skin.opacity.o12 : 0))
+            skin.shape(cut: skin.radius.md).fill(tokens.color(\.accentSecondary).opacity(isSelected ? skin.opacity.o12 : 0))
         )
         .overlay(
             AinkradCornerBrackets(length: skin.size.s10)
-                .stroke(isSelected ? tokens.color(\.accentSecondary).opacity(skin.opacity.o90) : .clear, lineWidth: 1.5)
+                .stroke(
+                    isSelected ? tokens.color(\.accentSecondary).opacity(skin.opacity.o90) : .clear,
+                    lineWidth: 1.5 * skin.bracketStrokeScale)
                 .padding(skin.size.s2)
         )
         .contentShape(Rectangle())

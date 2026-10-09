@@ -104,7 +104,7 @@ struct SubscriptionApprovalView: View {
                 // A tint band per row, never a separator: the design language
                 // forbids rules, and the rows still have to read as a list.
                 .background(
-                    ChamferShape(cut: skin.radius.sm)
+                    skin.shape(cut: skin.radius.sm)
                         .fill(theme.surfaceElevated.opacity(skin.opacity.o45)))
             }
         }

@@ -98,7 +98,7 @@ struct ScheduleUIView: View {
                 .disabled(!canAdd)
         }
         .padding(skin.size.s14)
-        .background(ChamferShape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(skin.opacity.o40)))
+        .background(skin.shape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(skin.opacity.o40)))
     }
 
     private var canAdd: Bool {

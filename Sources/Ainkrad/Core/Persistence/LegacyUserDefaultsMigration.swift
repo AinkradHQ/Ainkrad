@@ -31,8 +31,11 @@ enum LegacyUserDefaultsMigration {
 
         let decoder = JSONDecoder()  // M1 wrote plain JSON with no date strategy
 
+        // M1's blob is a schema-1 payload: upgrade it before decoding.
         if let data = defaults.data(forKey: "global-settings"),
-            let value = try? decoder.decode(GlobalSettings.self, from: data)
+            let v1 = try? decoder.decode(JSONValue.self, from: data),
+            let v2 = try? JSONEncoder().encode(GlobalSettings.upgradeFromV1(v1)),
+            let value = try? decoder.decode(GlobalSettings.self, from: v2)
         {
             persistence.save(value)
         }

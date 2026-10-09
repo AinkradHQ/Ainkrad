@@ -9,6 +9,7 @@ import Testing
 /// skin and every theme must carry `sp42_82` with today's values — or the
 /// wizard's step transitions silently snap or change feel.
 @Suite("Setup motion tokens")
+@MainActor
 struct SetupMotionTokenTests {
     private let stageSpring = AinkradAnimationToken(curve: "spring", response: 0.42, damping: 0.82)
 
@@ -17,9 +18,9 @@ struct SetupMotionTokenTests {
     }
 
     @Test func everyThemeCarriesTheStageSpring() {
-        for theme in Theme.allCases {
-            let springs = ThemeCatalog.shared.themeFile(for: theme.rawValue).skin.motion.springs
-            #expect(springs["sp42_82"] == stageSpring, "\(theme.rawValue) lost the stage spring")
+        for theme in neonSchemeIDs {
+            let springs = NeonSchemes.skin(theme).motion.springs
+            #expect(springs["sp42_82"] == stageSpring, "\(theme) lost the stage spring")
         }
     }
 }

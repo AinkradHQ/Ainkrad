@@ -120,14 +120,14 @@ struct HoardFinderBar: View {
         .padding(.horizontal, AinkradSpacing.md)
         .padding(.vertical, AinkradSpacing.sm)
         .background(
-            ChamferShape(cut: AinkradRadius.md)
+            skin.shape(cut: AinkradRadius.md)
                 .fill(tokens.color(\.accentSecondary).opacity(isHighlighted ? skin.opacity.o12 : 0))
         )
         // The Launcher's targeting brackets on the highlighted row, for the
         // same reason: one selection language across every palette.
         .overlay(
             TargetingBrackets()
-                .stroke(tokens.color(\.accentSecondary), lineWidth: isHighlighted ? 1 : 0)
+                .stroke(tokens.color(\.accentSecondary), lineWidth: isHighlighted ? skin.bracketStrokeScale : 0)
         )
         .contentShape(Rectangle())
     }

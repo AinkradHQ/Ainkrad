@@ -43,23 +43,26 @@ private struct HUDPanelChrome: ViewModifier {
             .background {
                 ZStack {
                     if store.overlayBlurEnabled {
-                        // The kit's `.panel` level is `.hudWindow`, the material
-                        // the host's own blur used — same pixels.
-                        VisualEffectBlur(level: .panel, blendingMode: blending)
+                        // The theme's material (blur, glass or solid). Under blur the
+                        // kit's `.panel` level is `.hudWindow`, the material the
+                        // host's own blur used — same pixels.
+                        AinkradMaterialBackground(level: .panel, blending: blending)
                     }
-                    tokens.color(\.background).opacity(store.overlayBackgroundOpacity)
+                    // Under glass the user's opacity is capped at the theme's panel
+                    // opacity, so the default (tuned for Neon) can't bury the glass.
+                    tokens.color(\.background).opacity(store.overlayOpacity(in: skin))
                 }
             }
-            .clipShape(ChamferShape(cut: skin.radius.panel))
+            .clipShape(skin.shape(cut: skin.radius.panel))
             // Accent border must follow the CHAMFER (the SDK `.ainkradEdgeRing`
             // strokes a RoundedRectangle, which made overlays read as rounded
-            // despite the chamfer clip). Stroke the same ChamferShape so the
+            // despite the chamfer clip). Stroke the same skin shape so the
             // frame reads as Cardinal HUD. The colours stay on `tokens`, which
             // carry the user's custom accent; the skin's `overlay.edgeFrom/edgeTo`
             // would drop it (theme-foundation fact 2), so only their alphas and
             // the width come from the skin.
             .overlay(
-                ChamferShape(cut: skin.radius.panel)
+                skin.shape(cut: skin.radius.panel)
                     .strokeBorder(
                         LinearGradient(
                             colors: [
@@ -82,5 +85,21 @@ extension View {
         blending: NSVisualEffectView.BlendingMode = .withinWindow
     ) -> some View {
         modifier(HUDPanelChrome(tokens: tokens, blending: blending))
+    }
+}
+
+extension AinkradSkin {
+    /// 1 when the theme draws targeting brackets, 0 when it turns them off
+    /// (`effects.brackets.width` 0, e.g. Glass); multiplies a bracket stroke.
+    var bracketStrokeScale: CGFloat { effects.brackets.width > 0 ? 1 : 0 }
+}
+
+extension GeneralSettingsStore {
+    /// The user's overlay opacity, capped under a glass theme at the theme's
+    /// panel opacity: the default (0.94) was tuned for Neon and would bury
+    /// Liquid Glass. Every overlay and kit panel reads its fill through this.
+    func overlayOpacity(in skin: AinkradSkin) -> Double {
+        skin.material.kind == "glass"
+            ? min(overlayBackgroundOpacity, skin.material.panelOpacity) : overlayBackgroundOpacity
     }
 }

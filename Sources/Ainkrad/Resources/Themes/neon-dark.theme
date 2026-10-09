@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "neon.dark",
+  "name": "Neon",
+  "base": "neonBlue",
+  "host": {
+    "language": {
+      "id": "neon",
+      "name": "Neon",
+      "appearance": "dark",
+      "defaultColorScheme": "neonBlue",
+      "fontFamily": "exo2"
+    }
+  }
+}

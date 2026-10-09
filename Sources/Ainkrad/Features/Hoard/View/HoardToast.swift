@@ -78,7 +78,7 @@ struct HoardToast: View {
                 .font(skin.font(AinkradFontToken(sizeKey: "t11", weight: "semibold", scaled: false)))
                 .foregroundStyle(accent)
                 .frame(width: skin.size.s22, height: skin.size.s22)
-                .background(ChamferShape(cut: skin.cut.c5).fill(accent.opacity(skin.opacity.o15)))
+                .background(skin.shape(cut: skin.cut.c5).fill(accent.opacity(skin.opacity.o15)))
 
             VStack(alignment: .leading, spacing: skin.size.s1) {
                 Text(message.text)
@@ -103,18 +103,18 @@ struct HoardToast: View {
         .padding(.vertical, AinkradSpacing.sm)
         .background {
             ZStack {
-                ChamferShape(cut: skin.cut.c8).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o96))
+                skin.shape(cut: skin.cut.c8).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o96))
                 // A leading accent rule rather than a full tinted fill: colour
                 // the meaning, not the whole surface.
                 HStack(spacing: 0) {
                     Rectangle().fill(accent).frame(width: skin.size.s2)
                     Spacer()
                 }
-                .clipShape(ChamferShape(cut: skin.cut.c8))
+                .clipShape(skin.shape(cut: skin.cut.c8))
             }
         }
         .overlay(
-            ChamferShape(cut: skin.cut.c8)
+            skin.shape(cut: skin.cut.c8)
                 .strokeBorder(accent.opacity(skin.opacity.o35), lineWidth: 1)
         )
         .ainkradPanelGlow()
@@ -150,7 +150,7 @@ struct HoardFailureSheet: View {
                     .font(skin.font(AinkradFontToken(sizeKey: "t13", weight: "semibold", scaled: false)))
                     .foregroundStyle(statusColors.warning)
                     .frame(width: skin.size.s26, height: skin.size.s26)
-                    .background(ChamferShape(cut: skin.cut.c5).fill(statusColors.warning.opacity(skin.opacity.o15)))
+                    .background(skin.shape(cut: skin.cut.c5).fill(statusColors.warning.opacity(skin.opacity.o15)))
                 Text("\(failures.count) item\(failures.count == 1 ? "" : "s") failed")
                     .font(AinkradFontResolver.font(.headline, weight: .medium, typography: typo))
                     .foregroundStyle(tokens.color(\.foreground))
@@ -179,7 +179,7 @@ struct HoardFailureSheet: View {
                 .padding(AinkradSpacing.sm)
             }
             .frame(height: skin.size.s200)
-            .background(ChamferShape(cut: skin.cut.c6).fill(tokens.color(\.foreground).opacity(skin.opacity.o05)))
+            .background(skin.shape(cut: skin.cut.c6).fill(tokens.color(\.foreground).opacity(skin.opacity.o05)))
 
             HStack {
                 Spacer()

@@ -212,9 +212,9 @@ struct SetupYouStepView: View {
         }
         .padding(skin.size.s14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: skin.radius.md).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o50)))
+        .background(skin.shape(cut: skin.radius.md).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o50)))
         .overlay(
-            ChamferShape(cut: skin.radius.md).strokeBorder(tokens.color(\.accentPrimary).opacity(skin.opacity.o15), lineWidth: 1)
+            skin.shape(cut: skin.radius.md).strokeBorder(tokens.color(\.accentPrimary).opacity(skin.opacity.o15), lineWidth: 1)
         )
     }
 

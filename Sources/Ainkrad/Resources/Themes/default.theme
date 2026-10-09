@@ -2046,6 +2046,7 @@
   "material" : {
     "blurEnabled" : true,
     "hud" : "fullScreenUI",
+    "kind" : "blur",
     "panel" : "hudWindow",
     "panelOpacity" : 0.94
   },

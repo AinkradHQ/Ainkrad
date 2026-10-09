@@ -70,19 +70,43 @@ extension HostSettingsCatalog {
         let accentTitle =
             manager.accentColorHex.map { "#" + $0.uppercased().trimmingCharacters(in: ["#"]) }
             ?? "Theme default"
-        return [
+        let themes = manager.themes
+        let failures = manager.catalogFailureCount
+        let warnings = manager.catalogIssues.count - failures
+        var fields = [
             SettingsField(
                 path: group.appending("picker"), label: "Theme",
-                help: "The whole workspace re-tints — window, islands, and the sky behind it.",
-                keywords: ["theme", "color", "dark mode", "neon", "palette"],
+                help: "The design language — shapes, type and the whole workspace, sky included.",
+                keywords: ["theme", "design", "language", "look", "neon"],
                 kind: .select(
-                    options: Theme.allCases.map { SettingsOption(id: $0.rawValue, title: $0.displayName) },
-                    selection: Binding(
-                        get: { manager.currentTheme.rawValue },
-                        set: { if let t = Theme(rawValue: $0) { manager.setTheme(t) } })),
-                defaultDescription: defaults.theme.displayName,
-                isModified: { manager.currentTheme != defaults.theme },
+                    options: themes.map { SettingsOption(id: $0.id, title: $0.name) },
+                    selection: Binding(get: { manager.activeThemeID }, set: { manager.setTheme($0) })),
+                defaultDescription: themes.first { $0.id == defaults.theme }?.name ?? defaults.theme,
+                isModified: { manager.currentThemeID != defaults.theme },
                 reset: { manager.setTheme(defaults.theme) }),
+            colorSchemeField(manager, .dark, group: group),
+        ]
+        // Only a theme with a light variant has a light scheme to pick.
+        if manager.defaultColorSchemeID(for: .light) != nil {
+            fields.append(colorSchemeField(manager, .light, group: group))
+        }
+        // A fresh install has only Neon; every other theme comes from the store.
+        fields.append(
+            SettingsField(
+                path: group.appending("more-themes"), label: "More themes",
+                help: "Themes and colour schemes from the App Store. Installed ones show up here at once.",
+                keywords: ["theme", "store", "app store", "download", "install", "colour scheme", "more"],
+                kind: .action(title: "More themes…") { environment.presentThemeStore() }))
+        let filesField = SettingsField(
+            path: group.appending("files"), label: "Theme files",
+            help: "Themes and colour schemes are loaded from the app and from your Home's Config/Themes folder.",
+            keywords: ["theme", "colour", "color scheme", "files", "errors"],
+            kind: .action(
+                title: failures > 0
+                    ? "\(failures) file\(failures == 1 ? "" : "s") could not load"
+                    : warnings > 0 ? "All loaded, \(warnings) warning\(warnings == 1 ? "" : "s")" : "All loaded"
+            ) { environment.settingsDrafts.showsThemeFiles = true })
+        return fields + [
             SettingsField(
                 path: group.appending("accent"), label: "Accent",
                 help: "Used for anything live: selection, focus, the things that are currently doing something.",
@@ -122,7 +146,34 @@ extension HostSettingsCatalog {
                     + "Ainkrad. Independent of the macOS Reduce Motion setting.",
                 get: { $0.uiReduceMotion }, set: { $0.setUiReduceMotion($1) },
                 default: defaults.uiReduceMotion),
+            filesField,
         ]
+    }
+
+    /// One colour-scheme select per appearance; nil (the reset) follows the theme.
+    private static func colorSchemeField(
+        _ manager: ThemeManager, _ appearance: ThemeAppearance, group: SettingsPath
+    ) -> SettingsField {
+        let schemes = manager.colorSchemes(for: appearance)
+        let fallback = manager.defaultColorSchemeID(for: appearance) ?? ""
+        let defaultName = schemes.first { $0.id == fallback }?.name ?? fallback
+        return SettingsField(
+            path: group.appending("scheme-\(appearance.rawValue)"),
+            label: appearance == .dark ? "Dark colour scheme" : "Light colour scheme",
+            help: "The colours on top of the theme: palette, terminal and the sky's tint.",
+            keywords: ["theme", "colour", "color", "color scheme", "palette", "light", "dark", "dark mode"],
+            kind: .select(
+                options: schemes.map { SettingsOption(id: $0.id, title: $0.name) },
+                selection: Binding(
+                    get: {
+                        manager.colorSchemeID(for: appearance).flatMap { id in
+                            schemes.contains { $0.id == id } ? id : nil
+                        } ?? fallback
+                    },
+                    set: { manager.setColorScheme($0, for: appearance) })),
+            defaultDescription: "Theme default (\(defaultName))",
+            isModified: { manager.colorSchemeID(for: appearance) != nil },
+            reset: { manager.setColorScheme(nil, for: appearance) })
     }
 
     static func overlayFields(_ environment: AppEnvironment, group: SettingsPath) -> [SettingsField] {
@@ -146,6 +197,17 @@ extension HostSettingsCatalog {
                 get: { $0.overlayBlurEnabled }, set: { $0.setOverlayBlurEnabled($1) },
                 default: defaults.overlayBlurEnabled),
         ]
+    }
+
+    /// The Living Sky group, or `nil` when the theme's language has no sky.
+    /// Hidden, never reset: the stored sky settings are untouched, so a theme
+    /// with a sky shows them exactly as they were.
+    static func livingSkyGroup(_ environment: AppEnvironment, page: SettingsPath) -> SettingsGroup? {
+        guard environment.themeManager.homeLanguage.sky else { return nil }
+        return SettingsGroup(
+            path: page.appending("livingSky"), title: "Living Sky",
+            footerNote: "The island artwork itself is never animated.",
+            fields: livingSkyFields(environment, group: page.appending("livingSky")))
     }
 
     static func livingSkyFields(_ environment: AppEnvironment, group: SettingsPath) -> [SettingsField] {

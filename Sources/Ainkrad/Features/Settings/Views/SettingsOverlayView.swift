@@ -102,6 +102,7 @@ struct SettingsOverlayView: View {
                     .onDisappear {
                         environment.settingsDrafts.recorder.stop()
                         environment.settingsDrafts.pendingConfirm = nil
+                        environment.settingsDrafts.showsThemeFiles = false
                     }
 
                 let size = SettingsGeometry.panelSize(in: geo.size)
@@ -119,6 +120,16 @@ struct SettingsOverlayView: View {
                     ) {
                         // Read at tap time: the request the dialog is showing.
                         environment.settingsDrafts.pendingConfirm?.onConfirm()
+                    }
+                    .ainkradModal(
+                        isPresented: Binding(
+                            get: { environment.settingsDrafts.showsThemeFiles },
+                            set: { environment.settingsDrafts.showsThemeFiles = $0 }),
+                        contentWidth: skin.size.s520
+                    ) {
+                        ThemeFilesSheet(issues: environment.themeManager.catalogIssues) {
+                            environment.settingsDrafts.showsThemeFiles = false
+                        }
                     }
             }
         }
@@ -155,6 +166,10 @@ struct SettingsOverlayView: View {
             // An open confirm answers Esc first, as Cancel.
             if environment.settingsDrafts.pendingConfirm != nil {
                 environment.settingsDrafts.pendingConfirm = nil
+                return .handled
+            }
+            if environment.settingsDrafts.showsThemeFiles {
+                environment.settingsDrafts.showsThemeFiles = false
                 return .handled
             }
             // Agree with `SettingsSearchMode`'s own notion of "empty" — a
@@ -289,7 +304,9 @@ struct SettingsOverlayView: View {
         )
         .overlay(
             AinkradCornerBrackets(length: skin.size.s7)
-                .stroke(isSelected ? tokens.color(\.accentSecondary).opacity(skin.opacity.o90) : .clear, lineWidth: 1.3)
+                .stroke(
+                    isSelected ? tokens.color(\.accentSecondary).opacity(skin.opacity.o90) : .clear,
+                    lineWidth: 1.3 * skin.bracketStrokeScale)
                 .padding(skin.size.s1)
         )
         // The kit row takes its tap as a gesture; these keep the row one

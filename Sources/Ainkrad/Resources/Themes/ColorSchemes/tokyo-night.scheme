@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "tokyoNight",
   "name": "Tokyo Night",
-  "base": "neonBlue",
+  "appearance": "dark",
   "palette": {
     "background": "#15161F",
     "surface": "#1A1B26",

@@ -47,13 +47,14 @@ public final class HostServicesImpl: HostServices, PluginInstanceIdentity {
         self.secrets = ScopedPluginSecretStore(appID: appID, backing: secretStore)
         self.log = PluginLoggerImpl(appID: appID)
         self.themeManager = themeManager
-        self.theme = HostTheme(HostThemeTokens(from: themeManager.currentTheme))
+        self.theme = HostTheme(HostThemeTokens(skin: themeManager.skin))
         // Publish the host's REAL status palette rather than leaving the
         // accent-derived fallback. `HostThemeTokens` cannot carry these (it is
         // ABI-frozen for plugins), and without them a plugin had no way to
         // express success/warning/danger through the theme — which is why they
         // all hardcoded system colors.
         self.theme.updateStatusColors(HostStatusColors(from: themeManager.skin))
+        self.theme.updateTerminalPalette(HostTerminalPalette(themeManager.skin.terminal))
         self.context = HostContextRegistry(appID: appID, hub: hub)
         self.actions = HostActionRegistry(appID: appID, hub: actionHub)
         self.apps = HostAppLauncher(appID: appID, hub: launchHub)
@@ -66,16 +67,17 @@ public final class HostServicesImpl: HostServices, PluginInstanceIdentity {
         armThemeSync()
     }
 
-    /// Observation fires `onChange` once, just before `currentTheme` changes, so
+    /// Observation fires `onChange` once, just before `skin` changes, so
     /// read the new value on the next main-actor hop and re-arm for the next one.
     private func armThemeSync() {
         withObservationTracking {
-            _ = themeManager.currentTheme
+            _ = themeManager.skin
         } onChange: { [weak self] in
             Task { @MainActor in
                 guard let self else { return }
-                self.theme.update(HostThemeTokens(from: self.themeManager.currentTheme))
+                self.theme.update(HostThemeTokens(skin: self.themeManager.skin))
                 self.theme.updateStatusColors(HostStatusColors(from: self.themeManager.skin))
+                self.theme.updateTerminalPalette(HostTerminalPalette(self.themeManager.skin.terminal))
                 self.armThemeSync()
             }
         }
@@ -193,19 +195,6 @@ final class PluginLoggerImpl: PluginLogger {
     init(appID: String) { logger = Logger(subsystem: "com.ainkrad.app.plugin.\(appID)", category: "plugin") }
     func info(_ message: String) { logger.info("\(message, privacy: .public)") }
     func error(_ message: String) { logger.error("\(message, privacy: .public)") }
-}
-
-extension HostThemeTokens {
-    public init(from theme: Theme) {
-        let s = theme.skin
-        self.init(
-            themeID: theme.rawValue,
-            background: s.color(\.background), surface: s.color(\.surface),
-            surfaceElevated: s.color(\.surfaceElevated), accentPrimary: s.color(\.accentPrimary),
-            accentSecondary: s.color(\.accentSecondary), accentTertiary: s.color(\.accentTertiary),
-            foreground: s.color(\.foreground)
-        )
-    }
 }
 
 extension HostStatusColors {

@@ -146,7 +146,7 @@ struct SetupHomeStepView: View {
         .padding(skin.size.s14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            ChamferShape(cut: skin.radius.md)
+            skin.shape(cut: skin.radius.md)
                 .fill(tokens.color(\.accentSecondary).opacity(skin.opacity.o09))
         )
         .accessibilityElement(children: .combine)
@@ -289,7 +289,7 @@ struct SetupHomeStepView: View {
         .padding(skin.spacing.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            ChamferShape(cut: skin.radius.md)
+            skin.shape(cut: skin.radius.md)
                 .fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o35))
         )
         .accessibilityElement(children: .contain)
@@ -387,7 +387,7 @@ struct SetupHomeStepView: View {
         }
         .padding(skin.size.s14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: skin.radius.md).fill(tint.opacity(skin.opacity.o09)))
+        .background(skin.shape(cut: skin.radius.md).fill(tint.opacity(skin.opacity.o09)))
     }
 
     private func choose() {

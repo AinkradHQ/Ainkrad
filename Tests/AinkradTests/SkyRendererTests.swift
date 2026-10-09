@@ -24,7 +24,7 @@ struct SkyRendererTests {
 
     @Test("every gradient layer is free of hard edges", arguments: ["aurora", "rays", "mist", "bokeh"])
     func gradientLayersAreSoft(layerName: String) throws {
-        let tokens = Theme.neonBlue.skin
+        let tokens = NeonSchemes.skin("neonBlue")
         let step = try maxAdjacentPixelStep { context, canvasSize in
             switch layerName {
             case "aurora": SkyRenderer.aurora(in: &context, size: canvasSize, time: time, surge: 0, tokens: tokens)

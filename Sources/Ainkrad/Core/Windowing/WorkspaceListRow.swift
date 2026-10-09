@@ -79,7 +79,7 @@ struct WorkspaceListRow: View {
         .overlay(
             // The kit row background's own chamfer (listRow shape, cut 6), so the
             // drop ring sits on the row's edge.
-            ChamferShape(cut: skin.cut.c6)
+            skin.shape(cut: skin.cut.c6)
                 .strokeBorder(
                     isDropTarget ? tokens.color(\.accentSecondary).opacity(skin.opacity.o90) : .clear, lineWidth: 1.5)
         )

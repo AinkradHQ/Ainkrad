@@ -75,14 +75,14 @@ struct DebugFixtureSeedTests {
         let persistence = FileDocumentStore(rootURL: vaultConfig)
 
         var settings = try #require(persistence.load(GlobalSettings.self))
-        settings.theme = .cyberPurple
+        settings.colorSchemeDark = "cyberPurple"
         persistence.save(settings)
 
         // Seed again over existing adopted Home
         seedDebugFixtureIfNeeded(home: home, lookup: lookup)
 
         let reloadedSettings = try #require(persistence.load(GlobalSettings.self))
-        #expect(reloadedSettings.theme == .cyberPurple)
+        #expect(reloadedSettings.colorSchemeDark == "cyberPurple")
     }
 
     @Test("seeding with seed flag alone ignores seeding and makes no writes outside fixture")

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "gruvbox",
   "name": "Gruvbox",
-  "base": "neonBlue",
+  "appearance": "dark",
   "palette": {
     "background": "#1D2021",
     "surface": "#282828",

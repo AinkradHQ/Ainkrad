@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "dracula",
   "name": "Dracula",
-  "base": "neonBlue",
+  "appearance": "dark",
   "palette": {
     "background": "#1A1B23",
     "surface": "#282A36",

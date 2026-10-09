@@ -14,7 +14,9 @@ extension AppEnvironment {
     /// layer, the legacy-defaults migration, plugin loading/App Store
     /// plumbing, app appearance/icon/sound stores, and the connection +
     /// discovered-models stores.
-    static func bootstrapCoreStores(home: Home, defaults: UserDefaults) -> (
+    static func bootstrapCoreStores(
+        home: Home, defaults: UserDefaults, systemAppearance: any SystemAppearanceSource
+    ) -> (
         persistence: PersistenceStore,
         secrets: SecretStore,
         registry: BuiltInAppRegistry,
@@ -73,7 +75,23 @@ extension AppEnvironment {
         LegacyUserDefaultsMigration.runIfNeeded(persistence: persistence, defaults: defaults)
 
         let registry = BuiltInAppRegistry(persistence: persistence)
-        let themeManager = ThemeManager(persistence: persistence)
+        // Themes and colour schemes: the bundle, plus any dropped or store-installed
+        // under `<Home>/Config/Themes` (a bundled id is never shadowed).
+        let homeThemesRoot = home.shared(.config).appendingPathComponent("Themes", isDirectory: true)
+        var themeRoots = [homeThemesRoot]
+        #if DEBUG
+        // `-AinkradThemesDir` is scanned first, so files being authored win over installed copies.
+        let debugTheme = parseDebugThemeArguments()
+        if let dir = debugTheme.themesDir { themeRoots.insert(dir, at: 0) }
+        #endif
+        let themeManager = ThemeManager(
+            persistence: persistence, catalog: ThemeCatalog(userRoots: themeRoots), systemAppearance: systemAppearance)
+        #if DEBUG
+        if debugTheme.theme != nil || debugTheme.colorScheme != nil || debugTheme.appearance != nil {
+            themeManager.applyLaunchOverride(
+                theme: debugTheme.theme, colorScheme: debugTheme.colorScheme, appearance: debugTheme.appearance)
+        }
+        #endif
 
         let workspaceManager = WorkspaceManager()
         AinkradSignposts.end(AinkradSignposts.launch, "core-a-persistence-keychain-registry", csp0)
@@ -171,11 +189,16 @@ extension AppEnvironment {
         let skillInstaller = SkillInstaller(
             http: URLSessionHTTPClient(), paths: SkillPaths(root: skillsRoot),
             persistence: persistence)
+        // Store themes land in a subfolder of the Home themes root the catalog already scans.
+        let themeInstaller = ThemeInstaller(
+            http: URLSessionHTTPClient(),
+            storeRoot: homeThemesRoot.appendingPathComponent("Store", isDirectory: true),
+            persistence: persistence, themeManager: themeManager)
         let appStore = AppStoreService(
             catalog: catalogService, installer: installer,
             mcpInstaller: mcpInstaller, persistence: persistence,
-            skillInstaller: skillInstaller)
-        let appStoreStore = AppStoreStore(service: appStore, registry: registry)
+            skillInstaller: skillInstaller, themeInstaller: themeInstaller)
+        let appStoreStore = AppStoreStore(service: appStore, registry: registry, themeManager: themeManager)
 
         let appIconStore = AppIconStore(
             persistence: persistence,

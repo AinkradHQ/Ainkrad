@@ -153,10 +153,10 @@ struct SignalBellDropdown: View {
         let layers = min(hidden, 2)
         return ZStack(alignment: .top) {
             ForEach((1...max(layers, 1)).reversed(), id: \.self) { depth in
-                ChamferShape(cut: skin.cut.c6)
+                skin.shape(cut: skin.cut.c6)
                     .fill(theme.surfaceElevated.opacity(depth == 1 ? skin.opacity.o55 : skin.opacity.o32))
                     .overlay(
-                        ChamferShape(cut: skin.cut.c6)
+                        skin.shape(cut: skin.cut.c6)
                             .strokeBorder(theme.accentSecondary.opacity(skin.opacity.o14), lineWidth: 1)
                     )
                     .padding(.horizontal, CGFloat(depth) * skin.size.s7)
@@ -166,7 +166,7 @@ struct SignalBellDropdown: View {
                     .onTapGesture { toggle(group.source) }
             }
             glanceRow(group.events[0])
-                .background(ChamferShape(cut: skin.cut.c6).fill(theme.surfaceElevated.opacity(skin.opacity.o90)))
+                .background(skin.shape(cut: skin.cut.c6).fill(theme.surfaceElevated.opacity(skin.opacity.o90)))
         }
         .padding(.bottom, CGFloat(layers) * skin.size.s5 + skin.spacing.xs)
         .overlay(alignment: .bottomTrailing) {
@@ -191,13 +191,13 @@ struct SignalBellDropdown: View {
             .foregroundStyle(theme.accentSecondary)
             .padding(.horizontal, skin.size.s7)
             .padding(.vertical, skin.size.s2_5)
-            .background(ChamferShape(cut: skin.cut.c3).fill(theme.surface))
-            .background(ChamferShape(cut: skin.cut.c3).fill(theme.accentSecondary.opacity(skin.opacity.o16)))
+            .background(skin.shape(cut: skin.cut.c3).fill(theme.surface))
+            .background(skin.shape(cut: skin.cut.c3).fill(theme.accentSecondary.opacity(skin.opacity.o16)))
             .overlay(
-                ChamferShape(cut: skin.cut.c3)
+                skin.shape(cut: skin.cut.c3)
                     .strokeBorder(theme.accentSecondary.opacity(skin.opacity.o40), lineWidth: 1)
             )
-            .contentShape(ChamferShape(cut: skin.cut.c3))
+            .contentShape(skin.shape(cut: skin.cut.c3))
         }
         .buttonStyle(.plain)
         .help(text == "Show less" ? "Show less" : "Show \(text.dropFirst()) more")

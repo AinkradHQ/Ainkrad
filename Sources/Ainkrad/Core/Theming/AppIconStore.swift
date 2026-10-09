@@ -24,7 +24,7 @@ final class AppIconStore {
 
     /// Apply the current settings to the running app (launch, theme change).
     func applyCurrent() {
-        applier.apply(choice: choice, appearance: appearance, theme: themeManager.currentTheme)
+        applier.apply(choice: choice, appearance: appearance, themeFamily: themeManager.iconColorFamily)
     }
 
     func selectColor(_ choice: AppIconChoice) {

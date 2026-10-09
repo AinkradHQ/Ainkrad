@@ -3,26 +3,27 @@ import SwiftUI
 import Testing
 
 @testable import Ainkrad
+@testable import AinkradHostRuntime
 
 @Suite("Theme")
+@MainActor
 struct ThemeTests {
-    @Test("neonBlue is the first case (the default theme)")
+    @Test("Neon is the only bundled theme, and Neon Blue is its default scheme")
     func neonBlueIsDefault() {
-        #expect(Theme.allCases.first == .neonBlue)
+        #expect(NeonSchemes.catalog.languages.map(\.id) == ["neon"])
+        #expect(NeonSchemes.catalog.languages.first?.defaultColorScheme == "neonBlue")
     }
 
-    @Test("the brand themes plus the ported well-known palettes are present")
+    @Test("the brand schemes plus the ported well-known palettes are present")
     func allThemesPresent() {
-        #expect(Theme.allCases.count == 7)
-        for theme in [Theme.cyberPurple, .dracula, .nord, .tokyoNight, .gruvbox, .solarizedDark] {
-            #expect(Theme.allCases.contains(theme))
-        }
+        #expect(Set(NeonSchemes.catalog.schemes(for: .dark).map(\.id)) == Set(neonSchemeIDs))
+        #expect(neonSchemeIDs.count == 7)
     }
 
-    @Test("every theme resolves to a distinct background token")
+    @Test("every scheme resolves to a distinct background token")
     func everyThemeResolves() {
         var backgrounds = Set<Color>()
-        for theme in Theme.allCases { backgrounds.insert(theme.skin.color(\.background)) }
-        #expect(backgrounds.count == Theme.allCases.count)
+        for theme in neonSchemeIDs { backgrounds.insert(NeonSchemes.skin(theme).color(\.background)) }
+        #expect(backgrounds.count == neonSchemeIDs.count)
     }
 }

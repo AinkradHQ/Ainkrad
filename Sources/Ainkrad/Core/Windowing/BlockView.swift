@@ -101,7 +101,7 @@ struct BlockView: View {
         // only input is whether the blur is on, which does NOT change when focus
         // moves, so SwiftUI skips re-rendering it on a tab switch.
         .background(PaneGlassBackdrop(isEnabled: glassBlur))
-        .clipShape(ChamferShape(cut: skin.radius.md))
+        .clipShape(skin.shape(cut: skin.radius.md))
         // The pane's frame — and, when it becomes the focused one, the pulse of
         // light that now carries the tab transition. Its own view so the pulse
         // animates without re-evaluating this body (and therefore without
@@ -158,15 +158,17 @@ struct BlockView: View {
         // if a stale `dropEdge` lingers from a pane the drag passed over.
         if let dropEdge, tileLayout.draggingBlockID != nil {
             let isHorizontal = dropEdge == .leading || dropEdge == .trailing
-            let zone = ChamferShape(cut: skin.radius.sm)
+            let zone = skin.shape(cut: skin.radius.sm)
                 .fill(tokens.color(\.accentPrimary).opacity(skin.opacity.o16))
                 .overlay(
-                    ChamferShape(cut: skin.radius.sm)
+                    skin.shape(cut: skin.radius.sm)
                         .strokeBorder(tokens.color(\.accentSecondary).opacity(skin.opacity.o65), lineWidth: 1)
                 )
                 .overlay(
                     TargetingBrackets(length: skin.size.s9)
-                        .stroke(tokens.color(\.accentSecondary).opacity(skin.opacity.o90), lineWidth: 1.5)
+                        .stroke(
+                            tokens.color(\.accentSecondary).opacity(skin.opacity.o90),
+                            lineWidth: 1.5 * skin.bracketStrokeScale)
                         .padding(skin.spacing.xs)
                 )
                 .overlay(

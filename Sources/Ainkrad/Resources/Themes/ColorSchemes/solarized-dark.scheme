@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "solarizedDark",
   "name": "Solarized Dark",
-  "base": "neonBlue",
+  "appearance": "dark",
   "palette": {
     "background": "#002B36",
     "surface": "#073642",

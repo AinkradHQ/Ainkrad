@@ -30,8 +30,8 @@ struct GeneratedImageView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(maxWidth: skin.size.s320, maxHeight: skin.size.s320, alignment: .leading)
-                .clipShape(ChamferShape(cut: AinkradRadius.md))
-                .overlay(ChamferShape(cut: AinkradRadius.md).stroke(theme.accentSecondary.opacity(skin.opacity.o22), lineWidth: 1))
+                .clipShape(skin.shape(cut: AinkradRadius.md))
+                .overlay(skin.shape(cut: AinkradRadius.md).stroke(theme.accentSecondary.opacity(skin.opacity.o22), lineWidth: 1))
                 .overlay(alignment: .topTrailing) { actionBar(d).padding(skin.size.s6) }
                 .contentShape(Rectangle())
                 .onHover { isHovering = $0 }
@@ -71,7 +71,7 @@ struct GeneratedImageView: View {
             }
         }
         .padding(skin.size.s3)
-        .background(ChamferShape(cut: AinkradRadius.sm).fill(theme.background.opacity(skin.opacity.o70)))
+        .background(skin.shape(cut: AinkradRadius.sm).fill(theme.background.opacity(skin.opacity.o70)))
         .opacity(isHovering ? skin.opacity.o95 : 0)
         .animation(reduceMotion ? nil : AinkradMotion.hover, value: isHovering)
     }
@@ -135,8 +135,8 @@ struct GeneratedVideoView: View {
             }
             .aspectRatio(16.0 / 9.0, contentMode: .fit)
             .frame(maxWidth: skin.size.s360, maxHeight: skin.size.s240, alignment: .leading)
-            .clipShape(ChamferShape(cut: AinkradRadius.md))
-            .overlay(ChamferShape(cut: AinkradRadius.md).stroke(theme.accentSecondary.opacity(skin.opacity.o22), lineWidth: 1))
+            .clipShape(skin.shape(cut: AinkradRadius.md))
+            .overlay(skin.shape(cut: AinkradRadius.md).stroke(theme.accentSecondary.opacity(skin.opacity.o22), lineWidth: 1))
             .overlay(alignment: .topTrailing) { actionBar(url).padding(skin.size.s6) }
             .onHover { isHovering = $0 }
             .ainkradContextMenu([
@@ -166,7 +166,7 @@ struct GeneratedVideoView: View {
             AinkradIconButton(systemName: "square.and.arrow.down", size: 22, tooltip: "Download") { download(url) }
         }
         .padding(skin.size.s3)
-        .background(ChamferShape(cut: AinkradRadius.sm).fill(theme.background.opacity(skin.opacity.o70)))
+        .background(skin.shape(cut: AinkradRadius.sm).fill(theme.background.opacity(skin.opacity.o70)))
         .opacity(isHovering ? skin.opacity.o95 : 0)
         .animation(reduceMotion ? nil : AinkradMotion.hover, value: isHovering)
     }
@@ -235,8 +235,8 @@ struct GeneratedAudioView: View {
             }
             .padding(.horizontal, skin.size.s10).padding(.vertical, skin.spacing.sm)
             .frame(maxWidth: skin.size.s360, alignment: .leading)
-            .background(ChamferShape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(skin.opacity.o40)))
-            .overlay(ChamferShape(cut: AinkradRadius.md).stroke(theme.accentSecondary.opacity(skin.opacity.o22), lineWidth: 1))
+            .background(skin.shape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(skin.opacity.o40)))
+            .overlay(skin.shape(cut: AinkradRadius.md).stroke(theme.accentSecondary.opacity(skin.opacity.o22), lineWidth: 1))
             .onAppear { ensurePlayer(url) }
             .onReceive(ticker) { _ in
                 guard isPlaying, let p = player else { return }

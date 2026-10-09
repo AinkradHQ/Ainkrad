@@ -62,7 +62,7 @@ final class QuitCoordinatorTests {
     func confirmWithDontAskAgainPersistsPreference() {
         let persistence = InMemoryPersistenceStore()
         var settings = GlobalSettings()
-        settings.theme = .cyberPurple
+        settings.colorSchemeDark = "cyberPurple"
         persistence.save(settings)
         let terminator = FakeTerminationReplier()
         let coordinator = QuitCoordinator(persistence: persistence, terminator: terminator)
@@ -72,7 +72,7 @@ final class QuitCoordinatorTests {
 
         let saved = persistence.load(GlobalSettings.self)
         #expect(saved?.confirmBeforeQuit == false)
-        #expect(saved?.theme == .cyberPurple)
+        #expect(saved?.colorSchemeDark == "cyberPurple")
         #expect(terminator.replies == [true])
     }
 

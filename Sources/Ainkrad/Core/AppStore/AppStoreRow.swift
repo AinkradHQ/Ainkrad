@@ -1,7 +1,13 @@
 import Foundation
+import SwiftUI
 
 enum AppStoreRowStatus: Equatable { case available, installed, updateAvailable }
-enum AppStoreRowKind: Equatable { case builtIn, plugin, mcpServer }
+enum AppStoreRowKind: Equatable {
+    case builtIn, plugin, mcpServer, theme, colorScheme
+
+    /// A row on the Themes tab: a store theme or colour scheme.
+    var isTheme: Bool { self == .theme || self == .colorScheme }
+}
 
 /// A plain, SILGen-safe projection of one row in the App Store grid.
 struct AppStoreRow: Identifiable, Equatable {
@@ -24,6 +30,13 @@ struct AppStoreRow: Identifiable, Equatable {
     /// Installed or updated while an older copy of its code is loaded: dyld
     /// never unloads a bundle, so the new version runs only after a restart.
     var needsRestart = false
+    /// Theme rows: which appearances it has ("Dark · Light"), or how many
+    /// before it is installed. A scheme row: its appearance.
+    var appearancesText: String? = nil
+    /// An installed colour scheme's colours: background, accent, secondary accent.
+    var swatch: [Color] = []
+    /// Theme rows: the theme or scheme in use right now.
+    var isApplied = false
 }
 
 extension AppStoreRow {

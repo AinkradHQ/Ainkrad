@@ -34,7 +34,7 @@ struct HoardPromptSheet: View {
                     .focused($fieldFocused)
                     .padding(.horizontal, AinkradSpacing.sm)
                     .padding(.vertical, skin.size.s6)
-                    .background(ChamferShape(cut: skin.cut.c4).fill(theme.foreground.opacity(skin.opacity.o08)))
+                    .background(skin.shape(cut: skin.cut.c4).fill(theme.foreground.opacity(skin.opacity.o08)))
                     .onSubmit(commit)
 
             case .noDestination(let isMove):
@@ -135,7 +135,7 @@ struct ConflictSheet: View {
                 .font(skin.font(AinkradFontToken(sizeKey: "t13", weight: "semibold", scaled: false)))
                 .foregroundStyle(statusColors.warning)
                 .frame(width: skin.size.s26, height: skin.size.s26)
-                .background(ChamferShape(cut: skin.cut.c5).fill(statusColors.warning.opacity(skin.opacity.o15)))
+                .background(skin.shape(cut: skin.cut.c5).fill(statusColors.warning.opacity(skin.opacity.o15)))
 
             VStack(alignment: .leading, spacing: skin.size.s3) {
                 Text("\u{201C}\(question.name)\u{201D} already exists")

@@ -29,10 +29,10 @@ struct FullScreenStatusBarView: View {
                     .padding(.horizontal, skin.spacing.sm)
                     .padding(.vertical, skin.spacing.xs)
                     .background(
-                        ChamferShape(cut: skin.radius.sm).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o32))
+                        skin.shape(cut: skin.radius.sm).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o32))
                     )
                     .overlay(
-                        ChamferShape(cut: skin.radius.sm).strokeBorder(
+                        skin.shape(cut: skin.radius.sm).strokeBorder(
                             tokens.color(\.surface).opacity(skin.opacity.o40), lineWidth: 1))
             }
         }

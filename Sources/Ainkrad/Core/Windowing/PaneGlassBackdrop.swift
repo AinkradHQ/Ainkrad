@@ -26,18 +26,50 @@ import SwiftUI
 /// scale for a fixed canvas and every pane shows it aspect-filled. Size is not
 /// an input: adding a pane, dragging a divider or entering full screen renders
 /// nothing (rendering per size stalled the main thread on every one of those).
+///
+/// ## A theme without the sky backdrop
+///
+/// `paneBackdrop: material` swaps the render for the theme's real material
+/// (`AinkradMaterialBackground`), so the image cache is never touched. The
+/// language is read from the environment, not passed in, so `isEnabled` stays
+/// the only input and a focus change still skips this view.
 struct PaneGlassBackdrop: View {
     let isEnabled: Bool
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.ainkradSkin) private var skin
 
+    #if DEBUG
+    /// Per environment (the test host app runs its own panes): body
+    /// evaluations, image-cache lookups and renders. Tests read them to prove
+    /// a focus switch skips this view and a material backdrop renders nothing.
+    static var debugBodyCounts: [ObjectIdentifier: Int] = [:]
+    static var debugCacheLookups: [ObjectIdentifier: Int] = [:]
+    static var debugRenders: [ObjectIdentifier: Int] = [:]
+    #endif
+
     var body: some View {
+        #if DEBUG
+        let _ = Self.debugBodyCounts[ObjectIdentifier(environment), default: 0] += 1
+        #endif
         if isEnabled {
+            switch environment.themeManager.homeLanguage.paneBackdrop {
+            case .sky: blurredSky
+            case .material: AinkradMaterialBackground(level: .panel, blending: .withinWindow)
+            case .solid: environment.themeManager.hostSkin.color(\.background)
+            }
+        }
+    }
+
+    private var blurredSky: some View {
+        Group {
             let key = PaneGlassImageCache.Key(
-                theme: environment.themeManager.currentTheme.rawValue,
+                theme: environment.themeManager.composedKey,
                 tokens: environment.themeManager.hostSkin,
                 effects: environment.skySettingsStore.effectEnabled)
             GeometryReader { proxy in
+                #if DEBUG
+                let _ = Self.debugCacheLookups[ObjectIdentifier(environment), default: 0] += 1
+                #endif
                 if let image = PaneGlassImageCache.image(for: key, render: render) {
                     Image(decorative: image, scale: PaneGlassImageCache.scale)
                         .resizable()
@@ -50,6 +82,9 @@ struct PaneGlassBackdrop: View {
     }
 
     private func render() -> CGImage? {
+        #if DEBUG
+        Self.debugRenders[ObjectIdentifier(environment), default: 0] += 1
+        #endif
         let renderer = ImageRenderer(
             content:
                 backdrop
@@ -66,8 +101,10 @@ struct PaneGlassBackdrop: View {
             // The real sky behind the workspace still animates; nothing the
             // user can actually see stopped moving.
             AmbientSkyView(isLive: false)
-            FloatingIslandView()
-                .frame(maxWidth: skin.size.s860, maxHeight: skin.size.s574)
+            if environment.themeManager.homeLanguage.islandArt {
+                FloatingIslandView()
+                    .frame(maxWidth: skin.size.s860, maxHeight: skin.size.s574)
+            }
         }
         .blur(radius: skin.size.s26)
     }

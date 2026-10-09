@@ -53,7 +53,7 @@ struct BatchRenameSheet: View {
                 .font(skin.font(AinkradFontToken(sizeKey: "t13", weight: "semibold", scaled: false)))
                 .foregroundStyle(tokens.color(\.accentSecondary))
                 .frame(width: skin.size.s26, height: skin.size.s26)
-                .background(ChamferShape(cut: skin.cut.c5).fill(tokens.color(\.accentSecondary).opacity(skin.opacity.o15)))
+                .background(skin.shape(cut: skin.cut.c5).fill(tokens.color(\.accentSecondary).opacity(skin.opacity.o15)))
 
             VStack(alignment: .leading, spacing: skin.size.s3) {
                 Text("Rename \(entries.count) Item\(entries.count == 1 ? "" : "s")")
@@ -107,7 +107,7 @@ struct BatchRenameSheet: View {
             }
         }
         .frame(height: skin.size.s220)
-        .background(ChamferShape(cut: skin.cut.c6).fill(tokens.color(\.foreground).opacity(skin.opacity.o05)))
+        .background(skin.shape(cut: skin.cut.c6).fill(tokens.color(\.foreground).opacity(skin.opacity.o05)))
     }
 
     private func row(_ item: BatchRenamePlanItem) -> some View {

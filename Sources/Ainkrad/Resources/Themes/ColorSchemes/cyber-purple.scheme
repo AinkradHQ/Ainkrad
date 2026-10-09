@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "cyberPurple",
   "name": "Cyber Purple",
-  "base": "neonBlue",
+  "appearance": "dark",
   "palette": {
     "background": "#080814",
     "surface": "#141420",

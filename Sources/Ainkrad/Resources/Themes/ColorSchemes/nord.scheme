@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "nord",
   "name": "Nord",
-  "base": "neonBlue",
+  "appearance": "dark",
   "palette": {
     "background": "#1B2029",
     "surface": "#2E3440",

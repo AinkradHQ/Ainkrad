@@ -60,11 +60,18 @@ struct AmbientSkyView: View {
     /// the settings switch; this just lets a caller ask for it.
     var isLive: Bool = true
 
+    #if DEBUG
+    /// Frame callbacks of the live sky's `TimelineView`, per environment (the
+    /// test host app runs its own sky); tests read it to prove a theme without
+    /// a sky runs no sky timeline.
+    static var debugFrameCounts: [ObjectIdentifier: Int] = [:]
+    #endif
+
     var body: some View {
         let tokens = environment.themeManager.hostSkin
         // Per-theme sky character (emphasis only — colors come from `tokens`).
-        // Read `currentTheme` (observed) so a theme switch repaints the sky.
-        let profile = environment.themeManager.currentTheme.skyProfile
+        // Read the composed `skyProfile` (observed) so a scheme switch repaints the sky.
+        let profile = environment.themeManager.skyProfile
         let sky = environment.skySettingsStore
         let animated = sky.motionEnabled && isLive && motionBudget.isAnimating
         // Register the per-effect switches as a body-level dependency: most
@@ -86,6 +93,9 @@ struct AmbientSkyView: View {
 
             if animated {
                 TimelineView(.animation(minimumInterval: motionBudget.minimumInterval ?? 1.0 / 30.0)) { context in
+                    #if DEBUG
+                    let _ = Self.debugFrameCounts[ObjectIdentifier(environment), default: 0] += 1
+                    #endif
                     layers(
                         at: clock.tick(
                             real: context.date.timeIntervalSinceReferenceDate,

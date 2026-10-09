@@ -163,6 +163,6 @@ struct SetupDoneStepView: View {
         }
         .padding(skin.spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ChamferShape(cut: skin.radius.md).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o40)))
+        .background(skin.shape(cut: skin.radius.md).fill(tokens.color(\.surfaceElevated).opacity(skin.opacity.o40)))
     }
 }

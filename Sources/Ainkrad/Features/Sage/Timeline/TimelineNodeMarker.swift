@@ -33,6 +33,6 @@ struct TimelineNodeMarker: View {
     }
 
     private var marker: some View {
-        ChamferShape(cut: skin.cut.c2).fill(color).frame(width: skin.size.s8, height: skin.size.s8)
+        skin.shape(cut: skin.cut.c2).fill(color).frame(width: skin.size.s8, height: skin.size.s8)
     }
 }

@@ -6,13 +6,37 @@ public enum LauncherViewMode: String, Codable, CaseIterable, Sendable {
     public var label: String { self == .list ? "List" : "Grid" }
 }
 
-/// App-wide settings persisted through `SettingsStore`. `theme` defaults to
-/// `.neonBlue` on first launch (see ADR-0006 Theming Approach). Decoding
-/// tolerates payloads written before/after fields changed — a missing `theme`
-/// falls back to the default.
+/// App-wide settings persisted through `SettingsStore`. `theme` is a design
+/// language id (default `neon`); the colour scheme is chosen per appearance,
+/// and `nil` means "the theme's own default". Decoding tolerates payloads
+/// written before/after fields changed — a missing `theme` falls back to the default.
 public struct GlobalSettings: PersistableDocument {
     public static let documentID = "global-settings"
-    public var theme: Theme = .neonBlue
+    public static let currentSchemaVersion = 2
+
+    /// v1 → v2: the single `Theme` raw value (a colour, e.g. `nord`) becomes
+    /// theme `neon` + `colorSchemeDark: "nord"`. `colorSchemeLight` is never
+    /// written. A missing or unknown theme becomes `neon` with no scheme set.
+    public static let migrators: [DocumentMigrator] = [DocumentMigrator(from: 1, upgradeFromV1)]
+
+    /// The 1→2 step as a pure function, also used by the M1 UserDefaults import
+    /// (whose blob is a v1 payload with no envelope).
+    @Sendable public static func upgradeFromV1(_ payload: JSONValue) -> JSONValue {
+        guard case .object(var root) = payload else { return payload }
+        let old: String? = if case .string(let value)? = root["theme"] { value } else { nil }
+        root["theme"] = .string("neon")
+        if let old, legacyThemeIDs.contains(old) { root["colorSchemeDark"] = .string(old) }
+        return .object(root)
+    }
+
+    /// The seven v1 `Theme` raw values, each now a colour scheme under Neon.
+    static let legacyThemeIDs: Set<String> = [
+        "neonBlue", "cyberPurple", "dracula", "nord", "tokyoNight", "gruvbox", "solarizedDark",
+    ]
+
+    public var theme: String = "neon"
+    public var colorSchemeDark: String? = nil
+    public var colorSchemeLight: String? = nil
     public var appIconChoice: AppIconChoice = .auto
     public var appIconAppearance: AppIconAppearance = .system
     public var launcherViewMode: LauncherViewMode = .list
@@ -80,7 +104,9 @@ public struct GlobalSettings: PersistableDocument {
     public var restoreLayoutOnLaunch: Bool = false
 
     public init(
-        theme: Theme = .neonBlue,
+        theme: String = "neon",
+        colorSchemeDark: String? = nil,
+        colorSchemeLight: String? = nil,
         appIconChoice: AppIconChoice = .auto,
         appIconAppearance: AppIconAppearance = .system,
         launcherViewMode: LauncherViewMode = .list,
@@ -102,6 +128,8 @@ public struct GlobalSettings: PersistableDocument {
         restoreLayoutOnLaunch: Bool = false
     ) {
         self.theme = theme
+        self.colorSchemeDark = colorSchemeDark
+        self.colorSchemeLight = colorSchemeLight
         self.appIconChoice = appIconChoice
         self.appIconAppearance = appIconAppearance
         self.launcherViewMode = launcherViewMode
@@ -125,7 +153,9 @@ public struct GlobalSettings: PersistableDocument {
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        theme = try container.decodeIfPresent(Theme.self, forKey: .theme) ?? .neonBlue
+        theme = try container.decodeIfPresent(String.self, forKey: .theme) ?? "neon"
+        colorSchemeDark = try container.decodeIfPresent(String.self, forKey: .colorSchemeDark)
+        colorSchemeLight = try container.decodeIfPresent(String.self, forKey: .colorSchemeLight)
         appIconChoice = try container.decodeIfPresent(AppIconChoice.self, forKey: .appIconChoice) ?? .auto
         appIconAppearance = try container.decodeIfPresent(AppIconAppearance.self, forKey: .appIconAppearance) ?? .system
         launcherViewMode = try container.decodeIfPresent(LauncherViewMode.self, forKey: .launcherViewMode) ?? .list

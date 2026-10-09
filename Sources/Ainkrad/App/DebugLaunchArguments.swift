@@ -34,18 +34,60 @@ func parseDebugOpenGalleryArgument(_ value: ArgumentLookup = { UserDefaults.stan
     return trimmed == "1" || trimmed == "true"
 }
 
-/// Parses `-AinkradGalleryTheme <themeID>` using a key-value lookup.
-/// Returns the matching Theme, or nil if missing or invalid. Logs if invalid.
-func parseDebugGalleryThemeArgument(_ value: ArgumentLookup = { UserDefaults.standard.string(forKey: $0) }) -> Theme? {
+/// Parses `-AinkradGalleryTheme <schemeID>` using a key-value lookup (the old
+/// theme ids are today's colour-scheme ids). Returns the id when it is one of
+/// `knownSchemeIDs`, or nil if missing or invalid. Logs if invalid.
+func parseDebugGalleryThemeArgument(
+    _ value: ArgumentLookup = { UserDefaults.standard.string(forKey: $0) }, knownSchemeIDs: Set<String>
+) -> String? {
     guard let rawThemeID = value("AinkradGalleryTheme") else { return nil }
     let themeID = rawThemeID.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !themeID.isEmpty else { return nil }
-    if let theme = Theme(rawValue: themeID) {
-        return theme
+    if knownSchemeIDs.contains(themeID) {
+        return themeID
     } else {
         Log.app.error("DEBUG launch arg: unknown AinkradGalleryTheme '\(themeID, privacy: .public)'")
         return nil
     }
+}
+
+/// The theme launch arguments: `-AinkradTheme <id>`, `-AinkradColorScheme <id>`,
+/// `-AinkradAppearance light|dark` and `-AinkradThemesDir <path>`. In memory only.
+struct DebugThemeArguments: Equatable {
+    var theme: String?
+    var colorScheme: String?
+    var appearance: ThemeAppearance?
+    /// An extra read-only scan root, ahead of `<Home>/Config/Themes`.
+    var themesDir: URL?
+}
+
+/// Parses the theme launch arguments. Ids are checked against the catalog when
+/// applied (`ThemeManager.applyLaunchOverride`); a bad appearance or a themes
+/// dir that is not a directory is logged and ignored here.
+func parseDebugThemeArguments(_ value: ArgumentLookup = { UserDefaults.standard.string(forKey: $0) })
+    -> DebugThemeArguments
+{
+    func trimmed(_ key: String) -> String? {
+        guard let raw = value(key)?.trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty else { return nil }
+        return raw
+    }
+    var parsed = DebugThemeArguments(theme: trimmed("AinkradTheme"), colorScheme: trimmed("AinkradColorScheme"))
+    if let raw = trimmed("AinkradAppearance") {
+        parsed.appearance = ThemeAppearance(rawValue: raw.lowercased())
+        if parsed.appearance == nil {
+            Log.app.error("DEBUG launch arg: AinkradAppearance must be light or dark, got '\(raw, privacy: .public)'")
+        }
+    }
+    if let raw = trimmed("AinkradThemesDir") {
+        let url = URL(fileURLWithPath: (raw as NSString).expandingTildeInPath).standardizedFileURL
+        var isDirectory: ObjCBool = false
+        if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory), isDirectory.boolValue {
+            parsed.themesDir = url
+        } else {
+            Log.app.error("DEBUG launch arg: AinkradThemesDir '\(url.path, privacy: .public)' is not a directory")
+        }
+    }
+    return parsed
 }
 
 /// Parses `-AinkradGallerySection <id>` using a key-value lookup.

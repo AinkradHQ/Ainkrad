@@ -6,8 +6,8 @@ import SwiftUI
 /// (AIN-107, "Living Island"). Renders the static painted artwork for the
 /// active theme.
 ///
-/// Each theme can ship its own painting as an asset named `Island-<Theme>`
-/// (PascalCase of the `Theme` raw value, e.g. `Island-Nord`, matching the
+/// Each colour scheme can ship its own painting as an asset named `Island-<Scheme>`
+/// (PascalCase of the composed skin's id = the scheme id, e.g. `Island-Nord`, matching the
 /// existing `Island-NeonBlue` / `Island-CyberPurple`). When a theme has no
 /// dedicated painting yet, it falls back to whichever of the two originals is
 /// closest in spirit — so adding a themed illustration to the asset catalog is
@@ -28,13 +28,13 @@ struct FloatingIslandView: View {
     var isVisible: Bool = true
 
     private var imageName: String {
-        let theme = environment.themeManager.currentTheme
-        // A dedicated painting for this theme wins if it's in the catalog.
-        let dedicated = "Island-" + theme.rawValue.prefix(1).uppercased() + theme.rawValue.dropFirst()
+        let scheme = environment.themeManager.skin.id
+        // A dedicated painting for this scheme wins if it's in the catalog.
+        let dedicated = "Island-" + scheme.prefix(1).uppercased() + scheme.dropFirst()
         if NSImage(named: dedicated) != nil { return dedicated }
         // Otherwise fall back to the nearest of the two shipped originals.
-        switch theme {
-        case .cyberPurple, .dracula, .tokyoNight: return "Island-CyberPurple"
+        switch scheme {
+        case "cyberPurple", "dracula", "tokyoNight": return "Island-CyberPurple"
         default: return "Island-NeonBlue"
         }
     }

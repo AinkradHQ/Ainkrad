@@ -22,7 +22,7 @@ final class UserDataPorterTests {
     func exportImportRoundTrips() throws {
         let source = FileDocumentStore(rootURL: root)
         source.save(SampleDoc(name: "hello"))
-        source.save(GlobalSettings(theme: .cyberPurple))
+        source.save(GlobalSettings(colorSchemeDark: "cyberPurple"))
 
         let bundle = try UserDataPorter(rootURL: root).export()
 
@@ -31,7 +31,7 @@ final class UserDataPorterTests {
 
         let restored = FileDocumentStore(rootURL: destRoot)
         #expect(restored.load(SampleDoc.self) == SampleDoc(name: "hello"))
-        #expect(restored.load(GlobalSettings.self)?.theme == .cyberPurple)
+        #expect(restored.load(GlobalSettings.self)?.colorSchemeDark == "cyberPurple")
     }
 
     @Test("the export bundle carries a version and never contains secrets")

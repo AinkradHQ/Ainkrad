@@ -24,7 +24,7 @@ final class AppKitAppIconApplier: NSObject, AppIconApplying {
 
     private var choice: AppIconChoice = .auto
     private var appearance: AppIconAppearance = .system
-    private var theme: Theme = .neonBlue
+    private var themeFamily: AppIconColor = .blue
     private var observation: NSKeyValueObservation?
 
     override init() {
@@ -34,10 +34,10 @@ final class AppKitAppIconApplier: NSObject, AppIconApplying {
         }
     }
 
-    func apply(choice: AppIconChoice, appearance: AppIconAppearance, theme: Theme) {
+    func apply(choice: AppIconChoice, appearance: AppIconAppearance, themeFamily: AppIconColor) {
         self.choice = choice
         self.appearance = appearance
-        self.theme = theme
+        self.themeFamily = themeFamily
         reapply()
     }
 
@@ -46,7 +46,7 @@ final class AppKitAppIconApplier: NSObject, AppIconApplying {
             NSApplication.shared.effectiveAppearance
             .bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
         let name = AppIconResolver.resourceName(
-            for: choice, theme: theme,
+            for: choice, themeFamily: themeFamily,
             appearance: appearance, systemDark: systemDark)
         guard let url = Bundle.main.url(forResource: name, withExtension: "icns"),
             let image = NSImage(contentsOf: url)

@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "id": "neonBlue",
+  "name": "Neon Blue",
+  "appearance": "dark",
+  "palette": {
+    "accentPrimary": "#2563EB",
+    "accentSecondary": "#22D3EE",
+    "accentTertiary": "#10B981",
+    "background": "#0A0E17",
+    "black": "#000000",
+    "danger": "#F85149",
+    "foreground": "#E2E8F0",
+    "success": "#3FB950",
+    "surface": "#111827",
+    "surfaceElevated": "#1A2233",
+    "warning": "#E3B341",
+    "white": "#FFFFFF"
+  },
+  "terminal": {
+    "ansi": [
+      "#1A1D24",
+      "#E06C75",
+      "#98C379",
+      "#E5C07B",
+      "#61AFEF",
+      "#C678DD",
+      "#56B6C2",
+      "#ABB2BF",
+      "#5C6370",
+      "#E06C75",
+      "#98C379",
+      "#E5C07B",
+      "#61AFEF",
+      "#C678DD",
+      "#56B6C2",
+      "#FFFFFF"
+    ],
+    "background": "#0A0E17",
+    "cursor": "#22D3EE",
+    "foreground": "#E2E8F0",
+    "selection": "#3B4252"
+  },
+  "host": {
+    "skyProfile": [
+      1.0,
+      0.9,
+      0.9,
+      1.0,
+      1.0
+    ],
+    "iconColorFamily": "blue"
+  }
+}

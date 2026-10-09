@@ -161,14 +161,11 @@ enum HostSettingsCatalog {
                 SettingsGroup(
                     path: page.appending("overlays"), title: "Overlays",
                     fields: overlayFields(environment, group: page.appending("overlays"))),
-                SettingsGroup(
-                    path: page.appending("livingSky"), title: "Living Sky",
-                    footerNote: "The island artwork itself is never animated.",
-                    fields: livingSkyFields(environment, group: page.appending("livingSky"))),
+                livingSkyGroup(environment, page: page),
                 SettingsGroup(
                     path: page.appending("appIcon"), title: "App Icon",
                     fields: appIconFields(environment, group: page.appending("appIcon"))),
-            ])
+            ].compactMap { $0 })
     }
 
     // MARK: - Sound & Voice

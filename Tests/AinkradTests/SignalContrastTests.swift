@@ -62,13 +62,13 @@ struct SignalContrastTests {
 
     @Test("every severity reads against the panel surface, in every theme")
     func againstSurface() {
-        for theme in Theme.allCases {
-            let tokens = theme.skin
+        for theme in neonSchemeIDs {
+            let tokens = NeonSchemes.skin(theme)
             for severity in SignalSeverity.allCases {
                 check(
                     severityColor(severity, tokens: tokens)
                         .contrastRatio(against: tokens.color(\.surface)),
-                    "\(theme.rawValue)/\(severity.rawValue)/surface")
+                    "\(theme)/\(severity.rawValue)/surface")
             }
         }
     }
@@ -78,13 +78,13 @@ struct SignalContrastTests {
         // `SignalFeedRow` fills its hover background with
         // surfaceElevated at 0.9 over the panel — the lighter surface is
         // where a ramp tuned against the darker one goes quietly illegible.
-        for theme in Theme.allCases {
-            let tokens = theme.skin
+        for theme in neonSchemeIDs {
+            let tokens = NeonSchemes.skin(theme)
             for severity in SignalSeverity.allCases {
                 check(
                     severityColor(severity, tokens: tokens)
                         .contrastRatio(against: tokens.color(\.surfaceElevated)),
-                    "\(theme.rawValue)/\(severity.rawValue)/hover")
+                    "\(theme)/\(severity.rawValue)/hover")
             }
         }
     }
@@ -93,13 +93,13 @@ struct SignalContrastTests {
     func badgeTextOnTint() {
         // The badge draws `tokens.color(\.background)` on the severity colour, so this
         // is the pair that has to hold now that the tint varies.
-        for theme in Theme.allCases {
-            let tokens = theme.skin
+        for theme in neonSchemeIDs {
+            let tokens = NeonSchemes.skin(theme)
             for severity in SignalSeverity.allCases {
                 check(
                     tokens.color(\.background)
                         .contrastRatio(against: severityColor(severity, tokens: tokens)),
-                    "\(theme.rawValue)/\(severity.rawValue)/badge")
+                    "\(theme)/\(severity.rawValue)/badge")
             }
         }
     }

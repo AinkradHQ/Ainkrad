@@ -15,7 +15,7 @@ SCHEME := Ainkrad
 PROJECT := Ainkrad.xcodeproj
 
 .DEFAULT_GOAL := generate
-.PHONY: generate open build test release clean help sample devhost
+.PHONY: generate open build test validate-themes release clean help sample devhost
 
 # The sideload directory is `<cacheRoot>/DevPlugins`, and cacheRoot is
 # `~/Library/Application Support/<bundle-id>/Cache` (see AinkradHome.defaultCacheRoot
@@ -42,6 +42,14 @@ build: lint generate ## Build the app (Debug)
 
 test: lint generate ## Run the test suite
 	xcodebuild -scheme $(SCHEME) -destination 'platform=macOS' test
+
+# The full suite with real theme files: ThemeDirectoryValidationTests reads AINKRAD_THEMES_DIR
+# (xcodebuild hands TEST_RUNNER_-prefixed variables to the test process). Without THEMES
+# that test prints a loud SKIPPED and passes, so plain `make test` checks no theme files.
+validate-themes: lint generate ## Run the test suite validating THEMES=<dir> (e.g. ../AinkradCatalog/themes)
+	@test -n "$(THEMES)" || { echo "validate-themes: THEMES is required, e.g. make validate-themes THEMES=../AinkradCatalog/themes"; exit 2; }
+	@test -d "$(THEMES)" || { echo "validate-themes: $(THEMES) is not a directory"; exit 2; }
+	TEST_RUNNER_AINKRAD_THEMES_DIR="$(abspath $(THEMES))" xcodebuild -scheme $(SCHEME) -destination 'platform=macOS' test
 
 release: ## Build a distributable .dmg (see scripts/release.sh)
 	./scripts/release.sh

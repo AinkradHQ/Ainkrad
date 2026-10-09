@@ -91,6 +91,8 @@ struct SignalBellButton: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        // A HUD control, not a form field: no system focus ring around it.
+        .focusEffectDisabled()
         .help(helpText)
         // One element, one sentence — the same rule `SignalFeedRow` follows.
         // The glyph and the count are two separate views, so without this a

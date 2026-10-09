@@ -198,13 +198,19 @@ struct AinkradHostApp: App {
                 // user who had just moved them.
                 .environment(
                     \.ainkradSurfaceOpacity,
-                    environment.generalSettingsStore.overlayBackgroundOpacity
+                    environment.generalSettingsStore.overlayOpacity(in: environment.themeManager.skin)
                 )
                 .environment(
                     \.ainkradSurfaceBlur,
                     environment.generalSettingsStore.overlayBlurEnabled
                 )
-                .preferredColorScheme(.dark)
+                // The composed appearance (system, or the variant a dark-only
+                // theme has). `NSApp.appearance` carries it to every window and
+                // `NSPanel` — traffic lights, menus, floating panels.
+                .preferredColorScheme(environment.themeManager.appearance == .dark ? .dark : .light)
+                .onChange(of: environment.themeManager.appearance, initial: true) { _, appearance in
+                    NSApp.appearance = NSAppearance(named: appearance == .dark ? .darkAqua : .aqua)
+                }
         }
         .windowStyle(.hiddenTitleBar)
         // Without this the window opens at whatever size AppKit picks, which on
