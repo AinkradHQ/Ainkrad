@@ -6,33 +6,52 @@ import Testing
 
 @testable import Ainkrad
 
-/// E3.2: under a glass language the window is clear and non-opaque; every other
-/// kind keeps the opaque window, and a live theme switch re-applies it.
+/// E3.2: a language with `windowGlass` makes the window clear and non-opaque;
+/// every other language keeps the opaque window (a glass *material* alone does
+/// not: Liquid Glass stays out of the content layer), and a live theme switch
+/// re-applies it.
 @Suite("Glass window", .serialized)
 @MainActor
 struct GlassWindowTests {
-    /// A synthetic mechanism language (not Glass's look): glass material, no sky.
+    /// Synthetic mechanism languages (not Glass's look): `pane` asks for a glass
+    /// window; `liquid` has the glass material but keeps the content layer opaque.
     private static let glassLanguage: [String: String] = [
         "pane-dark.theme": #"""
         {"schemaVersion": 1, "id": "pane.dark", "name": "Pane", "base": "neonBlue",
          "material": {"kind": "glass"},
-         "host": {"language": {"id": "pane", "name": "Pane", "appearance": "dark", "sky": false}}}
-        """#
+         "host": {"language": {"id": "pane", "name": "Pane", "appearance": "dark", "sky": false, "windowGlass": true}}}
+        """#,
+        "liquid-dark.theme": #"""
+        {"schemaVersion": 1, "id": "liquid.dark", "name": "Liquid", "base": "neonBlue",
+         "material": {"kind": "glass"},
+         "host": {"language": {"id": "liquid", "name": "Liquid", "appearance": "dark", "paneBackdrop": "solid"}}}
+        """#,
     ]
 
     private typealias Monitor = KeyboardShortcutMonitor.MonitoringView
 
-    @Test("windowSurface: glass is clear and non-opaque; blur and solid keep the opaque background")
+    @Test("windowSurface: a glass window is clear and non-opaque; otherwise the opaque background")
     func surfacePerKind() {
         let opaque = NSColor.windowBackgroundColor
-        let glass = Monitor.windowSurface(materialKind: "glass", opaqueBackground: opaque)
+        let glass = Monitor.windowSurface(isGlass: true, opaqueBackground: opaque)
         #expect(glass.isOpaque == false)
         #expect(glass.backgroundColor == .clear)
-        for kind in ["blur", "solid", "unknown"] {
-            let surface = Monitor.windowSurface(materialKind: kind, opaqueBackground: opaque)
-            #expect(surface.isOpaque, "\(kind)")
-            #expect(surface.backgroundColor == opaque, "\(kind)")
-        }
+        let solid = Monitor.windowSurface(isGlass: false, opaqueBackground: opaque)
+        #expect(solid.isOpaque)
+        #expect(solid.backgroundColor == opaque)
+    }
+
+    @Test("a glass material alone keeps the window opaque and panes on a solid backdrop")
+    func glassMaterialKeepsContentOpaque() {
+        defer { AinkradFont.configure(scale: 1, family: .exo2) }
+        let manager = ThemeManager(
+            persistence: InMemoryPersistenceStore(),
+            catalog: ThemeCatalog(bundle: .main, userRoots: [ThemeFixtures.tempDir(Self.glassLanguage)]),
+            systemAppearance: StubSystemAppearance(.dark))
+        manager.setTheme("liquid")
+        #expect(manager.skin.material.kind == "glass")
+        #expect(manager.homeLanguage.windowGlass == false)
+        #expect(manager.homeLanguage.paneBackdrop == .solid)
     }
 
     @Test("the user-root glass language composes to material.kind glass with no sky; Neon stays blur")
@@ -46,8 +65,9 @@ struct GlassWindowTests {
         manager.setTheme("pane")
         #expect(manager.skin.material.kind == "glass")
         #expect(manager.homeLanguage.sky == false)
+        #expect(manager.homeLanguage.windowGlass)
         let surface = Monitor.windowSurface(
-            materialKind: manager.skin.material.kind, opaqueBackground: .windowBackgroundColor)
+            isGlass: manager.homeLanguage.windowGlass, opaqueBackground: .windowBackgroundColor)
         #expect(surface.isOpaque == false)
     }
 

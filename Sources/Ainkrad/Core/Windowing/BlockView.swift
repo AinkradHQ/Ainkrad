@@ -166,7 +166,9 @@ struct BlockView: View {
                 )
                 .overlay(
                     TargetingBrackets(length: skin.size.s9)
-                        .stroke(tokens.color(\.accentSecondary).opacity(skin.opacity.o90), lineWidth: 1.5)
+                        .stroke(
+                            tokens.color(\.accentSecondary).opacity(skin.opacity.o90),
+                            lineWidth: 1.5 * skin.bracketStrokeScale)
                         .padding(skin.spacing.xs)
                 )
                 .overlay(

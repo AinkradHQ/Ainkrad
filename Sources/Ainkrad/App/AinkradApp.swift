@@ -198,7 +198,7 @@ struct AinkradHostApp: App {
                 // user who had just moved them.
                 .environment(
                     \.ainkradSurfaceOpacity,
-                    environment.generalSettingsStore.overlayBackgroundOpacity
+                    environment.generalSettingsStore.overlayOpacity(in: environment.themeManager.skin)
                 )
                 .environment(
                     \.ainkradSurfaceBlur,

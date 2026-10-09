@@ -146,7 +146,7 @@ struct WorkspaceOverviewView: View {
         // The user's overlay opacity and blur settings, as every summoned
         // overlay reads them.
         .ainkradOverlayChrome(
-            backgroundOpacity: store.overlayBackgroundOpacity,
+            backgroundOpacity: store.overlayOpacity(in: skin),
             blurEnabled: store.overlayBlurEnabled,
             blending: .withinWindow)
         .focusable()

@@ -134,14 +134,14 @@ struct KeyboardShortcutMonitor: NSViewRepresentable {
             }
         }
 
-        /// Window opacity per material kind (E3.2): `glass` is a clear,
-        /// non-opaque window; every other kind is the opaque window as AppKit
-        /// made it. Full screen needs no case of its own — the glass layer
-        /// fills the window there too.
+        /// Window opacity (E3.2): a theme with `windowGlass` gets a clear,
+        /// non-opaque window; every other theme keeps the opaque window as
+        /// AppKit made it. Full screen needs no case of its own — the glass
+        /// layer fills the window there too.
         static func windowSurface(
-            materialKind: String, opaqueBackground: NSColor
+            isGlass: Bool, opaqueBackground: NSColor
         ) -> (isOpaque: Bool, backgroundColor: NSColor) {
-            materialKind == "glass" ? (false, .clear) : (true, opaqueBackground)
+            isGlass ? (false, .clear) : (true, opaqueBackground)
         }
 
         /// Applies the window surface for the composed skin now, then again on
@@ -151,7 +151,7 @@ struct KeyboardShortcutMonitor: NSViewRepresentable {
             let generation = surfaceGeneration
             guard let themeManager = environment?.themeManager else { return }
             withObservationTracking {
-                applyWindowSurface(materialKind: themeManager.skin.material.kind)
+                applyWindowSurface(isGlass: themeManager.homeLanguage.windowGlass)
             } onChange: { [weak self] in
                 // Fires before `skin` changes: re-read on the next main-actor hop.
                 Task { @MainActor in
@@ -161,9 +161,9 @@ struct KeyboardShortcutMonitor: NSViewRepresentable {
             }
         }
 
-        private func applyWindowSurface(materialKind: String) {
+        private func applyWindowSurface(isGlass: Bool) {
             guard let window, let opaqueBackground else { return }
-            let surface = Self.windowSurface(materialKind: materialKind, opaqueBackground: opaqueBackground)
+            let surface = Self.windowSurface(isGlass: isGlass, opaqueBackground: opaqueBackground)
             if window.isOpaque != surface.isOpaque { window.isOpaque = surface.isOpaque }
             if window.backgroundColor != surface.backgroundColor { window.backgroundColor = surface.backgroundColor }
         }

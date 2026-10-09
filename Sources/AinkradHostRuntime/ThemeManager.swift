@@ -204,8 +204,13 @@ public final class ThemeManager {
     /// custom accent is kept. An id that is not installed is logged and ignored.
     public func applyLaunchOverride(theme: String?, colorScheme: String?, appearance requested: ThemeAppearance?) {
         if let theme {
-            if catalog.languages.contains(where: { $0.id == theme }) {
+            if let language = catalog.languages.first(where: { $0.id == theme }) {
                 currentThemeID = theme
+                // In memory only, like the rest of the override.
+                if let family = UIFontFamily(rawValue: language.fontFamily) {
+                    uiFontFamily = family
+                    AinkradFont.configure(scale: uiFontScale.multiplier, family: family)
+                }
             } else {
                 Log.settings.error("DEBUG launch arg: unknown AinkradTheme '\(theme, privacy: .public)'")
             }

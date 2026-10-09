@@ -80,6 +80,7 @@ struct LanguageSection: Equatable, Codable, Sendable {
     var islandArt: Bool?
     var paneBackdrop: String?
     var appTile: String?
+    var windowGlass: Bool?
 
     init(
         id: String = "neon", name: String = "Neon", appearance: ThemeAppearance = .dark,
@@ -106,5 +107,6 @@ struct LanguageSection: Equatable, Codable, Sendable {
         self.islandArt = try container.decodeIfPresent(Bool.self, forKey: .islandArt)
         self.paneBackdrop = try container.decodeIfPresent(String.self, forKey: .paneBackdrop)
         self.appTile = try container.decodeIfPresent(String.self, forKey: .appTile)
+        self.windowGlass = try container.decodeIfPresent(Bool.self, forKey: .windowGlass)
     }
 }

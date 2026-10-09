@@ -39,7 +39,7 @@ struct PluginOverlayView: View {
                         height: size.resolved(in: geo.size).height
                     )
                     .ainkradOverlayChrome(
-                        backgroundOpacity: environment.generalSettingsStore.overlayBackgroundOpacity,
+                        backgroundOpacity: environment.generalSettingsStore.overlayOpacity(in: skin),
                         blurEnabled: environment.generalSettingsStore.overlayBlurEnabled,
                         blending: .withinWindow
                     )

@@ -6,11 +6,13 @@ public enum HomeLayoutKind: String, Sendable {
     case islands
 }
 
-/// What sits behind a pane: today's blurred render of the sky and islands, or
-/// the theme's real material (`AinkradMaterialBackground`).
+/// What sits behind a pane: today's blurred render of the sky and islands, the
+/// theme's real material (`AinkradMaterialBackground`), or the theme's solid
+/// background (panes are content, and Liquid Glass stays out of the content layer).
 public enum PaneBackdropKind: String, Sendable {
     case sky
     case material
+    case solid
 }
 
 /// The app tile: Neon's bloom tile, or a calm symbol-on-fill tile.
@@ -28,16 +30,21 @@ public struct HomeLanguage: Equatable, Sendable {
     public var islandArt: Bool
     public var paneBackdrop: PaneBackdropKind
     public var appTile: AppTileKind
+    /// Whether the whole window is see-through glass (the desktop shows
+    /// behind the content). Off by default: per Apple's Liquid Glass guidance
+    /// the content layer, app background included, stays opaque.
+    public var windowGlass: Bool
 
     public init(
         layout: HomeLayoutKind = .islands, sky: Bool = true, islandArt: Bool = true,
-        paneBackdrop: PaneBackdropKind = .sky, appTile: AppTileKind = .neon
+        paneBackdrop: PaneBackdropKind = .sky, appTile: AppTileKind = .neon, windowGlass: Bool = false
     ) {
         self.layout = layout
         self.sky = sky
         self.islandArt = islandArt
         self.paneBackdrop = paneBackdrop
         self.appTile = appTile
+        self.windowGlass = windowGlass
     }
 
     /// Today's look.
@@ -59,6 +66,7 @@ public struct HomeLanguage: Equatable, Sendable {
         home.islandArt = language.islandArt ?? home.islandArt
         home.paneBackdrop = pick("paneBackdrop", language.paneBackdrop, home.paneBackdrop)
         home.appTile = pick("appTile", language.appTile, home.appTile)
+        home.windowGlass = language.windowGlass ?? home.windowGlass
         if home.paneBackdrop == .sky && !home.sky {
             problems.append("paneBackdrop 'sky' needs sky: true; using 'material'")
             home.paneBackdrop = .material

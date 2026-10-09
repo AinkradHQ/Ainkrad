@@ -48,7 +48,9 @@ private struct HUDPanelChrome: ViewModifier {
                         // host's own blur used — same pixels.
                         AinkradMaterialBackground(level: .panel, blending: blending)
                     }
-                    tokens.color(\.background).opacity(store.overlayBackgroundOpacity)
+                    // Under glass the user's opacity is capped at the theme's panel
+                    // opacity, so the default (tuned for Neon) can't bury the glass.
+                    tokens.color(\.background).opacity(store.overlayOpacity(in: skin))
                 }
             }
             .clipShape(skin.shape(cut: skin.radius.panel))
@@ -83,5 +85,21 @@ extension View {
         blending: NSVisualEffectView.BlendingMode = .withinWindow
     ) -> some View {
         modifier(HUDPanelChrome(tokens: tokens, blending: blending))
+    }
+}
+
+extension AinkradSkin {
+    /// 1 when the theme draws targeting brackets, 0 when it turns them off
+    /// (`effects.brackets.width` 0, e.g. Glass); multiplies a bracket stroke.
+    var bracketStrokeScale: CGFloat { effects.brackets.width > 0 ? 1 : 0 }
+}
+
+extension GeneralSettingsStore {
+    /// The user's overlay opacity, capped under a glass theme at the theme's
+    /// panel opacity: the default (0.94) was tuned for Neon and would bury
+    /// Liquid Glass. Every overlay and kit panel reads its fill through this.
+    func overlayOpacity(in skin: AinkradSkin) -> Double {
+        skin.material.kind == "glass"
+            ? min(overlayBackgroundOpacity, skin.material.panelOpacity) : overlayBackgroundOpacity
     }
 }

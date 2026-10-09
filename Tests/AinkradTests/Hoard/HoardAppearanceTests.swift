@@ -1,5 +1,6 @@
 import AinkradAppKit
 import AinkradAppKitUI
+import AppKit
 import SwiftUI
 import Testing
 
@@ -8,9 +9,10 @@ import Testing
 @MainActor
 @Suite("Hoard appearance and settings")
 struct HoardAppearanceTests {
-    @Test("opaque at full opacity means no fill, so no backdrop is rendered")
-    func opaqueYieldsNoFill() {
-        #expect(HoardApp.surfaceFill(opacity: 1.0, base: .black) == nil)
+    @Test("full opacity paints the opaque base, so the pane is never clear and no backdrop is rendered")
+    func opaqueYieldsOpaqueFill() throws {
+        let fill = try #require(HoardApp.surfaceFill(opacity: 1.0, base: .black))
+        #expect(NSColor(fill).alphaComponent == 1)
     }
 
     @Test("sub-opaque yields a translucent fill, which drives the island backdrop")

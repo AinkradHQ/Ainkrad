@@ -31,6 +31,36 @@ struct HUDBar: View {
         environment.isFullScreen && environment.generalSettingsStore.showFullScreenStatusBar
     }
 
+    /// The bell and the workspace dots. Under a glass theme they are one
+    /// floating Liquid Glass capsule, as macOS groups toolbar controls; the bar
+    /// itself stays clear (Liquid Glass is the controls layer, not a slab).
+    @ViewBuilder private func trailingControls(tokens: AinkradSkin) -> some View {
+        let controls = HStack(spacing: skin.spacing.md) {
+            if let center = environment.signalCenter {
+                SignalBellButton(
+                    unread: center.totalUnread,
+                    isMuted: center.rules.suppression.isSuppressing(at: Date()),
+                    arrivalToken: center.arrivalToken,
+                    tokens: tokens
+                ) {
+                    environment.isSignalDropdownPresented.toggle()
+                }
+            }
+            workspaceDots(tokens: tokens)
+        }
+        if skin.material.kind == "glass" {
+            controls
+                .padding(.horizontal, skin.spacing.md)
+                .padding(.vertical, skin.spacing.xs)
+                .background {
+                    AinkradMaterialBackground(level: .hud, blending: .withinWindow)
+                        .clipShape(Capsule())
+                }
+        } else {
+            controls
+        }
+    }
+
     var body: some View {
         let tokens = environment.themeManager.hostSkin
 
@@ -52,20 +82,11 @@ struct HUDBar: View {
             // this region of the fused title bar in windowed mode.
             Spacer()
 
-            if let center = environment.signalCenter {
-                SignalBellButton(
-                    unread: center.totalUnread,
-                    isMuted: center.rules.suppression.isSuppressing(at: Date()),
-                    arrivalToken: center.arrivalToken,
-                    tokens: tokens
-                ) {
-                    environment.isSignalDropdownPresented.toggle()
-                }
-            }
-
-            workspaceDots(tokens: tokens)
+            trailingControls(tokens: tokens)
         }
-        .padding(.horizontal, skin.size.s14)
+        .padding(.leading, skin.size.s14)
+        // The glass capsule sits nearer the edge, as macOS places toolbar controls.
+        .padding(.trailing, skin.material.kind == "glass" ? skin.size.s8 : skin.size.s14)
         .frame(height: Self.height)
         .contentShape(Rectangle())
         // Reveal the traffic lights the moment the pointer is anywhere in the
