@@ -15,7 +15,8 @@ extension AppEnvironment {
     /// plumbing, app appearance/icon/sound stores, and the connection +
     /// discovered-models stores.
     static func bootstrapCoreStores(
-        home: Home, defaults: UserDefaults, systemAppearance: any SystemAppearanceSource
+        home: Home, defaults: UserDefaults, systemAppearance: any SystemAppearanceSource,
+        launchArguments: @escaping ArgumentLookup
     ) -> (
         persistence: PersistenceStore,
         secrets: SecretStore,
@@ -81,7 +82,7 @@ extension AppEnvironment {
         var themeRoots = [homeThemesRoot]
         #if DEBUG
         // `-AinkradThemesDir` is scanned first, so files being authored win over installed copies.
-        let debugTheme = parseDebugThemeArguments()
+        let debugTheme = parseDebugThemeArguments(launchArguments)
         if let dir = debugTheme.themesDir { themeRoots.insert(dir, at: 0) }
         #endif
         let themeManager = ThemeManager(
