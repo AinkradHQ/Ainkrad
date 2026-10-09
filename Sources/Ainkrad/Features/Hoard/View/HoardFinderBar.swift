@@ -127,7 +127,7 @@ struct HoardFinderBar: View {
         // same reason: one selection language across every palette.
         .overlay(
             TargetingBrackets()
-                .stroke(tokens.color(\.accentSecondary), lineWidth: isHighlighted ? 1 : 0)
+                .stroke(tokens.color(\.accentSecondary), lineWidth: isHighlighted ? skin.bracketStrokeScale : 0)
         )
         .contentShape(Rectangle())
     }

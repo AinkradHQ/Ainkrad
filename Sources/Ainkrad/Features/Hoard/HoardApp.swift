@@ -30,11 +30,13 @@ enum HoardApp: AinkradApp {
     /// `TileLayoutView.hasTranslucentPane` then renders the shared blurred
     /// sky+island backdrop behind the pane, and `BlockView.headerBackground`
     /// adopts this same fill so the title bar is one continuous surface with
-    /// the body instead of an opaque bar sitting on glass. `nil` means opaque —
-    /// no backdrop, no cost. Pure + host-independent so it is unit-testable
-    /// without `AppEnvironment`.
+    /// the body instead of an opaque bar sitting on glass. At full opacity it is
+    /// the opaque base: Hoard paints no background of its own, so returning no
+    /// fill left the pane clear and the home showed through at 0% transparency.
+    /// Opaque still means no backdrop, no cost. Pure + host-independent so it is
+    /// unit-testable without `AppEnvironment`.
     static func surfaceFill(opacity: Double, base: Color) -> Color? {
-        opacity < 1 ? base.opacity(opacity) : nil
+        opacity < 1 ? base.opacity(opacity) : base
     }
 
     /// The typography Hoard renders with: its own per-app override where the

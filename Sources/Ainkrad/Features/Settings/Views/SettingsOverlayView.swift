@@ -304,7 +304,9 @@ struct SettingsOverlayView: View {
         )
         .overlay(
             AinkradCornerBrackets(length: skin.size.s7)
-                .stroke(isSelected ? tokens.color(\.accentSecondary).opacity(skin.opacity.o90) : .clear, lineWidth: 1.3)
+                .stroke(
+                    isSelected ? tokens.color(\.accentSecondary).opacity(skin.opacity.o90) : .clear,
+                    lineWidth: 1.3 * skin.bracketStrokeScale)
                 .padding(skin.size.s1)
         )
         // The kit row takes its tap as a gesture; these keep the row one

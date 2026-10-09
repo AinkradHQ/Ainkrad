@@ -31,7 +31,7 @@ struct PaneActivationRing: View {
                 .strokeBorder(borderColor, lineWidth: 1 + pulse * 0.6)
 
             TargetingBrackets(length: skin.size.s10)
-                .stroke(bracketColor, lineWidth: 1.5)
+                .stroke(bracketColor, lineWidth: 1.5 * skin.bracketStrokeScale)
                 .padding(-skin.size.s2)
         }
         .onChange(of: isFocused) { _, focused in
@@ -54,6 +54,10 @@ struct PaneActivationRing: View {
 
     private var borderColor: Color {
         guard isFocused else { return tokens.color(\.foreground).opacity(skin.opacity.o10) }
+        // Glass panes are content, framed by a neutral hairline: no accent rim.
+        if skin.material.kind == "glass" {
+            return tokens.color(\.foreground).opacity(skin.opacity.o16 + skin.opacity.o10 * pulse)
+        }
         return tokens.color(\.accentPrimary).opacity(skin.opacity.o55 + skin.opacity.o45 * pulse)
     }
 

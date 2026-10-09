@@ -71,7 +71,7 @@ struct QuitConfirmationView: View {
         // The user's overlay opacity and blur settings, as every summoned
         // overlay reads them.
         .ainkradOverlayChrome(
-            backgroundOpacity: environment.generalSettingsStore.overlayBackgroundOpacity,
+            backgroundOpacity: environment.generalSettingsStore.overlayOpacity(in: skin),
             blurEnabled: environment.generalSettingsStore.overlayBlurEnabled,
             blending: .withinWindow
         )

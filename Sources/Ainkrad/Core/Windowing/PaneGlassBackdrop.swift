@@ -55,6 +55,7 @@ struct PaneGlassBackdrop: View {
             switch environment.themeManager.homeLanguage.paneBackdrop {
             case .sky: blurredSky
             case .material: AinkradMaterialBackground(level: .panel, blending: .withinWindow)
+            case .solid: environment.themeManager.hostSkin.color(\.background)
             }
         }
     }

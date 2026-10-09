@@ -66,14 +66,17 @@ struct NeonAppTile: View {
                 .shadow(color: tokens.color(\.accentSecondary).opacity(skin.opacity.o16), radius: size * 0.22)
                 .frame(width: size, height: size)
         case .plain:
+            // Liquid Glass "Clear" app-icon mode: a frosted, see-through glass
+            // squircle drawn by the system (highlights, refraction), white glyph.
+            let squircle = skin.shape(cut: size * skin.cut.r0_22)
             Image(systemName: symbol)
-                .font(.system(size: size * 0.56, weight: .medium))  // design-lint: allow font-size kit-gap plainGlyphRatio
-                .foregroundStyle(tokens.color(\.accentSecondary))
+                .font(.system(size: size * 0.5, weight: .semibold))  // design-lint: allow font-size kit-gap plainGlyphRatio
+                .foregroundStyle(skin.color(.palette("white", 1)))
                 // Flattened so a multi-layer symbol (`sparkles`) keeps its tint in a
-                // layer-tree capture (`cacheDisplay`), which drew it white without.
+                // layer-tree capture (`cacheDisplay`).
                 .compositingGroup()
                 .frame(width: size, height: size)
-                .background(skin.shape(cut: size * skin.cut.r0_22).fill(tokens.color(\.surfaceElevated)))
+                .clearGlassTile(in: squircle)
         }
     }
 
@@ -95,5 +98,17 @@ struct NeonAppTile: View {
                 }
             }
             .animation(skin.motion.springs["sp30_70"].map { skin.animation($0) }, value: badge)
+    }
+}
+
+extension View {
+    /// The system's clear Liquid Glass in `shape` (macOS 26+); a blurred
+    /// fill of the same shape before that.
+    @ViewBuilder fileprivate func clearGlassTile<S: Shape>(in shape: S) -> some View {
+        if #available(macOS 26, *) {
+            glassEffect(.clear, in: shape)
+        } else {
+            background(.ultraThinMaterial, in: shape)
+        }
     }
 }
