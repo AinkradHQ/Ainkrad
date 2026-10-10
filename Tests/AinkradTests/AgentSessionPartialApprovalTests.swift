@@ -1,5 +1,6 @@
 import AinkradHostRuntime
 import Foundation
+import AinkradAppKit
 import Testing
 
 @testable import Ainkrad
@@ -14,7 +15,7 @@ struct AgentSessionPartialApprovalTests {
         arr[1] = "l2X"
         arr[18] = "l19X"
         let updated = arr.joined(separator: "\n")
-        let fileDiff = DiffEngine.compute(old: original, new: updated, path: "/f.txt", context: 2)
+        let fileDiff = AinkradDiffEngine.compute(old: original, new: updated, path: "/f.txt", context: 2)
 
         let rewritten = AgentSession.rewriteEditForPartialApproval(
             input: .object([
@@ -31,7 +32,7 @@ struct AgentSessionPartialApprovalTests {
     }
 
     @Test func emptyRejectionLeavesInputUnchanged() {
-        let fileDiff = DiffEngine.compute(old: "a\nb", new: "a\nB", path: "/f", context: 2)
+        let fileDiff = AinkradDiffEngine.compute(old: "a\nb", new: "a\nB", path: "/f", context: 2)
         let input = JSONValue.object([
             "path": .string("/f"),
             "old_string": .string("b"), "new_string": .string("B"),

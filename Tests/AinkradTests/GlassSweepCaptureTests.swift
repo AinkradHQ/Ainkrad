@@ -77,7 +77,7 @@ struct GlassSweepCaptureTests {
         let sections: [(String, CGFloat)] = [
             ("foundation", 364), ("scales", 434), ("panel", 154), ("card", 158), ("pickers", 145),
             ("formControls", 237), ("stateViews", 254), ("sectionHeader", 78), ("wave2", 517),
-            ("wave3", 704), ("wave4", 1011), ("wave5", 1643), ("themeFoundation", 624),
+            ("wave3", 704), ("wave4", 1011), ("wave5", 1643), ("agentChat", 760), ("themeFoundation", 624),
         ]
         for (section, height) in sections {
             try shoot("kit-\(section)", size: CGSize(width: 1280, height: height + 120)) { app in
@@ -102,8 +102,8 @@ struct GlassSweepCaptureTests {
                 ])
         }
         try shoot("sage-diff", size: CGSize(width: 520, height: 260)) { _ in
-            DiffReviewView(
-                fileDiff: DiffEngine.compute(
+            AinkradDiffReview(
+                fileDiff: AinkradDiffEngine.compute(
                     old: "let a = 1\nlet b = 2\nprint(a + b)\n", new: "let a = 1\nlet b = 3\nprint(a * b)\n",
                     path: "Sources/Main.swift"),
                 rejectedHunkIDs: .constant([]))

@@ -45,23 +45,23 @@ struct CommandCategoryTests {
 
     @Test func groupedOrdersSectionsAndOmitsEmpty() {
         let cmds = [namedCmd("remember", .memory), namedCmd("new", .session), namedCmd("model", .model)]
-        let sections = CommandPaletteView.grouped(cmds)
+        let sections = CommandPalette.grouped(cmds)
         #expect(sections.map(\.category) == [.session, .model, .memory])
     }
 
     @Test func groupedPreservesWithinSectionOrder() {
         let cmds = [namedCmd("retry", .session), namedCmd("new", .session)]
-        let sections = CommandPaletteView.grouped(cmds)
+        let sections = CommandPalette.grouped(cmds)
         #expect(sections.first?.commands.map(\.name) == ["retry", "new"])
     }
 
     @Test func selectionOrderIsFlattenedGrouping() {
         let cmds = [namedCmd("remember", .memory), namedCmd("new", .session), namedCmd("usage", .info)]
-        #expect(CommandPaletteView.selectionOrder(cmds, query: "").map(\.name) == ["new", "usage", "remember"])
+        #expect(CommandPalette.selectionOrder(cmds, query: "").map(\.name) == ["new", "usage", "remember"])
     }
 
     @Test func selectionOrderAppliesFilterFirst() {
         let cmds = [namedCmd("remember", .memory), namedCmd("new", .session)]
-        #expect(CommandPaletteView.selectionOrder(cmds, query: "rem").map(\.name) == ["remember"])
+        #expect(CommandPalette.selectionOrder(cmds, query: "rem").map(\.name) == ["remember"])
     }
 }

@@ -1,5 +1,6 @@
 import AinkradHostRuntime
 import Foundation
+import AinkradAppKit
 
 extension AgentSession {
     /// Thrown when `runConversation` needs a subscription credential but no
@@ -162,7 +163,7 @@ extension AgentSession {
         streamingText = ""
         streamingThinking = ""
         streamingBlocks = []
-        var textParser = MarkdownStreamParser()
+        var textParser = AinkradMarkdownStreamParser()
         var coalescer = StreamCoalescer()
         var pendingThinking = ""
         var pendingPublish = false
@@ -227,7 +228,7 @@ extension AgentSession {
     /// has elapsed. Everything between publishes is accumulated, not dropped.
     private func publishIfDue(
         _ coalescer: inout StreamCoalescer,
-        _ parser: inout MarkdownStreamParser,
+        _ parser: inout AinkradMarkdownStreamParser,
         _ thinking: inout String,
         _ pending: inout Bool
     ) {
@@ -242,7 +243,7 @@ extension AgentSession {
     /// last window is almost never exactly full, and without this the final
     /// few tokens would never reach the view.
     private func flushStreaming(
-        _ parser: inout MarkdownStreamParser,
+        _ parser: inout AinkradMarkdownStreamParser,
         _ thinking: inout String
     ) {
         streamingText = parser.text

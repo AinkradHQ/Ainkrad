@@ -1,5 +1,6 @@
 import AinkradHostRuntime
 import Foundation
+import AinkradAppKit
 import Observation
 
 /// The tool-use agent loop: owns the transcript, in-flight streaming buffers,
@@ -40,8 +41,8 @@ final class AgentSession {
     var streamingThinking: String = ""
     /// Pre-parsed blocks for `streamingText`, published on the same coalesced
     /// tick. The view renders these instead of re-parsing the whole message —
-    /// see `MarkdownStreamParser`.
-    var streamingBlocks: [MarkdownBlock] = []
+    /// see `AinkradMarkdownStreamParser`.
+    var streamingBlocks: [AinkradMarkdownBlock] = []
 
     /// Hunk ids the user has toggled to REJECT on the pending edit_file approval.
     /// Reset whenever a new approval is parked; read by `approve()` to rebuild a

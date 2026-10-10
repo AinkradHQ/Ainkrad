@@ -1,11 +1,12 @@
 import Foundation
+import AinkradAppKit
 import Testing
 
 @testable import Ainkrad
 
 @Suite struct PartialEditTests {
-    private func diff(_ old: String, _ new: String) -> FileDiff {
-        DiffEngine.compute(old: old, new: new, path: "/f", context: 2)
+    private func diff(_ old: String, _ new: String) -> AinkradFileDiff {
+        AinkradDiffEngine.compute(old: old, new: new, path: "/f", context: 2)
     }
 
     @Test func rejectingNoneYieldsFullUpdate() {

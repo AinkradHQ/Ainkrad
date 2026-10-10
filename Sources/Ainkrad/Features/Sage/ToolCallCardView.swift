@@ -23,8 +23,8 @@ struct ToolCallCardView: View {
     /// Present for committed transcript cards; nil for the approval card.
     var result: ToolResultSummary?
     /// Structured diff for rich hunk review; when present with `pendingApproval`,
-    /// the card renders `DiffReviewView` instead of the raw diff text.
-    var fileDiff: FileDiff? = nil
+    /// the card renders `AinkradDiffReview` instead of the raw diff text.
+    var fileDiff: AinkradFileDiff? = nil
     var rejectedHunkIDs: Binding<Set<Int>>? = nil
     /// A `data:` image URL (e.g. from `image_generate`) rendered inline below the
     /// row, so a generated image appears in the transcript, not only on the canvas.
@@ -63,7 +63,7 @@ struct ToolCallCardView: View {
         VStack(alignment: .leading, spacing: skin.spacing.sm) {
             header
             if pendingApproval, let fileDiff, let rejectedHunkIDs, !fileDiff.hunks.isEmpty {
-                DiffReviewView(fileDiff: fileDiff, rejectedHunkIDs: rejectedHunkIDs)
+                AinkradDiffReview(fileDiff: fileDiff, rejectedHunkIDs: rejectedHunkIDs)
             } else if showsBody {
                 codeBlock
             }
