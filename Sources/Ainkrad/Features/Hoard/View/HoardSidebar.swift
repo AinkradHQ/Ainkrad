@@ -23,7 +23,7 @@ struct HoardSidebar: View {
             LazyVStack(alignment: .leading, spacing: skin.size.s1) {
                 ForEach(sections) { section in
                     if let title = section.title {
-                        Text(title.uppercased())
+                        Text(skin.labelCased(title))
                             .font(
                                 AinkradFontResolver.font(
                                     .caption, weight: .medium,
