@@ -25,57 +25,15 @@ struct SageDecisionBarContent: Equatable {
     }
 }
 
-/// Docked decision bar shown just above the composer while a gated tool call or
-/// an agent-authored plan awaits the user's decision. The details (the tool's
-/// identity/summary/diff, the plan's steps in `PlanCardView`) stay in the inline
-/// transcript; this bar carries only the decision, so it is always visible
-/// without scrolling. Seamless elevated surface with an accent cue — matches
-/// the composer it sits above.
+/// Sage's docked decision bar: the kit's `AinkradDecisionBar` fed Sage's wording
+/// (`SageDecisionBarContent`). The details stay in the inline transcript.
 struct SageDecisionBar: View {
-    @Environment(\.ainkradSkin) private var skin
-    /// One button on the bar, drawn as a kit `AinkradButton` in `style` —
-    /// `.primary` for the affirmative decision, `.ghost` for the others.
-    struct Action {
-        let title: String
-        let style: AinkradButtonStyle
-        let perform: () -> Void
-    }
-
     let content: SageDecisionBarContent
-    let actions: [Action]
-    @Environment(\.ainkradTheme) private var theme
+    let actions: [AinkradDecisionBar.Action]
 
     var body: some View {
-        HStack(spacing: skin.size.s10) {
-            Image(systemName: content.icon)
-                .font(skin.font(AinkradFontToken(sizeKey: "t12", scaled: false)))
-                .foregroundStyle(content.iconTint == .primary ? theme.accentPrimary : theme.accentSecondary)
-            VStack(alignment: .leading, spacing: skin.size.s1) {
-                Text(content.caption)
-                    .font(AinkradFont.display(10, weight: .semibold))
-                    .kerning(0.6)
-                    .foregroundStyle(theme.accentPrimary.opacity(skin.opacity.o85))
-                Text(content.title)
-                    .font(AinkradFont.display(12, weight: .medium))
-                    .foregroundStyle(theme.foreground.opacity(skin.opacity.o85))
-                    .lineLimit(1)
-            }
-            Spacer(minLength: 12)
-            ForEach(actions.indices, id: \.self) { index in
-                AinkradButton(title: actions[index].title, style: actions[index].style, action: actions[index].perform)
-            }
-        }
-        .padding(.horizontal, skin.size.s14).padding(.vertical, skin.size.s9)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(skin.shape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(skin.opacity.o60)))
-        .overlay {
-            // Glass frames controls with a neutral hairline, not an accent rim (as `PaneActivationRing`).
-            skin.shape(cut: AinkradRadius.md).stroke(
-                skin.material.kind == "glass"
-                    ? theme.foreground.opacity(skin.opacity.o16) : theme.accentPrimary.opacity(skin.opacity.o55),
-                lineWidth: 1)
-        }
-        .padding(.horizontal, skin.size.s14)
-        .padding(.bottom, skin.spacing.xs)
+        AinkradDecisionBar(
+            icon: content.icon, iconTint: content.iconTint == .primary ? .primary : .secondary,
+            caption: content.caption, title: content.title, actions: actions)
     }
 }

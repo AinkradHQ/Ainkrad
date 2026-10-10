@@ -391,7 +391,7 @@ struct SageRootView: View {
                         .background(skin.shape(cut: AinkradRadius.md).fill(theme.accentPrimary.opacity(skin.opacity.o18)))
                         .shadow(color: theme.accentPrimary.opacity(skin.opacity.o12), radius: skin.size.s6)
                 } else {
-                    SageMarkdownText(text: message.text, typography: assistantTypography)
+                    AinkradMarkdownText(text: message.text, typography: assistantTypography)
                 }
             }
 

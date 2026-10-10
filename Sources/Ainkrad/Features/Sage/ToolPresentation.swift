@@ -6,7 +6,7 @@ import Foundation
 enum ToolTint: Equatable { case primary, secondary }
 
 /// Pure `tool name → visual identity` mapping for transcript tool cards.
-/// No SwiftUI, no `AppEnvironment` — unit-tested like `CommandPaletteView.filter`.
+/// No SwiftUI, no `AppEnvironment` — unit-tested like `CommandPalette.filter`.
 struct ToolPresentation: Equatable {
     let icon: String
     let tint: ToolTint

@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// Local `keyDown` monitors used by `SageComposerBar` (M7 finalize Wave D,
+/// Local `keyDown` monitor used by `SageComposerBar` (M7 finalize Wave D,
 /// D2 — extracted verbatim, no behavior change). App-scoped (not global),
 /// mirroring `KeyboardShortcutMonitor`'s established pattern.
 
@@ -55,77 +55,6 @@ struct ComposerTabCycleMonitor: NSViewRepresentable {
                         return nil
                     }
                     return event
-                }
-            } else if let monitor {
-                NSEvent.removeMonitor(monitor)
-                self.monitor = nil
-            }
-        }
-    }
-}
-
-/// Local `keyDown` monitor (same app-scoped pattern as `ComposerTabCycleMonitor`)
-/// that swallows Up/Down/Return while the palette or mention overlay is visible,
-/// driving list navigation/confirmation — the overlays themselves have no text
-/// field of their own to receive these keys, since their query comes from the
-/// composer's own draft. Esc is deliberately NOT handled here:
-/// `.ainkradFloatingPanel` already dismisses on Esc via its own monitor.
-struct ComposerOverlayKeyMonitor: NSViewRepresentable {
-    let isActive: () -> Bool
-    let onUp: () -> Void
-    let onDown: () -> Void
-    let onConfirm: () -> Void
-
-    /// The overlay keys this monitor swallows.
-    enum Key: Equatable { case up, down, confirm }
-
-    /// Up arrow (126), Down arrow (125), Return (36) / keypad Enter (76); every
-    /// other key passes through. Pure so the key table is testable.
-    nonisolated static func key(for keyCode: UInt16) -> Key? {
-        switch keyCode {
-        case 126: return .up
-        case 125: return .down
-        case 36, 76: return .confirm
-        default: return nil
-        }
-    }
-
-    func makeNSView(context: Context) -> MonitoringView {
-        let view = MonitoringView()
-        view.isActive = isActive
-        view.onUp = onUp
-        view.onDown = onDown
-        view.onConfirm = onConfirm
-        return view
-    }
-
-    func updateNSView(_ nsView: MonitoringView, context: Context) {
-        nsView.isActive = isActive
-        nsView.onUp = onUp
-        nsView.onDown = onDown
-        nsView.onConfirm = onConfirm
-    }
-
-    final class MonitoringView: NSView {
-        var isActive: (() -> Bool)?
-        var onUp: (() -> Void)?
-        var onDown: (() -> Void)?
-        var onConfirm: (() -> Void)?
-        private var monitor: Any?
-
-        override func viewDidMoveToWindow() {
-            super.viewDidMoveToWindow()
-            if window != nil {
-                guard monitor == nil else { return }
-                monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-                    guard let self, self.isActive?() == true else { return event }
-                    switch ComposerOverlayKeyMonitor.key(for: event.keyCode) {
-                    case .up: self.onUp?()
-                    case .down: self.onDown?()
-                    case .confirm: self.onConfirm?()
-                    case nil: return event
-                    }
-                    return nil
                 }
             } else if let monitor {
                 NSEvent.removeMonitor(monitor)

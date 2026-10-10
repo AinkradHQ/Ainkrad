@@ -4,16 +4,12 @@ import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// The Sage composer: one seamless neon surface (soft elevated fill) with a
-/// bottom control strip holding the connection·model pill, the compact
-/// permission-mode select, and send. Owns the draft binding shared with
-/// `SageRootView`. The text field is `AinkradTextArea`, which carries its
-/// own chamfer focus ring.
-///
-/// M7 Slice 5c Task 22b adds four surfaces on top of the existing bar: the
-/// `/`-triggered `CommandPaletteView`, the `@`-triggered `MentionOverlayView`,
-/// image drag-and-drop, and an export/redaction flow — see the doc comments
-/// on each below.
+/// The Sage composer: the kit's `AinkradComposer` with Sage's controls in its
+/// slots — agent, permission mode and the connection·model pill on the left;
+/// Runs, Schedules, the `•••` overflow and push-to-talk on the right. Owns the
+/// attachment and `@file` mention state for the next send; the kit owns the
+/// surface, the text area, Send and the `/` / `@` overlay (rows come from
+/// `SageComposerBar+MentionOverlay.swift`).
 struct SageComposerBar: View {
     // Not `private` — read from the `SageComposerBar+*.swift` extension
     // files (M7 finalize Wave D, D2 file split: `private` is file-scoped, so
@@ -63,147 +59,76 @@ struct SageComposerBar: View {
     /// content; reference-mode entries stay as the `@path` token only.
     @State var mentions: [ComposerMention] = []
 
-    /// Slash-command palette state. `paletteQuery` is derived from `draft`
-    /// (see `ComposerTriggers.paletteQuery`) rather than a separate text
-    /// field — the palette has no input of its own, it reads the composer's.
-    /// Not `private` — read/written from `SageComposerBar+MentionOverlay.swift`
-    /// (M7 finalize Wave D, D2 file split: `private` is file-scoped, so state
-    /// touched by an extension in a different file needs at least `internal`).
-    @State var isPaletteVisible = false
-    @State var paletteQuery = ""
-    @State var paletteSelectedIndex = 0
-
-    /// `@`-mention overlay state — same shape as the palette's.
-    @State var isMentionVisible = false
-    @State var mentionQuery = ""
-    @State var mentionSelectedIndex = 0
-
     /// `•••` overflow panel state (M7 finalize follow-up: composer strip
     /// polish) — see `SageComposerBar+Overflow.swift`. Not `private`,
     /// same widening rationale as the state above (read from that extension).
     @State var isOverflowVisible = false
 
-    /// Wave 3e: the ONE uniform height every control in the bottom strip is
-    /// pinned to — icon buttons (`size:`, send included) and the model select
-    /// (`.frame`). Not `private` — read from
-    /// `SageComposerBar+Overflow.swift`'s `overflowTrigger`.
-    static let controlHeight: CGFloat = 30
+    /// The one height every control in the bottom strip is pinned to — the
+    /// kit composer's, so Sage's slot buttons match its Send button. Not
+    /// `private` — read from `SageComposerBar+Overflow.swift`.
+    static var controlHeight: CGFloat { AinkradComposer<EmptyView, EmptyView, EmptyView>.controlHeight }
 
     var body: some View {
         let isBusy = SageComposerBar.isBusy(session.state)
 
-        return VStack(alignment: .leading, spacing: skin.spacing.sm) {
+        return AinkradComposer(
+            text: $draft, placeholder: "Message Sage…", isEditable: !isBusy, canSend: canSend(isBusy: isBusy),
+            autoFocus: autoFocusOnAppear, suggestions: suggestions(for:), onPick: picked,
+            onDrop: handleDrop, onSend: send
+        ) {
             if !pendingImages.isEmpty {
                 attachmentChips
             }
-
             if !mentions.isEmpty {
                 mentionChips
             }
-
-            AinkradTextArea(
-                text: $draft, placeholder: "Message Sage…",
-                minHeight: 34, maxHeight: 80, autoFocus: autoFocusOnAppear,
-                onSubmit: { send() }
-            )
-            .disabled(isBusy)
-            .onDrop(of: [.image, .fileURL], isTargeted: nil, perform: handleDrop)
-
-            // Wave 3e: the whole strip is pinned to one uniform control height
-            // (30) so the icon buttons, the model select, and the send button
-            // all read as the same size — see each control's `size`/`.frame`
-            // below, all set to `Self.controlHeight`.
-            HStack(spacing: skin.spacing.sm) {
-                // Left cluster (Wave 3c): agent and permission are icon
-                // buttons that cycle on click, matching the right cluster's
-                // `AinkradIconButton` idiom; model is the only real select.
-                // Replaces the old grouped "well" of three stacked selects.
-                AinkradIconButton(
-                    systemName: environment.agentStore.active.icon, size: Self.controlHeight,
-                    tooltip: "Agent: \(environment.agentStore.active.name) — Shift+Tab"
-                ) {
-                    environment.agentStore.cycleActive()
-                }
-
-                AinkradIconButton(
-                    systemName: environment.agentPermissionStore.mode.glyph, size: Self.controlHeight,
-                    tooltip: "Permission: \(SageComposerBar.title(environment.agentPermissionStore.mode)) — ⌘⇧P"
-                ) {
-                    environment.agentPermissionStore.cycle()
-                }
-
-                SageConnectionModelPicker(
-                    model: modelPicker,
-                    onManageConnections: { environment.isSettingsPresented = true }
-                )
-
-                Spacer(minLength: 8)
-
-                // Action cluster: high-traffic triggers stay visible; Usage
-                // and Export collapse into `overflowTrigger`'s `•••` panel.
-                runsPanelTrigger
-
-                schedulesTrigger
-
-                overflowTrigger
-
-                micTrigger
-
-                RecordingIndicatorView(
-                    status: environment.voiceService.pushToTalk.status,
-                    notice: environment.voiceService.lastNotice)
-
-                AinkradIconButton(systemName: "arrow.up", size: Self.controlHeight, tooltip: "Send") { send() }
-                    .disabled(!canSend(isBusy: isBusy))
-                    .opacity(canSend(isBusy: isBusy) ? 1 : skin.opacity.o40)
+        } leading: {
+            // Agent and permission are icon buttons that cycle on click; model
+            // is the only real select.
+            AinkradIconButton(
+                systemName: environment.agentStore.active.icon, size: Self.controlHeight,
+                tooltip: "Agent: \(environment.agentStore.active.name) — Shift+Tab"
+            ) {
+                environment.agentStore.cycleActive()
             }
-            .frame(height: Self.controlHeight)
+
+            AinkradIconButton(
+                systemName: environment.agentPermissionStore.mode.glyph, size: Self.controlHeight,
+                tooltip: "Permission: \(SageComposerBar.title(environment.agentPermissionStore.mode)) — ⌘⇧P"
+            ) {
+                environment.agentPermissionStore.cycle()
+            }
+
+            SageConnectionModelPicker(
+                model: modelPicker,
+                onManageConnections: { environment.isSettingsPresented = true }
+            )
+        } trailing: {
+            // High-traffic triggers stay visible; Usage and Export collapse
+            // into `overflowTrigger`'s `•••` panel.
+            runsPanelTrigger
+
+            schedulesTrigger
+
+            overflowTrigger
+
+            micTrigger
+
+            RecordingIndicatorView(
+                status: environment.voiceService.pushToTalk.status,
+                notice: environment.voiceService.lastNotice)
         }
-        .padding(.horizontal, skin.spacing.md).padding(.vertical, skin.size.s10)
-        .background(skin.shape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(skin.opacity.o45)))
         .background(
             // Tab-cycle affordance (M7 Slice 5a Task 5): swallows a plain Tab
             // keyDown to advance the active agent, but ONLY when the draft is
-            // empty — otherwise Tab still moves keyboard focus as normal. A
-            // remappable `ShortcutAction` binding is explicitly deferred; this
-            // is a local (app-scoped, not global) monitor, same pattern as
-            // `KeyboardShortcutMonitor`.
+            // empty — otherwise Tab still moves keyboard focus as normal.
             ComposerTabCycleMonitor(
                 isDraftEmpty: { draft.isEmpty },
                 onCycle: { environment.agentStore.cycleActive() }
             )
         )
-        .background(
-            // Up/Down navigates whichever overlay (palette or mention) is
-            // currently visible; Return confirms the highlighted row. Esc is
-            // NOT handled here — `.ainkradFloatingPanel` already dismisses on
-            // Esc via its own monitor. Same local-monitor pattern as
-            // `ComposerTabCycleMonitor` (Slice 1 Task 13's established
-            // "confirm kit affordances at build time" convention).
-            ComposerOverlayKeyMonitor(
-                isActive: { isPaletteVisible || isMentionVisible },
-                onUp: { moveSelection(by: -1) },
-                onDown: { moveSelection(by: 1) },
-                onConfirm: { confirmSelection() }
-            )
-        )
-        .ainkradFloatingPanel(isPresented: $isPaletteVisible, maxHeight: 260) {
-            CommandPaletteView(
-                commands: environment.commandRegistry.all(),
-                query: paletteQuery,
-                selectedIndex: $paletteSelectedIndex,
-                onSelect: insertCommand
-            )
-        }
-        .ainkradFloatingPanel(isPresented: $isMentionVisible, maxHeight: 260) {
-            MentionOverlayView(
-                matches: mentionMatches,
-                selectedIndex: $mentionSelectedIndex,
-                onSelect: insertMention
-            )
-        }
         .ainkradToastHost()
-        .onChange(of: draft) { _, newValue in updateOverlayTriggers(newValue) }
         .onChange(of: environment.voiceService.reviewTranscript) { _, new in
             guard let new, !new.isEmpty else { return }
             draft = draft.isEmpty ? new : draft + " " + new
@@ -259,8 +184,6 @@ struct SageComposerBar: View {
         draft = ""
         pendingImages = []
         mentions = []
-        isPaletteVisible = false
-        isMentionVisible = false
         session.send(text, images: images)
     }
 
@@ -300,35 +223,5 @@ struct SageComposerBar: View {
         case .autoApprove: return "Auto"
         case .fullAuto: return "Full-auto"
         }
-    }
-}
-
-/// Pure trigger-detection over the live draft string — `AinkradTextArea`
-/// exposes no cursor position or per-keystroke hook, so both triggers are
-/// derived from `draft`'s current value alone (M7 Slice 5c Task 22b).
-enum ComposerTriggers {
-    /// The palette query when `text` is a LEADING `/` command still being
-    /// typed — no space/newline yet — mirroring `CommandRegistry.parse`'s own
-    /// "leading `/`" recognition exactly, so the palette only ever offers to
-    /// complete something that would actually dispatch as a command. `nil`
-    /// once a space follows (the user is now typing the command's args).
-    static func paletteQuery(in text: String) -> String? {
-        guard text.hasPrefix("/"), !text.contains(" "), !text.contains("\n") else { return nil }
-        return String(text.dropFirst())
-    }
-
-    /// The mention query when the TRAILING whitespace-delimited token of
-    /// `text` starts with `@`. Best-effort: since there's no cursor position,
-    /// this assumes composing happens at the end of the draft — true for the
-    /// overwhelming majority of chat-composer typing.
-    static func mentionQuery(in text: String) -> String? {
-        let token = trailingToken(of: text)
-        guard token.hasPrefix("@") else { return nil }
-        return String(token.dropFirst())
-    }
-
-    static func trailingToken(of text: String) -> String {
-        guard let idx = text.lastIndex(where: { $0.isWhitespace }) else { return text }
-        return String(text[text.index(after: idx)...])
     }
 }

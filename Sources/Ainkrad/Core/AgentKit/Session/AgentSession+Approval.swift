@@ -1,5 +1,6 @@
 import AinkradHostRuntime
 import Foundation
+import AinkradAppKit
 
 extension AgentSession {
     /// Resume a parked approval by allowing the pending tool call to run. When
@@ -27,7 +28,7 @@ extension AgentSession {
     /// the full original file and `new_string` the reconstructed content. Returns the
     /// input unchanged when nothing is rejected (keeps the original find/replace).
     static func rewriteEditForPartialApproval(
-        input: JSONValue, fileDiff: FileDiff,
+        input: JSONValue, fileDiff: AinkradFileDiff,
         rejecting rejected: Set<Int>
     ) -> JSONValue {
         guard !rejected.isEmpty else { return input }
