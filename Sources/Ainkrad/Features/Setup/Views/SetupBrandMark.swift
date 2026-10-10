@@ -139,6 +139,10 @@ struct SetupBrandMark: View {
     let tokens: AinkradSkin
     let reduceMotion: Bool
     var style: Style = .hero(diameter: 236)
+    /// Keeps the sparks, halo and glow even when the theme clears its bloom:
+    /// the Liquid Glass home shows the full lit mark, while Setup under that
+    /// theme stays plain.
+    var forcesGlow = false
 
     @Environment(\.ainkradSkin) private var skin
 
@@ -164,7 +168,7 @@ struct SetupBrandMark: View {
 
     /// Whether the theme glows at all: a language that clears its bloom (Glass)
     /// gets the plain mark — no sparks, no halo, no shadows. Neon keeps all three.
-    private var glows: Bool { tokens.effects.glowBloom.color != .clear }
+    private var glows: Bool { forcesGlow || tokens.effects.glowBloom.color != .clear }
 
     private var showsField: Bool {
         if case .hero = style { return glows }

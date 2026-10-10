@@ -297,7 +297,10 @@ packages:
     # 636baa4: kit panels follow material.panelOpacity (#94).
     # 2f0bb8f: type.labelCase makes the kit's uppercase labels a token; radioGroup.markerShape honoured (#95).
     #   AppKitUI ABI: additions only (abi-ui-diff exit 3). Theme format 2 = files may set type.labelCase.
-    revision: 2f0bb8ffb982019ba93b4194f9ca7fa541fdd808
+    # fb4be6d: Glass Native E1–E2 (#96–#106): every kit component draws Apple's own controls and Liquid Glass
+    #   when skin.usesNativeGlass (material.kind glass on macOS 26+). AppKitUI ABI: additions only; no new skin token.
+    # aa3fc95: AinkradMenuButton keeps a custom label under Glass (#107).
+    revision: aa3fc955d523a9ec940626bddeeabd927c587737
 
 targets:
   AinkradHostRuntime:
@@ -351,8 +354,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ainkrad.app
-        MARKETING_VERSION: "0.29.0"
-        CURRENT_PROJECT_VERSION: "30"
+        MARKETING_VERSION: "0.30.0"
+        CURRENT_PROJECT_VERSION: "31"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_NSHumanReadableCopyright: ""

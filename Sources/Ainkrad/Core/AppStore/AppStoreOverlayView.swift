@@ -211,7 +211,7 @@ struct AppStoreOverlayView: View {
 
     private func header(tokens: AinkradSkin) -> some View {
         HStack {
-            Text("APP STORE").font(AinkradFont.display(14, weight: .semibold)).kerning(1)
+            Text(skin.labelCased("App Store")).font(AinkradFont.display(14, weight: .semibold)).kerning(skin.labelKerning(1))
                 .foregroundStyle(tokens.color(\.foreground))
             Spacer()
             AinkradSegmentedPicker(items: AppStoreStore.Tab.allCases, selection: $store.tab) { tab in

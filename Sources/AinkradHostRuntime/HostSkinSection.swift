@@ -78,6 +78,9 @@ struct LanguageSection: Equatable, Codable, Sendable {
     var layout: String?
     var sky: Bool?
     var islandArt: Bool?
+    /// `art` / `glass` / `mark`; wins over `islandArt`. Older hosts ignore it
+    /// and read `islandArt`, so a file sets both.
+    var island: String?
     var paneBackdrop: String?
     var appTile: String?
     var windowGlass: Bool?
@@ -105,6 +108,7 @@ struct LanguageSection: Equatable, Codable, Sendable {
         self.layout = try container.decodeIfPresent(String.self, forKey: .layout)
         self.sky = try container.decodeIfPresent(Bool.self, forKey: .sky)
         self.islandArt = try container.decodeIfPresent(Bool.self, forKey: .islandArt)
+        self.island = try container.decodeIfPresent(String.self, forKey: .island)
         self.paneBackdrop = try container.decodeIfPresent(String.self, forKey: .paneBackdrop)
         self.appTile = try container.decodeIfPresent(String.self, forKey: .appTile)
         self.windowGlass = try container.decodeIfPresent(Bool.self, forKey: .windowGlass)

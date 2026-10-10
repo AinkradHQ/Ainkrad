@@ -32,13 +32,17 @@ struct EmptyWorkspaceView: View {
     }
 
     var body: some View {
-        if environment.themeManager.homeLanguage.islandArt {
+        switch environment.themeManager.homeLanguage.island {
+        case .art:
             // The artwork carries the wordmark and tagline itself — no native
             // text or shortcut hint over it; the empty workspace is just the
             // hero over the live sky.
             FloatingIslandView(isVisible: islandVisible)
                 .frame(maxWidth: skin.size.s860, maxHeight: skin.size.s574)
-        } else {
+        case .glass:
+            GlassIslandView(isVisible: islandVisible)
+                .frame(maxWidth: skin.size.s860, maxHeight: skin.size.s574)
+        case .mark:
             brandHome
         }
     }

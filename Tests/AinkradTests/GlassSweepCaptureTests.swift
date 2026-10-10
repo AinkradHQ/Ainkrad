@@ -10,7 +10,8 @@ import Testing
 /// Glass, written as `<dir>/<area>-<screen>-<theme>.png`. A tool, not a check:
 /// it runs only with `AINKRAD_SWEEP_DIR` and `AINKRAD_THEMES_DIR` set
 /// (`TEST_RUNNER_AINKRAD_SWEEP_DIR=<dir> make validate-themes THEMES=<catalog>/themes`)
-/// and skips loudly otherwise. Off-screen capture cannot show behind-window glass.
+/// and skips loudly otherwise. Shots are live window captures (see `LiveGlassCapture`):
+/// off-screen `cacheDisplay` cannot draw Liquid Glass.
 @MainActor
 @Suite("Glass sweep capture")
 struct GlassSweepCaptureTests {
@@ -42,8 +43,49 @@ struct GlassSweepCaptureTests {
                     AinkradTypography(fontFamilyName: app.themeManager.uiFontFamily.fontName, scale: 1))
                 .environment(\.ainkradMotionBudget, .frozen)
                 .ainkradSkin(skin)
-            let png = try SignalSnapshotTests.render(view, size: size)
-            try png.write(to: URL(fileURLWithPath: out).appendingPathComponent("\(name)-\(theme).png"))
+            try LiveGlassCapture.shoot(
+                view, size: size, to: URL(fileURLWithPath: out).appendingPathComponent("\(name)-\(theme).png"))
+        }
+    }
+
+    // MARK: - Shell (Glass Native E3)
+
+    /// The window chrome and the summoned overlays: HUD bar, focus tab strip,
+    /// Launcher, App Store, Workspace Overview and the empty home.
+    @Test("shell") func shell() throws {
+        try shoot("shell-hud", size: CGSize(width: 1100, height: 40)) { _ in HUDBar() }
+        try shoot("shell-tabs", size: CGSize(width: 900, height: 40)) { app in
+            FocusTabStrip(workspace: app.workspaceManager.activeWorkspace)
+        }
+        try shoot("shell-launcher", size: CGSize(width: 1000, height: 640)) { app in
+            LauncherView(store: app.launcherStore, onDismiss: {})
+        }
+        try shoot("shell-appstore", size: CGSize(width: 1100, height: 700)) { app in
+            AppStoreOverlayView(store: app.appStoreStore, onDismiss: {})
+        }
+        try shoot("shell-overview", size: CGSize(width: 1100, height: 700)) { _ in
+            WorkspaceOverviewView(onDismiss: {})
+        }
+        try shoot("shell-home", size: CGSize(width: 1000, height: 640)) { _ in EmptyWorkspaceView() }
+    }
+
+    // MARK: - Kit (Glass Native E0.2)
+
+    /// Every gallery section, so each Glass Native PR shows its components
+    /// Neon | Glass. Heights are the Neon goldens' plus room for native controls.
+    @Test("kit") func kit() throws {
+        let sections: [(String, CGFloat)] = [
+            ("foundation", 364), ("scales", 434), ("panel", 154), ("card", 158), ("pickers", 145),
+            ("formControls", 237), ("stateViews", 254), ("sectionHeader", 78), ("wave2", 517),
+            ("wave3", 704), ("wave4", 1011), ("wave5", 1643), ("themeFoundation", 624),
+        ]
+        for (section, height) in sections {
+            try shoot("kit-\(section)", size: CGSize(width: 1280, height: height + 120)) { app in
+                ComponentGalleryView()
+                    .gallerySectionView(named: section, theme: app.themeManager.skin.id)
+                    .padding(20)
+                    .frame(maxHeight: .infinity, alignment: .top)
+            }
         }
     }
 
@@ -167,5 +209,57 @@ struct GlassSweepCaptureTests {
                 isPresented: .constant(true), title: "Delete workspace?", message: "This cannot be undone.",
                 confirmTitle: "Delete", isDestructive: true, onConfirm: {})
         }
+    }
+}
+
+/// Off-screen `cacheDisplay` cannot draw Liquid Glass (the window server
+/// composites it), so each shot is a real window at desktop level, behind
+/// every other window: nothing flashes and no focus is taken.
+/// `screencapture -l` grabs that window alone. The window claims key/active
+/// appearance so controls and glass tints render as in a focused app.
+@MainActor
+enum LiveGlassCapture {
+    private final class KeyAppearancePanel: NSPanel {
+        override var isKeyWindow: Bool { true }
+        override var isMainWindow: Bool { true }
+        override var canBecomeKey: Bool { false }
+        @objc var hasKeyAppearance: Bool { true }
+        @objc var hasMainAppearance: Bool { true }
+        @objc var _hasActiveAppearance: Bool { true }
+        @objc var _hasActiveAppearanceIgnoringKeyFocus: Bool { true }
+    }
+
+    static func shoot(_ view: some View, size: CGSize, to url: URL) throws {
+        let panel = KeyAppearancePanel(
+            contentRect: NSRect(origin: CGPoint(x: 200, y: 200), size: size),
+            styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+        panel.appearance = NSAppearance(named: .darkAqua)
+        panel.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.desktopWindow)))
+        panel.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
+        panel.hasShadow = false
+        panel.contentView = NSHostingView(
+            rootView:
+                view
+                .environment(\.controlActiveState, .key)
+                .frame(width: size.width, height: size.height))
+        panel.orderFrontRegardless()
+        defer { panel.orderOut(nil) }
+        RunLoop.main.run(until: Date().addingTimeInterval(0.5))
+
+        // The Debug test host has no Screen Recording grant, so the capture
+        // runs outside it: a request file names the window and the PNG, and
+        // `.build/capture-broker.sh` (started by `.build/hostsweep.sh`) runs
+        // `screencapture -l` and writes the PNG.
+        let requests = url.deletingLastPathComponent().appendingPathComponent(".requests", isDirectory: true)
+        try FileManager.default.createDirectory(at: requests, withIntermediateDirectories: true)
+        try? FileManager.default.removeItem(at: url)
+        try "\(panel.windowNumber) \(url.path)".write(
+            to: requests.appendingPathComponent(UUID().uuidString + ".req"), atomically: true, encoding: .utf8)
+        let deadline = Date().addingTimeInterval(10)
+        while !FileManager.default.fileExists(atPath: url.path), Date() < deadline {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+        }
+        RunLoop.main.run(until: Date().addingTimeInterval(0.1))
+        #expect(FileManager.default.fileExists(atPath: url.path), "no capture broker answered for \(url.lastPathComponent)")
     }
 }

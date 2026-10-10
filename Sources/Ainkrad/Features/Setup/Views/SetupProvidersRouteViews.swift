@@ -117,8 +117,8 @@ struct SetupClaudeRoute: View {
                             .font(AinkradFont.display(13, weight: .medium))
                             .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o92))
                         if isRecommended {
-                            Text("FASTEST")
-                                .font(AinkradFont.display(9, weight: .medium)).kerning(0.6)
+                            Text(skin.labelCased("Fastest"))
+                                .font(AinkradFont.display(9, weight: .medium)).kerning(skin.labelKerning(0.6))
                                 .foregroundStyle(tokens.color(\.accentSecondary))
                         }
                     }
