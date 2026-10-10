@@ -15,6 +15,14 @@ public enum PaneBackdropKind: String, Sendable {
     case solid
 }
 
+/// What floats on the empty home: Neon's painted island, the all-glass island
+/// (Liquid Glass), or the plain brand mark.
+public enum IslandKind: String, Sendable {
+    case art
+    case glass
+    case mark
+}
+
 /// The app tile: Neon's bloom tile, or a calm symbol-on-fill tile.
 public enum AppTileKind: String, Sendable {
     case neon
@@ -27,7 +35,7 @@ public enum AppTileKind: String, Sendable {
 public struct HomeLanguage: Equatable, Sendable {
     public var layout: HomeLayoutKind
     public var sky: Bool
-    public var islandArt: Bool
+    public var island: IslandKind
     public var paneBackdrop: PaneBackdropKind
     public var appTile: AppTileKind
     /// Whether the whole window is see-through glass (the desktop shows
@@ -37,15 +45,19 @@ public struct HomeLanguage: Equatable, Sendable {
 
     public init(
         layout: HomeLayoutKind = .islands, sky: Bool = true, islandArt: Bool = true,
-        paneBackdrop: PaneBackdropKind = .sky, appTile: AppTileKind = .neon, windowGlass: Bool = false
+        paneBackdrop: PaneBackdropKind = .sky, appTile: AppTileKind = .neon, windowGlass: Bool = false,
+        island: IslandKind? = nil
     ) {
         self.layout = layout
         self.sky = sky
-        self.islandArt = islandArt
+        self.island = island ?? (islandArt ? .art : .mark)
         self.paneBackdrop = paneBackdrop
         self.appTile = appTile
         self.windowGlass = windowGlass
     }
+
+    /// Whether the home shows Neon's painted island.
+    public var islandArt: Bool { island == .art }
 
     /// Today's look.
     public static let neon = HomeLanguage()
@@ -63,7 +75,9 @@ public struct HomeLanguage: Equatable, Sendable {
         }
         home.layout = pick("layout", language.layout, home.layout)
         home.sky = language.sky ?? home.sky
-        home.islandArt = language.islandArt ?? home.islandArt
+        // `island` wins; a file without it (or a host before it) reads `islandArt`.
+        let legacy: IslandKind = (language.islandArt ?? true) ? .art : .mark
+        home.island = pick("island", language.island, legacy)
         home.paneBackdrop = pick("paneBackdrop", language.paneBackdrop, home.paneBackdrop)
         home.appTile = pick("appTile", language.appTile, home.appTile)
         home.windowGlass = language.windowGlass ?? home.windowGlass
