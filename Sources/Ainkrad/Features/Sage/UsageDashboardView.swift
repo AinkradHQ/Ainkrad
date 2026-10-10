@@ -112,7 +112,7 @@ struct UsageDashboardView: View {
     @ViewBuilder
     private func sectionPanel<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
-            Text(title.uppercased())
+            Text(skin.labelCased(title))
                 .font(AinkradFont.display(11, weight: .semibold))
                 .tracking(0.8)
                 .foregroundStyle(theme.accentSecondary.opacity(skin.opacity.o85))

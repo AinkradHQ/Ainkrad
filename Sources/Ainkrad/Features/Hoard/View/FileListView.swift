@@ -226,7 +226,7 @@ struct FileListView: View {
             }
         } label: {
             HStack(spacing: skin.size.s3) {
-                Text(title.uppercased())
+                Text(skin.labelCased(title))
                     .font(AinkradFontResolver.font(.caption, weight: .medium, typography: typo))
                     .tracking(0.9)
                 Image(systemName: "chevron.up")

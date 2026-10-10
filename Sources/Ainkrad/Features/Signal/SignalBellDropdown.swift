@@ -212,7 +212,7 @@ struct SignalBellDropdown: View {
             Text("Notifications")
                 .font(AinkradFont.display(11.5, weight: .semibold))
                 .foregroundStyle(theme.foreground)
-                .textCase(.uppercase)
+                .textCase(skin.labelTextCase)
                 .tracking(0.6)
             if unread > 0 {
                 AinkradBadge(text: "\(unread)", tint: theme.accentSecondary)

@@ -53,7 +53,7 @@ struct RunsPanelView: View {
 
     private func sectionPanel(title: String, runs: [AgentRun], showControls: Bool) -> some View {
         VStack(alignment: .leading, spacing: AinkradSpacing.sm) {
-            Text("\(title.uppercased()) (\(runs.count))")
+            Text("\(skin.labelCased(title)) (\(runs.count))")
                 .font(AinkradFont.display(11, weight: .semibold))
                 .tracking(0.8)
                 .foregroundStyle(theme.accentSecondary.opacity(skin.opacity.o85))
