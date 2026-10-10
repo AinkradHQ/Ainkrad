@@ -147,6 +147,12 @@ struct GlassSweepCaptureTests {
 
     @Test("setup") func setup() throws {
         try shoot("setup-welcome", size: CGSize(width: 900, height: 640)) { _ in SetupOverlayView() }
+        try shoot("setup-heading-mark", size: CGSize(width: 420, height: 80)) { app in
+            HStack(spacing: 12) {
+                SetupBrandMark(tokens: app.themeManager.hostSkin, reduceMotion: true, style: .inline(height: 30))
+                Text("Pick a look").font(.title)
+            }
+        }
     }
 
     // MARK: - Settings
