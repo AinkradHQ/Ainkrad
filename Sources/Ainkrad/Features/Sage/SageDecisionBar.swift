@@ -69,7 +69,11 @@ struct SageDecisionBar: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(skin.shape(cut: AinkradRadius.md).fill(theme.surfaceElevated.opacity(skin.opacity.o60)))
         .overlay {
-            skin.shape(cut: AinkradRadius.md).stroke(theme.accentPrimary.opacity(skin.opacity.o55), lineWidth: 1)
+            // Glass frames controls with a neutral hairline, not an accent rim (as `PaneActivationRing`).
+            skin.shape(cut: AinkradRadius.md).stroke(
+                skin.material.kind == "glass"
+                    ? theme.foreground.opacity(skin.opacity.o16) : theme.accentPrimary.opacity(skin.opacity.o55),
+                lineWidth: 1)
         }
         .padding(.horizontal, skin.size.s14)
         .padding(.bottom, skin.spacing.xs)
