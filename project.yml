@@ -295,7 +295,9 @@ packages:
     #   kit panel shapes follow shape.style + chamfer-direct lint (#92), HostTerminalPalette, apiVersion 12 (#93).
     #   AppKitUI ABI since 73662dd: additions only (abi-ui-diff exit 3). default.theme gains material.kind.
     # 636baa4: kit panels follow material.panelOpacity (#94).
-    revision: 636baa4cb5925a4603a589eaad98139e3b93d888
+    # 2f0bb8f: type.labelCase makes the kit's uppercase labels a token; radioGroup.markerShape honoured (#95).
+    #   AppKitUI ABI: additions only (abi-ui-diff exit 3). Theme format 2 = files may set type.labelCase.
+    revision: 2f0bb8ffb982019ba93b4194f9ca7fa541fdd808
 
 targets:
   AinkradHostRuntime:
