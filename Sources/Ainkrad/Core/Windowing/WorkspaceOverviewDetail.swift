@@ -174,7 +174,7 @@ extension WorkspaceOverviewView {
                 .lineLimit(1)
 
             if workspace.id == manager.activeWorkspaceID {
-                Text("ACTIVE").font(AinkradFont.mono(9, weight: .bold)).tracking(1)
+                Text(skin.labelCased("Active")).font(AinkradFont.mono(9, weight: .bold)).tracking(skin.labelKerning(1))
                     .foregroundStyle(tokens.color(\.accentSecondary))
                     .lineLimit(1).fixedSize()
                     .padding(.horizontal, skin.size.s6).padding(.vertical, skin.size.s2)
@@ -223,8 +223,8 @@ extension WorkspaceOverviewView {
         let count = workspace.tileLayout.blocks.count
         if count > 0 {
             HStack(spacing: skin.size.s6) {
-                Text("OPEN APPS")
-                    .font(AinkradFont.mono(9, weight: .semibold)).kerning(1.5)
+                Text(skin.labelCased("Open apps"))
+                    .font(AinkradFont.mono(9, weight: .semibold)).kerning(skin.labelKerning(1.5))
                     .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o45))
                     .lineLimit(1).fixedSize()
                 Text("\(count)")

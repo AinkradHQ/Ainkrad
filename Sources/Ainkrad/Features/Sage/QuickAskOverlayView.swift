@@ -32,9 +32,9 @@ struct QuickAskOverlayView: View {
             Image(systemName: "sparkles")
                 .font(skin.font(AinkradFontToken(sizeKey: "t12", scaled: false)))
                 .foregroundStyle(theme.accentSecondary)
-            Text("QUICK ASK")
+            Text(skin.labelCased("Quick ask"))
                 .font(AinkradFont.display(12, weight: .medium))
-                .kerning(0.6)
+                .kerning(skin.labelKerning(0.6))
                 .foregroundStyle(theme.foreground.opacity(skin.opacity.o70))
 
             Spacer()

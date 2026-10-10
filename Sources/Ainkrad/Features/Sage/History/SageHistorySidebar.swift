@@ -50,8 +50,8 @@ struct SageHistorySidebar: View {
 
     private var header: some View {
         HStack {
-            Text("HISTORY")
-                .font(AinkradFont.display(11, weight: .medium)).kerning(1.5)
+            Text(skin.labelCased("History"))
+                .font(AinkradFont.display(11, weight: .medium)).kerning(skin.labelKerning(1.5))
                 .foregroundStyle(theme.foreground.opacity(skin.opacity.o50))
             Spacer()
             AinkradIconButton(
