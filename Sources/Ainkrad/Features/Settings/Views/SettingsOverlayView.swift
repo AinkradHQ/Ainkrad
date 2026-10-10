@@ -269,7 +269,8 @@ struct SettingsOverlayView: View {
                 ForEach(SettingsPageGroup.allCases, id: \.self) { group in
                     let pages = catalog.pages(in: group)
                     if !pages.isEmpty {
-                        AinkradSectionHeader(title: group.title)
+                        // The contract title is upper case; the header cases it per `type.labelCase`.
+                        AinkradSectionHeader(title: group.title.prefix(1) + group.title.dropFirst().lowercased())
                             .padding(.top, group == .workspace ? 0 : skin.spacing.md)
                         ForEach(pages) { page in
                             sidebarRow(page: page, tokens: tokens)

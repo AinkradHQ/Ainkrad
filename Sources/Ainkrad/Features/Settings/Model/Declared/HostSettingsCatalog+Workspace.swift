@@ -90,6 +90,19 @@ extension HostSettingsCatalog {
         if manager.defaultColorSchemeID(for: .light) != nil {
             fields.append(colorSchemeField(manager, .light, group: group))
         }
+        // Live previews of every installed theme and of each scheme on the current one.
+        fields.append(
+            SettingsField(
+                path: group.appending("previews"), label: "Theme previews",
+                keywords: ["theme", "preview", "colour scheme", "color scheme", "look"],
+                kind: .custom(
+                    AnyView(
+                        VStack(alignment: .leading, spacing: environment.themeManager.skin.size.s10) {
+                            AinkradSectionHeader(title: "Theme")
+                            ThemeChoiceGrid(choice: .themes)
+                            AinkradSectionHeader(title: "Colour scheme", subtitle: "On the current theme")
+                            ThemeChoiceGrid(choice: .schemes)
+                        }))))
         // A fresh install has only Neon; every other theme comes from the store.
         fields.append(
             SettingsField(

@@ -138,6 +138,17 @@ public final class ThemeManager {
         catalog.compose(themeVariant: variantID, scheme: schemeID)?.skin
     }
 
+    /// Installed theme `id` in its own default colours, at the appearance it would
+    /// compose to if picked (the system's, or `-AinkradAppearance`'s, when it has
+    /// that variant, else its first): a picker preview. From the catalog's compose
+    /// cache; does not change the selection.
+    public func previewSkin(forTheme id: String) -> AinkradSkin? {
+        let wanted = launchAppearance ?? systemAppearance.current
+        let appearances = catalog.appearances(ofTheme: id)
+        guard let at = appearances.contains(wanted) ? wanted : appearances.first else { return nil }
+        return catalog.compose(theme: id, appearance: at, scheme: nil)?.skin
+    }
+
     /// Today's order of the seven bundled schemes, so the scheme pickers read
     /// as before. Other schemes follow by name.
     // ponytail: fixed rank for the bundled seven; a scheme file could carry its own order if that matters.

@@ -62,7 +62,7 @@ struct SubscriptionApprovalView: View {
                 Text(isReapproval ? "Updated notification access" : "Notification access")
                     .font(AinkradFont.display(11.5, weight: .semibold))
                     .foregroundStyle(theme.foreground)
-                    .textCase(.uppercase)
+                    .textCase(skin.labelTextCase)
                     .tracking(0.6)
                 Spacer()
                 AinkradBadge(text: "\(subscriptions.count)", tint: theme.accentSecondary)

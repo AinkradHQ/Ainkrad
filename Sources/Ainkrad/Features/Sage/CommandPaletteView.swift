@@ -49,7 +49,7 @@ struct CommandPaletteView: View {
     }
 
     private func sectionHeader(_ category: CommandCategory) -> some View {
-        Text(category.title.uppercased())
+        Text(skin.labelCased(category.title))
             .font(AinkradFont.display(10, weight: .medium))
             .kerning(0.6)
             .foregroundStyle(theme.foreground.opacity(skin.opacity.o50))

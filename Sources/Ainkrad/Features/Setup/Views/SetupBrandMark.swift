@@ -162,10 +162,17 @@ struct SetupBrandMark: View {
         }
     }
 
+    /// Whether the theme glows at all: a language that clears its bloom (Glass)
+    /// gets the plain mark — no sparks, no halo, no shadows. Neon keeps all three.
+    private var glows: Bool { tokens.effects.glowBloom.color != .clear }
+
     private var showsField: Bool {
-        if case .hero = style { return true }
+        if case .hero = style { return glows }
         return false
     }
+
+    /// `color`, or nothing when the theme does not glow.
+    private func glow(_ color: Color) -> Color { glows ? color : .clear }
 
     var body: some View {
         Group {
@@ -343,8 +350,8 @@ struct SetupBrandMark: View {
                     )
                 )
                 .frame(width: chevronWidth, height: chevronHeight)
-                .shadow(color: tokens.color(\.accentSecondary).opacity(skin.opacity.o55), radius: skin.size.s8)
-                .shadow(color: tokens.color(\.accentPrimary).opacity(skin.opacity.o75), radius: skin.size.s26)
+                .shadow(color: glow(tokens.color(\.accentSecondary).opacity(skin.opacity.o55)), radius: skin.size.s8)
+                .shadow(color: glow(tokens.color(\.accentPrimary).opacity(skin.opacity.o75)), radius: skin.size.s26)
 
             crystal(width: crystalW, height: crystalH)
                 .offset(y: chevronHeight * MarkProportions.crystalTop)
@@ -369,8 +376,8 @@ struct SetupBrandMark: View {
                 .fill(tokens.color(\.foreground).opacity(skin.opacity.o28))
         }
         .frame(width: width, height: height)
-        .shadow(color: tokens.color(\.accentSecondary).opacity(skin.opacity.o95), radius: skin.size.s6)
-        .shadow(color: tokens.color(\.accentSecondary).opacity(skin.opacity.o70), radius: skin.size.s16)
-        .shadow(color: tokens.color(\.accentSecondary).opacity(skin.opacity.o40), radius: skin.size.s34)
+        .shadow(color: glow(tokens.color(\.accentSecondary).opacity(skin.opacity.o95)), radius: skin.size.s6)
+        .shadow(color: glow(tokens.color(\.accentSecondary).opacity(skin.opacity.o70)), radius: skin.size.s16)
+        .shadow(color: glow(tokens.color(\.accentSecondary).opacity(skin.opacity.o40)), radius: skin.size.s34)
     }
 }
