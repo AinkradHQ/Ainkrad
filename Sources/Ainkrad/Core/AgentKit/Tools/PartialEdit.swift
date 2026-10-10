@@ -1,12 +1,13 @@
 import Foundation
+import AinkradAppKit
 
 /// Rebuilds file content from the original + a subset of accepted hunks. A
 /// rejected hunk contributes its ORIGINAL lines; an accepted hunk contributes
 /// its NEW lines; everything outside any hunk is copied verbatim from the
-/// original. Hunks are non-overlapping and sorted by `oldStart` (DiffEngine
+/// original. Hunks are non-overlapping and sorted by `oldStart` (AinkradDiffEngine
 /// guarantees this).
 enum PartialEdit {
-    static func reconstruct(_ diff: FileDiff, rejecting rejectedHunkIDs: Set<Int>) -> String {
+    static func reconstruct(_ diff: AinkradFileDiff, rejecting rejectedHunkIDs: Set<Int>) -> String {
         let originalLines = diff.original.isEmpty ? [] : diff.original.components(separatedBy: "\n")
         var out: [String] = []
         var cursor = 0  // 0-based index into originalLines

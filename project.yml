@@ -300,7 +300,9 @@ packages:
     # fb4be6d: Glass Native E1–E2 (#96–#106): every kit component draws Apple's own controls and Liquid Glass
     #   when skin.usesNativeGlass (material.kind glass on macOS 26+). AppKitUI ABI: additions only; no new skin token.
     # aa3fc95: AinkradMenuButton keeps a custom label under Glass (#107).
-    revision: aa3fc955d523a9ec940626bddeeabd927c587737
+    # bdf3b0d: Grimoire E1: AinkradMarkdownText + stream parser (#108), AinkradDiffReview + AinkradDecisionBar (#109),
+    #   AinkradComposer (#110). AppKitUI ABI: additions only (abi-ui-diff exit 3).
+    revision: bdf3b0d8d235cf792ca4c2a986801162aee3e4fb
 
 targets:
   AinkradHostRuntime:
@@ -354,8 +356,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ainkrad.app
-        MARKETING_VERSION: "0.30.0"
-        CURRENT_PROJECT_VERSION: "31"
+        MARKETING_VERSION: "0.31.0"
+        CURRENT_PROJECT_VERSION: "32"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_NSHumanReadableCopyright: ""

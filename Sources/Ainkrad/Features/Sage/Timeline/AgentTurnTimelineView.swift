@@ -81,7 +81,7 @@ struct AgentTurnTimelineView: View {
                 }
             }
         case .text(let text):
-            SageMarkdownText(text: text, typography: typography)
+            AinkradMarkdownText(text: text, typography: typography)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .overlay(alignment: .topTrailing) {
                     SageTurnCopyButton(text: text, isVisible: hoveredTextStep == step.id)
@@ -135,7 +135,7 @@ struct AgentTurnTimelineView: View {
 struct LiveStepView: View {
     @Environment(\.ainkradSkin) private var skin
     let streamingText: String
-    let streamingBlocks: [MarkdownBlock]
+    let streamingBlocks: [AinkradMarkdownBlock]
     let streamingThinking: String
     let isStreaming: Bool
     @Environment(\.ainkradTheme) private var theme
@@ -154,7 +154,7 @@ struct LiveStepView: View {
                 }
                 if isStreaming || !streamingText.isEmpty {
                     VStack(alignment: .leading, spacing: skin.size.s2) {
-                        SageMarkdownText(blocks: streamingBlocks, typography: typography)
+                        AinkradMarkdownText(blocks: streamingBlocks, typography: typography)
                         if isStreaming { StreamingCursor() }
                     }
                 } else if streamingThinking.isEmpty {

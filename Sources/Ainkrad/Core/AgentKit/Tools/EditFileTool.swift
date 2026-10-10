@@ -1,6 +1,7 @@
 import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/Tools/EditFileTool.swift
 import Foundation
+import AinkradAppKit
 
 /// Find/replace file editor. `old_string` must match exactly once. Empty
 /// `old_string` on a non-existent path creates the file. Any path is allowed;
@@ -121,7 +122,7 @@ struct EditFileTool: AgentTool {
             title: edit.original.isEmpty ? "Create file" : "Edit file",
             summary: path,
             diff: UnifiedDiff.make(old: edit.original, new: edit.updated, path: path),
-            fileDiff: DiffEngine.compute(old: edit.original, new: edit.updated, path: path, context: 3))
+            fileDiff: AinkradDiffEngine.compute(old: edit.original, new: edit.updated, path: path, context: 3))
     }
 }
 
@@ -129,10 +130,10 @@ struct EditFileTool: AgentTool {
 /// it brackets the changed region, which is sufficient for a find/replace edit.
 enum UnifiedDiff {
     /// Renders a per-hunk unified diff (one `@@` header per changed region),
-    /// delegating hunk computation to `DiffEngine` so multiple separated edits
+    /// delegating hunk computation to `AinkradDiffEngine` so multiple separated edits
     /// each get their own hunk instead of one over-wide bracket.
     static func make(old: String, new: String, path: String) -> String {
-        let diff = DiffEngine.compute(old: old, new: new, path: path, context: 2)
+        let diff = AinkradDiffEngine.compute(old: old, new: new, path: path, context: 2)
         var out = ["--- \(path)", "+++ \(path)"]
         for hunk in diff.hunks {
             out.append("@@ -\(hunk.oldStart),\(hunk.oldCount) +\(hunk.newStart),\(hunk.newCount) @@")

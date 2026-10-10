@@ -125,6 +125,10 @@ struct ComponentGalleryView: View {
     @State var wave5SheetPresented = false
     @State var wave5DrawerPresented = false
 
+    // MARK: Agent chat
+    @State var agentChatDraft = ""
+    @State var agentChatRejectedHunks: Set<Int> = []
+
     var galleryTokens: HostThemeTokens { HostThemeTokens(skin: gallerySkin) }
     var galleryStatusColors: AinkradStatusColors {
         let skin = gallerySkin
@@ -192,6 +196,7 @@ struct ComponentGalleryView: View {
                         wave3Section.id("wave3")
                         wave4Section.id("wave4")
                         wave5Section.id("wave5")
+                        agentChatSection.id("agentChat")
                         themeFoundationSection.id("themeFoundation")
                     }
                     .padding(AinkradSpacing.lg)

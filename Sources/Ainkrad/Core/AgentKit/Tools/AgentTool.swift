@@ -1,6 +1,7 @@
 import AinkradHostRuntime
 // Sources/Ainkrad/Core/AgentKit/Tools/AgentTool.swift
 import Foundation
+import AinkradAppKit
 
 struct AgentToolSchema: Sendable, Equatable {
     let name: String
@@ -28,9 +29,9 @@ struct ToolApprovalPreview: Sendable, Equatable {
     let diff: String?
     /// Structured diff for rich hunk-level review (edit_file only). `nil` for
     /// every other tool — the card falls back to the `diff`/`summary` string.
-    let fileDiff: FileDiff?
+    let fileDiff: AinkradFileDiff?
 
-    init(title: String, summary: String, diff: String?, fileDiff: FileDiff? = nil) {
+    init(title: String, summary: String, diff: String?, fileDiff: AinkradFileDiff? = nil) {
         self.title = title
         self.summary = summary
         self.diff = diff
