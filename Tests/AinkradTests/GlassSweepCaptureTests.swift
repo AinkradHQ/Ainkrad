@@ -47,6 +47,26 @@ struct GlassSweepCaptureTests {
         }
     }
 
+    // MARK: - Kit (Glass Native E0.2)
+
+    /// Every gallery section, so each Glass Native PR shows its components
+    /// Neon | Glass. Heights are the Neon goldens' plus room for native controls.
+    @Test("kit") func kit() throws {
+        let sections: [(String, CGFloat)] = [
+            ("foundation", 364), ("scales", 434), ("panel", 154), ("card", 158), ("pickers", 145),
+            ("formControls", 237), ("stateViews", 254), ("sectionHeader", 78), ("wave2", 517),
+            ("wave3", 704), ("wave4", 1011), ("wave5", 1643), ("themeFoundation", 624),
+        ]
+        for (section, height) in sections {
+            try shoot("kit-\(section)", size: CGSize(width: 1280, height: height + 120)) { app in
+                ComponentGalleryView()
+                    .gallerySectionView(named: section, theme: app.themeManager.skin.id)
+                    .padding(20)
+                    .frame(maxHeight: .infinity, alignment: .top)
+            }
+        }
+    }
+
     // MARK: - Sage
 
     @Test("sage") func sage() throws {
