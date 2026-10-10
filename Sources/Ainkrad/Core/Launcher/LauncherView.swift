@@ -93,9 +93,9 @@ struct LauncherView: View {
                 onEscape: { dismiss() }
             )
 
-            Text("APPS")
+            Text(skin.labelCased("Apps"))
                 .font(AinkradFont.mono(9, weight: .medium))
-                .kerning(2.5)
+                .kerning(skin.labelKerning(2.5))
                 .foregroundStyle(tokens.color(\.foreground).opacity(skin.opacity.o40))
                 .padding(.horizontal, skin.size.s18)
                 .padding(.top, skin.size.s14)
