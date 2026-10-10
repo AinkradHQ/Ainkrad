@@ -47,6 +47,11 @@ struct GlassIslandView: View {
             // One rigid piece: the whole brand follows the pointer together,
             // so nothing in it shifts against anything else.
             .offset(follow(unit: unit))
+            // Optical centre: the mark's box carries its halo above the
+            // chevron, so the visible brand sat ~22pt low in the frame (measured
+            // from the capture); and the home sits below the HUD bar, so half
+            // its height more puts the brand at the WINDOW's middle.
+            .offset(y: -22 * unit - HUDBar.height / 2)
             .frame(width: size.width, height: size.height)
             .contentShape(Rectangle())
             .onContinuousHover { phase in
