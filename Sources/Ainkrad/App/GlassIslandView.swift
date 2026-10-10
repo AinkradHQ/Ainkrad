@@ -12,9 +12,9 @@ import SwiftUI
 /// foreground colour, the crystals in the two As and the tagline take the
 /// accent, so the home follows the colour scheme.
 ///
-/// Separate live layers: the sparks drift on their own (the mark's timeline),
-/// and the pointer moves each layer by its depth — the mark most, the tagline
-/// least. Still under Reduce Motion or when `isVisible` is false.
+/// Motion: the sparks drift on their own (the mark's timeline), and the whole
+/// brand follows the pointer as ONE rigid piece — Ahmed: it moves as it is,
+/// never stretching or bending. Still under Reduce Motion or when not visible.
 struct GlassIslandView: View {
     var isVisible: Bool = true
 
@@ -36,17 +36,17 @@ struct GlassIslandView: View {
                 // wordmark up into that empty lower edge.
                 SetupBrandMark(
                     tokens: tokens, reduceMotion: !animates, style: .hero(diameter: 300 * unit), forcesGlow: true)
-                    .offset(parallax(depth: 1, unit: unit))
                     .padding(.bottom, -44 * unit)
                 wordmark(tokens: tokens, unit: unit)
-                    .offset(parallax(depth: 0.55, unit: unit))
                 Image("Wordmark-Tagline")
                     .resizable()
                     .scaledToFit()
                     .frame(width: 324 * unit)
                     .foregroundStyle(tokens.color(\.accentSecondary))
-                    .offset(parallax(depth: 0.35, unit: unit))
             }
+            // One rigid piece: the whole brand follows the pointer together,
+            // so nothing in it shifts against anything else.
+            .offset(follow(unit: unit))
             .frame(width: size.width, height: size.height)
             .contentShape(Rectangle())
             .onContinuousHover { phase in
@@ -77,9 +77,9 @@ struct GlassIslandView: View {
         .frame(width: 423 * unit)
     }
 
-    /// How far a layer at `depth` follows the pointer; the front moves most.
-    private func parallax(depth: CGFloat, unit: CGFloat) -> CGSize {
-        let reach = 18 * unit * depth
+    /// How far the brand follows the pointer.
+    private func follow(unit: CGFloat) -> CGSize {
+        let reach = 14 * unit
         return CGSize(width: pointer.x * reach, height: pointer.y * reach * 0.6)
     }
 }
