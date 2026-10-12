@@ -240,6 +240,11 @@ struct KeyboardShortcutMonitor: NSViewRepresentable {
             // dispatch below — a second lookup could drift from this one.
             let action = environment.shortcutStore.bindings.action(matching: event)
 
+            // The quit HUD answers Return / Esc wherever focus is — a plugin's text view would take them (H1b).
+            if !command, environment.quitCoordinator.answer(keyCode: event.keyCode, beforeQuit: { environment.sounds.play(.appQuit) }) {
+                return true
+            }
+
             // First-run setup is a blocking gate: the workspace renders behind
             // it but nothing in it may be reached. Returning `true` consumes the
             // event (see the local monitor above) WITHOUT performing anything.

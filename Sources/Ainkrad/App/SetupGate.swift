@@ -150,9 +150,9 @@ enum SetupGate {
     /// Virtual key codes the quit confirmation needs. Escape, Return and keypad
     /// Enter occupy the same physical position on every layout, so matching them
     /// by key code is correct and layout-independent.
-    private static let returnKey: UInt16 = 36
-    private static let keypadEnter: UInt16 = 76
-    private static let escape: UInt16 = 53
+    static let returnKey: UInt16 = 36
+    static let keypadEnter: UInt16 = 76
+    static let escape: UInt16 = 53
 
     /// Whether the first-run gate goes up at LAUNCH.
     ///
