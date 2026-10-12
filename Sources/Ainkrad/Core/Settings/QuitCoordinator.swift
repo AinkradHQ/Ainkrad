@@ -12,6 +12,9 @@ import Observation
 @Observable
 final class QuitCoordinator {
     private(set) var isConfirming = false
+    /// The HUD's "Don't ask again" box. Here rather than in the view so Return from the key monitor
+    /// (which works wherever focus is) quits with the same answer as the Quit button.
+    var dontAskAgain = false
     private let persistence: PersistenceStore
     private let terminator: TerminationReplying
 
@@ -26,6 +29,7 @@ final class QuitCoordinator {
     func requestTerminate() -> NSApplication.TerminateReply {
         let settings = persistence.load(GlobalSettings.self) ?? GlobalSettings()
         guard settings.confirmBeforeQuit else { return .terminateNow }
+        dontAskAgain = false
         isConfirming = true
         return .terminateLater
     }
@@ -41,6 +45,20 @@ final class QuitCoordinator {
         }
         isConfirming = false
         terminator.reply(true)
+    }
+
+    /// Return / keypad Enter quits (with the HUD's "Don't ask again"), Esc cancels — answered from the key
+    /// monitor, so they work while a plugin's text view holds focus. `false` = not confirming, or another key.
+    func answer(keyCode: UInt16, beforeQuit: () -> Void) -> Bool {
+        guard isConfirming else { return false }
+        switch keyCode {
+        case SetupGate.returnKey, SetupGate.keypadEnter:
+            beforeQuit()
+            confirm(dontAskAgain: dontAskAgain)
+        case SetupGate.escape: cancel()
+        default: return false
+        }
+        return true
     }
 
     /// The user cancelled from the HUD — the app keeps running.

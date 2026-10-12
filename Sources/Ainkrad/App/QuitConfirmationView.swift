@@ -9,6 +9,9 @@ import SwiftUI
 /// Overview overlays. Cancel keeps the app running; Quit (optionally with
 /// "Don't ask again") delivers the coordinator's deferred termination reply.
 ///
+/// Return and Esc are answered first by `KeyboardShortcutMonitor`: a plugin's
+/// text view holding focus would otherwise take them (H1b).
+///
 /// Not `AinkradConfirmDialog`: the kit dialog has no accessory control for
 /// the "Don't ask again" checkbox and no Return/Escape shortcuts — a kit gap
 /// ("confirm dialog with an accessory checkbox"). Local, on skin tokens and
@@ -16,7 +19,6 @@ import SwiftUI
 struct QuitConfirmationView: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.ainkradSkin) private var skin
-    @State private var dontAskAgain = false
 
     var body: some View {
         let tokens = environment.themeManager.hostSkin
@@ -51,7 +53,7 @@ struct QuitConfirmationView: View {
             .padding(.horizontal, skin.size.s26)
             .padding(.bottom, skin.size.s18)
 
-            AinkradCheckbox(isOn: $dontAskAgain, label: "Don't ask again")
+            AinkradCheckbox(isOn: Bindable(coordinator).dontAskAgain, label: "Don't ask again")
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, skin.size.s26)
                 .padding(.bottom, skin.size.s20)
@@ -62,7 +64,7 @@ struct QuitConfirmationView: View {
                     .keyboardShortcut(.cancelAction)
                 AinkradButton(title: "Quit", style: .danger) {
                     environment.sounds.play(.appQuit)
-                    coordinator.confirm(dontAskAgain: dontAskAgain)
+                    coordinator.confirm(dontAskAgain: coordinator.dontAskAgain)
                 }
                 .keyboardShortcut(.defaultAction)
             }
