@@ -76,6 +76,38 @@ final class QuitCoordinatorTests {
         #expect(terminator.replies == [true])
     }
 
+    @Test("each quit request starts with Don't ask again unticked")
+    func requestResetsDontAskAgain() {
+        let coordinator = QuitCoordinator(persistence: InMemoryPersistenceStore(), terminator: FakeTerminationReplier())
+        _ = coordinator.requestTerminate()
+        coordinator.dontAskAgain = true
+        coordinator.cancel()
+
+        _ = coordinator.requestTerminate()
+
+        #expect(coordinator.dontAskAgain == false)
+    }
+
+    @Test("Return quits with the HUD's Don't ask again, Esc cancels, other keys and no HUD pass through")
+    func keysAnswerTheHUD() {
+        let persistence = InMemoryPersistenceStore()
+        let terminator = FakeTerminationReplier()
+        let coordinator = QuitCoordinator(persistence: persistence, terminator: terminator)
+        var quitSounds = 0
+        #expect(!coordinator.answer(keyCode: 36, beforeQuit: { quitSounds += 1 }))  // no HUD
+
+        _ = coordinator.requestTerminate()
+        #expect(!coordinator.answer(keyCode: 0, beforeQuit: { quitSounds += 1 }))  // "a"
+        #expect(coordinator.answer(keyCode: 53, beforeQuit: { quitSounds += 1 }))  // Esc
+        _ = coordinator.requestTerminate()
+        coordinator.dontAskAgain = true
+        #expect(coordinator.answer(keyCode: 36, beforeQuit: { quitSounds += 1 }))  // Return
+
+        #expect(terminator.replies == [false, true])
+        #expect(quitSounds == 1)
+        #expect(persistence.load(GlobalSettings.self)?.confirmBeforeQuit == false)
+    }
+
     @Test("cancel stops confirming and replies false")
     func cancelStopsConfirmingAndRepliesFalse() {
         let persistence = InMemoryPersistenceStore()
