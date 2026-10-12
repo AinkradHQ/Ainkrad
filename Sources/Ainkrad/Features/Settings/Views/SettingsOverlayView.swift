@@ -162,32 +162,40 @@ struct SettingsOverlayView: View {
             .keyboardShortcut("f", modifiers: .command)
             .hidden()
         )
-        .onKeyPress(.escape) {
-            // An open confirm answers Esc first, as Cancel.
-            if environment.settingsDrafts.pendingConfirm != nil {
-                environment.settingsDrafts.pendingConfirm = nil
-                return .handled
-            }
-            if environment.settingsDrafts.showsThemeFiles {
-                environment.settingsDrafts.showsThemeFiles = false
-                return .handled
-            }
-            // Agree with `SettingsSearchMode`'s own notion of "empty" — a
-            // whitespace-only query is `.browsing`, so it must dismiss on
-            // the first press rather than silently eating the whitespace.
-            if searchMode != .browsing {
-                query = ""
-                return .handled
-            }
-            onDismiss()
-            return .handled
-        }
+        .background(
+            Button(action: handleEscape) { EmptyView() }  // design-lint: allow raw-control kit gap, keyboard-shortcut carrier
+                .keyboardShortcut(.escape, modifiers: [])
+                .hidden()
+        )
         .task {
             if let path = pendingDeepLink {
                 navigator.navigate(to: path, in: catalog)
                 pendingDeepLink = nil
             }
         }
+    }
+
+    /// Esc, in order: an open confirm, the theme-files view, a search query, then the overlay itself. Carried by a
+    /// key-equivalent button, not `.onKeyPress`: after a re-skin (picking a theme) nothing inside the overlay is
+    /// focused, and a key-press handler then never sees Esc (E0 FD19) — the same reason ⌘F is carried that way.
+    private func handleEscape() {
+        // An open confirm answers Esc first, as Cancel.
+        if environment.settingsDrafts.pendingConfirm != nil {
+            environment.settingsDrafts.pendingConfirm = nil
+            return
+        }
+        if environment.settingsDrafts.showsThemeFiles {
+            environment.settingsDrafts.showsThemeFiles = false
+            return
+        }
+        // Agree with `SettingsSearchMode`'s own notion of "empty" — a
+        // whitespace-only query is `.browsing`, so it must dismiss on
+        // the first press rather than silently eating the whitespace.
+        if searchMode != .browsing {
+            query = ""
+            return
+        }
+        onDismiss()
     }
 
     private func header(tokens: AinkradSkin) -> some View {
