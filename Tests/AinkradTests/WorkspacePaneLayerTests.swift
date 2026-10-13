@@ -49,6 +49,20 @@ struct WorkspacePaneLayerTests {
         #expect(destinationPlacements[0].block === block)
     }
 
+    // FD36: `ainkradPaneIsFocused` reads this — a plugin in a workspace you are
+    // not on must not think it has focus (it would keep its key claims mounted).
+    @Test("only the active workspace's focused pane counts as focused")
+    func onlyTheActiveWorkspaceHasAFocusedPane() throws {
+        let ws = workspace(panes: 2)
+        let active = PaneGeometryResolver.placements(
+            for: ws, in: size, carouselOffsetX: 0, isActiveWorkspace: true)
+        let inactive = PaneGeometryResolver.placements(
+            for: ws, in: size, carouselOffsetX: size.width, isActiveWorkspace: false)
+
+        #expect(active.filter(\.isFocusedPane).map(\.block.id) == [try #require(ws.tileLayout.focusedBlockID)])
+        #expect(!inactive.contains { $0.isFocusedPane })
+    }
+
     @Test("a workspace's carousel offset shifts all of its panes and nothing else")
     func carouselOffsetShiftsPanes() {
         let ws = workspace(panes: 2)

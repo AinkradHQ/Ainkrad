@@ -175,7 +175,10 @@ enum PaneGeometryResolver {
                     dy: canvas.minY
                 ),
                 isVisible: isActiveWorkspace && visibleInWorkspace,
-                isFocusedPane: isFocusedPane,
+                // Only the ACTIVE workspace has a focused pane: the focused
+                // pane of a workspace you are not on is not where you work, and
+                // its plugin must not keep claiming keys (FD36).
+                isFocusedPane: isActiveWorkspace && isFocusedPane,
                 isInFocusMode: inFocus
             )
         }
