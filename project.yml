@@ -305,7 +305,10 @@ packages:
     # 41cd9d9: markdown pipe tables and block quotes in AinkradMarkdownText (#111, Grimoire GD11).
     #   AppKitUI ABI: additions only (abi-ui-diff exit 3); abi-check clean.
     # 51655c2: AinkradMenuButton.kitMenuUnderGlass() opt-in (#112, Forge FD20).
-    revision: 51655c243aab09146e8db97df9b72ee0ba5cc52c
+    # 966326c: kit parity batches 1+2 (#113, #114) for the Forge/Grimoire mockups; additive, abi-check clean.
+    # a352acd: kit parity batches 3+4 (#115, #116) for the Forge/Grimoire mockups; additive, abi-check clean.
+    # dbc2b5e: kit parity batch 5 (#117) for the Forge mockups; additive, abi-check clean.
+    revision: dbc2b5eb7dce936861e470084b9cde05070d3607
 
 targets:
   AinkradHostRuntime:
@@ -359,8 +362,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ainkrad.app
-        MARKETING_VERSION: "0.31.4"
-        CURRENT_PROJECT_VERSION: "36"
+        MARKETING_VERSION: "0.31.5"
+        CURRENT_PROJECT_VERSION: "37"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_NSHumanReadableCopyright: ""
