@@ -239,6 +239,13 @@ struct KeyboardShortcutMonitor: NSViewRepresentable {
             // Resolved once, here, and reused for both the gate and the
             // dispatch below — a second lookup could drift from this one.
             let action = environment.shortcutStore.bindings.action(matching: event)
+            let isWorkspaceChord = WorkspaceChord.matches(
+                keyCode: event.keyCode,
+                characters: event.charactersIgnoringModifiers?.lowercased(),
+                command: command,
+                option: isOption,
+                shift: isShifted
+            )
 
             // The quit HUD answers Return / Esc wherever focus is — a plugin's text view would take them (H1b).
             if !command, environment.quitCoordinator.answer(keyCode: event.keyCode, beforeQuit: { environment.sounds.play(.appQuit) }) {
@@ -257,13 +264,7 @@ struct KeyboardShortcutMonitor: NSViewRepresentable {
                 isSetupPresented: environment.isSetupPresented,
                 isConfirmingQuit: environment.quitCoordinator.isConfirming,
                 isRegisteredShortcut: action != nil,
-                isWorkspaceChord: WorkspaceChord.matches(
-                    keyCode: event.keyCode,
-                    characters: event.charactersIgnoringModifiers?.lowercased(),
-                    command: command,
-                    option: isOption,
-                    shift: isShifted
-                ),
+                isWorkspaceChord: isWorkspaceChord,
                 command: command,
                 characters: event.charactersIgnoringModifiers,
                 keyCode: event.keyCode
@@ -279,6 +280,11 @@ struct KeyboardShortcutMonitor: NSViewRepresentable {
             // gate has to be the first thing checked, before any dispatch.
             if environment.shortcutStore.isRecordingShortcut {
                 return false
+            }
+
+            // FD36: the focused plugin's own claim on a host chord wins (see `PluginKeyClaim`).
+            if PluginKeyClaim.takes(event, isHostChord: action != nil || isWorkspaceChord, action: action, in: environment, window: window) {
+                return true
             }
 
             // The six named, rebindable shortcuts (AIN-144) are resolved by
