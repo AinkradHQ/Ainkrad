@@ -52,3 +52,13 @@ public struct HostAppLauncher: PluginAppLauncher, PluginAppLauncherResult {
 
     public func takePendingLaunch() -> String? { hub.takePending(for: appID) }
 }
+
+/// Lets a plugin ask whether another app is installed and enabled (`PluginAppLauncher.appAvailability`), e.g.
+/// Grimoire's "↗ Open" when Forge is missing. Same alias resolution and availability test as opening.
+extension HostAppLauncher: PluginAppAvailability {
+    public func isAppAvailable(appID requested: String) -> Bool {
+        let target = AppIDRenames.map[requested] ?? requested
+        if case .available = hub.availability(of: target) { return true }
+        return false
+    }
+}
