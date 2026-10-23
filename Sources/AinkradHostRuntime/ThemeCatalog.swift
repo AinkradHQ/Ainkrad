@@ -26,7 +26,8 @@ public final class ThemeCatalog: @unchecked Sendable {
 
     /// The theme-file format this host reads. A store entry with a higher `format` is hidden.
     /// 2: files may set `type.labelCase` (AppKit 2f0bb8f); a format-1 host rejects that key.
-    public static let supportedFormat = 2
+    /// 3: files may set `palette.accentViolet` (AppKit 39330dd); a format-2 host rejects that key.
+    public static let supportedFormat = 3
 
     let bundle: Bundle
     let userRoots: [URL]
