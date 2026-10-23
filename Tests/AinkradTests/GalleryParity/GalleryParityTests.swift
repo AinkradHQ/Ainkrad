@@ -10,6 +10,7 @@ import Testing
 private let gallerySections = [
     "foundation", "scales", "panel", "card", "pickers", "formControls",
     "stateViews", "sectionHeader", "wave2", "wave3", "wave4", "wave5", "agentChat",
+    "charts", "transcript", "citadel",
     "themeFoundation",
 ]
 private let galleryThemeNames = ["neonBlue", "cyberPurple", "gruvbox"]

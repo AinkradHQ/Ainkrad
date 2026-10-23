@@ -2200,6 +2200,7 @@
     "accentPrimary" : "#2563EB",
     "accentSecondary" : "#22D3EE",
     "accentTertiary" : "#10B981",
+    "accentViolet" : "#A78BFA",
     "background" : "#0A0E17",
     "black" : "#000000",
     "danger" : "#F85149",
