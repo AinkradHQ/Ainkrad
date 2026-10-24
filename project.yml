@@ -309,7 +309,12 @@ packages:
     # a352acd: kit parity batches 3+4 (#115, #116) for the Forge/Grimoire mockups; additive, abi-check clean.
     # dbc2b5e: kit parity batch 5 (#117) for the Forge mockups; additive, abi-check clean.
     # 20fb3db: kit parity batch 6 (#118) for the Forge mockups; additive, abi-check clean.
-    revision: 20fb3db9f278b3e73f195c3bfb5c321084db3053
+    # ba44099: Citadel kit (#119-#122): chart family, AinkradToolCard, AinkradChatBubble, palette.accentViolet
+    #   (theme format 3), 10 Citadel components, AinkradAgentFigure; additive, abi-check clean.
+    # 141d5b8: Citadel kit options (#123): card rimTint, tone stacked bars, nav counts, banner action,
+    #   sentence-case stat labels; Glass card wash + nested cards draw no fill; bar chart keeps shared labels apart.
+    #   Additive (AinkradAppKitUI only).
+    revision: 141d5b80468a5aa43e688c2716e1cc715b17564f
 
 targets:
   AinkradHostRuntime:
@@ -363,8 +368,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ainkrad.app
-        MARKETING_VERSION: "0.31.6"
-        CURRENT_PROJECT_VERSION: "38"
+        MARKETING_VERSION: "0.32.0"
+        CURRENT_PROJECT_VERSION: "39"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_NSHumanReadableCopyright: ""

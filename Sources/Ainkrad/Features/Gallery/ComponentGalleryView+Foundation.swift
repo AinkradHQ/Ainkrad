@@ -34,6 +34,9 @@ extension ComponentGalleryView {
             case "wave4": wave4Section
             case "wave5": wave5Section
             case "agentChat": agentChatSection
+            case "charts": chartsSection
+            case "transcript": transcriptSection
+            case "citadel": citadelSection
             case "themeFoundation": themeFoundationSection
             default: EmptyView()
             }

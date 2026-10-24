@@ -129,6 +129,12 @@ struct ComponentGalleryView: View {
     @State var agentChatDraft = ""
     @State var agentChatRejectedHunks: Set<Int> = []
 
+    // MARK: Citadel
+    @State var citadelPoints: Int? = 8
+    @State var citadelWorkspace = "aink"
+    @State var citadelChain = ComponentGalleryView.sampleChain
+    @State var citadelStall = "10 min"
+
     var galleryTokens: HostThemeTokens { HostThemeTokens(skin: gallerySkin) }
     var galleryStatusColors: AinkradStatusColors {
         let skin = gallerySkin
@@ -197,6 +203,9 @@ struct ComponentGalleryView: View {
                         wave4Section.id("wave4")
                         wave5Section.id("wave5")
                         agentChatSection.id("agentChat")
+                        chartsSection.id("charts")
+                        transcriptSection.id("transcript")
+                        citadelSection.id("citadel")
                         themeFoundationSection.id("themeFoundation")
                     }
                     .padding(AinkradSpacing.lg)
