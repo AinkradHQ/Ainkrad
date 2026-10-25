@@ -314,7 +314,8 @@ packages:
     # 141d5b8: Citadel kit options (#123): card rimTint, tone stacked bars, nav counts, banner action,
     #   sentence-case stat labels; Glass card wash + nested cards draw no fill; bar chart keeps shared labels apart.
     #   Additive (AinkradAppKitUI only).
-    revision: 141d5b80468a5aa43e688c2716e1cc715b17564f
+    # 20cb62d: the Citadel prototype parity components (#124); additive, abi-check clean.
+    revision: 20cb62dae52062fb59723ab435b47fab89b55d26
 
 targets:
   AinkradHostRuntime:
@@ -368,8 +369,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ainkrad.app
-        MARKETING_VERSION: "0.32.0"
-        CURRENT_PROJECT_VERSION: "39"
+        MARKETING_VERSION: "0.33.0"
+        CURRENT_PROJECT_VERSION: "40"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_NSHumanReadableCopyright: ""
