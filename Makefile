@@ -21,7 +21,7 @@ PROJECT := Ainkrad.xcodeproj
 # `~/Library/Application Support/<bundle-id>/Cache` (see AinkradHome.defaultCacheRoot
 # and AppEnvironment+BootstrapStores). It is deliberately NOT under the user's
 # Ainkrad Home: dev plugin bundles are rebuildable machine state, not vault data.
-DEV_PLUGINS := $(HOME)/Library/Application Support/com.ainkrad.app/Cache/DevPlugins
+DEV_PLUGINS ?= $(HOME)/Library/Application Support/com.ainkrad.app/Cache/DevPlugins
 
 generate: ## Generate the Xcode project from project.yml
 	xcodegen generate
@@ -63,6 +63,8 @@ devhost: generate ## Build the AinkradDevHost app (Debug)
 	@echo "Built → build/Build/Products/Debug/AinkradDevHost.app"
 
 sample: generate ## Build the Hello sample plugin and sideload it into DevPlugins
+	@case "$(DEV_PLUGINS)" in "$(HOME)/Library/Application Support/"*) \
+		[ "$(CONFIRM_DAILY)" = 1 ] || { echo "refusing: DEV_PLUGINS is the daily app's folder (set DEV_PLUGINS=<fixture>/DevPlugins or CONFIRM_DAILY=1)"; exit 1; };; esac
 	xcodebuild -scheme $(SCHEME) -configuration Debug -derivedDataPath build \
 		-destination 'platform=macOS' build
 	mkdir -p "$(DEV_PLUGINS)"
