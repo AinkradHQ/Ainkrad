@@ -18,6 +18,11 @@ struct ScryElementRenderTests {
         #expect(rows.last == ["Bo", "PM"])
     }
 
+    @Test func markdownKeepsNewlinesAndInlineStyling() throws {
+        let attributed = try scryAttributedMarkdown("one\ntwo **bold**")
+        #expect(String(attributed.characters) == "one\ntwo bold")
+    }
+
     @Test func parsesCSVFallback() {
         let rows = ScryTableParse.rows(from: "a,b,c\n1,2,3")
         #expect(rows == [["a", "b", "c"], ["1", "2", "3"]])

@@ -23,7 +23,7 @@ struct ScryTextCard: View {
 
     private var safeContent: AnyView {
         do {
-            let attributed = try AttributedString(markdown: element.body)
+            let attributed = try scryAttributedMarkdown(element.body)
             return AnyView(
                 Text(attributed).font(AinkradFont.display(13))
                     .foregroundStyle(theme.foreground.opacity(skin.opacity.o90))
@@ -33,6 +33,14 @@ struct ScryTextCard: View {
             return AnyView(ScryErrorCard(message: message))
         }
     }
+}
+
+/// Inline markdown with the author's newlines kept. The default syntax folds a single
+/// newline into a space, which collapsed every multi-line card into one paragraph.
+func scryAttributedMarkdown(_ body: String) throws -> AttributedString {
+    try AttributedString(
+        markdown: body,
+        options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))
 }
 
 /// `.code` — a syntax-highlighted code block.
